@@ -16,6 +16,7 @@ const io = socketIO(server, {
 });
 
 const PORT = process.env.PORT || 3000;
+console.log(`Port configuration: ${PORT}`);
 
 // 미들웨어 설정
 app.use(cors());
@@ -93,8 +94,9 @@ app.use((err, req, res, next) => {
 });
 
 // 서버 시작
-server.listen(PORT, () => {
-  console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
+const HOST = '0.0.0.0';
+server.listen(PORT, HOST, () => {
+  console.log(`서버가 ${HOST}:${PORT}에서 실행 중입니다.`);
   console.log(`http://localhost:${PORT}`);
 
   // 데이터베이스 초기화
