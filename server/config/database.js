@@ -176,11 +176,11 @@ const initDatabase = () => {
 
   // 기본 관리자 계정 생성
   const bcrypt = require('bcryptjs');
-  const adminPassword = bcrypt.hashSync('admin123', 10);
+  const adminPassword = bcrypt.hashSync('0109', 10);
 
   db.run(`
     INSERT OR IGNORE INTO users (username, password, name, role, department)
-    VALUES ('admin', '${adminPassword}', '시스템 관리자', 'admin', '관리부')
+    VALUES ('hvlab', '${adminPassword}', '시스템 관리자', 'admin', '관리부')
   `);
 
   console.log('데이터베이스 테이블 초기화 완료');
