@@ -66,7 +66,7 @@ const projectRoutes = require('./server/routes/projects');
 const scheduleRoutes = require('./server/routes/schedules');
 const userRoutes = require('./server/routes/users');
 const paymentRoutes = require('./server/routes/payments');
-const oauthRoutes = require('./routes/oauth');
+const oauthRoutes = require('./server/routes/oauth');
 
 // API 라우트 설정
 app.use('/api/auth', authRoutes);
