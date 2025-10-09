@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>현장 관리 시스템</title>
+    <link rel="stylesheet" href="/css/minimal.css">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>현장 관리 시스템</h1>
+                <p>공사 현장 통합 관리</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="text" id="username" placeholder="사용자명" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" placeholder="비밀번호" required>
+                </div>
+                <button type="submit" class="btn-login">로그인</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 메인 앱 -->
+    <div id="mainApp" class="main-container" style="display: none;">
+        <!-- 사이드바 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">현장 관리</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-view="dashboard">대시보드</div>
+                <div class="nav-item" data-view="payments">결제 요청</div>
+                <div class="nav-item" data-view="projects">현장 관리</div>
+                <div class="nav-item" data-view="schedules">일정 관리</div>
+                <div class="nav-item" data-view="team">팀원 관리</div>
+            </nav>
+
+            <div class="sidebar-footer" style="padding: var(--spacing-lg); border-top: 1px solid var(--border-color);">
+                <div style="font-size: var(--font-size-sm); color: var(--color-gray-600);">
+                    <div id="userName" style="font-weight: 500; color: var(--color-gray-900);">사용자</div>
+                    <div id="userRole" style="font-size: var(--font-size-xs);">직책</div>
+                </div>
+                <button id="logoutBtn" class="btn btn-ghost" style="width: 100%; margin-top: var(--spacing-md);">
+                    로그아웃
+                </button>
+            </div>
+        </aside>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="main-content">
+            <!-- 헤더 -->
+            <header class="main-header">
+                <h2 id="pageTitle">대시보드</h2>
+                <div style="display: flex; gap: var(--spacing-md);">
+                    <button class="btn btn-ghost" id="refreshBtn">새로고침</button>
+                    <button class="btn btn-primary" id="addNewBtn">추가</button>
+                </div>
+            </header>
+
+            <!-- 콘텐츠 영역 -->
+            <div class="content-wrapper">
+                <!-- 대시보드 뷰 -->
+                <div id="dashboardView" class="view-content active">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-lg); margin-bottom: var(--spacing-xl);">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="text-xs text-muted">대기중 결제</div>
+                                <div style="font-size: var(--font-size-2xl); font-weight: 600;" id="pendingPayments">0</div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="text-xs text-muted">진행중 현장</div>
+                                <div style="font-size: var(--font-size-2xl); font-weight: 600;" id="activeProjects">0</div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="text-xs text-muted">오늘 일정</div>
+                                <div style="font-size: var(--font-size-2xl); font-weight: 600;" id="todaySchedules">0</div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="text-xs text-muted">이번달 결제액</div>
+                                <div style="font-size: var(--font-size-2xl); font-weight: 600;" id="monthlyAmount">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>최근 결제 요청</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="recentPayments">
+                                <p class="text-muted">결제 요청이 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 결제 요청 뷰 -->
+                <div id="paymentsView" class="view-content">
+                    <div style="display: flex; gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+                        <select class="form-control" id="paymentStatusFilter" style="width: 150px;">
+                            <option value="">전체 상태</option>
+                            <option value="pending">대기중</option>
+                            <option value="approved">승인됨</option>
+                            <option value="completed">완료</option>
+                            <option value="rejected">거절됨</option>
+                        </select>
+                        <select class="form-control" id="paymentProjectFilter" style="width: 200px;">
+                            <option value="">전체 현장</option>
+                        </select>
+                    </div>
+
+                    <div id="paymentsList">
+                        <!-- 동적으로 추가됨 -->
+                    </div>
+                </div>
+
+                <!-- 현장 관리 뷰 -->
+                <div id="projectsView" class="view-content">
+                    <div id="projectsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--spacing-lg);">
+                        <!-- 동적으로 추가됨 -->
+                    </div>
+                </div>
+
+                <!-- 일정 관리 뷰 -->
+                <div id="schedulesView" class="view-content">
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>현장</th>
+                                        <th>일정</th>
+                                        <th>기간</th>
+                                        <th>상태</th>
+                                        <th>담당자</th>
+                                        <th>작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scheduleTableBody">
+                                    <!-- 동적으로 추가됨 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 팀원 관리 뷰 -->
+                <div id="teamView" class="view-content">
+                    <div id="teamList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--spacing-lg);">
+                        <!-- 동적으로 추가됨 -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 결제 요청 모달 -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>결제 요청</h3>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="form-group">
+                        <label>현장 선택</label>
+                        <select id="paymentProject" required>
+                            <option value="">현장을 선택하세요</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>요청 구분</label>
+                        <select id="paymentType">
+                            <option value="material">자재비</option>
+                            <option value="labor">인건비</option>
+                            <option value="equipment">장비대여</option>
+                            <option value="misc">기타</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>업체명</label>
+                        <input type="text" id="vendorName" placeholder="거래처 또는 업체명">
+                    </div>
+                    <div class="form-group">
+                        <label>요청 내용 *</label>
+                        <textarea id="paymentDescription" rows="3" required placeholder="결제 요청 내용을 입력하세요"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>금액 *</label>
+                        <input type="number" id="paymentAmount" required placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>예금주</label>
+                        <input type="text" id="accountHolder" placeholder="예금주명">
+                    </div>
+                    <div class="form-group">
+                        <label>은행</label>
+                        <select id="bankName">
+                            <option value="">선택</option>
+                            <option value="KB국민">KB국민</option>
+                            <option value="신한">신한</option>
+                            <option value="하나">하나</option>
+                            <option value="우리">우리</option>
+                            <option value="NH농협">NH농협</option>
+                            <option value="카카오뱅크">카카오뱅크</option>
+                            <option value="토스뱅크">토스뱅크</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>계좌번호</label>
+                        <input type="text" id="accountNumber" placeholder="계좌번호 (- 제외)">
+                    </div>
+                    <div class="form-group">
+                        <label>메모</label>
+                        <textarea id="paymentNotes" rows="2" placeholder="추가 메모"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('paymentModal')">취소</button>
+                <button class="btn btn-primary" onclick="savePaymentRequest()">요청</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- 메인 JavaScript -->
+    <script src="/js/app-minimal.js"></script>
+    <script src="/js/payment.js"></script>
+</body>
+</html>
