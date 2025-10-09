@@ -174,14 +174,22 @@ const initDatabase = () => {
     )
   `);
 
-  // 기본 관리자 계정 생성
-  const bcrypt = require('bcryptjs');
-  const adminPassword = bcrypt.hashSync('0109', 10);
+  // 기본 관리자 계정 생성 (테이블 생성 후 약간의 지연)
+  setTimeout(() => {
+    const bcrypt = require('bcryptjs');
+    const adminPassword = bcrypt.hashSync('0109', 10);
 
-  db.run(`
-    INSERT OR IGNORE INTO users (username, password, name, role, department)
-    VALUES ('hvlab', '${adminPassword}', '시스템 관리자', 'admin', '관리부')
-  `);
+    db.run(`
+      INSERT OR IGNORE INTO users (username, password, name, role, department)
+      VALUES ('hvlab', '${adminPassword}', '시스템 관리자', 'admin', '관리부')
+    `, (err) => {
+      if (err) {
+        console.error('관리자 계정 생성 오류:', err.message);
+      } else {
+        console.log('관리자 계정 생성 완료');
+      }
+    });
+  }, 1000);
 
   console.log('데이터베이스 테이블 초기화 완료');
 };
