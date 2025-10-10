@@ -77,9 +77,41 @@ app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/oauth', oauthRoutes);
 
+// 헬스체크 라우트
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', message: '서버가 정상 작동 중입니다.' });
+});
+
+// 디버깅용 경로 확인
+console.log('Current directory:', __dirname);
+console.log('Views directory:', path.join(__dirname, 'views'));
+
 // 메인 페이지 라우트 (미니멀 디자인 버전)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'index-minimal.html'));
+  const filePath = path.join(__dirname, 'views', 'index-minimal.html');
+  console.log('Attempting to serve file:', filePath);
+
+  // 파일 존재 확인
+  const fs = require('fs');
+  if (!fs.existsSync(filePath)) {
+    console.error('File does not exist:', filePath);
+    // 대체 경로 시도
+    const altPath = path.join(process.cwd(), 'views', 'index-minimal.html');
+    console.log('Trying alternative path:', altPath);
+    if (fs.existsSync(altPath)) {
+      return res.sendFile(altPath);
+    }
+    return res.status(404).send('파일을 찾을 수 없습니다.');
+  }
+
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('File send error:', err);
+      res.status(500).send('파일 전송 중 오류가 발생했습니다.');
+    } else {
+      console.log('File sent successfully');
+    }
+  });
 });
 
 // 404 처리
