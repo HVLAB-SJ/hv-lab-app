@@ -8,3 +8,6 @@ kakao-tokens.json
 dist/
 build/
 *.local
+.claude/
+hvlab-app-backup/
+interior-management-system/
