@@ -1,110 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HV LAB - 통합 업무 관리 시스템</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body>
-    <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full">
-            <div class="bg-white border border-gray-200 rounded-lg p-8">
-                <div class="text-center mb-8">
-                    <h2 class="text-3xl font-bold text-gray-900">HV LAB</h2>
-                    <p class="mt-2 text-sm text-gray-600">통합 업무 관리 시스템</p>
-                </div>
+  <head>
+    <meta charset="UTF-8" />
 
-                <form id="loginForm" class="space-y-6">
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700 mb-2">아이디</label>
-                        <input
-                            id="username"
-                            name="username"
-                            type="text"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="아이디를 입력하세요">
-                    </div>
+    <!-- Favicons (with cache busting) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=2" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=2" />
+    <link rel="apple-touch-icon" href="/icon-192.png?v=2" />
 
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="••••••••">
-                    </div>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json?v=2" />
 
-                    <button
-                        type="submit"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                            <polyline points="10 17 15 12 10 7"></polyline>
-                            <line x1="15" x2="3" y1="12" y2="12"></line>
-                        </svg>
-                        로그인
-                    </button>
-                </form>
+    <!-- Meta tags for PWA -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#1f2937" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HV_WORKS" />
+    <meta name="description" content="HV LAB 인테리어 관리 시스템 - 효율적인 프로젝트 관리 솔루션" />
+    <meta name="keywords" content="HV LAB, 인테리어, 관리 시스템, 프로젝트 관리" />
+    <meta name="author" content="HV LAB" />
 
-                <div class="mt-6 border-t pt-6">
-                    <p class="text-sm text-gray-600 text-center mb-4">빠른 로그인</p>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="상준">상준</button>
-                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="신애">신애</button>
-                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="재천">재천</button>
-                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="민기">민기</button>
-                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="재성">재성</button>
-                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="재현">재현</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hvlab.app/" />
+    <meta property="og:title" content="HV_WORKS - 인테리어 관리 시스템" />
+    <meta property="og:description" content="HV LAB 인테리어 관리 시스템 - 효율적인 프로젝트 관리 솔루션" />
 
-    <script>
-        // 빠른 로그인 버튼
-        document.querySelectorAll('.quick-login').forEach(button => {
-            button.addEventListener('click', function() {
-                const username = this.getAttribute('data-username');
-                document.getElementById('username').value = username;
-                document.getElementById('password').focus();
-            });
-        });
-
-        // 로그인 폼 제출
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/index-minimal.html';
-                } else {
-                    alert(data.message || '로그인에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('서버 연결에 실패했습니다.');
-            }
-        });
-    </script>
-</body>
+    <title>HV LAB - 인테리어 관리 시스템</title>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"
+      integrity="sha384-DKYJZ8NLiK8MN4/C5P2dtSmLQ4KwPaoqAfyA/DfmEc1VDxu4yyC7wy6K1Hs90nka"
+      crossorigin="anonymous"></script>
+    <script type="module" crossorigin src="/assets/index-Dq9xGWxv.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B4esKWjE.css">
+  <script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>
