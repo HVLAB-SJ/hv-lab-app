@@ -25,7 +25,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'views')));
 
 // Socket.IO 연결 처리
 io.on('connection', (socket) => {
@@ -83,7 +82,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: '서버가 정상 작동 중입니다.' });
 });
 
-// 메인 페이지는 정적 파일 (views/index.html)로 제공됨
+// 메인 페이지는 정적 파일 (public/index.html)로 제공됨
 
 // SPA fallback - HTML 요청은 index.html로, API 요청은 404 JSON으로
 app.use((req, res) => {
@@ -93,7 +92,7 @@ app.use((req, res) => {
   }
 
   // HTML 요청인 경우 index.html 반환 (SPA 라우팅)
-  res.sendFile(path.join(__dirname, 'views', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // 에러 처리 미들웨어
