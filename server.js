@@ -25,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'views')));
 
 // Socket.IO 연결 처리
 io.on('connection', (socket) => {
@@ -82,177 +83,17 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: '서버가 정상 작동 중입니다.' });
 });
 
-// 메인 페이지 라우트 - HTML을 직접 반환
-app.get('/', (req, res) => {
-  console.log('Main page requested');
+// 메인 페이지는 정적 파일 (views/index.html)로 제공됨
 
-  // 간단하게 HTML을 직접 반환하여 테스트
-  const html = `
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HV LAB 현장 관리 시스템</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-container {
-            background: white;
-            padding: 3rem;
-            border-radius: 1rem;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .logo h1 {
-            color: #667eea;
-            font-size: 2rem;
-            font-weight: 700;
-        }
-
-        .logo p {
-            color: #666;
-            margin-top: 0.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            color: #333;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 0.75rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .error-message {
-            color: #e53e3e;
-            text-align: center;
-            margin-top: 1rem;
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <div class="logo">
-            <h1>HV LAB</h1>
-            <p>현장 관리 시스템</p>
-        </div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">사용자명</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-
-            <div class="form-group">
-                <label for="password">비밀번호</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-
-            <button type="submit" class="btn">로그인</button>
-
-            <div id="errorMessage" class="error-message"></div>
-        </form>
-    </div>
-
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
-
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/dashboard.html';
-                } else {
-                    errorMessage.textContent = data.message || '로그인에 실패했습니다.';
-                    errorMessage.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                errorMessage.textContent = '서버 연결에 실패했습니다.';
-                errorMessage.style.display = 'block';
-            }
-        });
-    </script>
-</body>
-</html>
-  `;
-
-  res.type('html').send(html);
-});
-
-// 404 처리
+// SPA fallback - HTML 요청은 index.html로, API 요청은 404 JSON으로
 app.use((req, res) => {
-  res.status(404).json({ error: '페이지를 찾을 수 없습니다.' });
+  // API 요청인 경우 JSON 에러 반환
+  if (req.path.startsWith('/api/') || req.path.startsWith('/oauth/')) {
+    return res.status(404).json({ error: '페이지를 찾을 수 없습니다.' });
+  }
+
+  // HTML 요청인 경우 index.html 반환 (SPA 라우팅)
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
 
 // 에러 처리 미들웨어
