@@ -2,80 +2,109 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-
-    <!-- Favicons (with cache busting) -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=2">
-    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=2">
-    <link rel="apple-touch-icon" href="/icon-192.png?v=2">
-
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json?v=2">
-
-    <!-- Meta tags for PWA -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1f2937">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="HV_WORKS">
-    <meta name="description" content="HV LAB 인테리어 관리 시스템 - 효율적인 프로젝트 관리 솔루션">
-    <meta name="keywords" content="HV LAB, 인테리어, 관리 시스템, 프로젝트 관리">
-    <meta name="author" content="HV LAB">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://hvlab.app/">
-    <meta property="og:title" content="HV_WORKS - 인테리어 관리 시스템">
-    <meta property="og:description" content="HV LAB 인테리어 관리 시스템 - 효율적인 프로젝트 관리 솔루션">
-
-    <title>HV LAB - 인테리어 관리 시스템</title>
-    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" integrity="sha384-DKYJZ8NLiK8MN4/C5P2dtSmLQ4KwPaoqAfyA/DfmEc1VDxu4yyC7wy6K1Hs90nka" crossorigin="anonymous"></script>
-    <script type="module" crossorigin="" src="/assets/index-CqnzTDzr.js"></script>
-    <link rel="stylesheet" crossorigin="" href="/assets/index-B4esKWjE.css">
-    <script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script>
-    <style id="_goober"> @keyframes go2264125279{from{transform:scale(0) rotate(45deg);opacity:0;}to{transform:scale(1) rotate(45deg);opacity:1;}}@keyframes go3020080000{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}@keyframes go463499852{from{transform:scale(0) rotate(90deg);opacity:0;}to{transform:scale(1) rotate(90deg);opacity:1;}}@keyframes go1268368563{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}@keyframes go1310225428{from{transform:scale(0) rotate(45deg);opacity:0;}to{transform:scale(1) rotate(45deg);opacity:1;}}@keyframes go651618207{0%{height:0;width:0;opacity:0;}40%{height:0;width:6px;opacity:1;}100%{opacity:1;height:10px;}}@keyframes go901347462{from{transform:scale(0.6);opacity:0.4;}to{transform:scale(1);opacity:1;}}.go4109123758{z-index:9999;}.go4109123758 > *{pointer-events:auto;}.go2072408551{display:flex;align-items:center;background:#fff;color:#363636;line-height:1.3;will-change:transform;box-shadow:0 3px 10px rgba(0, 0, 0, 0.1), 0 3px 3px rgba(0, 0, 0, 0.05);max-width:350px;pointer-events:auto;padding:8px 10px;border-radius:8px;}.go685806154{position:relative;display:flex;justify-content:center;align-items:center;min-width:20px;min-height:20px;}.go1858758034{width:12px;height:12px;box-sizing:border-box;border:2px solid;border-radius:100%;border-color:#e0e0e0;border-right-color:#616161;animation:go1268368563 1s linear infinite;}.go1579819456{position:absolute;}.go2344853693{width:20px;opacity:0;height:20px;border-radius:10px;background:#61d345;position:relative;transform:rotate(45deg);animation:go1310225428 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;animation-delay:100ms;}.go2344853693:after{content:'';box-sizing:border-box;animation:go651618207 0.2s ease-out forwards;opacity:0;animation-delay:200ms;position:absolute;border-right:2px solid;border-bottom:2px solid;border-color:#fff;bottom:6px;left:6px;height:10px;width:6px;}.go3958317564{display:flex;justify-content:center;margin:4px 10px;color:inherit;flex:1 1 auto;white-space:pre-line;}@keyframes go3223188581{0%{transform:translate3d(0,-200%,0) scale(.6);opacity:.5;}100%{transform:translate3d(0,0,0) scale(1);opacity:1;}}@keyframes go502128938{0%{transform:translate3d(0,0,-1px) scale(1);opacity:1;}100%{transform:translate3d(0,-150%,-1px) scale(.6);opacity:0;}}</style>
+    <title>HV LAB - 통합 업무 관리 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <div id="root">
-        <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-md w-full">
-                <div class="bg-white border border-gray-200 rounded-lg p-8">
-                    <div class="text-center mb-8">
-                        <h2 class="text-3xl font-bold text-gray-900">HV LAB</h2>
-                        <p class="mt-2 text-sm text-gray-600">통합 업무 관리 시스템</p>
+    <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full">
+            <div class="bg-white border border-gray-200 rounded-lg p-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900">HV LAB</h2>
+                    <p class="mt-2 text-sm text-gray-600">통합 업무 관리 시스템</p>
+                </div>
+
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-2">아이디</label>
+                        <input
+                            id="username"
+                            name="username"
+                            type="text"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="아이디를 입력하세요">
                     </div>
-                    <form class="space-y-6">
-                        <div>
-                            <label for="username" class="block text-sm font-medium text-gray-700 mb-2">아이디</label>
-                            <input name="username" type="text" class="input" placeholder="아이디를 입력하세요">
-                        </div>
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
-                            <input name="password" type="password" class="input" placeholder="••••••••">
-                        </div>
-                        <button type="submit" class="w-full btn btn-primary flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in mr-2 h-5 w-5">
-                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                                <polyline points="10 17 15 12 10 7"></polyline>
-                                <line x1="15" x2="3" y1="12" y2="12"></line>
-                            </svg>
-                            로그인
-                        </button>
-                    </form>
-                    <div class="mt-6 border-t pt-6">
-                        <p class="text-sm text-gray-600 text-center mb-4">빠른 로그인</p>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button">상준</button>
-                            <button class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button">신애</button>
-                            <button class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button">재천</button>
-                            <button class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button">민기</button>
-                            <button class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button">재성</button>
-                            <button class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button">재현</button>
-                        </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="••••••••">
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                            <polyline points="10 17 15 12 10 7"></polyline>
+                            <line x1="15" x2="3" y1="12" y2="12"></line>
+                        </svg>
+                        로그인
+                    </button>
+                </form>
+
+                <div class="mt-6 border-t pt-6">
+                    <p class="text-sm text-gray-600 text-center mb-4">빠른 로그인</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="상준">상준</button>
+                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="신애">신애</button>
+                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="재천">재천</button>
+                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="민기">민기</button>
+                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="재성">재성</button>
+                        <button class="quick-login px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" type="button" data-username="재현">재현</button>
                     </div>
                 </div>
             </div>
         </div>
-        <div data-rht-toaster="" style="position: fixed; z-index: 9999; inset: 16px; pointer-events: none;"></div>
     </div>
+
+    <script>
+        // 빠른 로그인 버튼
+        document.querySelectorAll('.quick-login').forEach(button => {
+            button.addEventListener('click', function() {
+                const username = this.getAttribute('data-username');
+                document.getElementById('username').value = username;
+                document.getElementById('password').focus();
+            });
+        });
+
+        // 로그인 폼 제출
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = '/dashboard.html';
+                } else {
+                    alert(data.message || '로그인에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('서버 연결에 실패했습니다.');
+            }
+        });
+    </script>
 </body>
 </html>
