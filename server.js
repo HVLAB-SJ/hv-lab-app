@@ -25,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'views')));
 
 // Socket.IO 연결 처리
 io.on('connection', (socket) => {

@@ -96,7 +96,7 @@
                 if (response.ok) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/index-minimal.html';
                 } else {
                     alert(data.message || '로그인에 실패했습니다.');
                 }
