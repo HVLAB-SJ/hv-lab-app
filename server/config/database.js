@@ -174,6 +174,92 @@ const initDatabase = () => {
     )
   `);
 
+  // 기본
+
+  // AS 요청 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS as_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER,
+      client_name TEXT NOT NULL,
+      client_phone TEXT,
+      description TEXT NOT NULL,
+      scheduled_date DATE,
+      status TEXT DEFAULT 'pending',
+      created_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `);
+
+  // 업무 요청 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS work_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      priority TEXT DEFAULT 'normal',
+      status TEXT DEFAULT 'pending',
+      assigned_to INTEGER,
+      due_date DATE,
+      created_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (assigned_to) REFERENCES users(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `);
+
+  // 추가내역 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS additional_works (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      description TEXT NOT NULL,
+      amount INTEGER NOT NULL,
+      work_date DATE,
+      created_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `);
+
+  // 공사대금 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS construction_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      amount INTEGER NOT NULL,
+      payment_date DATE,
+      payment_method TEXT,
+      notes TEXT,
+      created_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `);
+
+  // 협력업체 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS contractors (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      contact_person TEXT,
+      phone TEXT,
+      email TEXT,
+      specialty TEXT,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // 기본 관리자 계정 생성 (테이블 생성 후 약간의 지연)
   setTimeout(() => {
     const bcrypt = require('bcryptjs');

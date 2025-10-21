@@ -69,6 +69,11 @@ const scheduleRoutes = require('./server/routes/schedules');
 const userRoutes = require('./server/routes/users');
 const paymentRoutes = require('./server/routes/payments');
 const oauthRoutes = require('./server/routes/oauth');
+const asRequestsRoutes = require('./server/routes/asrequests');
+const workRequestsRoutes = require('./server/routes/workrequests');
+const additionalWorksRoutes = require('./server/routes/additionalworks');
+const constructionPaymentsRoutes = require('./server/routes/constructionpayments');
+const contractorsRoutes = require('./server/routes/contractors');
 
 // API 라우트 설정
 app.use('/api/auth', authRoutes);
@@ -77,6 +82,11 @@ app.use('/api/schedules', scheduleRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/oauth', oauthRoutes);
+app.use('/api/as-requests', asRequestsRoutes);
+app.use('/api/workrequests', workRequestsRoutes);
+app.use('/api/additional-works', additionalWorksRoutes);
+app.use('/api/construction-payments', constructionPaymentsRoutes);
+app.use('/api/contractors', contractorsRoutes);
 
 // 헬스체크 라우트
 app.get('/health', (req, res) => {
