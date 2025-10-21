@@ -29,7 +29,7 @@ router.post('/login', (req, res) => {
         {
           id: user.id,
           username: user.username,
-          role: user.role
+          role: user.username  // Use username for display
         },
         process.env.JWT_SECRET,
         { expiresIn: process.env.SESSION_EXPIRE || '24h' }
@@ -40,7 +40,7 @@ router.post('/login', (req, res) => {
         user: {
           id: user.id,
           username: user.username,
-          role: user.role,
+          role: user.username,  // Display username instead of role
           department: user.department
         }
       });
