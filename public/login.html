@@ -3,109 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HV_WORKS 로그인</title>
+    <title>HV LAB - 로그인</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', 'Pretendard', system-ui, sans-serif; }
+        .btn { min-height: 44px; transition: all 0.2s; }
+        .input { min-height: 44px; }
+    </style>
 </head>
-<body class="bg-gray-900 min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-md">
-        <div class="bg-gray-800 rounded-lg shadow-xl p-8">
-            <h1 class="text-3xl font-bold text-white text-center mb-2">HV_WORKS</h1>
-            <p class="text-gray-400 text-center mb-8">통합 업무 관리 시스템</p>
-            
-            <div class="mb-6">
-                <h2 class="text-white text-lg font-semibold mb-4">빠른 로그인</h2>
-                <div class="grid grid-cols-3 gap-3">
-                    <button onclick="quickLogin('상준')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition">상준</button>
-                    <button onclick="quickLogin('신애')" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded transition">신애</button>
-                    <button onclick="quickLogin('재천')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded transition">재천</button>
-                    <button onclick="quickLogin('민기')" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded transition">민기</button>
-                    <button onclick="quickLogin('재성')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded transition">재성</button>
-                    <button onclick="quickLogin('재현')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded transition">재현</button>
+<body class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div class="max-w-md w-full">
+        <div class="bg-white border border-gray-200 rounded-lg p-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900">HV LAB</h2>
+                <p class="mt-2 text-sm text-gray-600">통합 업무 관리 시스템</p>
+            </div>
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">아이디</label>
+                    <input type="text" id="username" class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-gray-500 focus:outline-none focus:ring-0 transition-colors input" placeholder="아이디를 입력하세요" autofocus>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
+                    <input type="password" id="password" class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-gray-500 focus:outline-none focus:ring-0 transition-colors input" placeholder="••••••••">
+                </div>
+                <button type="submit" class="w-full px-6 py-3 bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-950 rounded-lg font-medium transition-all duration-200 btn flex items-center justify-center">
+                    <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                    로그인
+                </button>
+            </form>
+            <div class="mt-6 border-t border-gray-200 pt-6">
+                <p class="text-sm text-gray-600 text-center mb-4">빠른 로그인</p>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="handleQuickLogin('상준')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors btn">상준</button>
+                    <button onclick="handleQuickLogin('신애')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors btn">신애</button>
+                    <button onclick="handleQuickLogin('재천')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors btn">재천</button>
+                    <button onclick="handleQuickLogin('민기')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors btn">민기</button>
+                    <button onclick="handleQuickLogin('재성')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors btn">재성</button>
+                    <button onclick="handleQuickLogin('재현')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors btn">재현</button>
                 </div>
             </div>
-
-            <div class="border-t border-gray-700 pt-6">
-                <h2 class="text-white text-lg font-semibold mb-4">일반 로그인</h2>
-                <form id="loginForm" class="space-y-4">
-                    <div>
-                        <label class="block text-gray-400 text-sm mb-2">아이디</label>
-                        <input type="text" id="username" class="w-full px-4 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none" placeholder="아이디 입력">
-                    </div>
-                    <div>
-                        <label class="block text-gray-400 text-sm mb-2">비밀번호</label>
-                        <input type="password" id="password" class="w-full px-4 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none" placeholder="비밀번호 입력">
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition">로그인</button>
-                </form>
-            </div>
-
             <div id="message" class="mt-4 text-center text-sm"></div>
         </div>
     </div>
-
     <script>
         const API_URL = '/api';
-
-        async function quickLogin(username) {
-            await login(username, '0109');
+        function handleQuickLogin(username) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = '0109';
+            login(username, '0109');
         }
-
         async function login(username, password) {
+            const btn = document.querySelector('button[type=submit]');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>';
             try {
-                const response = await fetch(API_URL + '/auth/login', {
+                const res = await fetch(API_URL + '/auth/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username: username, password: password })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
                 });
-
-                const data = await response.json();
-
-                if (response.ok) {
+                const data = await res.json();
+                if (res.ok) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    showMessage('로그인 성공! 이동 중...', 'success');
-                    setTimeout(function() {
-                        window.location.href = '/';
-                    }, 500);
+                    showMessage('로그인 성공!', 'success');
+                    setTimeout(() => window.location.href = '/', 300);
                 } else {
                     showMessage(data.error || '로그인 실패', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>로그인';
                 }
             } catch (error) {
-                showMessage('서버 오류가 발생했습니다.', 'error');
-                console.error('Login error:', error);
+                showMessage('서버 오류', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>로그인';
             }
         }
-
-        function showMessage(msg, msgType) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = msg;
-            if (msgType === 'success') {
-                messageDiv.className = 'mt-4 text-center text-sm text-green-400';
-            } else {
-                messageDiv.className = 'mt-4 text-center text-sm text-red-400';
-            }
+        function showMessage(msg, type) {
+            const div = document.getElementById('message');
+            div.textContent = msg;
+            div.className = 'mt-4 text-center text-sm ' + (type === 'success' ? 'text-green-600' : 'text-red-600');
         }
-
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (!username || !password) {
-                showMessage('아이디와 비밀번호를 입력해주세요.', 'error');
-                return;
-            }
-            
-            await login(username, password);
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            if (!u || !p) { showMessage('아이디와 비밀번호를 입력하세요', 'error'); return; }
+            await login(u, p);
         });
-
-        window.addEventListener('load', function() {
-            const token = localStorage.getItem('token');
-            if (token) {
-                window.location.href = '/';
-            }
+        window.addEventListener('load', () => {
+            if (localStorage.getItem('token')) window.location.href = '/';
         });
     </script>
 </body>
