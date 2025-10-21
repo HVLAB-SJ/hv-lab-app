@@ -88,6 +88,12 @@ app.use('/api/additional-works', additionalWorksRoutes);
 app.use('/api/construction-payments', constructionPaymentsRoutes);
 app.use('/api/contractors', contractorsRoutes);
 
+
+// 로그인 페이지 라우트
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
 // 헬스체크 라우트
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: '서버가 정상 작동 중입니다.' });
