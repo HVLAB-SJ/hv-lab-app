@@ -29,8 +29,7 @@ router.post('/login', (req, res) => {
         {
           id: user.id,
           username: user.username,
-          role: user.role,
-          name: user.name
+          role: user.role
         },
         process.env.JWT_SECRET,
         { expiresIn: process.env.SESSION_EXPIRE || '24h' }
@@ -41,7 +40,6 @@ router.post('/login', (req, res) => {
         user: {
           id: user.id,
           username: user.username,
-          name: user.name,
           role: user.role,
           department: user.department
         }
@@ -64,6 +62,48 @@ router.get('/verify', (req, res) => {
       return res.status(403).json({ valid: false });
     }
     res.json({ valid: true, user });
+  });
+});
+
+// 현재 로그인 사용자 정보 조회
+router.get('/me', (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'No token provided' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ success: false, message: 'Invalid token' });
+    }
+
+    db.get(
+      'SELECT id, username, role, department, phone, email FROM users WHERE id = ?',
+      [decoded.id],
+      (err, user) => {
+        if (err) {
+          return res.status(500).json({ success: false, message: 'Database error' });
+        }
+
+        if (!user) {
+          return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        res.json({
+          success: true,
+          user: {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            department: user.department,
+            phone: user.phone,
+            email: user.email
+          }
+        });
+      }
+    );
   });
 });
 

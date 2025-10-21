@@ -9,9 +9,9 @@ router.get('/', authenticateToken, (req, res) => {
   const { status, project_id, user_id } = req.query;
   let query = `
     SELECT pr.*,
-           u.name as requester_name,
+           u.username as requester_name,
            p.name as project_name,
-           a.name as approver_name
+           a.username as approver_name
     FROM payment_requests pr
     LEFT JOIN users u ON pr.user_id = u.id
     LEFT JOIN projects p ON pr.project_id = p.id
@@ -49,9 +49,9 @@ router.get('/:id', authenticateToken, (req, res) => {
 
   db.get(
     `SELECT pr.*,
-            u.name as requester_name,
+            u.username as requester_name,
             p.name as project_name,
-            a.name as approver_name
+            a.username as approver_name
      FROM payment_requests pr
      LEFT JOIN users u ON pr.user_id = u.id
      LEFT JOIN projects p ON pr.project_id = p.id
@@ -109,7 +109,7 @@ router.post('/', authenticateToken, (req, res) => {
       // 알림 전송 (관리자에게)
       sendPaymentNotification({
         id: this.lastID,
-        requester: req.user.name,
+        requester: req.user.username,
         amount: amount,
         description: description,
         project_id: project_id,
@@ -334,7 +334,7 @@ async function notifyApproval(requestId, status) {
     // 결제 요청 정보 조회
     const request = await new Promise((resolve, reject) => {
       db.get(
-        `SELECT pr.*, u.name as requester_name, a.name as approver_name
+        `SELECT pr.*, u.username as requester_name, a.username as approver_name
          FROM payment_requests pr
          LEFT JOIN users u ON pr.user_id = u.id
          LEFT JOIN users a ON pr.approved_by = a.id
@@ -379,7 +379,7 @@ async function notifyCompletion(requestId) {
     // 결제 요청 정보 조회
     const request = await new Promise((resolve, reject) => {
       db.get(
-        `SELECT pr.*, u.name as requester_name
+        `SELECT pr.*, u.username as requester_name
          FROM payment_requests pr
          LEFT JOIN users u ON pr.user_id = u.id
          WHERE pr.id = ?`,

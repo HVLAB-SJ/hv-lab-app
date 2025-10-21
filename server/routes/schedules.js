@@ -7,7 +7,7 @@ const { authenticateToken } = require('../middleware/auth');
 router.get('/', authenticateToken, (req, res) => {
   const { project_id, start_date, end_date, status } = req.query;
   let query = `
-    SELECT s.*, p.name as project_name, p.color as project_color, u.name as creator_name
+    SELECT s.*, p.name as project_name, p.color as project_color, u.username as creator_name
     FROM schedules s
     LEFT JOIN projects p ON s.project_id = p.id
     LEFT JOIN users u ON s.created_by = u.id
@@ -47,7 +47,7 @@ router.get('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
   db.get(
-    `SELECT s.*, p.name as project_name, u.name as creator_name
+    `SELECT s.*, p.name as project_name, u.username as creator_name
      FROM schedules s
      LEFT JOIN projects p ON s.project_id = p.id
      LEFT JOIN users u ON s.created_by = u.id
@@ -63,7 +63,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 
       // 담당자 목록 조회
       db.all(
-        `SELECT u.id, u.name, u.department
+        `SELECT u.id, u.username, u.department
          FROM schedule_assignees sa
          JOIN users u ON sa.user_id = u.id
          WHERE sa.schedule_id = ?`,
@@ -276,7 +276,7 @@ router.get('/:id/comments', authenticateToken, (req, res) => {
   const { id } = req.params;
 
   db.all(
-    `SELECT c.*, u.name as user_name
+    `SELECT c.*, u.username as user_name
      FROM comments c
      JOIN users u ON c.user_id = u.id
      WHERE c.schedule_id = ?

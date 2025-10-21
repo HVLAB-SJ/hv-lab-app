@@ -6,7 +6,7 @@ const { authenticateToken, isManager } = require('../middleware/auth');
 // 모든 프로젝트 조회
 router.get('/', authenticateToken, (req, res) => {
   db.all(
-    `SELECT p.*, u.name as manager_name
+    `SELECT p.*, u.username as manager_name
      FROM projects p
      LEFT JOIN users u ON p.manager_id = u.id
      ORDER BY p.created_at DESC`,
@@ -25,7 +25,7 @@ router.get('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
   db.get(
-    `SELECT p.*, u.name as manager_name
+    `SELECT p.*, u.username as manager_name
      FROM projects p
      LEFT JOIN users u ON p.manager_id = u.id
      WHERE p.id = ?`,
