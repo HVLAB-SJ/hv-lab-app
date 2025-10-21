@@ -260,20 +260,32 @@ const initDatabase = () => {
     )
   `);
 
-  // 기본 관리자 계정 생성 (테이블 생성 후 약간의 지연)
+  // 기본 계정 생성 (테이블 생성 후 약간의 지연)
   setTimeout(() => {
     const bcrypt = require('bcryptjs');
-    const adminPassword = bcrypt.hashSync('0109', 10);
+    const password = bcrypt.hashSync('0109', 10);
 
-    db.run(`
-      INSERT OR IGNORE INTO users (username, password, name, role, department)
-      VALUES ('hvlab', '${adminPassword}', '시스템 관리자', 'admin', '관리부')
-    `, (err) => {
-      if (err) {
-        console.error('관리자 계정 생성 오류:', err.message);
-      } else {
-        console.log('관리자 계정 생성 완료');
-      }
+    const users = [
+      ['상준', password, '김상준', 'manager', '관리부'],
+      ['신애', password, '이신애', 'manager', '관리부'],
+      ['재천', password, '정재천', 'worker', '시공부'],
+      ['민기', password, '김민기', 'worker', '시공부'],
+      ['재성', password, '박재성', 'worker', '시공부'],
+      ['재현', password, '박재현', 'worker', '시공부']
+    ];
+
+    users.forEach(([username, pwd, name, role, dept]) => {
+      db.run(
+        'INSERT OR IGNORE INTO users (username, password, name, role, department) VALUES (?, ?, ?, ?, ?)',
+        [username, pwd, name, role, dept],
+        (err) => {
+          if (err) {
+            console.error(`사용자 ${username} 생성 오류:`, err.message);
+          } else {
+            console.log(`사용자 ${username} 생성 완료`);
+          }
+        }
+      );
     });
   }, 1000);
 
