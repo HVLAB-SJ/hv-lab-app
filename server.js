@@ -91,6 +91,9 @@ app.use('/api/contractors', contractorsRoutes);
 
 // 로그인 페이지 라우트
 app.get('/login', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
