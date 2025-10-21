@@ -112,7 +112,7 @@ app.use((req, res) => {
   }
 
   // HTML 요청인 경우 views/index.html 반환 (원래 달력 시스템)
-  res.sendFile(path.join(__dirname, 'views', 'index-minimal.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // 에러 처리 미들웨어
