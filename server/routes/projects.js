@@ -95,35 +95,38 @@ router.post('/', authenticateToken, isManager, (req, res) => {
 // 프로젝트 수정
 router.put('/:id', authenticateToken, isManager, (req, res) => {
   const { id } = req.params;
-  const {
-    name,
-    client,
-    address,
-    start_date,
-    end_date,
-    status,
-    color,
-    manager_id,
-    description
-  } = req.body;
 
-  db.run(
-    `UPDATE projects
-     SET name = ?, client = ?, address = ?, start_date = ?, end_date = ?,
-         status = ?, color = ?, manager_id = ?, description = ?, updated_at = CURRENT_TIMESTAMP
-     WHERE id = ?`,
-    [name, client, address, start_date || null, end_date || null, status, color, manager_id, description, id],
-    function(err) {
-      if (err) {
-        console.error('프로젝트 수정 오류:', err);
-        return res.status(500).json({ error: '프로젝트 수정 실패' });
-      }
-      if (this.changes === 0) {
-        return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
-      }
-      res.json({ message: '프로젝트가 수정되었습니다.' });
+  // Build dynamic UPDATE query for only provided fields
+  const allowedFields = ['name', 'client', 'address', 'start_date', 'end_date', 'status', 'color', 'manager_id', 'description'];
+  const updates = [];
+  const values = [];
+
+  allowedFields.forEach(field => {
+    if (req.body[field] !== undefined) {
+      updates.push(`${field} = ?`);
+      values.push(req.body[field] === '' ? null : req.body[field]);
     }
-  );
+  });
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: '수정할 필드가 없습니다.' });
+  }
+
+  updates.push('updated_at = CURRENT_TIMESTAMP');
+  values.push(id);
+
+  const query = `UPDATE projects SET ${updates.join(', ')} WHERE id = ?`;
+
+  db.run(query, values, function(err) {
+    if (err) {
+      console.error('프로젝트 수정 오류:', err);
+      return res.status(500).json({ error: '프로젝트 수정 실패' });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
+    }
+    res.json({ message: '프로젝트가 수정되었습니다.' });
+  });
 });
 
 // 프로젝트 삭제
