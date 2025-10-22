@@ -111,8 +111,8 @@ app.use((req, res) => {
     return res.status(404).json({ error: '페이지를 찾을 수 없습니다.' });
   }
 
-  // HTML 요청인 경우 views/index.html 반환 (원래 달력 시스템)
-  res.sendFile(path.join(__dirname, 'views', 'index-minimal.html'));
+  // HTML 요청인 경우 React app (public/index.html) 반환
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // 에러 처리 미들웨어
