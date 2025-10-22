@@ -3,21 +3,28 @@ const router = express.Router();
 const { db } = require('../config/database');
 const { authenticateToken, isManager } = require('../middleware/auth');
 
-// 모든 프로젝트 조회
+// 모든 프로젝트 조회 (status 필터링 지원)
 router.get('/', authenticateToken, (req, res) => {
-  db.all(
-    `SELECT p.*, u.username as manager_name
-     FROM projects p
-     LEFT JOIN users u ON p.manager_id = u.id
-     ORDER BY p.created_at DESC`,
-    [],
-    (err, projects) => {
-      if (err) {
-        return res.status(500).json({ error: '프로젝트 조회 실패' });
-      }
-      res.json(projects);
+  const { status } = req.query;
+
+  let query = `SELECT p.*, u.username as manager_name
+               FROM projects p
+               LEFT JOIN users u ON p.manager_id = u.id`;
+  let params = [];
+
+  if (status) {
+    query += ` WHERE p.status = ?`;
+    params.push(status);
+  }
+
+  query += ` ORDER BY p.created_at DESC`;
+
+  db.all(query, params, (err, projects) => {
+    if (err) {
+      return res.status(500).json({ error: '프로젝트 조회 실패' });
     }
-  );
+    res.json(projects);
+  });
 });
 
 // 특정 프로젝트 조회
