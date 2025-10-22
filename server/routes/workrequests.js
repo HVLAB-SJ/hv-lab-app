@@ -35,15 +35,46 @@ router.get('/', authenticateToken, (req, res) => {
 
 router.post('/', authenticateToken, (req, res) => {
   const { title, description, priority, assigned_to, due_date } = req.body;
-  
+
   db.run(
     'INSERT INTO work_requests (title, description, priority, assigned_to, due_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [title, description, priority || 'normal', assigned_to, due_date, 'pending', req.user.id],
     function(err) {
       if (err) {
+        console.error('[POST /api/workrequests] Database error:', err);
         return res.status(500).json({ error: '업무 요청 생성 실패' });
       }
-      res.status(201).json({ id: this.lastID, message: '업무 요청이 생성되었습니다.' });
+
+      // Fetch the created work request to return full data
+      db.get(
+        'SELECT * FROM work_requests WHERE id = ?',
+        [this.lastID],
+        (err, row) => {
+          if (err) {
+            console.error('[POST /api/workrequests] Failed to fetch created request:', err);
+            return res.status(500).json({ error: '생성된 업무 요청 조회 실패' });
+          }
+
+          // Convert to MongoDB-compatible format for frontend
+          const workRequest = {
+            _id: row.id.toString(),
+            project: '',  // work_requests table doesn't have project field
+            requestType: row.title,
+            description: row.description,
+            requestDate: row.created_at,
+            dueDate: row.due_date,
+            requestedBy: req.user.username || req.user.name,
+            assignedTo: row.assigned_to,
+            status: row.status,
+            priority: row.priority,
+            notes: '',
+            createdAt: row.created_at,
+            updatedAt: row.updated_at
+          };
+
+          res.status(201).json(workRequest);
+        }
+      );
     }
   );
 });
