@@ -1,7 +1,17 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-const dbPath = path.join(__dirname, '../../database.db');
+// Use environment variable for DB path, fallback to local path
+// For Railway, set DATABASE_PATH=/app/data/database.db and mount volume at /app/data
+const dbDir = process.env.DATABASE_PATH ? path.dirname(process.env.DATABASE_PATH) : path.join(__dirname, '../..');
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '../../database.db');
+
+// Ensure database directory exists
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+  console.log(`✅ Created database directory: ${dbDir}`);
+}
 
 // 데이터베이스 연결
 const db = new sqlite3.Database(dbPath, (err) => {
