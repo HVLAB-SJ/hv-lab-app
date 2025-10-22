@@ -330,6 +330,45 @@ const initDatabase = () => {
     });
 
     console.log('데이터베이스 초기 사용자 생성 완료');
+
+    // 협력업체 시드 데이터 삽입
+    try {
+      const contractorsSeed = require('../data/contractors-seed');
+
+      // Check if contractors already exist
+      db.get('SELECT COUNT(*) as count FROM contractors', [], (err, row) => {
+        if (err) {
+          console.error('협력업체 확인 오류:', err);
+          return;
+        }
+
+        if (row.count === 0) {
+          console.log('협력업체 시드 데이터 삽입 시작...');
+          let insertedCount = 0;
+
+          contractorsSeed.forEach((contractor) => {
+            db.run(
+              'INSERT INTO contractors (name, contact_person, phone, specialty, notes) VALUES (?, ?, ?, ?, ?)',
+              [contractor.name, contractor.contact_person, contractor.phone, contractor.specialty, contractor.notes],
+              (err) => {
+                if (err) {
+                  console.error(`협력업체 ${contractor.name} 생성 오류:`, err.message);
+                } else {
+                  insertedCount++;
+                  if (insertedCount % 20 === 0 || insertedCount === contractorsSeed.length) {
+                    console.log(`협력업체 ${insertedCount}/${contractorsSeed.length}개 생성 완료`);
+                  }
+                }
+              }
+            );
+          });
+        } else {
+          console.log(`데이터베이스에 이미 ${row.count}개의 협력업체가 있습니다.`);
+        }
+      });
+    } catch (err) {
+      console.log('협력업체 시드 데이터 파일을 찾을 수 없습니다. 건너뜁니다.');
+    }
   });
 
   console.log('데이터베이스 테이블 초기화 완료');
