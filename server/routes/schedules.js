@@ -35,13 +35,53 @@ router.get('/', authenticateToken, (req, res) => {
 
   query += ' ORDER BY s.start_date ASC';
 
-  db.all(query, params, (err, schedules) => {
+  db.all(query, params, async (err, schedules) => {
     if (err) {
       return res.status(500).json({ error: '일정 조회 실패' });
     }
-    // Convert SQLite dates to ISO 8601
-    const sanitized = sanitizeDatesArray(schedules, ['start_date', 'end_date', 'created_at', 'updated_at']);
-    res.json(sanitized);
+
+    // Convert SQLite format to MongoDB-compatible format for frontend
+    const convertedSchedules = await Promise.all(schedules.map(async (schedule) => {
+      // Get assignees for this schedule
+      const assignees = await new Promise((resolve) => {
+        db.all(
+          `SELECT u.id, u.username, u.name FROM schedule_assignees sa
+           JOIN users u ON sa.user_id = u.id
+           WHERE sa.schedule_id = ?`,
+          [schedule.id],
+          (err, users) => {
+            if (err) resolve([]);
+            else resolve(users || []);
+          }
+        );
+      });
+
+      return {
+        _id: schedule.id.toString(),
+        title: schedule.title,
+        description: schedule.description || '',
+        startDate: schedule.start_date,
+        endDate: schedule.end_date,
+        type: schedule.type || 'construction',
+        status: schedule.status || 'pending',
+        priority: schedule.priority || 'normal',
+        project: schedule.project_id ? {
+          _id: schedule.project_id.toString(),
+          name: schedule.project_name || '',
+          color: schedule.project_color || ''
+        } : schedule.project_name,
+        assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
+        assigneeNames: assignees.map(u => u.name || u.username),
+        createdBy: schedule.created_by ? {
+          _id: schedule.created_by.toString(),
+          username: schedule.creator_name || ''
+        } : null,
+        createdAt: schedule.created_at,
+        updatedAt: schedule.updated_at
+      };
+    }));
+
+    res.json(convertedSchedules);
   });
 });
 
@@ -167,7 +207,7 @@ router.post('/', authenticateToken, (req, res) => {
         });
       }
 
-      // Fetch the created schedule with full data
+      // Fetch the created schedule with full data and convert to MongoDB format
       db.get(
         `SELECT s.*, p.name as project_name, p.color as project_color, u.username as creator_name
          FROM schedules s
@@ -175,15 +215,53 @@ router.post('/', authenticateToken, (req, res) => {
          LEFT JOIN users u ON s.created_by = u.id
          WHERE s.id = ?`,
         [scheduleId],
-        (err, schedule) => {
+        async (err, schedule) => {
           if (err) {
             console.error('[POST /api/schedules] Failed to fetch created schedule:', err);
             return res.status(500).json({ error: '일정 조회 실패' });
           }
 
-          console.log('[POST /api/schedules] Created schedule:', schedule);
-          const sanitized = sanitizeDates(schedule, ['start_date', 'end_date', 'created_at', 'updated_at']);
-          res.status(201).json(sanitized);
+          // Get assignees
+          const assignees = await new Promise((resolve) => {
+            db.all(
+              `SELECT u.id, u.username, u.name FROM schedule_assignees sa
+               JOIN users u ON sa.user_id = u.id
+               WHERE sa.schedule_id = ?`,
+              [scheduleId],
+              (err, users) => {
+                if (err) resolve([]);
+                else resolve(users || []);
+              }
+            );
+          });
+
+          // Convert to MongoDB format for frontend
+          const convertedSchedule = {
+            _id: schedule.id.toString(),
+            title: schedule.title,
+            description: schedule.description || '',
+            startDate: schedule.start_date,
+            endDate: schedule.end_date,
+            type: schedule.type || 'construction',
+            status: schedule.status || 'pending',
+            priority: schedule.priority || 'normal',
+            project: schedule.project_id ? {
+              _id: schedule.project_id.toString(),
+              name: schedule.project_name || '',
+              color: schedule.project_color || ''
+            } : schedule.project_name,
+            assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
+            assigneeNames: assignees.map(u => u.name || u.username),
+            createdBy: schedule.created_by ? {
+              _id: schedule.created_by.toString(),
+              username: schedule.creator_name || ''
+            } : null,
+            createdAt: schedule.created_at,
+            updatedAt: schedule.updated_at
+          };
+
+          console.log('[POST /api/schedules] Created schedule:', convertedSchedule);
+          res.status(201).json(convertedSchedule);
         }
       );
     }
