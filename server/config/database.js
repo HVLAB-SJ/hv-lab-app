@@ -69,6 +69,42 @@ const initDatabase = () => {
     }
   });
 
+  // Add meeting_notes column if it doesn't exist (migration)
+  db.run(`
+    ALTER TABLE projects ADD COLUMN meeting_notes TEXT
+  `, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding meeting_notes column:', err);
+    }
+  });
+
+  // Add customer_requests column if it doesn't exist (migration)
+  db.run(`
+    ALTER TABLE projects ADD COLUMN customer_requests TEXT
+  `, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding customer_requests column:', err);
+    }
+  });
+
+  // Add entrance_password column if it doesn't exist (migration)
+  db.run(`
+    ALTER TABLE projects ADD COLUMN entrance_password TEXT
+  `, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding entrance_password column:', err);
+    }
+  });
+
+  // Add site_password column if it doesn't exist (migration)
+  db.run(`
+    ALTER TABLE projects ADD COLUMN site_password TEXT
+  `, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding site_password column:', err);
+    }
+  });
+
   // 일정 테이블
   db.run(`
     CREATE TABLE IF NOT EXISTS schedules (

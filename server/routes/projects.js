@@ -4,6 +4,49 @@ const { db } = require('../config/database');
 const { authenticateToken, isManager } = require('../middleware/auth');
 const { sanitizeDatesArray, sanitizeDates } = require('../utils/dateUtils');
 
+// Helper function to parse JSON fields from database
+const parseProjectJSON = (project) => {
+  if (!project) return project;
+
+  // Parse meeting_notes if exists
+  if (project.meeting_notes) {
+    try {
+      project.meetingNotes = JSON.parse(project.meeting_notes);
+      delete project.meeting_notes;
+    } catch (e) {
+      console.error('Error parsing meeting_notes:', e);
+      project.meetingNotes = [];
+    }
+  } else {
+    project.meetingNotes = [];
+  }
+
+  // Parse customer_requests if exists
+  if (project.customer_requests) {
+    try {
+      project.customerRequests = JSON.parse(project.customer_requests);
+      delete project.customer_requests;
+    } catch (e) {
+      console.error('Error parsing customer_requests:', e);
+      project.customerRequests = [];
+    }
+  } else {
+    project.customerRequests = [];
+  }
+
+  // Parse password fields
+  if (project.entrance_password !== undefined) {
+    project.entrancePassword = project.entrance_password || '';
+    delete project.entrance_password;
+  }
+  if (project.site_password !== undefined) {
+    project.sitePassword = project.site_password || '';
+    delete project.site_password;
+  }
+
+  return project;
+};
+
 // 모든 프로젝트 조회 (status 필터링 지원)
 router.get('/', authenticateToken, (req, res) => {
   const { status } = req.query;
@@ -34,8 +77,11 @@ router.get('/', authenticateToken, (req, res) => {
 
     console.log(`[GET /api/projects] Found ${projects.length} projects`);
 
+    // Parse JSON fields for each project
+    const parsedProjects = projects.map(p => parseProjectJSON(p));
+
     // Convert SQLite dates to ISO 8601 (null dates are removed from response)
-    const sanitized = sanitizeDatesArray(projects, ['created_at', 'updated_at', 'start_date', 'end_date']);
+    const sanitized = sanitizeDatesArray(parsedProjects, ['created_at', 'updated_at', 'start_date', 'end_date']);
     res.json(sanitized);
   });
 });
@@ -60,8 +106,11 @@ router.get('/:id', authenticateToken, (req, res) => {
         return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
       }
 
+      // Parse JSON fields
+      const parsed = parseProjectJSON(project);
+
       // Convert SQLite dates to ISO 8601 (null dates are removed from response)
-      const sanitized = sanitizeDates(project, ['created_at', 'updated_at', 'start_date', 'end_date']);
+      const sanitized = sanitizeDates(parsed, ['created_at', 'updated_at', 'start_date', 'end_date']);
       res.json(sanitized);
     }
   );
@@ -112,7 +161,8 @@ router.post('/', authenticateToken, isManager, (req, res) => {
           }
 
           console.log('[POST /api/projects] Created project:', project);
-          const sanitized = sanitizeDates(project, ['created_at', 'updated_at', 'start_date', 'end_date']);
+          const parsed = parseProjectJSON(project);
+          const sanitized = sanitizeDates(parsed, ['created_at', 'updated_at', 'start_date', 'end_date']);
           res.status(201).json(sanitized);
         }
       );
@@ -152,6 +202,28 @@ router.put('/:id', authenticateToken, isManager, (req, res) => {
     updates.push('manager_name = ?');
     values.push(req.body.manager);
     processedFields.add('manager_name');
+  }
+
+  // Handle JSON fields that need serialization
+  if (req.body.meetingNotes !== undefined) {
+    updates.push('meeting_notes = ?');
+    values.push(JSON.stringify(req.body.meetingNotes));
+    processedFields.add('meeting_notes');
+  }
+  if (req.body.customerRequests !== undefined) {
+    updates.push('customer_requests = ?');
+    values.push(JSON.stringify(req.body.customerRequests));
+    processedFields.add('customer_requests');
+  }
+  if (req.body.entrancePassword !== undefined) {
+    updates.push('entrance_password = ?');
+    values.push(req.body.entrancePassword);
+    processedFields.add('entrance_password');
+  }
+  if (req.body.sitePassword !== undefined) {
+    updates.push('site_password = ?');
+    values.push(req.body.sitePassword);
+    processedFields.add('site_password');
   }
 
   // Only process remaining fields that weren't already handled
@@ -194,7 +266,8 @@ router.put('/:id', authenticateToken, isManager, (req, res) => {
         if (err) {
           return res.status(500).json({ error: '수정된 프로젝트 조회 실패' });
         }
-        const sanitized = sanitizeDates(project, ['created_at', 'updated_at', 'start_date', 'end_date']);
+        const parsed = parseProjectJSON(project);
+        const sanitized = sanitizeDates(parsed, ['created_at', 'updated_at', 'start_date', 'end_date']);
         res.json(sanitized);
       }
     );
