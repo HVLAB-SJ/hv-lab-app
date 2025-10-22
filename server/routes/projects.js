@@ -125,7 +125,22 @@ router.put('/:id', authenticateToken, isManager, (req, res) => {
     if (this.changes === 0) {
       return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
     }
-    res.json({ message: '프로젝트가 수정되었습니다.' });
+
+    // Return updated project data
+    db.get(
+      `SELECT p.*, u.username as manager_name
+       FROM projects p
+       LEFT JOIN users u ON p.manager_id = u.id
+       WHERE p.id = ?`,
+      [id],
+      (err, project) => {
+        if (err) {
+          return res.status(500).json({ error: '수정된 프로젝트 조회 실패' });
+        }
+        const sanitized = sanitizeDates(project, ['created_at', 'updated_at', 'start_date', 'end_date']);
+        res.json(sanitized);
+      }
+    );
   });
 });
 
