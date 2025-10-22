@@ -182,6 +182,12 @@ router.put('/:id', authenticateToken, isManager, (req, res) => {
   const processedFields = new Set(); // Track which fields we've already processed
 
   // Support both frontend format and backend format for field names
+  if (req.body.client !== undefined) {
+    const client = typeof req.body.client === 'object' ? req.body.client.name : req.body.client;
+    updates.push('client = ?');
+    values.push(client);
+    processedFields.add('client');
+  }
   if (req.body.location !== undefined) {
     const address = typeof req.body.location === 'object' ? req.body.location.address : req.body.location;
     updates.push('address = ?');
