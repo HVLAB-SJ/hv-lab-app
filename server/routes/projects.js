@@ -31,11 +31,13 @@ router.get('/', authenticateToken, (req, res) => {
 
     console.log(`[GET /api/projects] Found ${projects.length} projects`);
 
-    // Ensure dates are valid or null (not empty strings)
+    // Ensure dates are valid or null (not empty strings or "null" strings)
     const sanitizedProjects = projects.map(project => ({
       ...project,
-      start_date: project.start_date || null,
-      end_date: project.end_date || null
+      start_date: (project.start_date && project.start_date !== '' && project.start_date !== 'null') ? project.start_date : null,
+      end_date: (project.end_date && project.end_date !== '' && project.end_date !== 'null') ? project.end_date : null,
+      created_at: project.created_at || null,
+      updated_at: project.updated_at || null
     }));
 
     res.json(sanitizedProjects);
@@ -60,11 +62,13 @@ router.get('/:id', authenticateToken, (req, res) => {
         return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
       }
 
-      // Ensure dates are valid or null
+      // Ensure dates are valid or null (not empty strings or "null" strings)
       const sanitizedProject = {
         ...project,
-        start_date: project.start_date || null,
-        end_date: project.end_date || null
+        start_date: (project.start_date && project.start_date !== '' && project.start_date !== 'null') ? project.start_date : null,
+        end_date: (project.end_date && project.end_date !== '' && project.end_date !== 'null') ? project.end_date : null,
+        created_at: project.created_at || null,
+        updated_at: project.updated_at || null
       };
 
       res.json(sanitizedProject);
