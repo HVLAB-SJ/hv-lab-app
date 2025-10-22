@@ -7,6 +7,10 @@ const { authenticateToken, isManager } = require('../middleware/auth');
 router.get('/', authenticateToken, (req, res) => {
   const { status } = req.query;
 
+  // Log the request for debugging
+  console.log(`[GET /api/projects] Query params:`, req.query);
+  console.log(`[GET /api/projects] Status filter:`, status);
+
   let query = `SELECT p.*, u.username as manager_name
                FROM projects p
                LEFT JOIN users u ON p.manager_id = u.id`;
@@ -21,8 +25,11 @@ router.get('/', authenticateToken, (req, res) => {
 
   db.all(query, params, (err, projects) => {
     if (err) {
+      console.error(`[GET /api/projects] Database error:`, err);
       return res.status(500).json({ error: '프로젝트 조회 실패' });
     }
+
+    console.log(`[GET /api/projects] Found ${projects.length} projects`);
 
     // Ensure dates are valid or null (not empty strings)
     const sanitizedProjects = projects.map(project => ({
