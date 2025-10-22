@@ -24,7 +24,13 @@ const sanitizeDates = (obj, dateFields = ['created_at', 'updated_at', 'start_dat
   const sanitized = { ...obj };
   dateFields.forEach(field => {
     if (sanitized[field] !== undefined) {
-      sanitized[field] = convertSQLiteDate(sanitized[field]);
+      const converted = convertSQLiteDate(sanitized[field]);
+      // Remove null date fields from response to prevent frontend parsing errors
+      if (converted === null) {
+        delete sanitized[field];
+      } else {
+        sanitized[field] = converted;
+      }
     }
   });
   return sanitized;
