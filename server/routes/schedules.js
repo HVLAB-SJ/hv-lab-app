@@ -56,6 +56,23 @@ router.get('/', authenticateToken, (req, res) => {
         );
       });
 
+      // Handle project data - can be object or string
+      let projectData;
+      if (schedule.project_id && schedule.project_name) {
+        // Full project object
+        projectData = {
+          _id: schedule.project_id.toString(),
+          name: schedule.project_name,
+          color: schedule.project_color || '#4A90E2'
+        };
+      } else if (schedule.project_name) {
+        // Just project name as string
+        projectData = schedule.project_name;
+      } else {
+        // No project - return empty string to prevent null errors
+        projectData = '';
+      }
+
       return {
         _id: schedule.id.toString(),
         title: schedule.title,
@@ -65,11 +82,7 @@ router.get('/', authenticateToken, (req, res) => {
         type: schedule.type || 'construction',
         status: schedule.status || 'pending',
         priority: schedule.priority || 'normal',
-        project: schedule.project_id ? {
-          _id: schedule.project_id.toString(),
-          name: schedule.project_name || '',
-          color: schedule.project_color || ''
-        } : schedule.project_name,
+        project: projectData,
         assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
         assigneeNames: assignees.map(u => u.name || u.username),
         createdBy: schedule.created_by ? {
@@ -235,6 +248,23 @@ router.post('/', authenticateToken, (req, res) => {
             );
           });
 
+          // Handle project data - can be object or string
+          let projectData;
+          if (schedule.project_id && schedule.project_name) {
+            // Full project object
+            projectData = {
+              _id: schedule.project_id.toString(),
+              name: schedule.project_name,
+              color: schedule.project_color || '#4A90E2'
+            };
+          } else if (schedule.project_name) {
+            // Just project name as string
+            projectData = schedule.project_name;
+          } else {
+            // No project - return empty string to prevent null errors
+            projectData = '';
+          }
+
           // Convert to MongoDB format for frontend
           const convertedSchedule = {
             _id: schedule.id.toString(),
@@ -245,11 +275,7 @@ router.post('/', authenticateToken, (req, res) => {
             type: schedule.type || 'construction',
             status: schedule.status || 'pending',
             priority: schedule.priority || 'normal',
-            project: schedule.project_id ? {
-              _id: schedule.project_id.toString(),
-              name: schedule.project_name || '',
-              color: schedule.project_color || ''
-            } : schedule.project_name,
+            project: projectData,
             assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
             assigneeNames: assignees.map(u => u.name || u.username),
             createdBy: schedule.created_by ? {
