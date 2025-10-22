@@ -260,8 +260,9 @@ const initDatabase = () => {
     )
   `);
 
-  // 기본 계정 생성 (테이블 생성 후 약간의 지연)
-  setTimeout(() => {
+  // 기본 계정 생성 (테이블 생성 후 즉시 실행)
+  // Use serialize to ensure tables are created before inserting users
+  db.serialize(() => {
     const bcrypt = require('bcryptjs');
     const password = bcrypt.hashSync('0109', 10);
 
@@ -287,7 +288,9 @@ const initDatabase = () => {
         }
       );
     });
-  }, 1000);
+
+    console.log('데이터베이스 초기 사용자 생성 완료');
+  });
 
   console.log('데이터베이스 테이블 초기화 완료');
 };
