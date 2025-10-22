@@ -174,7 +174,7 @@ router.post('/', authenticateToken, isManager, (req, res) => {
 router.put('/:id', authenticateToken, isManager, (req, res) => {
   const { id } = req.params;
 
-  console.log('[PUT /api/projects/:id] Received body:', req.body);
+  console.log('[PUT /api/projects/:id] Received body:', JSON.stringify(req.body, null, 2));
 
   // Build dynamic UPDATE query for only provided fields
   const updates = [];
@@ -236,8 +236,12 @@ router.put('/:id', authenticateToken, isManager, (req, res) => {
   });
 
   if (updates.length === 0) {
+    console.log('[PUT /api/projects/:id] No updates found. Body keys:', Object.keys(req.body));
     return res.status(400).json({ error: '수정할 필드가 없습니다.' });
   }
+
+  console.log('[PUT /api/projects/:id] Updates:', updates);
+  console.log('[PUT /api/projects/:id] Values:', values);
 
   updates.push('updated_at = CURRENT_TIMESTAMP');
   values.push(id);
