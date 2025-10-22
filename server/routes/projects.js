@@ -31,13 +31,26 @@ router.get('/', authenticateToken, (req, res) => {
 
     console.log(`[GET /api/projects] Found ${projects.length} projects`);
 
-    // Ensure dates are valid or null (not empty strings or "null" strings)
+    // Convert SQLite datetime format to ISO 8601
+    const convertSQLiteDate = (dateStr) => {
+      if (!dateStr || dateStr === '' || dateStr === 'null') return null;
+      try {
+        // SQLite format: "2025-10-22 10:28:01"
+        // ISO 8601 format: "2025-10-22T10:28:01.000Z"
+        const isoDate = dateStr.replace(' ', 'T') + '.000Z';
+        return new Date(isoDate).toISOString();
+      } catch (e) {
+        return null;
+      }
+    };
+
+    // Ensure dates are valid ISO 8601 format or null
     const sanitizedProjects = projects.map(project => ({
       ...project,
-      start_date: (project.start_date && project.start_date !== '' && project.start_date !== 'null') ? project.start_date : null,
-      end_date: (project.end_date && project.end_date !== '' && project.end_date !== 'null') ? project.end_date : null,
-      created_at: project.created_at || null,
-      updated_at: project.updated_at || null
+      start_date: convertSQLiteDate(project.start_date),
+      end_date: convertSQLiteDate(project.end_date),
+      created_at: convertSQLiteDate(project.created_at),
+      updated_at: convertSQLiteDate(project.updated_at)
     }));
 
     res.json(sanitizedProjects);
@@ -62,13 +75,23 @@ router.get('/:id', authenticateToken, (req, res) => {
         return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
       }
 
-      // Ensure dates are valid or null (not empty strings or "null" strings)
+      // Convert SQLite datetime format to ISO 8601
+      const convertSQLiteDate = (dateStr) => {
+        if (!dateStr || dateStr === '' || dateStr === 'null') return null;
+        try {
+          const isoDate = dateStr.replace(' ', 'T') + '.000Z';
+          return new Date(isoDate).toISOString();
+        } catch (e) {
+          return null;
+        }
+      };
+
       const sanitizedProject = {
         ...project,
-        start_date: (project.start_date && project.start_date !== '' && project.start_date !== 'null') ? project.start_date : null,
-        end_date: (project.end_date && project.end_date !== '' && project.end_date !== 'null') ? project.end_date : null,
-        created_at: project.created_at || null,
-        updated_at: project.updated_at || null
+        start_date: convertSQLiteDate(project.start_date),
+        end_date: convertSQLiteDate(project.end_date),
+        created_at: convertSQLiteDate(project.created_at),
+        updated_at: convertSQLiteDate(project.updated_at)
       };
 
       res.json(sanitizedProject);
