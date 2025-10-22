@@ -275,10 +275,30 @@ const initDatabase = () => {
       email TEXT,
       specialty TEXT,
       notes TEXT,
+      bank_name TEXT,
+      account_number TEXT,
+      rank TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add missing columns to contractors table (migration)
+  db.run(`ALTER TABLE contractors ADD COLUMN bank_name TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding bank_name column:', err);
+    }
+  });
+  db.run(`ALTER TABLE contractors ADD COLUMN account_number TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding account_number column:', err);
+    }
+  });
+  db.run(`ALTER TABLE contractors ADD COLUMN rank TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding rank column:', err);
+    }
+  });
 
   // 기본 계정 생성 (테이블 생성 후 즉시 실행)
   // Use serialize to ensure tables are created before inserting users

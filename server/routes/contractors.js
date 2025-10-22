@@ -12,36 +12,72 @@ router.get('/', authenticateToken, (req, res) => {
       if (err) {
         return res.status(500).json({ error: '협력업체 조회 실패' });
       }
-      const sanitized = sanitizeDatesArray(rows || [], ['created_at', 'updated_at']);
-      res.json(sanitized);
+
+      // Convert SQLite format to MongoDB-compatible format for frontend
+      const contractors = (rows || []).map(row => ({
+        _id: row.id.toString(),
+        rank: row.rank || '',
+        companyName: row.name,
+        name: row.contact_person || '',
+        process: row.specialty || '',
+        contact: row.phone || '',
+        bankName: row.bank_name || '',
+        accountNumber: row.account_number || '',
+        notes: row.notes || '',
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }));
+
+      res.json(contractors);
     }
   );
 });
 
 router.post('/', authenticateToken, (req, res) => {
-  const { name, contact_person, phone, email, specialty, notes } = req.body;
-  
+  // Frontend sends: { companyName, name (contact person), process, contact, bankName, accountNumber, notes, rank }
+  const companyName = req.body.companyName || req.body.name;
+  const contactPerson = req.body.name;
+  const phone = req.body.contact || req.body.phone;
+  const specialty = req.body.process || req.body.specialty;
+  const bankName = req.body.bankName || req.body.bank_name;
+  const accountNumber = req.body.accountNumber || req.body.account_number;
+  const notes = req.body.notes;
+  const rank = req.body.rank;
+  const email = req.body.email;
+
   db.run(
-    'INSERT INTO contractors (name, contact_person, phone, email, specialty, notes) VALUES (?, ?, ?, ?, ?, ?)',
-    [name, contact_person, phone, email, specialty, notes],
+    'INSERT INTO contractors (name, contact_person, phone, email, specialty, notes, bank_name, account_number, rank) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [companyName, contactPerson, phone, email || '', specialty, notes || '', bankName || '', accountNumber || '', rank || ''],
     function(err) {
       if (err) {
+        console.error('Error creating contractor:', err);
         return res.status(500).json({ error: '협력업체 생성 실패' });
       }
-      res.status(201).json({ id: this.lastID, message: '협력업체가 생성되었습니다.' });
+      res.status(201).json({ _id: this.lastID.toString(), message: '협력업체가 생성되었습니다.' });
     }
   );
 });
 
 router.put('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
-  const { name, contact_person, phone, email, specialty, notes } = req.body;
-  
+
+  // Frontend sends: { companyName, name (contact person), process, contact, bankName, accountNumber, notes, rank }
+  const companyName = req.body.companyName || req.body.name;
+  const contactPerson = req.body.name;
+  const phone = req.body.contact || req.body.phone;
+  const specialty = req.body.process || req.body.specialty;
+  const bankName = req.body.bankName || req.body.bank_name;
+  const accountNumber = req.body.accountNumber || req.body.account_number;
+  const notes = req.body.notes;
+  const rank = req.body.rank;
+  const email = req.body.email;
+
   db.run(
-    'UPDATE contractors SET name = ?, contact_person = ?, phone = ?, email = ?, specialty = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-    [name, contact_person, phone, email, specialty, notes, id],
+    'UPDATE contractors SET name = ?, contact_person = ?, phone = ?, email = ?, specialty = ?, notes = ?, bank_name = ?, account_number = ?, rank = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [companyName, contactPerson, phone, email || '', specialty, notes || '', bankName || '', accountNumber || '', rank || '', id],
     function(err) {
       if (err) {
+        console.error('Error updating contractor:', err);
         return res.status(500).json({ error: '협력업체 수정 실패' });
       }
       res.json({ message: '협력업체가 수정되었습니다.' });
