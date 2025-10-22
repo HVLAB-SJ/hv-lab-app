@@ -12,7 +12,9 @@ router.get('/', authenticateToken, (req, res) => {
   console.log(`[GET /api/projects] Query params:`, req.query);
   console.log(`[GET /api/projects] Status filter:`, status);
 
-  let query = `SELECT p.*, u.username as manager_name
+  let query = `SELECT p.*,
+               COALESCE(p.manager_name, u.username) as manager,
+               u.username as manager_username
                FROM projects p
                LEFT JOIN users u ON p.manager_id = u.id`;
   let params = [];
@@ -43,7 +45,9 @@ router.get('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
   db.get(
-    `SELECT p.*, u.username as manager_name
+    `SELECT p.*,
+     COALESCE(p.manager_name, u.username) as manager,
+     u.username as manager_username
      FROM projects p
      LEFT JOIN users u ON p.manager_id = u.id
      WHERE p.id = ?`,
@@ -65,29 +69,53 @@ router.get('/:id', authenticateToken, (req, res) => {
 
 // 프로젝트 생성
 router.post('/', authenticateToken, isManager, (req, res) => {
-  const {
-    name,
-    client,
-    address,
-    start_date,
-    end_date,
-    status,
-    color,
-    description
-  } = req.body;
+  console.log('[POST /api/projects] Received body:', req.body);
+
+  // Support both frontend format and backend format
+  const name = req.body.name;
+  const client = typeof req.body.client === 'object' ? req.body.client.name : req.body.client;
+  const address = req.body.address || (typeof req.body.location === 'object' ? req.body.location.address : req.body.location);
+  const start_date = req.body.start_date || req.body.startDate;
+  const end_date = req.body.end_date || req.body.endDate;
+  const status = req.body.status || 'planning';
+  const color = req.body.color || req.body.colorCode || '#4A90E2';
+  const description = req.body.description || '';
+  const manager = req.body.manager; // Manager name(s) from frontend
+
+  console.log('[POST /api/projects] Parsed data:', {
+    name, client, address, start_date, end_date, status, color, description, manager
+  });
 
   db.run(
-    `INSERT INTO projects (name, client, address, start_date, end_date, status, color, manager_id, description)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name, client, address, start_date, end_date, status || 'planning', color || '#4A90E2', req.user.id, description],
+    `INSERT INTO projects (name, client, address, start_date, end_date, status, color, manager_id, description, manager_name)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [name, client, address, start_date, end_date, status, color, req.user.id, description, manager],
     function(err) {
       if (err) {
+        console.error('[POST /api/projects] Database error:', err);
         return res.status(500).json({ error: '프로젝트 생성 실패' });
       }
-      res.status(201).json({
-        id: this.lastID,
-        message: '프로젝트가 생성되었습니다.'
-      });
+
+      // Fetch the created project with full data
+      db.get(
+        `SELECT p.*,
+         COALESCE(p.manager_name, u.username) as manager,
+         u.username as manager_username
+         FROM projects p
+         LEFT JOIN users u ON p.manager_id = u.id
+         WHERE p.id = ?`,
+        [this.lastID],
+        (err, project) => {
+          if (err) {
+            console.error('[POST /api/projects] Failed to fetch created project:', err);
+            return res.status(500).json({ error: '프로젝트 조회 실패' });
+          }
+
+          console.log('[POST /api/projects] Created project:', project);
+          const sanitized = sanitizeDates(project, ['created_at', 'updated_at', 'start_date', 'end_date']);
+          res.status(201).json(sanitized);
+        }
+      );
     }
   );
 });
@@ -97,9 +125,28 @@ router.put('/:id', authenticateToken, isManager, (req, res) => {
   const { id } = req.params;
 
   // Build dynamic UPDATE query for only provided fields
-  const allowedFields = ['name', 'client', 'address', 'start_date', 'end_date', 'status', 'color', 'manager_id', 'description'];
+  const allowedFields = ['name', 'client', 'address', 'start_date', 'end_date', 'status', 'color', 'manager_id', 'manager_name', 'description'];
   const updates = [];
   const values = [];
+
+  // Support both frontend format and backend format for field names
+  if (req.body.location !== undefined) {
+    const address = typeof req.body.location === 'object' ? req.body.location.address : req.body.location;
+    updates.push('address = ?');
+    values.push(address);
+  }
+  if (req.body.startDate !== undefined) {
+    updates.push('start_date = ?');
+    values.push(req.body.startDate);
+  }
+  if (req.body.endDate !== undefined) {
+    updates.push('end_date = ?');
+    values.push(req.body.endDate);
+  }
+  if (req.body.manager !== undefined) {
+    updates.push('manager_name = ?');
+    values.push(req.body.manager);
+  }
 
   allowedFields.forEach(field => {
     if (req.body[field] !== undefined) {
@@ -128,7 +175,9 @@ router.put('/:id', authenticateToken, isManager, (req, res) => {
 
     // Return updated project data
     db.get(
-      `SELECT p.*, u.username as manager_name
+      `SELECT p.*,
+       COALESCE(p.manager_name, u.username) as manager,
+       u.username as manager_username
        FROM projects p
        LEFT JOIN users u ON p.manager_id = u.id
        WHERE p.id = ?`,

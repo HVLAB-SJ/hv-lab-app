@@ -52,12 +52,22 @@ const initDatabase = () => {
       status TEXT DEFAULT 'planning',
       color TEXT DEFAULT '#4A90E2',
       manager_id INTEGER,
+      manager_name TEXT,
       description TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (manager_id) REFERENCES users(id)
     )
   `);
+
+  // Add manager_name column if it doesn't exist (migration)
+  db.run(`
+    ALTER TABLE projects ADD COLUMN manager_name TEXT
+  `, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding manager_name column:', err);
+    }
+  });
 
   // 일정 테이블
   db.run(`
