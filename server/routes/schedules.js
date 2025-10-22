@@ -297,6 +297,9 @@ router.post('/', authenticateToken, (req, res) => {
 // 일정 수정
 router.put('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
+
+  console.log('[PUT /api/schedules/:id] Received body:', JSON.stringify(req.body, null, 2));
+
   const {
     title,
     description,
@@ -332,7 +335,8 @@ router.put('/:id', authenticateToken, (req, res) => {
     ],
     function(err) {
       if (err) {
-        return res.status(500).json({ error: '일정 수정 실패' });
+        console.error('[PUT /api/schedules/:id] Database error:', err);
+        return res.status(500).json({ error: '일정 수정 실패: ' + err.message });
       }
       if (this.changes === 0) {
         return res.status(404).json({ error: '일정을 찾을 수 없습니다.' });
