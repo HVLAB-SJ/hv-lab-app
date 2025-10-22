@@ -87,19 +87,24 @@ router.get('/:id', authenticateToken, (req, res) => {
 
 // 일정 생성
 router.post('/', authenticateToken, (req, res) => {
-  const {
-    project_id,
-    title,
-    description,
-    start_date,
-    end_date,
-    type,
-    status,
-    priority,
-    color,
-    assigned_to,
-    assignee_ids
-  } = req.body;
+  console.log('[POST /api/schedules] Received body:', req.body);
+
+  // Support both frontend format (project, startDate, endDate, assignedTo) and backend format
+  const project_id = req.body.project_id || req.body.project;
+  const title = req.body.title;
+  const description = req.body.description;
+  const start_date = req.body.start_date || req.body.startDate;
+  const end_date = req.body.end_date || req.body.endDate;
+  const type = req.body.type || 'construction';
+  const status = req.body.status || 'pending';
+  const priority = req.body.priority || 'normal';
+  const color = req.body.color;
+  const assigned_to = req.body.assigned_to || (req.body.assignedTo ? req.body.assignedTo.join(', ') : null);
+  const assignee_ids = req.body.assignee_ids || req.body.assignedTo;
+
+  console.log('[POST /api/schedules] Parsed data:', {
+    project_id, title, description, start_date, end_date, type, status, priority, color, assigned_to, assignee_ids
+  });
 
   db.run(
     `INSERT INTO schedules
@@ -111,38 +116,76 @@ router.post('/', authenticateToken, (req, res) => {
       description,
       start_date,
       end_date,
-      type || 'construction',
-      status || 'pending',
-      priority || 'normal',
+      type,
+      status,
+      priority,
       color,
       assigned_to,
       req.user.id
     ],
     function(err) {
       if (err) {
-        return res.status(500).json({ error: '일정 생성 실패' });
+        console.error('[POST /api/schedules] Database error:', err);
+        return res.status(500).json({ error: '일정 생성 실패', details: err.message });
       }
 
       const scheduleId = this.lastID;
 
-      // 담당자 할당
-      if (assignee_ids && assignee_ids.length > 0) {
-        const assigneeValues = assignee_ids.map(userId => `(${scheduleId}, ${userId})`).join(',');
-        db.run(
-          `INSERT INTO schedule_assignees (schedule_id, user_id) VALUES ${assigneeValues}`,
-          [],
-          (err) => {
-            if (err) {
-              console.error('담당자 할당 실패:', err);
-            }
+      // 담당자 할당 (assignee_ids가 배열일 경우)
+      if (assignee_ids && Array.isArray(assignee_ids) && assignee_ids.length > 0) {
+        // assignee_ids가 숫자 배열인지 확인하고, 문자열이면 user id로 변환
+        const userPromises = assignee_ids.map(assignee => {
+          // 숫자면 그대로 사용
+          if (typeof assignee === 'number') {
+            return Promise.resolve(assignee);
           }
-        );
+          // 문자열이면 username으로 user id 찾기
+          return new Promise((resolve, reject) => {
+            db.get('SELECT id FROM users WHERE username = ? OR name = ?', [assignee, assignee], (err, user) => {
+              if (err) reject(err);
+              else resolve(user ? user.id : null);
+            });
+          });
+        });
+
+        Promise.all(userPromises).then(userIds => {
+          const validUserIds = userIds.filter(id => id !== null);
+          if (validUserIds.length > 0) {
+            const assigneeValues = validUserIds.map(userId => `(${scheduleId}, ${userId})`).join(',');
+            db.run(
+              `INSERT INTO schedule_assignees (schedule_id, user_id) VALUES ${assigneeValues}`,
+              [],
+              (err) => {
+                if (err) {
+                  console.error('담당자 할당 실패:', err);
+                }
+              }
+            );
+          }
+        }).catch(err => {
+          console.error('담당자 ID 변환 실패:', err);
+        });
       }
 
-      res.status(201).json({
-        id: scheduleId,
-        message: '일정이 생성되었습니다.'
-      });
+      // Fetch the created schedule with full data
+      db.get(
+        `SELECT s.*, p.name as project_name, p.color as project_color, u.username as creator_name
+         FROM schedules s
+         LEFT JOIN projects p ON s.project_id = p.id
+         LEFT JOIN users u ON s.created_by = u.id
+         WHERE s.id = ?`,
+        [scheduleId],
+        (err, schedule) => {
+          if (err) {
+            console.error('[POST /api/schedules] Failed to fetch created schedule:', err);
+            return res.status(500).json({ error: '일정 조회 실패' });
+          }
+
+          console.log('[POST /api/schedules] Created schedule:', schedule);
+          const sanitized = sanitizeDates(schedule, ['start_date', 'end_date', 'created_at', 'updated_at']);
+          res.status(201).json(sanitized);
+        }
+      );
     }
   );
 });
