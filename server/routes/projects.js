@@ -124,32 +124,40 @@ router.post('/', authenticateToken, isManager, (req, res) => {
 router.put('/:id', authenticateToken, isManager, (req, res) => {
   const { id } = req.params;
 
+  console.log('[PUT /api/projects/:id] Received body:', req.body);
+
   // Build dynamic UPDATE query for only provided fields
-  const allowedFields = ['name', 'client', 'address', 'start_date', 'end_date', 'status', 'color', 'manager_id', 'manager_name', 'description'];
   const updates = [];
   const values = [];
+  const processedFields = new Set(); // Track which fields we've already processed
 
   // Support both frontend format and backend format for field names
   if (req.body.location !== undefined) {
     const address = typeof req.body.location === 'object' ? req.body.location.address : req.body.location;
     updates.push('address = ?');
     values.push(address);
+    processedFields.add('address');
   }
   if (req.body.startDate !== undefined) {
     updates.push('start_date = ?');
     values.push(req.body.startDate);
+    processedFields.add('start_date');
   }
   if (req.body.endDate !== undefined) {
     updates.push('end_date = ?');
     values.push(req.body.endDate);
+    processedFields.add('end_date');
   }
   if (req.body.manager !== undefined) {
     updates.push('manager_name = ?');
     values.push(req.body.manager);
+    processedFields.add('manager_name');
   }
 
+  // Only process remaining fields that weren't already handled
+  const allowedFields = ['name', 'client', 'address', 'start_date', 'end_date', 'status', 'color', 'manager_id', 'manager_name', 'description'];
   allowedFields.forEach(field => {
-    if (req.body[field] !== undefined) {
+    if (req.body[field] !== undefined && !processedFields.has(field)) {
       updates.push(`${field} = ?`);
       values.push(req.body[field] === '' ? null : req.body[field]);
     }
