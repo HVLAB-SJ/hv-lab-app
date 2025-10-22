@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
+const { sanitizeDatesArray, sanitizeDates } = require('../utils/dateUtils');
 
 // 일정 목록 조회 (프로젝트별 또는 전체)
 router.get('/', authenticateToken, (req, res) => {
@@ -38,7 +39,9 @@ router.get('/', authenticateToken, (req, res) => {
     if (err) {
       return res.status(500).json({ error: '일정 조회 실패' });
     }
-    res.json(schedules);
+    // Convert SQLite dates to ISO 8601
+    const sanitized = sanitizeDatesArray(schedules, ['start_date', 'end_date', 'created_at', 'updated_at']);
+    res.json(sanitized);
   });
 });
 
@@ -73,7 +76,9 @@ router.get('/:id', authenticateToken, (req, res) => {
             return res.status(500).json({ error: '담당자 조회 실패' });
           }
           schedule.assignees = assignees;
-          res.json(schedule);
+          // Convert SQLite dates to ISO 8601
+          const sanitized = sanitizeDates(schedule, ['start_date', 'end_date', 'created_at', 'updated_at']);
+          res.json(sanitized);
         }
       );
     }

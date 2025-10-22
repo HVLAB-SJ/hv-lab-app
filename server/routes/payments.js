@@ -3,6 +3,7 @@ const router = express.Router();
 const { db } = require('../config/database');
 const { authenticateToken, isManager } = require('../middleware/auth');
 const kakaoMessage = require('../../utils/kakaoMessage');
+const { sanitizeDatesArray, sanitizeDates } = require('../utils/dateUtils');
 
 // 결제 요청 목록 조회
 router.get('/', authenticateToken, (req, res) => {
@@ -39,7 +40,9 @@ router.get('/', authenticateToken, (req, res) => {
     if (err) {
       return res.status(500).json({ error: '결제 요청 조회 실패' });
     }
-    res.json(requests);
+    // Convert SQLite dates to ISO 8601
+    const sanitized = sanitizeDatesArray(requests, ['created_at', 'updated_at', 'approved_at', 'paid_at']);
+    res.json(sanitized);
   });
 });
 
