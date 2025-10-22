@@ -6,30 +6,48 @@ const { sanitizeDatesArray } = require('../utils/dateUtils');
 
 router.get('/', authenticateToken, (req, res) => {
   const { status, priority, assignedTo } = req.query;
-  let query = 'SELECT * FROM work_requests WHERE 1=1';
+  let query = 'SELECT wr.*, u.username, u.name FROM work_requests wr LEFT JOIN users u ON wr.created_by = u.id WHERE 1=1';
   const params = [];
-  
+
   if (status) {
-    query += ' AND status = ?';
+    query += ' AND wr.status = ?';
     params.push(status);
   }
   if (priority) {
-    query += ' AND priority = ?';
+    query += ' AND wr.priority = ?';
     params.push(priority);
   }
   if (assignedTo) {
-    query += ' AND assigned_to = ?';
+    query += ' AND wr.assigned_to = ?';
     params.push(assignedTo);
   }
-  
-  query += ' ORDER BY created_at DESC';
-  
+
+  query += ' ORDER BY wr.created_at DESC';
+
   db.all(query, params, (err, rows) => {
     if (err) {
+      console.error('[GET /api/workrequests] Database error:', err);
       return res.status(500).json({ error: '업무 요청 조회 실패' });
     }
-    const sanitized = sanitizeDatesArray(rows || [], ['created_at', 'updated_at', 'due_date']);
-    res.json(sanitized);
+
+    // Convert each row to MongoDB-compatible format with fallback values
+    const workRequests = (rows || []).map(row => ({
+      _id: row.id.toString(),
+      project: '',  // work_requests table doesn't have project field
+      requestType: row.title || '기타',
+      description: row.description || '',
+      requestDate: row.created_at || new Date().toISOString(),
+      dueDate: row.due_date || new Date().toISOString(),
+      requestedBy: row.username || row.name || '알 수 없음',
+      assignedTo: row.assigned_to || '',
+      status: row.status || 'pending',
+      priority: row.priority || 'medium',
+      notes: '',
+      createdAt: row.created_at || new Date().toISOString(),
+      updatedAt: row.updated_at || new Date().toISOString()
+    }));
+
+    res.json(workRequests);
   });
 });
 
@@ -83,15 +101,46 @@ router.post('/', authenticateToken, (req, res) => {
 router.put('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { title, description, priority, assigned_to, status, due_date } = req.body;
-  
+
   db.run(
     'UPDATE work_requests SET title = ?, description = ?, priority = ?, assigned_to = ?, status = ?, due_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
     [title, description, priority, assigned_to, status, due_date, id],
     function(err) {
       if (err) {
+        console.error('[PUT /api/workrequests/:id] Database error:', err);
         return res.status(500).json({ error: '업무 요청 수정 실패' });
       }
-      res.json({ message: '업무 요청이 수정되었습니다.' });
+
+      // Fetch the updated work request to return full data
+      db.get(
+        'SELECT wr.*, u.username, u.name FROM work_requests wr LEFT JOIN users u ON wr.created_by = u.id WHERE wr.id = ?',
+        [id],
+        (err, row) => {
+          if (err) {
+            console.error('[PUT /api/workrequests/:id] Failed to fetch updated request:', err);
+            return res.status(500).json({ error: '수정된 업무 요청 조회 실패' });
+          }
+
+          // Convert to MongoDB-compatible format with fallback values
+          const workRequest = {
+            _id: row.id.toString(),
+            project: '',
+            requestType: row.title || '기타',
+            description: row.description || '',
+            requestDate: row.created_at || new Date().toISOString(),
+            dueDate: row.due_date || new Date().toISOString(),
+            requestedBy: row.username || row.name || '알 수 없음',
+            assignedTo: row.assigned_to || '',
+            status: row.status || 'pending',
+            priority: row.priority || 'medium',
+            notes: '',
+            createdAt: row.created_at || new Date().toISOString(),
+            updatedAt: row.updated_at || new Date().toISOString()
+          };
+
+          res.json(workRequest);
+        }
+      );
     }
   );
 });
