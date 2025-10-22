@@ -123,12 +123,53 @@ app.use((err, req, res, next) => {
 
 // 서버 시작
 const HOST = '0.0.0.0';
-server.listen(PORT, HOST, () => {
+server.listen(PORT, HOST, async () => {
   console.log(`서버가 ${HOST}:${PORT}에서 실행 중입니다.`);
   console.log(`http://localhost:${PORT}`);
 
   // 데이터베이스 초기화
   initDatabase();
+
+  // Ensure at least one admin user exists (for Railway ephemeral storage)
+  setTimeout(() => {
+    db.get('SELECT COUNT(*) as count FROM users', [], (err, result) => {
+      if (err) {
+        console.error('사용자 확인 오류:', err);
+        return;
+      }
+
+      if (result.count === 0) {
+        console.log('⚠️  사용자가 없습니다. 기본 사용자를 다시 생성합니다...');
+        const bcrypt = require('bcryptjs');
+        const password = bcrypt.hashSync('0109', 10);
+
+        const users = [
+          ['상준', password, '김상준', 'manager', '관리부'],
+          ['신애', password, '이신애', 'manager', '관리부'],
+          ['재천', password, '정재천', 'worker', '시공부'],
+          ['민기', password, '김민기', 'worker', '시공부'],
+          ['재성', password, '박재성', 'worker', '시공부'],
+          ['재현', password, '박재현', 'worker', '시공부']
+        ];
+
+        users.forEach(([username, pwd, name, role, dept]) => {
+          db.run(
+            'INSERT OR IGNORE INTO users (username, password, name, role, department) VALUES (?, ?, ?, ?, ?)',
+            [username, pwd, name, role, dept],
+            (err) => {
+              if (err) {
+                console.error(`사용자 ${username} 생성 오류:`, err.message);
+              } else {
+                console.log(`✅ 사용자 ${username} 생성 완료`);
+              }
+            }
+          );
+        });
+      } else {
+        console.log(`✅ 데이터베이스에 ${result.count}명의 사용자가 있습니다.`);
+      }
+    });
+  }, 2000); // Wait for tables to be created
 });
 
 // 우아한 종료 처리
