@@ -175,6 +175,28 @@ server.listen(PORT, HOST, async () => {
         });
       } else {
         console.log(`✅ 데이터베이스에 ${result.count}명의 사용자가 있습니다.`);
+
+        // Migration: Fix user names to remove surnames (for existing Railway database)
+        const nameUpdates = [
+          { username: '상준', correctName: '상준' },
+          { username: '신애', correctName: '신애' },
+          { username: '재천', correctName: '재천' },
+          { username: '민기', correctName: '민기' },
+          { username: '재성', correctName: '재성' },
+          { username: '재현', correctName: '재현' }
+        ];
+
+        nameUpdates.forEach(({ username, correctName }) => {
+          db.get('SELECT name FROM users WHERE username = ?', [username], (err, row) => {
+            if (!err && row && row.name !== correctName) {
+              db.run('UPDATE users SET name = ? WHERE username = ?', [correctName, username], (err) => {
+                if (!err) {
+                  console.log(`✅ Fixed user name: ${row.name} -> ${correctName}`);
+                }
+              });
+            }
+          });
+        });
       }
     });
   }, 2000); // Wait for tables to be created
