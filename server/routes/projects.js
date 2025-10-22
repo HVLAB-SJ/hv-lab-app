@@ -112,9 +112,10 @@ router.put('/:id', authenticateToken, isManager, (req, res) => {
      SET name = ?, client = ?, address = ?, start_date = ?, end_date = ?,
          status = ?, color = ?, manager_id = ?, description = ?, updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`,
-    [name, client, address, start_date, end_date, status, color, manager_id, description, id],
+    [name, client, address, start_date || null, end_date || null, status, color, manager_id, description, id],
     function(err) {
       if (err) {
+        console.error('프로젝트 수정 오류:', err);
         return res.status(500).json({ error: '프로젝트 수정 실패' });
       }
       if (this.changes === 0) {
