@@ -73,8 +73,14 @@ const initDatabase = () => {
   db.run(`
     ALTER TABLE projects ADD COLUMN meeting_notes TEXT
   `, (err) => {
-    if (err && !err.message.includes('duplicate column name')) {
-      console.error('Error adding meeting_notes column:', err);
+    if (err) {
+      if (err.message.includes('duplicate column name')) {
+        console.log('✓ meeting_notes column already exists');
+      } else {
+        console.error('❌ Error adding meeting_notes column:', err);
+      }
+    } else {
+      console.log('✓ meeting_notes column added successfully');
     }
   });
 
@@ -82,8 +88,14 @@ const initDatabase = () => {
   db.run(`
     ALTER TABLE projects ADD COLUMN customer_requests TEXT
   `, (err) => {
-    if (err && !err.message.includes('duplicate column name')) {
-      console.error('Error adding customer_requests column:', err);
+    if (err) {
+      if (err.message.includes('duplicate column name')) {
+        console.log('✓ customer_requests column already exists');
+      } else {
+        console.error('❌ Error adding customer_requests column:', err);
+      }
+    } else {
+      console.log('✓ customer_requests column added successfully');
     }
   });
 
@@ -91,8 +103,14 @@ const initDatabase = () => {
   db.run(`
     ALTER TABLE projects ADD COLUMN entrance_password TEXT
   `, (err) => {
-    if (err && !err.message.includes('duplicate column name')) {
-      console.error('Error adding entrance_password column:', err);
+    if (err) {
+      if (err.message.includes('duplicate column name')) {
+        console.log('✓ entrance_password column already exists');
+      } else {
+        console.error('❌ Error adding entrance_password column:', err);
+      }
+    } else {
+      console.log('✓ entrance_password column added successfully');
     }
   });
 
@@ -100,8 +118,14 @@ const initDatabase = () => {
   db.run(`
     ALTER TABLE projects ADD COLUMN site_password TEXT
   `, (err) => {
-    if (err && !err.message.includes('duplicate column name')) {
-      console.error('Error adding site_password column:', err);
+    if (err) {
+      if (err.message.includes('duplicate column name')) {
+        console.log('✓ site_password column already exists');
+      } else {
+        console.error('❌ Error adding site_password column:', err);
+      }
+    } else {
+      console.log('✓ site_password column added successfully');
     }
   });
 
