@@ -81,7 +81,7 @@ router.get('/me', (req, res) => {
     }
 
     db.get(
-      'SELECT id, username, role, department, phone, email FROM users WHERE id = ?',
+      'SELECT id, username, name, role, department, phone, email FROM users WHERE id = ?',
       [decoded.id],
       (err, user) => {
         if (err) {
@@ -97,6 +97,7 @@ router.get('/me', (req, res) => {
           user: {
             id: user.id,
             username: user.username,
+            name: user.name,
             role: user.role,
             department: user.department,
             phone: user.phone,
