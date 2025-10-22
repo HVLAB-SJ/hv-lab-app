@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
+const { sanitizeDatesArray } = require('../utils/dateUtils');
 
 router.get('/', authenticateToken, (req, res) => {
   db.all(
@@ -11,7 +12,8 @@ router.get('/', authenticateToken, (req, res) => {
       if (err) {
         return res.status(500).json({ error: '공사대금 조회 실패' });
       }
-      res.json(rows || []);
+      const sanitized = sanitizeDatesArray(rows || [], ['created_at', 'updated_at', 'payment_date']);
+      res.json(sanitized);
     }
   );
 });
