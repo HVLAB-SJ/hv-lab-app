@@ -23,7 +23,15 @@ router.get('/', authenticateToken, (req, res) => {
     if (err) {
       return res.status(500).json({ error: '프로젝트 조회 실패' });
     }
-    res.json(projects);
+
+    // Ensure dates are valid or null (not empty strings)
+    const sanitizedProjects = projects.map(project => ({
+      ...project,
+      start_date: project.start_date || null,
+      end_date: project.end_date || null
+    }));
+
+    res.json(sanitizedProjects);
   });
 });
 
@@ -44,7 +52,15 @@ router.get('/:id', authenticateToken, (req, res) => {
       if (!project) {
         return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
       }
-      res.json(project);
+
+      // Ensure dates are valid or null
+      const sanitizedProject = {
+        ...project,
+        start_date: project.start_date || null,
+        end_date: project.end_date || null
+      };
+
+      res.json(sanitizedProject);
     }
   );
 });
