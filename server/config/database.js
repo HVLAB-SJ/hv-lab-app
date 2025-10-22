@@ -307,12 +307,12 @@ const initDatabase = () => {
     const password = bcrypt.hashSync('0109', 10);
 
     const users = [
-      ['상준', password, '김상준', 'manager', '관리부'],
-      ['신애', password, '이신애', 'manager', '관리부'],
-      ['재천', password, '정재천', 'worker', '시공부'],
-      ['민기', password, '김민기', 'worker', '시공부'],
-      ['재성', password, '박재성', 'worker', '시공부'],
-      ['재현', password, '박재현', 'worker', '시공부']
+      ['상준', password, '상준', 'manager', '관리부'],
+      ['신애', password, '신애', 'manager', '관리부'],
+      ['재천', password, '재천', 'worker', '시공부'],
+      ['민기', password, '민기', 'worker', '시공부'],
+      ['재성', password, '재성', 'worker', '시공부'],
+      ['재현', password, '재현', 'worker', '시공부']
     ];
 
     users.forEach(([username, pwd, name, role, dept]) => {
