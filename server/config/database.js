@@ -348,8 +348,8 @@ const initDatabase = () => {
 
           contractorsSeed.forEach((contractor) => {
             db.run(
-              'INSERT INTO contractors (name, contact_person, phone, specialty, notes) VALUES (?, ?, ?, ?, ?)',
-              [contractor.name, contractor.contact_person, contractor.phone, contractor.specialty, contractor.notes],
+              'INSERT INTO contractors (name, contact_person, phone, specialty, notes, rank) VALUES (?, ?, ?, ?, ?, ?)',
+              [contractor.name, contractor.contact_person, contractor.phone, contractor.specialty, contractor.notes, contractor.rank || ''],
               (err) => {
                 if (err) {
                   console.error(`협력업체 ${contractor.name} 생성 오류:`, err.message);
