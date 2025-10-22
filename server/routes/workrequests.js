@@ -59,19 +59,20 @@ router.post('/', authenticateToken, (req, res) => {
           const workRequest = {
             _id: row.id.toString(),
             project: '',  // work_requests table doesn't have project field
-            requestType: row.title,
-            description: row.description,
-            requestDate: row.created_at,
-            dueDate: row.due_date,
-            requestedBy: req.user.username || req.user.name,
-            assignedTo: row.assigned_to,
-            status: row.status,
-            priority: row.priority,
+            requestType: row.title || '기타',
+            description: row.description || '',
+            requestDate: row.created_at || new Date().toISOString(),
+            dueDate: row.due_date || new Date().toISOString(),
+            requestedBy: req.user.username || req.user.name || '알 수 없음',
+            assignedTo: row.assigned_to || '',
+            status: row.status || 'pending',
+            priority: row.priority || 'medium',
             notes: '',
-            createdAt: row.created_at,
-            updatedAt: row.updated_at
+            createdAt: row.created_at || new Date().toISOString(),
+            updatedAt: row.updated_at || new Date().toISOString()
           };
 
+          console.log('[POST /api/workrequests] Created:', workRequest);
           res.status(201).json(workRequest);
         }
       );
