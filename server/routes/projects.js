@@ -109,8 +109,25 @@ router.get('/:id', authenticateToken, (req, res) => {
       // Parse JSON fields
       const parsed = parseProjectJSON(project);
 
+      console.log('[GET /api/projects/:id] Raw project data:', {
+        id: project.id,
+        name: project.name,
+        start_date: project.start_date,
+        end_date: project.end_date
+      });
+
       // Convert SQLite dates to ISO 8601 (null dates are removed from response)
       const sanitized = sanitizeDates(parsed, ['created_at', 'updated_at', 'start_date', 'end_date']);
+
+      console.log('[GET /api/projects/:id] Sanitized data:', {
+        id: sanitized.id,
+        name: sanitized.name,
+        startDate: sanitized.startDate,
+        endDate: sanitized.endDate,
+        start_date: sanitized.start_date,
+        end_date: sanitized.end_date
+      });
+
       res.json(sanitized);
     }
   );
@@ -269,14 +286,20 @@ router.put('/:id', authenticateToken, (req, res) => {
 
   const query = `UPDATE projects SET ${updates.join(', ')} WHERE id = ?`;
 
+  console.log('[PUT /api/projects/:id] SQL Query:', query);
+  console.log('[PUT /api/projects/:id] SQL Values:', values);
+
   db.run(query, values, function(err) {
     if (err) {
-      console.error('프로젝트 수정 오류:', err);
+      console.error('[PUT /api/projects/:id] Database error:', err);
       return res.status(500).json({ error: '프로젝트 수정 실패' });
     }
     if (this.changes === 0) {
+      console.log('[PUT /api/projects/:id] No rows updated for id:', id);
       return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
     }
+
+    console.log('[PUT /api/projects/:id] Updated', this.changes, 'row(s)');
 
     // Return updated project data
     db.get(
@@ -289,10 +312,27 @@ router.put('/:id', authenticateToken, (req, res) => {
       [id],
       (err, project) => {
         if (err) {
+          console.error('[PUT /api/projects/:id] Fetch error:', err);
           return res.status(500).json({ error: '수정된 프로젝트 조회 실패' });
         }
+
+        console.log('[PUT /api/projects/:id] DB result after update:', {
+          id: project.id,
+          name: project.name,
+          start_date: project.start_date,
+          end_date: project.end_date
+        });
+
         const parsed = parseProjectJSON(project);
         const sanitized = sanitizeDates(parsed, ['created_at', 'updated_at', 'start_date', 'end_date']);
+
+        console.log('[PUT /api/projects/:id] Returning to client:', {
+          id: sanitized.id,
+          name: sanitized.name,
+          startDate: sanitized.startDate,
+          endDate: sanitized.endDate
+        });
+
         res.json(sanitized);
       }
     );
