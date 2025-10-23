@@ -247,7 +247,8 @@ router.put('/:id', authenticateToken, (req, res) => {
   }
 
   // Only process remaining fields that weren't already handled
-  const allowedFields = ['name', 'client', 'address', 'start_date', 'end_date', 'status', 'color', 'manager_id', 'manager_name', 'description'];
+  // Note: We only check for fields that use snake_case in both frontend and backend
+  const allowedFields = ['name', 'status', 'color', 'manager_id', 'description'];
   allowedFields.forEach(field => {
     if (req.body[field] !== undefined && !processedFields.has(field)) {
       updates.push(`${field} = ?`);
