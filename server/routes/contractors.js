@@ -19,6 +19,7 @@ router.get('/', authenticateToken, (req, res) => {
         rank: row.rank || '',
         companyName: row.name,
         name: row.contact_person || '',
+        position: row.position || '',
         process: row.specialty || '',
         contact: row.phone || '',
         bankName: row.bank_name || '',
@@ -34,9 +35,10 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 router.post('/', authenticateToken, (req, res) => {
-  // Frontend sends: { companyName, name (contact person), process, contact, bankName, accountNumber, notes, rank }
+  // Frontend sends: { companyName, name (contact person), position, process, contact, bankName, accountNumber, notes, rank }
   const companyName = req.body.companyName || req.body.name;
   const contactPerson = req.body.name;
+  const position = req.body.position;
   const phone = req.body.contact || req.body.phone;
   const specialty = req.body.process || req.body.specialty;
   const bankName = req.body.bankName || req.body.bank_name;
@@ -46,8 +48,8 @@ router.post('/', authenticateToken, (req, res) => {
   const email = req.body.email;
 
   db.run(
-    'INSERT INTO contractors (name, contact_person, phone, email, specialty, notes, bank_name, account_number, rank) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [companyName, contactPerson, phone, email || '', specialty, notes || '', bankName || '', accountNumber || '', rank || ''],
+    'INSERT INTO contractors (name, contact_person, position, phone, email, specialty, notes, bank_name, account_number, rank) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [companyName, contactPerson, position || '', phone, email || '', specialty, notes || '', bankName || '', accountNumber || '', rank || ''],
     function(err) {
       if (err) {
         console.error('Error creating contractor:', err);
@@ -61,9 +63,10 @@ router.post('/', authenticateToken, (req, res) => {
 router.put('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
-  // Frontend sends: { companyName, name (contact person), process, contact, bankName, accountNumber, notes, rank }
+  // Frontend sends: { companyName, name (contact person), position, process, contact, bankName, accountNumber, notes, rank }
   const companyName = req.body.companyName || req.body.name;
   const contactPerson = req.body.name;
+  const position = req.body.position;
   const phone = req.body.contact || req.body.phone;
   const specialty = req.body.process || req.body.specialty;
   const bankName = req.body.bankName || req.body.bank_name;
@@ -73,8 +76,8 @@ router.put('/:id', authenticateToken, (req, res) => {
   const email = req.body.email;
 
   db.run(
-    'UPDATE contractors SET name = ?, contact_person = ?, phone = ?, email = ?, specialty = ?, notes = ?, bank_name = ?, account_number = ?, rank = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-    [companyName, contactPerson, phone, email || '', specialty, notes || '', bankName || '', accountNumber || '', rank || '', id],
+    'UPDATE contractors SET name = ?, contact_person = ?, position = ?, phone = ?, email = ?, specialty = ?, notes = ?, bank_name = ?, account_number = ?, rank = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [companyName, contactPerson, position || '', phone, email || '', specialty, notes || '', bankName || '', accountNumber || '', rank || '', id],
     function(err) {
       if (err) {
         console.error('Error updating contractor:', err);
