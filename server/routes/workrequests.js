@@ -58,18 +58,33 @@ router.post('/', authenticateToken, (req, res) => {
   const description = req.body.description || '';
   const requestDate = req.body.requestDate || req.body.request_date || new Date().toISOString();
   const dueDate = req.body.dueDate || req.body.due_date || new Date().toISOString();
-  const requestedBy = req.body.requestedBy || req.body.requested_by || '';
-  const assignedTo = req.body.assignedTo || req.body.assigned_to || '';
+  const requestedByName = req.body.requestedBy || req.body.requested_by || '';
+  const assignedToName = req.body.assignedTo || req.body.assigned_to || '';
   const priority = req.body.priority || 'medium';
   const status = req.body.status || 'pending';
 
   console.log('[POST /api/workrequests] Received data:', {
-    project, requestType, description, requestDate, dueDate, requestedBy, assignedTo, priority, status
+    project, requestType, description, requestDate, dueDate, requestedByName, assignedToName, priority, status
   });
+
+  // Convert assignedTo name to user ID if it's a name (string)
+  // If it's already a number, use it as-is
+  let assignedToId = null;
+  if (assignedToName) {
+    // Check if it's a number (user ID) or a string (user name)
+    if (typeof assignedToName === 'number' || !isNaN(assignedToName)) {
+      assignedToId = parseInt(assignedToName);
+    } else {
+      // It's a name, look up the user ID
+      // For now, store the name in requested_by field and leave assigned_to null
+      // since we don't have a users table lookup here
+      assignedToId = null;
+    }
+  }
 
   db.run(
     'INSERT INTO work_requests (project, request_type, title, description, request_date, due_date, requested_by, assigned_to, priority, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [project, requestType, requestType, description, requestDate, dueDate, requestedBy, assignedTo, priority, status, req.user.id],
+    [project, requestType, requestType, description, requestDate, dueDate, requestedByName, assignedToId, priority, status, req.user.id],
     function(err) {
       if (err) {
         console.error('[POST /api/workrequests] Database error:', err);
@@ -95,7 +110,7 @@ router.post('/', authenticateToken, (req, res) => {
             requestDate: row.request_date || row.created_at || new Date().toISOString(),
             dueDate: row.due_date || new Date().toISOString(),
             requestedBy: row.requested_by || row.username || row.name || '알 수 없음',
-            assignedTo: row.assigned_to || '',
+            assignedTo: assignedToName || row.assigned_to || '',
             status: row.status || 'pending',
             priority: row.priority || 'medium',
             notes: '',
@@ -120,18 +135,28 @@ router.put('/:id', authenticateToken, (req, res) => {
   const description = req.body.description || '';
   const requestDate = req.body.requestDate || req.body.request_date;
   const dueDate = req.body.dueDate || req.body.due_date;
-  const requestedBy = req.body.requestedBy || req.body.requested_by || '';
-  const assignedTo = req.body.assignedTo || req.body.assigned_to || '';
+  const requestedByName = req.body.requestedBy || req.body.requested_by || '';
+  const assignedToName = req.body.assignedTo || req.body.assigned_to || '';
   const priority = req.body.priority || 'medium';
   const status = req.body.status || 'pending';
 
   console.log('[PUT /api/workrequests/:id] Updating ID:', id, 'with data:', {
-    project, requestType, description, requestDate, dueDate, requestedBy, assignedTo, priority, status
+    project, requestType, description, requestDate, dueDate, requestedByName, assignedToName, priority, status
   });
+
+  // Convert assignedTo name to user ID if it's a name (string)
+  let assignedToId = null;
+  if (assignedToName) {
+    if (typeof assignedToName === 'number' || !isNaN(assignedToName)) {
+      assignedToId = parseInt(assignedToName);
+    } else {
+      assignedToId = null;
+    }
+  }
 
   db.run(
     'UPDATE work_requests SET project = ?, request_type = ?, title = ?, description = ?, request_date = ?, due_date = ?, requested_by = ?, assigned_to = ?, priority = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-    [project, requestType, requestType, description, requestDate, dueDate, requestedBy, assignedTo, priority, status, id],
+    [project, requestType, requestType, description, requestDate, dueDate, requestedByName, assignedToId, priority, status, id],
     function(err) {
       if (err) {
         console.error('[PUT /api/workrequests/:id] Database error:', err);
@@ -157,7 +182,7 @@ router.put('/:id', authenticateToken, (req, res) => {
             requestDate: row.request_date || row.created_at || new Date().toISOString(),
             dueDate: row.due_date || new Date().toISOString(),
             requestedBy: row.requested_by || row.username || row.name || '알 수 없음',
-            assignedTo: row.assigned_to || '',
+            assignedTo: assignedToName || row.assigned_to || '',
             status: row.status || 'pending',
             priority: row.priority || 'medium',
             notes: '',
