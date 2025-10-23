@@ -30,6 +30,7 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "mongodb": "^6.20.0",
     "nodemon": "^3.1.10"
   }
 }
