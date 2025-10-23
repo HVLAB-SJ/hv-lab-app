@@ -300,25 +300,25 @@ router.put('/:id', authenticateToken, (req, res) => {
 
   console.log('[PUT /api/schedules/:id] Received body:', JSON.stringify(req.body, null, 2));
 
-  const {
-    title,
-    description,
-    start_date,
-    end_date,
-    type,
-    status,
-    priority,
-    color,
-    progress,
-    assigned_to,
-    assignee_ids
-  } = req.body;
+  // Support both frontend format (startDate, endDate, assignedTo) and backend format (start_date, end_date, etc)
+  const title = req.body.title;
+  const description = req.body.description;
+  const start_date = req.body.start_date || req.body.startDate;
+  const end_date = req.body.end_date || req.body.endDate;
+  const type = req.body.type || 'other';
+  const status = req.body.status;
+  const priority = req.body.priority;
+  const color = req.body.color;
+  const progress = req.body.progress;
+  const assigned_to = req.body.assigned_to || (req.body.assignedTo ? req.body.assignedTo.join(', ') : null);
+  const assignee_ids = req.body.assignee_ids || req.body.assignedTo;
+  const project_id = req.body.project_id || req.body.project;
 
   db.run(
     `UPDATE schedules
      SET title = ?, description = ?, start_date = ?, end_date = ?,
          type = ?, status = ?, priority = ?, color = ?, progress = ?,
-         assigned_to = ?, updated_at = CURRENT_TIMESTAMP
+         assigned_to = ?, project_id = ?, updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`,
     [
       title,
@@ -331,6 +331,7 @@ router.put('/:id', authenticateToken, (req, res) => {
       color,
       progress,
       assigned_to,
+      project_id,
       id
     ],
     function(err) {
@@ -342,25 +343,116 @@ router.put('/:id', authenticateToken, (req, res) => {
         return res.status(404).json({ error: '일정을 찾을 수 없습니다.' });
       }
 
-      // 담당자 재할당
-      if (assignee_ids) {
+      // 담당자 재할당 (assignee_ids가 배열일 경우)
+      if (assignee_ids && Array.isArray(assignee_ids)) {
         db.run('DELETE FROM schedule_assignees WHERE schedule_id = ?', [id], (err) => {
           if (!err && assignee_ids.length > 0) {
-            const assigneeValues = assignee_ids.map(userId => `(${id}, ${userId})`).join(',');
-            db.run(
-              `INSERT INTO schedule_assignees (schedule_id, user_id) VALUES ${assigneeValues}`,
-              [],
-              (err) => {
-                if (err) {
-                  console.error('담당자 재할당 실패:', err);
-                }
+            // assignee_ids가 숫자 배열인지 확인하고, 문자열이면 user id로 변환
+            const userPromises = assignee_ids.map(assignee => {
+              // 숫자면 그대로 사용
+              if (typeof assignee === 'number') {
+                return Promise.resolve(assignee);
               }
-            );
+              // 문자열이면 username으로 user id 찾기
+              return new Promise((resolve, reject) => {
+                db.get('SELECT id FROM users WHERE username = ? OR name = ?', [assignee, assignee], (err, user) => {
+                  if (err) reject(err);
+                  else resolve(user ? user.id : null);
+                });
+              });
+            });
+
+            Promise.all(userPromises).then(userIds => {
+              const validUserIds = userIds.filter(id => id !== null);
+              if (validUserIds.length > 0) {
+                const assigneeValues = validUserIds.map(userId => `(${id}, ${userId})`).join(',');
+                db.run(
+                  `INSERT INTO schedule_assignees (schedule_id, user_id) VALUES ${assigneeValues}`,
+                  [],
+                  (err) => {
+                    if (err) {
+                      console.error('담당자 재할당 실패:', err);
+                    }
+                  }
+                );
+              }
+            }).catch(err => {
+              console.error('담당자 ID 변환 실패:', err);
+            });
           }
         });
       }
 
-      res.json({ message: '일정이 수정되었습니다.' });
+      // Fetch the updated schedule with full data and convert to MongoDB format
+      db.get(
+        `SELECT s.*, p.name as project_name, p.color as project_color, u.username as creator_name
+         FROM schedules s
+         LEFT JOIN projects p ON s.project_id = p.id
+         LEFT JOIN users u ON s.created_by = u.id
+         WHERE s.id = ?`,
+        [id],
+        async (err, schedule) => {
+          if (err) {
+            console.error('[PUT /api/schedules/:id] Failed to fetch updated schedule:', err);
+            return res.status(500).json({ error: '일정 조회 실패' });
+          }
+
+          // Get assignees
+          const assignees = await new Promise((resolve) => {
+            db.all(
+              `SELECT u.id, u.username, u.name FROM schedule_assignees sa
+               JOIN users u ON sa.user_id = u.id
+               WHERE sa.schedule_id = ?`,
+              [id],
+              (err, users) => {
+                if (err) resolve([]);
+                else resolve(users || []);
+              }
+            );
+          });
+
+          // Handle project data - can be object or string
+          let projectData;
+          if (schedule.project_id && schedule.project_name) {
+            // Full project object
+            projectData = {
+              _id: schedule.project_id.toString(),
+              name: schedule.project_name,
+              color: schedule.project_color || '#4A90E2'
+            };
+          } else if (schedule.project_name) {
+            // Just project name as string
+            projectData = schedule.project_name;
+          } else {
+            // No project - return empty string to prevent null errors
+            projectData = '';
+          }
+
+          // Convert to MongoDB format for frontend
+          const convertedSchedule = {
+            _id: schedule.id.toString(),
+            title: schedule.title,
+            description: schedule.description || '',
+            startDate: schedule.start_date,
+            endDate: schedule.end_date,
+            type: schedule.type || 'construction',
+            status: schedule.status || 'pending',
+            priority: schedule.priority || 'normal',
+            project: projectData,
+            assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
+            assigneeNames: assignees.map(u => u.name || u.username),
+            createdBy: schedule.created_by ? {
+              _id: schedule.created_by.toString(),
+              username: schedule.creator_name || ''
+            } : null,
+            createdAt: schedule.created_at,
+            updatedAt: schedule.updated_at
+          };
+
+          console.log('[PUT /api/schedules/:id] Updated schedule:', convertedSchedule);
+          res.json(convertedSchedule);
+        }
+      );
     }
   );
 });
