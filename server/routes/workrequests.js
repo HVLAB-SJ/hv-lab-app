@@ -33,12 +33,12 @@ router.get('/', authenticateToken, (req, res) => {
     // Convert each row to MongoDB-compatible format with fallback values
     const workRequests = (rows || []).map(row => ({
       _id: row.id.toString(),
-      project: '',  // work_requests table doesn't have project field
-      requestType: row.title || '기타',
+      project: row.project || '',
+      requestType: row.request_type || row.title || '기타',
       description: row.description || '',
-      requestDate: row.created_at || new Date().toISOString(),
+      requestDate: row.request_date || row.created_at || new Date().toISOString(),
       dueDate: row.due_date || new Date().toISOString(),
-      requestedBy: row.username || row.name || '알 수 없음',
+      requestedBy: row.requested_by || row.username || row.name || '알 수 없음',
       assignedTo: row.assigned_to || '',
       status: row.status || 'pending',
       priority: row.priority || 'medium',
@@ -52,11 +52,24 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 router.post('/', authenticateToken, (req, res) => {
-  const { title, description, priority, assigned_to, due_date } = req.body;
+  // Accept both frontend (camelCase) and backend (snake_case) field names
+  const project = req.body.project || '';
+  const requestType = req.body.requestType || req.body.request_type || req.body.title || '';
+  const description = req.body.description || '';
+  const requestDate = req.body.requestDate || req.body.request_date || new Date().toISOString();
+  const dueDate = req.body.dueDate || req.body.due_date || new Date().toISOString();
+  const requestedBy = req.body.requestedBy || req.body.requested_by || '';
+  const assignedTo = req.body.assignedTo || req.body.assigned_to || '';
+  const priority = req.body.priority || 'medium';
+  const status = req.body.status || 'pending';
+
+  console.log('[POST /api/workrequests] Received data:', {
+    project, requestType, description, requestDate, dueDate, requestedBy, assignedTo, priority, status
+  });
 
   db.run(
-    'INSERT INTO work_requests (title, description, priority, assigned_to, due_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [title, description, priority || 'normal', assigned_to, due_date, 'pending', req.user.id],
+    'INSERT INTO work_requests (project, request_type, title, description, request_date, due_date, requested_by, assigned_to, priority, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [project, requestType, requestType, description, requestDate, dueDate, requestedBy, assignedTo, priority, status, req.user.id],
     function(err) {
       if (err) {
         console.error('[POST /api/workrequests] Database error:', err);
@@ -65,7 +78,7 @@ router.post('/', authenticateToken, (req, res) => {
 
       // Fetch the created work request to return full data
       db.get(
-        'SELECT * FROM work_requests WHERE id = ?',
+        'SELECT wr.*, u.username, u.name FROM work_requests wr LEFT JOIN users u ON wr.created_by = u.id WHERE wr.id = ?',
         [this.lastID],
         (err, row) => {
           if (err) {
@@ -76,12 +89,12 @@ router.post('/', authenticateToken, (req, res) => {
           // Convert to MongoDB-compatible format for frontend
           const workRequest = {
             _id: row.id.toString(),
-            project: '',  // work_requests table doesn't have project field
-            requestType: row.title || '기타',
+            project: row.project || '',
+            requestType: row.request_type || row.title || '기타',
             description: row.description || '',
-            requestDate: row.created_at || new Date().toISOString(),
+            requestDate: row.request_date || row.created_at || new Date().toISOString(),
             dueDate: row.due_date || new Date().toISOString(),
-            requestedBy: req.user.username || req.user.name || '알 수 없음',
+            requestedBy: row.requested_by || row.username || row.name || '알 수 없음',
             assignedTo: row.assigned_to || '',
             status: row.status || 'pending',
             priority: row.priority || 'medium',
@@ -100,11 +113,25 @@ router.post('/', authenticateToken, (req, res) => {
 
 router.put('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
-  const { title, description, priority, assigned_to, status, due_date } = req.body;
+
+  // Accept both frontend (camelCase) and backend (snake_case) field names
+  const project = req.body.project || '';
+  const requestType = req.body.requestType || req.body.request_type || req.body.title || '';
+  const description = req.body.description || '';
+  const requestDate = req.body.requestDate || req.body.request_date;
+  const dueDate = req.body.dueDate || req.body.due_date;
+  const requestedBy = req.body.requestedBy || req.body.requested_by || '';
+  const assignedTo = req.body.assignedTo || req.body.assigned_to || '';
+  const priority = req.body.priority || 'medium';
+  const status = req.body.status || 'pending';
+
+  console.log('[PUT /api/workrequests/:id] Updating ID:', id, 'with data:', {
+    project, requestType, description, requestDate, dueDate, requestedBy, assignedTo, priority, status
+  });
 
   db.run(
-    'UPDATE work_requests SET title = ?, description = ?, priority = ?, assigned_to = ?, status = ?, due_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-    [title, description, priority, assigned_to, status, due_date, id],
+    'UPDATE work_requests SET project = ?, request_type = ?, title = ?, description = ?, request_date = ?, due_date = ?, requested_by = ?, assigned_to = ?, priority = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [project, requestType, requestType, description, requestDate, dueDate, requestedBy, assignedTo, priority, status, id],
     function(err) {
       if (err) {
         console.error('[PUT /api/workrequests/:id] Database error:', err);
@@ -124,12 +151,12 @@ router.put('/:id', authenticateToken, (req, res) => {
           // Convert to MongoDB-compatible format with fallback values
           const workRequest = {
             _id: row.id.toString(),
-            project: '',
-            requestType: row.title || '기타',
+            project: row.project || '',
+            requestType: row.request_type || row.title || '기타',
             description: row.description || '',
-            requestDate: row.created_at || new Date().toISOString(),
+            requestDate: row.request_date || row.created_at || new Date().toISOString(),
             dueDate: row.due_date || new Date().toISOString(),
-            requestedBy: row.username || row.name || '알 수 없음',
+            requestedBy: row.requested_by || row.username || row.name || '알 수 없음',
             assignedTo: row.assigned_to || '',
             status: row.status || 'pending',
             priority: row.priority || 'medium',
@@ -138,6 +165,7 @@ router.put('/:id', authenticateToken, (req, res) => {
             updatedAt: row.updated_at || new Date().toISOString()
           };
 
+          console.log('[PUT /api/workrequests/:id] Updated:', workRequest);
           res.json(workRequest);
         }
       );
