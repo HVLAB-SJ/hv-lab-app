@@ -197,14 +197,26 @@ router.put('/:id', authenticateToken, (req, res) => {
     processedFields.add('address');
   }
   if (req.body.startDate !== undefined) {
+    // Convert ISO date string to YYYY-MM-DD format if needed
+    let startDate = req.body.startDate;
+    if (typeof startDate === 'string' && startDate.includes('T')) {
+      startDate = startDate.split('T')[0];
+    }
     updates.push('start_date = ?');
-    values.push(req.body.startDate);
+    values.push(startDate);
     processedFields.add('start_date');
+    console.log('[PUT /api/projects/:id] Setting start_date to:', startDate);
   }
   if (req.body.endDate !== undefined) {
+    // Convert ISO date string to YYYY-MM-DD format if needed
+    let endDate = req.body.endDate;
+    if (typeof endDate === 'string' && endDate.includes('T')) {
+      endDate = endDate.split('T')[0];
+    }
     updates.push('end_date = ?');
-    values.push(req.body.endDate);
+    values.push(endDate);
     processedFields.add('end_date');
+    console.log('[PUT /api/projects/:id] Setting end_date to:', endDate);
   }
   if (req.body.manager !== undefined) {
     updates.push('manager_name = ?');
