@@ -138,6 +138,73 @@ server.listen(PORT, HOST, async () => {
   // 데이터베이스 초기화
   initDatabase();
 
+  // Run work_requests table migration
+  setTimeout(() => {
+    console.log('🔄 Checking work_requests table schema...');
+
+    // Function to check if column exists
+    const columnExists = (columnName, callback) => {
+      db.all('PRAGMA table_info(work_requests)', (err, columns) => {
+        if (err) {
+          callback(err, false);
+          return;
+        }
+        const exists = columns && columns.some(col => col.name === columnName);
+        callback(null, exists);
+      });
+    };
+
+    // Add column if it doesn't exist
+    const addColumnIfNeeded = (columnName, columnType, callback) => {
+      columnExists(columnName, (err, exists) => {
+        if (err) {
+          console.error(`❌ Error checking ${columnName}:`, err);
+          callback(err);
+          return;
+        }
+        if (exists) {
+          console.log(`✅ Column '${columnName}' already exists`);
+          callback(null);
+          return;
+        }
+        db.run(`ALTER TABLE work_requests ADD COLUMN ${columnName} ${columnType}`, (err) => {
+          if (err) {
+            console.error(`❌ Error adding ${columnName}:`, err);
+            callback(err);
+            return;
+          }
+          console.log(`✅ Added column '${columnName}' (${columnType})`);
+          callback(null);
+        });
+      });
+    };
+
+    // Add all required columns
+    const columnsToAdd = [
+      { name: 'project', type: 'TEXT' },
+      { name: 'request_date', type: 'DATE' },
+      { name: 'request_type', type: 'TEXT' },
+      { name: 'requested_by', type: 'TEXT' }
+    ];
+
+    let currentIndex = 0;
+    const addNextColumn = () => {
+      if (currentIndex >= columnsToAdd.length) {
+        console.log('✅ work_requests migration completed');
+        return;
+      }
+      const column = columnsToAdd[currentIndex];
+      addColumnIfNeeded(column.name, column.type, (err) => {
+        if (!err) {
+          currentIndex++;
+          addNextColumn();
+        }
+      });
+    };
+
+    addNextColumn();
+  }, 1000);
+
   // Ensure at least one admin user exists (for Railway ephemeral storage)
   setTimeout(() => {
     db.get('SELECT COUNT(*) as count FROM users', [], (err, result) => {
