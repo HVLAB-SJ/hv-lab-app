@@ -15,6 +15,13 @@ const convertSQLiteDate = (dateStr) => {
 };
 
 /**
+ * Convert snake_case to camelCase
+ */
+const toCamelCase = (str) => {
+  return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+};
+
+/**
  * Sanitize an object's date fields
  * @param {Object} obj - Object with potential date fields
  * @param {Array<string>} dateFields - Array of field names to convert
@@ -25,10 +32,16 @@ const sanitizeDates = (obj, dateFields = ['created_at', 'updated_at', 'start_dat
   dateFields.forEach(field => {
     if (sanitized[field] !== undefined) {
       const converted = convertSQLiteDate(sanitized[field]);
+      const camelField = toCamelCase(field);
+
       // Remove null date fields from response to prevent frontend parsing errors
       if (converted === null) {
         delete sanitized[field];
+        delete sanitized[camelField];
       } else {
+        // Add camelCase version for frontend
+        sanitized[camelField] = converted;
+        // Keep snake_case for backward compatibility
         sanitized[field] = converted;
       }
     }
