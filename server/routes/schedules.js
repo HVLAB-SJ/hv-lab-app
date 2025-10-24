@@ -85,6 +85,7 @@ router.get('/', authenticateToken, (req, res) => {
         project: projectData,
         assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
         assigneeNames: assignees.map(u => u.name || u.username),
+        time: schedule.time,
         createdBy: schedule.created_by ? {
           _id: schedule.created_by.toString(),
           username: schedule.creator_name || ''
@@ -300,6 +301,7 @@ router.post('/', authenticateToken, (req, res) => {
             project: projectData,
             assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
             assigneeNames: assignees.map(u => u.name || u.username),
+            time: schedule.time,
             createdBy: schedule.created_by ? {
               _id: schedule.created_by.toString(),
               username: schedule.creator_name || ''
@@ -336,12 +338,13 @@ router.put('/:id', authenticateToken, (req, res) => {
   const assigned_to = req.body.assigned_to || (req.body.assignedTo ? req.body.assignedTo.join(', ') : null);
   const assignee_ids = req.body.assignee_ids || req.body.assignedTo;
   const project_id = req.body.project_id || req.body.project;
+  const time = req.body.time;
 
   db.run(
     `UPDATE schedules
      SET title = ?, description = ?, start_date = ?, end_date = ?,
          type = ?, status = ?, priority = ?, color = ?, progress = ?,
-         assigned_to = ?, project_id = ?, updated_at = CURRENT_TIMESTAMP
+         assigned_to = ?, project_id = ?, time = ?, updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`,
     [
       title,
@@ -355,6 +358,7 @@ router.put('/:id', authenticateToken, (req, res) => {
       progress,
       assigned_to,
       project_id,
+      time,
       id
     ],
     function(err) {
@@ -464,6 +468,7 @@ router.put('/:id', authenticateToken, (req, res) => {
             project: projectData,
             assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
             assigneeNames: assignees.map(u => u.name || u.username),
+            time: schedule.time,
             createdBy: schedule.created_by ? {
               _id: schedule.created_by.toString(),
               username: schedule.creator_name || ''
