@@ -7,6 +7,7 @@ const { sanitizeDatesArray, sanitizeDates } = require('../utils/dateUtils');
 
 // 결제 요청 목록 조회
 router.get('/', authenticateToken, (req, res) => {
+  console.log('[GET /api/payments] Request received');
   const { status, project_id, user_id } = req.query;
   let query = `
     SELECT pr.*,
@@ -39,8 +40,11 @@ router.get('/', authenticateToken, (req, res) => {
 
   db.all(query, params, (err, requests) => {
     if (err) {
+      console.error('[GET /api/payments] Database error:', err);
       return res.status(500).json({ error: '결제 요청 조회 실패' });
     }
+    console.log('[GET /api/payments] Found', requests.length, 'payments');
+    console.log('[GET /api/payments] Sample:', JSON.stringify(requests[0], null, 2));
     // Convert SQLite dates to ISO 8601
     const sanitized = sanitizeDatesArray(requests, ['created_at', 'updated_at', 'approved_at', 'paid_at']);
     res.json(sanitized);
