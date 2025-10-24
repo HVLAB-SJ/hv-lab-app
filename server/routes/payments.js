@@ -264,17 +264,20 @@ router.post('/:id/complete', authenticateToken, isManager, (req, res) => {
 router.delete('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
+  // Worker 권한도 삭제 가능하도록 변경 (pending 상태만)
   db.run(
     `DELETE FROM payment_requests
-     WHERE id = ? AND user_id = ? AND status = 'pending'`,
-    [id, req.user.id],
+     WHERE id = ? AND status = 'pending'`,
+    [id],
     function(err) {
       if (err) {
+        console.error('[DELETE /api/payments/:id] Database error:', err);
         return res.status(500).json({ error: '삭제 실패' });
       }
       if (this.changes === 0) {
-        return res.status(404).json({ error: '삭제할 수 없는 요청입니다.' });
+        return res.status(404).json({ error: '삭제할 수 없는 요청입니다. (이미 삭제되었거나 pending 상태가 아닙니다)' });
       }
+      console.log(`[DELETE /api/payments/:id] Deleted payment request ${id} by user ${req.user.id}`);
       res.json({ message: '결제 요청이 삭제되었습니다.' });
     }
   );
