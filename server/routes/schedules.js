@@ -312,7 +312,8 @@ router.post('/', authenticateToken, (req, res) => {
           res.status(201).json(convertedSchedule);
         }
       );
-    });
+    }
+    );
   }
 });
 
