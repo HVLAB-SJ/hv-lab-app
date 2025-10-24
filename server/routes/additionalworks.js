@@ -24,6 +24,7 @@ router.get('/', authenticateToken, (req, res) => {
         description: row.description || '',
         amount: row.amount || 0,
         date: row.work_date || new Date().toISOString(),
+        notes: row.notes || '',
         createdAt: row.created_at || new Date().toISOString(),
         updatedAt: row.updated_at || new Date().toISOString()
       }));
@@ -41,6 +42,7 @@ router.post('/', authenticateToken, (req, res) => {
   const description = req.body.description || '';
   const amount = req.body.amount || 0;
   const work_date = req.body.work_date || req.body.date || new Date().toISOString();
+  const notes = req.body.notes || '';
 
   // If project is a name (string), look up the project_id
   if (!project_id && req.body.project) {
@@ -60,8 +62,8 @@ router.post('/', authenticateToken, (req, res) => {
 
   function insertAdditionalWork() {
     db.run(
-      'INSERT INTO additional_works (project_id, description, amount, work_date, created_by) VALUES (?, ?, ?, ?, ?)',
-      [project_id, description, amount, work_date, req.user.id],
+      'INSERT INTO additional_works (project_id, description, amount, work_date, notes, created_by) VALUES (?, ?, ?, ?, ?, ?)',
+      [project_id, description, amount, work_date, notes, req.user.id],
       function(err) {
         if (err) {
           console.error('[POST /api/additional-works] Database error:', err);
@@ -87,6 +89,7 @@ router.post('/', authenticateToken, (req, res) => {
               description: row.description || '',
               amount: row.amount || 0,
               date: row.work_date || new Date().toISOString(),
+              notes: row.notes || '',
               createdAt: row.created_at || new Date().toISOString(),
               updatedAt: row.updated_at || new Date().toISOString()
             };
@@ -109,6 +112,7 @@ router.put('/:id', authenticateToken, (req, res) => {
   const description = req.body.description;
   const amount = req.body.amount;
   const work_date = req.body.work_date || req.body.date;
+  const notes = req.body.notes;
 
   // If project is a name (string), look up the project_id
   if (!project_id && req.body.project) {
@@ -145,6 +149,10 @@ router.put('/:id', authenticateToken, (req, res) => {
     if (work_date !== undefined) {
       updates.push('work_date = ?');
       values.push(work_date);
+    }
+    if (notes !== undefined) {
+      updates.push('notes = ?');
+      values.push(notes);
     }
 
     if (updates.length === 0) {
@@ -184,6 +192,7 @@ router.put('/:id', authenticateToken, (req, res) => {
               description: row.description || '',
               amount: row.amount || 0,
               date: row.work_date || new Date().toISOString(),
+              notes: row.notes || '',
               createdAt: row.created_at || new Date().toISOString(),
               updatedAt: row.updated_at || new Date().toISOString()
             };
