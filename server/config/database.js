@@ -308,6 +308,15 @@ const initDatabase = () => {
     )
   `);
 
+  // Add notes column to additional_works table (migration)
+  db.run(`ALTER TABLE additional_works ADD COLUMN notes TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding notes column to additional_works:', err);
+    } else if (!err) {
+      console.log('✓ notes column added to additional_works table');
+    }
+  });
+
   // 공사대금 테이블
   db.run(`
     CREATE TABLE IF NOT EXISTS construction_payments (
