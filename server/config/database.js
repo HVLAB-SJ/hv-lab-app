@@ -317,6 +317,17 @@ const initDatabase = () => {
     }
   });
 
+  // Clean quotes from specialty field in contractors table (one-time migration)
+  db.run(`UPDATE contractors SET specialty = REPLACE(specialty, '"', '') WHERE specialty LIKE '%"%'`, function(err) {
+    if (err) {
+      console.error('❌ Error cleaning quotes from specialty:', err);
+    } else if (this.changes > 0) {
+      console.log(`✓ Cleaned quotes from ${this.changes} contractor specialty entries`);
+    } else {
+      console.log('✓ No quotes found in contractor specialty field');
+    }
+  });
+
   // 공사대금 테이블
   db.run(`
     CREATE TABLE IF NOT EXISTS construction_payments (
