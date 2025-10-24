@@ -317,14 +317,36 @@ const initDatabase = () => {
     }
   });
 
-  // Clean quotes from specialty field in contractors table (one-time migration)
-  db.run(`UPDATE contractors SET specialty = REPLACE(specialty, '"', '') WHERE specialty LIKE '%"%'`, function(err) {
+  // Clean quotes from all text fields in contractors table (one-time migration)
+  db.run(`
+    UPDATE contractors SET
+      name = REPLACE(name, '"', ''),
+      contact_person = REPLACE(contact_person, '"', ''),
+      phone = REPLACE(phone, '"', ''),
+      email = REPLACE(email, '"', ''),
+      specialty = REPLACE(specialty, '"', ''),
+      notes = REPLACE(notes, '"', ''),
+      bank_name = REPLACE(bank_name, '"', ''),
+      account_number = REPLACE(account_number, '"', ''),
+      rank = REPLACE(rank, '"', ''),
+      position = REPLACE(position, '"', '')
+    WHERE name LIKE '%"%'
+       OR contact_person LIKE '%"%'
+       OR phone LIKE '%"%'
+       OR email LIKE '%"%'
+       OR specialty LIKE '%"%'
+       OR notes LIKE '%"%'
+       OR bank_name LIKE '%"%'
+       OR account_number LIKE '%"%'
+       OR rank LIKE '%"%'
+       OR position LIKE '%"%'
+  `, function(err) {
     if (err) {
-      console.error('❌ Error cleaning quotes from specialty:', err);
+      console.error('❌ Error cleaning quotes from contractors:', err);
     } else if (this.changes > 0) {
-      console.log(`✓ Cleaned quotes from ${this.changes} contractor specialty entries`);
+      console.log(`✓ Cleaned quotes from ${this.changes} contractor entries`);
     } else {
-      console.log('✓ No quotes found in contractor specialty field');
+      console.log('✓ No quotes found in contractors table');
     }
   });
 
