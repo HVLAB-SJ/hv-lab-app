@@ -274,6 +274,48 @@ const initDatabase = () => {
     )
   `);
 
+  // Add missing columns to as_requests table (migration)
+  db.run(`ALTER TABLE as_requests ADD COLUMN request_date DATE`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding request_date column:', err);
+    }
+  });
+  db.run(`ALTER TABLE as_requests ADD COLUMN site_address TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding site_address column:', err);
+    }
+  });
+  db.run(`ALTER TABLE as_requests ADD COLUMN entrance_password TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding entrance_password column:', err);
+    }
+  });
+  db.run(`ALTER TABLE as_requests ADD COLUMN scheduled_visit_date DATE`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding scheduled_visit_date column:', err);
+    }
+  });
+  db.run(`ALTER TABLE as_requests ADD COLUMN scheduled_visit_time TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding scheduled_visit_time column:', err);
+    }
+  });
+  db.run(`ALTER TABLE as_requests ADD COLUMN assigned_to TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding assigned_to column:', err);
+    }
+  });
+  db.run(`ALTER TABLE as_requests ADD COLUMN completion_date DATE`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding completion_date column:', err);
+    }
+  });
+  db.run(`ALTER TABLE as_requests ADD COLUMN notes TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding notes column:', err);
+    }
+  });
+
   // 업무 요청 테이블
   db.run(`
     CREATE TABLE IF NOT EXISTS work_requests (
