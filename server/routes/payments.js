@@ -233,6 +233,52 @@ router.post('/:id/reject', authenticateToken, isManager, (req, res) => {
   );
 });
 
+// 결제 상태 변경 (송금완료 등)
+router.put('/:id/status', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  console.log(`[PUT /api/payments/:id/status] Updating payment ${id} to status: ${status}`);
+
+  // 유효한 상태값 검증
+  const validStatuses = ['pending', 'reviewing', 'approved', 'rejected', 'completed'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: '유효하지 않은 상태값입니다.' });
+  }
+
+  db.run(
+    `UPDATE payment_requests
+     SET status = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [status, id],
+    function(err) {
+      if (err) {
+        console.error('[PUT /api/payments/:id/status] Database error:', err);
+        return res.status(500).json({ error: '상태 변경 실패' });
+      }
+      if (this.changes === 0) {
+        return res.status(404).json({ error: '결제 요청을 찾을 수 없습니다.' });
+      }
+
+      console.log(`[PUT /api/payments/:id/status] Successfully updated payment ${id} to ${status}`);
+
+      // 상태가 completed로 변경되면 paid_at 업데이트
+      if (status === 'completed') {
+        db.run(
+          'UPDATE payment_requests SET paid_at = CURRENT_TIMESTAMP WHERE id = ?',
+          [id],
+          (err) => {
+            if (err) console.error('Error updating paid_at:', err);
+          }
+        );
+        notifyCompletion(id);
+      }
+
+      res.json({ message: '상태가 변경되었습니다.' });
+    }
+  );
+});
+
 // 결제 완료 처리
 router.post('/:id/complete', authenticateToken, isManager, (req, res) => {
   const { id } = req.params;
