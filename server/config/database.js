@@ -325,6 +325,28 @@ const initDatabase = () => {
     )
   `);
 
+  // Add VAT-related columns to construction_payments table (migration)
+  db.run(`ALTER TABLE construction_payments ADD COLUMN vat_type TEXT DEFAULT 'percentage'`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding vat_type column:', err);
+    }
+  });
+  db.run(`ALTER TABLE construction_payments ADD COLUMN vat_percentage INTEGER DEFAULT 100`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding vat_percentage column:', err);
+    }
+  });
+  db.run(`ALTER TABLE construction_payments ADD COLUMN vat_amount INTEGER DEFAULT 0`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding vat_amount column:', err);
+    }
+  });
+  db.run(`ALTER TABLE construction_payments ADD COLUMN payments TEXT DEFAULT '[]'`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding payments column:', err);
+    }
+  });
+
   // 협력업체 테이블
   db.run(`
     CREATE TABLE IF NOT EXISTS contractors (
@@ -357,6 +379,11 @@ const initDatabase = () => {
   db.run(`ALTER TABLE contractors ADD COLUMN rank TEXT`, (err) => {
     if (err && !err.message.includes('duplicate column name')) {
       console.error('Error adding rank column:', err);
+    }
+  });
+  db.run(`ALTER TABLE contractors ADD COLUMN position TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding position column:', err);
     }
   });
 
