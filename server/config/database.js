@@ -144,6 +144,7 @@ const initDatabase = () => {
       color TEXT,
       progress INTEGER DEFAULT 0,
       assigned_to TEXT,
+      time TEXT DEFAULT '-',
       created_by INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
