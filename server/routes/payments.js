@@ -12,6 +12,7 @@ router.get('/', authenticateToken, (req, res) => {
     SELECT pr.*,
            u.username as requester_name,
            p.name as project_name,
+           p.color as project_color,
            a.username as approver_name
     FROM payment_requests pr
     LEFT JOIN users u ON pr.user_id = u.id
@@ -54,6 +55,7 @@ router.get('/:id', authenticateToken, (req, res) => {
     `SELECT pr.*,
             u.username as requester_name,
             p.name as project_name,
+            p.color as project_color,
             a.username as approver_name
      FROM payment_requests pr
      LEFT JOIN users u ON pr.user_id = u.id
@@ -75,6 +77,9 @@ router.get('/:id', authenticateToken, (req, res) => {
 
 // 결제 요청 생성
 router.post('/', authenticateToken, (req, res) => {
+  console.log('[POST /api/payments] Received request body:', req.body);
+  console.log('[POST /api/payments] User:', req.user);
+
   const {
     project_id,
     request_type,
@@ -97,7 +102,7 @@ router.post('/', authenticateToken, (req, res) => {
       req.user.id,
       request_type || 'material',
       vendor_name,
-      description,
+      description || '',
       amount,
       account_holder,
       bank_name,
@@ -106,7 +111,8 @@ router.post('/', authenticateToken, (req, res) => {
     ],
     function(err) {
       if (err) {
-        return res.status(500).json({ error: '결제 요청 생성 실패' });
+        console.error('[POST /api/payments] Database error:', err);
+        return res.status(500).json({ error: '결제 요청 생성 실패', details: err.message });
       }
 
       // 알림 전송 (관리자에게)
