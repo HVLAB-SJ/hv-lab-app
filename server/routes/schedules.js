@@ -143,7 +143,7 @@ router.post('/', authenticateToken, (req, res) => {
   console.log('[POST /api/schedules] Received body:', req.body);
 
   // Support both frontend format (project, startDate, endDate, assignedTo) and backend format
-  const project_id = req.body.project_id || req.body.project;
+  let project_id = req.body.project_id || req.body.project;
   const title = req.body.title;
   const description = req.body.description;
   const start_date = req.body.start_date || req.body.startDate;
@@ -155,27 +155,49 @@ router.post('/', authenticateToken, (req, res) => {
   const assigned_to = req.body.assigned_to || (req.body.assignedTo ? req.body.assignedTo.join(', ') : null);
   const assignee_ids = req.body.assignee_ids || req.body.assignedTo;
 
-  console.log('[POST /api/schedules] Parsed data:', {
+  console.log('[POST /api/schedules] Initial parsed data:', {
     project_id, title, description, start_date, end_date, type, status, priority, color, assigned_to, assignee_ids
   });
 
-  db.run(
-    `INSERT INTO schedules
-     (project_id, title, description, start_date, end_date, type, status, priority, color, assigned_to, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      project_id,
-      title,
-      description,
-      start_date,
-      end_date,
-      type,
-      status,
-      priority,
-      color,
-      assigned_to,
-      req.user.id
-    ],
+  // If project_id is a string (project name), look it up
+  if (project_id && typeof project_id === 'string' && isNaN(Number(project_id))) {
+    console.log('[POST /api/schedules] Project is string, looking up project by name:', project_id);
+    db.get('SELECT id FROM projects WHERE name = ?', [project_id], (err, project) => {
+      if (err) {
+        console.error('[POST /api/schedules] Project lookup error:', err);
+        return res.status(500).json({ error: '프로젝트 조회 실패' });
+      }
+      if (!project) {
+        console.error('[POST /api/schedules] Project not found:', project_id);
+        return res.status(400).json({ error: '프로젝트를 찾을 수 없습니다' });
+      }
+      console.log('[POST /api/schedules] Found project ID:', project.id);
+      createSchedule(project.id);
+    });
+  } else {
+    createSchedule(project_id);
+  }
+
+  function createSchedule(finalProjectId) {
+    console.log('[POST /api/schedules] Creating schedule with project_id:', finalProjectId);
+
+    db.run(
+      `INSERT INTO schedules
+       (project_id, title, description, start_date, end_date, type, status, priority, color, assigned_to, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        finalProjectId,
+        title,
+        description,
+        start_date,
+        end_date,
+        type,
+        status,
+        priority,
+        color,
+        assigned_to,
+        req.user.id
+      ],
     function(err) {
       if (err) {
         console.error('[POST /api/schedules] Database error:', err);
@@ -290,8 +312,8 @@ router.post('/', authenticateToken, (req, res) => {
           res.status(201).json(convertedSchedule);
         }
       );
-    }
-  );
+    });
+  }
 });
 
 // 일정 수정
