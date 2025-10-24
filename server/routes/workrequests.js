@@ -67,24 +67,10 @@ router.post('/', authenticateToken, (req, res) => {
     project, requestType, description, requestDate, dueDate, requestedByName, assignedToName, priority, status
   });
 
-  // Convert assignedTo name to user ID if it's a name (string)
-  // If it's already a number, use it as-is
-  let assignedToId = null;
-  if (assignedToName) {
-    // Check if it's a number (user ID) or a string (user name)
-    if (typeof assignedToName === 'number' || !isNaN(assignedToName)) {
-      assignedToId = parseInt(assignedToName);
-    } else {
-      // It's a name, look up the user ID
-      // For now, store the name in requested_by field and leave assigned_to null
-      // since we don't have a users table lookup here
-      assignedToId = null;
-    }
-  }
-
+  // Store the assignedTo name directly (assigned_to is a TEXT column)
   db.run(
     'INSERT INTO work_requests (project, request_type, title, description, request_date, due_date, requested_by, assigned_to, priority, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [project, requestType, requestType, description, requestDate, dueDate, requestedByName, assignedToId, priority, status, req.user.id],
+    [project, requestType, requestType, description, requestDate, dueDate, requestedByName, assignedToName, priority, status, req.user.id],
     function(err) {
       if (err) {
         console.error('[POST /api/workrequests] Database error:', err);
@@ -110,7 +96,7 @@ router.post('/', authenticateToken, (req, res) => {
             requestDate: row.request_date || row.created_at || new Date().toISOString(),
             dueDate: row.due_date || new Date().toISOString(),
             requestedBy: row.requested_by || row.username || row.name || '알 수 없음',
-            assignedTo: assignedToName || row.assigned_to || '',
+            assignedTo: row.assigned_to || '',
             status: row.status || 'pending',
             priority: row.priority || 'medium',
             notes: '',
@@ -130,33 +116,75 @@ router.put('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
   // Accept both frontend (camelCase) and backend (snake_case) field names
-  const project = req.body.project || '';
-  const requestType = req.body.requestType || req.body.request_type || req.body.title || '';
-  const description = req.body.description || '';
+  const project = req.body.project;
+  const requestType = req.body.requestType || req.body.request_type || req.body.title;
+  const description = req.body.description;
   const requestDate = req.body.requestDate || req.body.request_date;
   const dueDate = req.body.dueDate || req.body.due_date;
-  const requestedByName = req.body.requestedBy || req.body.requested_by || '';
-  const assignedToName = req.body.assignedTo || req.body.assigned_to || '';
-  const priority = req.body.priority || 'medium';
-  const status = req.body.status || 'pending';
+  const requestedByName = req.body.requestedBy || req.body.requested_by;
+  const assignedToName = req.body.assignedTo || req.body.assigned_to;
+  const priority = req.body.priority;
+  const status = req.body.status;
 
   console.log('[PUT /api/workrequests/:id] Updating ID:', id, 'with data:', {
     project, requestType, description, requestDate, dueDate, requestedByName, assignedToName, priority, status
   });
 
-  // Convert assignedTo name to user ID if it's a name (string)
-  let assignedToId = null;
-  if (assignedToName) {
-    if (typeof assignedToName === 'number' || !isNaN(assignedToName)) {
-      assignedToId = parseInt(assignedToName);
-    } else {
-      assignedToId = null;
-    }
+  // Build dynamic UPDATE query for only provided fields
+  const updates = [];
+  const values = [];
+
+  if (project !== undefined) {
+    updates.push('project = ?');
+    values.push(project);
+  }
+  if (requestType !== undefined) {
+    updates.push('request_type = ?', 'title = ?');
+    values.push(requestType, requestType);
+  }
+  if (description !== undefined) {
+    updates.push('description = ?');
+    values.push(description);
+  }
+  if (requestDate !== undefined) {
+    updates.push('request_date = ?');
+    values.push(requestDate);
+  }
+  if (dueDate !== undefined) {
+    updates.push('due_date = ?');
+    values.push(dueDate);
+  }
+  if (requestedByName !== undefined) {
+    updates.push('requested_by = ?');
+    values.push(requestedByName);
+  }
+  if (assignedToName !== undefined) {
+    // Store the name directly in assigned_to field (TEXT column)
+    updates.push('assigned_to = ?');
+    values.push(assignedToName);
+  }
+  if (priority !== undefined) {
+    updates.push('priority = ?');
+    values.push(priority);
+  }
+  if (status !== undefined) {
+    updates.push('status = ?');
+    values.push(status);
   }
 
-  db.run(
-    'UPDATE work_requests SET project = ?, request_type = ?, title = ?, description = ?, request_date = ?, due_date = ?, requested_by = ?, assigned_to = ?, priority = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-    [project, requestType, requestType, description, requestDate, dueDate, requestedByName, assignedToId, priority, status, id],
+  if (updates.length === 0) {
+    return res.status(400).json({ error: '수정할 필드가 없습니다.' });
+  }
+
+  updates.push('updated_at = CURRENT_TIMESTAMP');
+  values.push(id);
+
+  const query = `UPDATE work_requests SET ${updates.join(', ')} WHERE id = ?`;
+
+  console.log('[PUT /api/workrequests/:id] SQL Query:', query);
+  console.log('[PUT /api/workrequests/:id] SQL Values:', values);
+
+  db.run(query, values,
     function(err) {
       if (err) {
         console.error('[PUT /api/workrequests/:id] Database error:', err);
@@ -182,7 +210,7 @@ router.put('/:id', authenticateToken, (req, res) => {
             requestDate: row.request_date || row.created_at || new Date().toISOString(),
             dueDate: row.due_date || new Date().toISOString(),
             requestedBy: row.requested_by || row.username || row.name || '알 수 없음',
-            assignedTo: assignedToName || row.assigned_to || '',
+            assignedTo: row.assigned_to || '',
             status: row.status || 'pending',
             priority: row.priority || 'medium',
             notes: '',
