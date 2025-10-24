@@ -223,7 +223,7 @@ const initDatabase = () => {
       user_id INTEGER NOT NULL,
       request_type TEXT DEFAULT 'material',
       vendor_name TEXT,
-      description TEXT NOT NULL,
+      description TEXT,
       amount INTEGER NOT NULL,
       account_holder TEXT,
       bank_name TEXT,
