@@ -3,6 +3,7 @@ const router = express.Router();
 const { db } = require('../config/database');
 const { authenticateToken, isManager } = require('../middleware/auth');
 const openBankingService = require('../services/openBankingService');
+const kbBankService = require('../services/kbBankService');
 
 /**
  * 오픈뱅킹 인증 시작
@@ -149,7 +150,140 @@ router.delete('/disconnect', authenticateToken, (req, res) => {
 });
 
 /**
- * 송금 실행
+ * KB은행 송금 실행 (무료)
+ * POST /api/banking/kb-transfer
+ */
+router.post('/kb-transfer', authenticateToken, isManager, async (req, res) => {
+  const {
+    paymentId,
+    bankCode,
+    accountNumber,
+    accountHolder,
+    amount,
+    purpose
+  } = req.body;
+
+  // 필수 파라미터 검증
+  if (!paymentId || !bankCode || !accountNumber || !accountHolder || !amount) {
+    return res.status(400).json({
+      success: false,
+      message: '필수 정보가 누락되었습니다'
+    });
+  }
+
+  try {
+    // KB API Access Token 발급
+    const tokenResult = await kbBankService.getAccessToken();
+
+    if (!tokenResult.success) {
+      return res.status(500).json({
+        success: false,
+        message: 'KB은행 인증에 실패했습니다',
+        error: tokenResult.error
+      });
+    }
+
+    // 송금 실행
+    console.log('[KB Transfer] Initiating transfer:', {
+      paymentId,
+      to: `${bankCode}-${accountNumber}`,
+      amount,
+      purpose
+    });
+
+    const transferResult = await kbBankService.transfer({
+      accessToken: tokenResult.accessToken,
+      toBankCode: bankCode,
+      toAccountNumber: accountNumber,
+      toAccountHolder: accountHolder,
+      amount: amount,
+      memo: purpose || `결제요청 #${paymentId}`
+    });
+
+    if (!transferResult.success) {
+      console.error('[KB Transfer] Failed:', transferResult.error);
+      return res.status(400).json({
+        success: false,
+        message: transferResult.error.message || '송금에 실패했습니다',
+        code: transferResult.error.code
+      });
+    }
+
+    // 송금 성공 - 결제 요청 상태 업데이트
+    await new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE payment_requests
+         SET status = 'completed',
+             paid_at = datetime('now'),
+             updated_at = datetime('now'),
+             notes = CASE
+               WHEN notes IS NULL OR notes = '' THEN ?
+               ELSE notes || '\n' || ?
+             END
+         WHERE id = ?`,
+        [
+          `[KB자동송금] ${transferResult.data.transactionId}`,
+          `[KB자동송금] ${transferResult.data.transactionId}`,
+          paymentId
+        ],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    // 송금 기록 저장
+    await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO banking_transactions
+         (payment_id, user_id, transaction_id, bank_code, account_number, account_holder, amount, status, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'completed', datetime('now'))`,
+        [
+          paymentId,
+          req.user.id,
+          transferResult.data.transactionId,
+          bankCode,
+          accountNumber,
+          accountHolder,
+          amount
+        ],
+        (err) => {
+          if (err) {
+            console.error('[KB Transfer] Transaction log error:', err);
+          }
+          resolve();
+        }
+      );
+    });
+
+    console.log('[KB Transfer] Success:', transferResult.data);
+
+    // 수수료 정보 포함하여 응답
+    const fee = transferResult.data.fee || 0;
+    const feeMessage = fee === 0 ? ' (수수료 무료)' : ` (수수료 ${fee}원)`;
+
+    res.json({
+      success: true,
+      message: `송금이 완료되었습니다${feeMessage}`,
+      data: {
+        transactionId: transferResult.data.transactionId,
+        amount: transferResult.data.amount,
+        fee: fee,
+        timestamp: transferResult.data.timestamp
+      }
+    });
+  } catch (error) {
+    console.error('[KB Transfer] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: '송금 처리 중 오류가 발생했습니다'
+    });
+  }
+});
+
+/**
+ * 오픈뱅킹 송금 실행 (기존 코드 유지)
  * POST /api/banking/transfer
  */
 router.post('/transfer', authenticateToken, isManager, async (req, res) => {
