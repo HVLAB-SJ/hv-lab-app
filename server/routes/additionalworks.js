@@ -106,9 +106,9 @@ router.put('/:id', authenticateToken, (req, res) => {
 
   // Support both frontend (project name) and backend (project_id) formats
   let project_id = req.body.project_id || req.body.projectId;
-  const description = req.body.description || '';
-  const amount = req.body.amount || 0;
-  const work_date = req.body.work_date || req.body.date || new Date().toISOString();
+  const description = req.body.description;
+  const amount = req.body.amount;
+  const work_date = req.body.work_date || req.body.date;
 
   // If project is a name (string), look up the project_id
   if (!project_id && req.body.project) {
@@ -126,13 +126,43 @@ router.put('/:id', authenticateToken, (req, res) => {
   updateAdditionalWork();
 
   function updateAdditionalWork() {
-    db.run(
-      'UPDATE additional_works SET project_id = ?, description = ?, amount = ?, work_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [project_id, description, amount, work_date, id],
-      function(err) {
+    // Build dynamic update query with only provided fields
+    const updates = [];
+    const values = [];
+
+    if (project_id !== undefined) {
+      updates.push('project_id = ?');
+      values.push(project_id);
+    }
+    if (description !== undefined) {
+      updates.push('description = ?');
+      values.push(description);
+    }
+    if (amount !== undefined) {
+      updates.push('amount = ?');
+      values.push(amount);
+    }
+    if (work_date !== undefined) {
+      updates.push('work_date = ?');
+      values.push(work_date);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: '수정할 필드가 없습니다.' });
+    }
+
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+    values.push(id);
+
+    const query = `UPDATE additional_works SET ${updates.join(', ')} WHERE id = ?`;
+
+    console.log('[PUT /api/additional-works/:id] SQL Query:', query);
+    console.log('[PUT /api/additional-works/:id] SQL Values:', values);
+
+    db.run(query, values, function(err) {
         if (err) {
           console.error('[PUT /api/additional-works/:id] Database error:', err);
-          return res.status(500).json({ error: '추가내역 수정 실패' });
+          return res.status(500).json({ error: '추가내역 수정 실패', details: err.message });
         }
 
         // Return updated work data with project name
