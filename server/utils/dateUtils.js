@@ -1,15 +1,24 @@
 /**
  * Convert SQLite datetime format to ISO 8601
- * SQLite: "2025-10-22 10:28:01"
- * ISO 8601: "2025-10-22T10:28:01.000Z"
+ * SQLite datetime: "2025-10-22 10:28:01" -> "2025-10-22T10:28:01.000Z"
+ * SQLite date: "2025-10-22" -> "2025-10-22T00:00:00.000Z"
  */
 const convertSQLiteDate = (dateStr) => {
   if (!dateStr || dateStr === '' || dateStr === 'null') return null;
   try {
-    // Replace space with 'T' and add timezone
-    const isoDate = dateStr.replace(' ', 'T') + '.000Z';
-    return new Date(isoDate).toISOString();
+    // Handle both date-only (YYYY-MM-DD) and datetime (YYYY-MM-DD HH:mm:ss) formats
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      // Date-only format: YYYY-MM-DD
+      return new Date(dateStr + 'T00:00:00.000Z').toISOString();
+    } else if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(dateStr)) {
+      // DateTime format: YYYY-MM-DD HH:mm:ss
+      const isoDate = dateStr.replace(' ', 'T') + '.000Z';
+      return new Date(isoDate).toISOString();
+    }
+    // Fallback: try to parse as-is
+    return new Date(dateStr).toISOString();
   } catch (e) {
+    console.error('Error converting date:', dateStr, e);
     return null;
   }
 };
