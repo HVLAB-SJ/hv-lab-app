@@ -46,12 +46,24 @@ router.post('/', authenticateToken, (req, res) => {
 
   // If project is a name (string), look up the project_id
   if (!project_id && req.body.project) {
+    console.log('[POST /api/additional-works] Looking up project by name:', req.body.project);
     // First, try to find project by name
-    db.get('SELECT id FROM projects WHERE name = ?', [req.body.project], (err, project) => {
-      if (err || !project) {
+    db.get('SELECT id, name FROM projects WHERE name = ?', [req.body.project], (err, project) => {
+      if (err) {
+        console.error('[POST /api/additional-works] Database error looking up project:', err);
+        return res.status(500).json({ error: '프로젝트 조회 중 오류가 발생했습니다.' });
+      }
+      if (!project) {
         console.error('[POST /api/additional-works] Project not found:', req.body.project);
+        // List all projects for debugging
+        db.all('SELECT id, name FROM projects', [], (err2, projects) => {
+          if (!err2) {
+            console.log('[POST /api/additional-works] Available projects:', projects.map(p => p.name));
+          }
+        });
         return res.status(400).json({ error: '프로젝트를 찾을 수 없습니다.' });
       }
+      console.log('[POST /api/additional-works] Found project:', project);
       project_id = project.id;
       insertAdditionalWork();
     });
@@ -116,11 +128,17 @@ router.put('/:id', authenticateToken, (req, res) => {
 
   // If project is a name (string), look up the project_id
   if (!project_id && req.body.project) {
-    db.get('SELECT id FROM projects WHERE name = ?', [req.body.project], (err, project) => {
-      if (err || !project) {
+    console.log('[PUT /api/additional-works/:id] Looking up project by name:', req.body.project);
+    db.get('SELECT id, name FROM projects WHERE name = ?', [req.body.project], (err, project) => {
+      if (err) {
+        console.error('[PUT /api/additional-works/:id] Database error looking up project:', err);
+        return res.status(500).json({ error: '프로젝트 조회 중 오류가 발생했습니다.' });
+      }
+      if (!project) {
         console.error('[PUT /api/additional-works/:id] Project not found:', req.body.project);
         return res.status(400).json({ error: '프로젝트를 찾을 수 없습니다.' });
       }
+      console.log('[PUT /api/additional-works/:id] Found project:', project);
       project_id = project.id;
       updateAdditionalWork();
     });
