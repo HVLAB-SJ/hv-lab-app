@@ -140,6 +140,32 @@ server.listen(PORT, HOST, async () => {
   // 데이터베이스 초기화
   initDatabase();
 
+  // Add time column to schedules table
+  setTimeout(() => {
+    console.log('🔄 Checking schedules table for time column...');
+    db.all('PRAGMA table_info(schedules)', (err, columns) => {
+      if (err) {
+        console.error('❌ Error checking schedules table schema:', err);
+        return;
+      }
+
+      const hasTimeColumn = columns && columns.some(col => col.name === 'time');
+
+      if (!hasTimeColumn) {
+        console.log('⚠️  Time column not found, adding it now...');
+        db.run(`ALTER TABLE schedules ADD COLUMN time TEXT DEFAULT '-'`, (err) => {
+          if (err) {
+            console.error('❌ Error adding time column:', err.message);
+          } else {
+            console.log('✅ Successfully added time column to schedules table');
+          }
+        });
+      } else {
+        console.log('✅ Time column already exists in schedules table');
+      }
+    });
+  }, 100);
+
   // Run work_requests table migration
   setTimeout(() => {
     console.log('🔄 Checking work_requests table schema...');
