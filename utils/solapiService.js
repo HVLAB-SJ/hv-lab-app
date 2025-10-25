@@ -72,16 +72,20 @@ class SolapiNotificationService {
         const results = [];
 
         // 템플릿 변수 설정 - SOLAPI 템플릿에 정의된 변수명과 일치해야 함
-        // 영문과 한글 모두 시도
+        // 긴급일 경우 프로젝트명 앞에 (긴급) 추가
+        const projectNameWithUrgency = isUrgent ? `(긴급)${String(data.projectName || '프로젝트')}` : String(data.projectName || '프로젝트');
+
         const templateVariables = {
             // 한글 변수명
-            '프로젝트명': String(data.projectName || '프로젝트'),
+            '프로젝트명': projectNameWithUrgency,
+            '내용': String(data.itemName || data.purpose || '결제 요청'),
             '금액': String(this.formatAmount(data.amount) || '0'),
             '예금주': String(data.accountHolder || '예금주'),
             '은행명': String(data.bankName || '은행'),
             '계좌번호': String(data.accountNumber || '계좌번호'),
             // 영문 변수명 (템플릿이 영문일 경우)
-            'projectName': String(data.projectName || '프로젝트'),
+            'projectName': projectNameWithUrgency,
+            'content': String(data.itemName || data.purpose || '결제 요청'),
             'amount': String(this.formatAmount(data.amount) || '0'),
             'accountHolder': String(data.accountHolder || '예금주'),
             'bankName': String(data.bankName || '은행'),

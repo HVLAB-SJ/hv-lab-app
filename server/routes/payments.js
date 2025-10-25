@@ -454,6 +454,7 @@ async function sendPaymentNotification(data, isUrgent = false) {
       accountNumber: data.account_number || '',
       requesterName: data.requester,
       itemName: data.item_name || '',
+      purpose: data.description || '',
       category: data.request_type || '자재비'
     };
 
