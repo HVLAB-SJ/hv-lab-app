@@ -71,12 +71,20 @@ class SolapiNotificationService {
         // 템플릿 변수 설정 - SOLAPI 템플릿에 정의된 변수명과 일치해야 함
         // #{변수명} 형식으로 템플릿에 정의되어 있어야 함
         const templateVariables = {
-            프로젝트명: data.projectName || '프로젝트',
-            금액: this.formatAmount(data.amount) || '0',
-            예금주: data.accountHolder || '예금주',
-            은행명: data.bankName || '은행',
-            계좌번호: data.accountNumber || '계좌번호'
+            '프로젝트명': String(data.projectName || '프로젝트'),
+            '금액': String(this.formatAmount(data.amount) || '0'),
+            '예금주': String(data.accountHolder || '예금주'),
+            '은행명': String(data.bankName || '은행'),
+            '계좌번호': String(data.accountNumber || '계좌번호')
         };
+
+        console.log('📱 [SOLAPI] 원본 데이터:', {
+            projectName: data.projectName,
+            amount: data.amount,
+            accountHolder: data.accountHolder,
+            bankName: data.bankName,
+            accountNumber: data.accountNumber
+        });
 
         // 각 관리자에게 알림톡 발송
         for (const phoneNumber of this.adminPhones) {
@@ -84,15 +92,16 @@ class SolapiNotificationService {
                 console.log(`📤 [SOLAPI] ${phoneNumber}로 알림톡 발송 시도...`);
 
                 // 알림톡 메시지 구성 - SOLAPI v5 형식
+                // variables를 최상위로 이동 (SOLAPI v5 문서 참조)
                 const message = {
                     to: phoneNumber.replace(/-/g, ''), // 하이픈 제거
                     from: this.from.replace(/-/g, ''), // 하이픈 제거
                     type: 'ATA',  // 알림톡 타입 명시
                     kakaoOptions: {
                         pfId: this.pfId,
-                        templateId: this.templateId,
-                        variables: templateVariables
-                    }
+                        templateId: this.templateId
+                    },
+                    variables: templateVariables  // variables를 kakaoOptions 밖으로 이동
                 };
 
                 console.log('📤 [SOLAPI] 템플릿 ID:', this.templateId);
@@ -101,7 +110,10 @@ class SolapiNotificationService {
                 console.log('📤 [SOLAPI] 메시지 객체:', JSON.stringify(message, null, 2));
 
                 // 알림톡 발송 - SOLAPI v5는 배열 형식 필요
-                const response = await this.messageService.send([message]);
+                // messages 키로 감싸서 전송
+                const response = await this.messageService.send({
+                    messages: [message]
+                });
 
                 console.log(`✅ [SOLAPI] 알림톡 발송 응답:`, JSON.stringify(response, null, 2));
                 results.push({
