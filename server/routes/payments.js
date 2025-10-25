@@ -80,7 +80,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 });
 
 // 결제 요청 생성
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   console.log('[POST /api/payments] Received request body:', req.body);
   console.log('[POST /api/payments] User:', req.user);
 
@@ -102,6 +102,37 @@ router.post('/', authenticateToken, (req, res) => {
     includesVAT
   } = req.body;
 
+  // Convert project name to project_id if necessary
+  let finalProjectId = project_id;
+
+  // Check if project_id is a string (name) and not a number
+  if (project_id && isNaN(project_id)) {
+    console.log('[POST /api/payments] project_id is a name, looking up ID for:', project_id);
+
+    // Look up project by name
+    const project = await new Promise((resolve, reject) => {
+      db.get('SELECT id FROM projects WHERE name = ?', [project_id], (err, row) => {
+        if (err) {
+          console.error('[POST /api/payments] Project lookup error:', err);
+          reject(err);
+        } else {
+          resolve(row);
+        }
+      });
+    }).catch(err => {
+      console.error('[POST /api/payments] Project lookup failed:', err);
+      return null;
+    });
+
+    if (!project) {
+      console.error('[POST /api/payments] Project not found:', project_id);
+      return res.status(400).json({ error: '프로젝트를 찾을 수 없습니다: ' + project_id });
+    }
+
+    finalProjectId = project.id;
+    console.log('[POST /api/payments] Found project ID:', finalProjectId);
+  }
+
   db.run(
     `INSERT INTO payment_requests
      (project_id, user_id, request_type, vendor_name, description, amount,
@@ -109,7 +140,7 @@ router.post('/', authenticateToken, (req, res) => {
       material_amount, labor_amount, original_labor_amount, apply_tax_deduction, includes_vat, status)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     [
-      project_id,
+      finalProjectId,
       req.user.id,
       request_type || 'material',
       vendor_name,
