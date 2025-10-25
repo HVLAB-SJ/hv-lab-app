@@ -22,8 +22,15 @@ class SolapiNotificationService {
         // SOLAPI 서비스 초기화
         if (this.apiKey && this.apiSecret) {
             this.messageService = new SolapiMessageService(this.apiKey, this.apiSecret);
+            console.log('✅ SOLAPI 서비스가 초기화되었습니다.');
+            console.log(`📞 관리자 전화번호: ${this.adminPhones.length}개 등록됨`);
         } else {
             console.warn('⚠️ SOLAPI API 키가 설정되지 않았습니다. 알림톡 기능이 비활성화됩니다.');
+            console.warn('Railway 환경변수에 다음을 설정해주세요:');
+            console.warn('- SOLAPI_API_KEY');
+            console.warn('- SOLAPI_API_SECRET');
+            console.warn('- SOLAPI_FROM_NUMBER');
+            console.warn('- ADMIN_PHONE_NUMBERS');
         }
     }
 
