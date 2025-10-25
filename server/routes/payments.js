@@ -93,14 +93,15 @@ router.post('/', authenticateToken, (req, res) => {
     account_holder,
     bank_name,
     account_number,
-    notes
+    notes,
+    itemName
   } = req.body;
 
   db.run(
     `INSERT INTO payment_requests
      (project_id, user_id, request_type, vendor_name, description, amount,
-      account_holder, bank_name, account_number, notes, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      account_holder, bank_name, account_number, notes, item_name, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     [
       project_id,
       req.user.id,
@@ -111,7 +112,8 @@ router.post('/', authenticateToken, (req, res) => {
       account_holder,
       bank_name,
       account_number,
-      notes
+      notes,
+      itemName || ''
     ],
     function(err) {
       if (err) {
@@ -150,14 +152,15 @@ router.put('/:id', authenticateToken, (req, res) => {
     account_holder,
     bank_name,
     account_number,
-    notes
+    notes,
+    itemName
   } = req.body;
 
   db.run(
     `UPDATE payment_requests
      SET vendor_name = ?, description = ?, amount = ?,
          account_holder = ?, bank_name = ?, account_number = ?,
-         notes = ?, updated_at = CURRENT_TIMESTAMP
+         notes = ?, item_name = ?, updated_at = CURRENT_TIMESTAMP
      WHERE id = ? AND user_id = ? AND status = 'pending'`,
     [
       vendor_name,
@@ -167,6 +170,7 @@ router.put('/:id', authenticateToken, (req, res) => {
       bank_name,
       account_number,
       notes,
+      itemName || '',
       id,
       req.user.id
     ],
