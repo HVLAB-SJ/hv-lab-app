@@ -40,9 +40,25 @@ class SolapiNotificationService {
      * @param {boolean} isUrgent - 긴급 여부
      */
     async sendPaymentNotification(data, isUrgent = false) {
+        console.log('📱 [SOLAPI] sendPaymentNotification 호출됨');
+        console.log('📱 [SOLAPI] 데이터:', JSON.stringify(data, null, 2));
+        console.log('📱 [SOLAPI] 긴급여부:', isUrgent);
+        console.log('📱 [SOLAPI] API Key 설정:', !!this.apiKey);
+        console.log('📱 [SOLAPI] API Secret 설정:', !!this.apiSecret);
+        console.log('📱 [SOLAPI] 발신번호:', this.from);
+        console.log('📱 [SOLAPI] 수신번호 목록:', this.adminPhones);
+
         if (!this.messageService) {
-            console.error('SOLAPI 서비스가 초기화되지 않았습니다.');
+            console.error('❌ [SOLAPI] 서비스가 초기화되지 않았습니다.');
+            console.error('❌ [SOLAPI] API Key:', this.apiKey ? '설정됨' : '없음');
+            console.error('❌ [SOLAPI] API Secret:', this.apiSecret ? '설정됨' : '없음');
             return { success: false, error: 'SOLAPI not initialized' };
+        }
+
+        if (this.adminPhones.length === 0) {
+            console.error('❌ [SOLAPI] 수신 전화번호가 설정되지 않았습니다.');
+            console.error('❌ [SOLAPI] ADMIN_PHONE_NUMBERS 환경변수를 확인하세요.');
+            return { success: false, error: 'No admin phone numbers configured' };
         }
 
         const results = [];
@@ -60,10 +76,13 @@ class SolapiNotificationService {
         // 각 관리자에게 알림톡 발송
         for (const phoneNumber of this.adminPhones) {
             try {
+                console.log(`📤 [SOLAPI] ${phoneNumber}로 알림톡 발송 시도...`);
+
                 // 알림톡 메시지 구성
-                const kakaoOptions = {
+                const message = {
                     to: phoneNumber,
                     from: this.from,
+                    type: 'ATA',  // 알림톡 타입 명시
                     kakaoOptions: {
                         pfId: this.pfId,
                         templateId: this.templateId,
@@ -71,15 +90,17 @@ class SolapiNotificationService {
                     }
                 };
 
-                // 알림톡 발송
-                const response = await this.messageService.send([kakaoOptions]);
+                console.log('📤 [SOLAPI] 메시지 객체:', JSON.stringify(message, null, 2));
 
-                console.log(`✅ 알림톡 발송 성공: ${phoneNumber}`);
+                // 알림톡 발송
+                const response = await this.messageService.send([message]);
+
+                console.log(`✅ [SOLAPI] 알림톡 발송 응답:`, JSON.stringify(response, null, 2));
                 results.push({
                     phone: phoneNumber,
                     type: 'alimtalk',
                     success: true,
-                    messageId: response.groupId
+                    response: response
                 });
 
                 // 긴급 요청인 경우 SMS도 추가 발송
@@ -93,10 +114,16 @@ class SolapiNotificationService {
                 }
 
             } catch (error) {
-                console.error(`❌ 알림톡 발송 실패 (${phoneNumber}):`, error.message);
+                console.error(`❌ [SOLAPI] 알림톡 발송 실패 (${phoneNumber}):`, error);
+                console.error(`❌ [SOLAPI] 오류 상세:`, {
+                    message: error.message,
+                    response: error.response?.data,
+                    status: error.response?.status
+                });
 
                 // 알림톡 실패 시 SMS로 대체 발송 시도
                 try {
+                    console.log(`📱 [SOLAPI] SMS로 대체 발송 시도...`);
                     await this.sendFallbackSMS(phoneNumber, data, isUrgent);
                     results.push({
                         phone: phoneNumber,
@@ -104,6 +131,7 @@ class SolapiNotificationService {
                         success: true
                     });
                 } catch (smsError) {
+                    console.error(`❌ [SOLAPI] SMS도 실패:`, smsError);
                     results.push({
                         phone: phoneNumber,
                         type: 'failed',
