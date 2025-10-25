@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../config/database');
 const { authenticateToken, isManager } = require('../middleware/auth');
-const kakaoMessage = require('../../utils/kakaoMessage');
+const solapiService = require('../../utils/solapiService'); // SOLAPI 서비스로 변경
 const { sanitizeDatesArray, sanitizeDates } = require('../utils/dateUtils');
 
 // 결제 요청 목록 조회
@@ -174,18 +174,22 @@ router.post('/', authenticateToken, async (req, res) => {
         return res.status(500).json({ error: '결제 요청 생성 실패', details: err.message });
       }
 
+      // 긴급 여부 확인 (프론트엔드에서 urgency 필드 또는 includesVAT로 판단)
+      const isUrgent = req.body.urgency === 'urgent' || req.body.urgency === 'emergency';
+
       // 알림 전송 (관리자에게)
       sendPaymentNotification({
         id: this.lastID,
         requester: req.user.username,
         amount: amount,
         description: description,
-        project_id: project_id,
+        project_id: finalProjectId,
         request_type: request_type || 'material',
         bank_name: bank_name,
         account_number: account_number,
-        account_holder: account_holder
-      });
+        account_holder: account_holder,
+        item_name: itemName || ''
+      }, isUrgent);
 
       res.status(201).json({
         id: this.lastID,
@@ -419,9 +423,9 @@ router.get('/stats/summary', authenticateToken, (req, res) => {
   );
 });
 
-// 알림 전송 함수들 - 카카오톡 메시지 연동
-async function sendPaymentNotification(data) {
-  console.log(`새 결제 요청: ${data.requester}님이 ${data.amount.toLocaleString()}원 요청`);
+// 알림 전송 함수들 - SOLAPI 알림톡 연동
+async function sendPaymentNotification(data, isUrgent = false) {
+  console.log(`새 결제 요청: ${data.requester}님이 ${data.amount.toLocaleString()}원 요청${isUrgent ? ' [긴급]' : ''}`);
 
   try {
     // 프로젝트 정보 조회
@@ -432,28 +436,23 @@ async function sendPaymentNotification(data) {
       });
     });
 
-    // 계좌 정보가 있는 경우 포함
-    const accountInfo = data.bank_name && data.account_number ? {
-      bank: data.bank_name,
-      accountNumber: data.account_number,
-      accountHolder: data.account_holder
-    } : null;
-
-    // 메시지 생성
-    const message = kakaoMessage.createPaymentRequestMessage({
-      requesterName: data.requester,
+    // SOLAPI 알림톡 발송
+    const notificationData = {
       projectName: project?.name || '프로젝트',
       amount: data.amount,
-      category: data.request_type || '자재비',
-      description: data.description,
-      accountInfo: accountInfo
-    });
+      accountHolder: data.account_holder || '',
+      bankName: data.bank_name || '',
+      accountNumber: data.account_number || '',
+      requesterName: data.requester,
+      itemName: data.item_name || '',
+      category: data.request_type || '자재비'
+    };
 
-    // 관리자들에게 메시지 발송
-    const results = await kakaoMessage.notifyAdmins(message);
-    console.log('카카오톡 알림 발송 결과:', results);
+    // SOLAPI로 알림톡 발송 (긴급인 경우 SMS도 추가 발송)
+    const results = await solapiService.sendPaymentNotification(notificationData, isUrgent);
+    console.log('SOLAPI 알림 발송 결과:', results);
   } catch (error) {
-    console.error('카카오톡 알림 발송 실패:', error);
+    console.error('SOLAPI 알림 발송 실패:', error);
     // 에러가 발생해도 결제 요청 처리는 계속 진행
   }
 }
