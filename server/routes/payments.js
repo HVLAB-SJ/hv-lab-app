@@ -94,14 +94,20 @@ router.post('/', authenticateToken, (req, res) => {
     bank_name,
     account_number,
     notes,
-    itemName
+    itemName,
+    materialAmount,
+    laborAmount,
+    originalLaborAmount,
+    applyTaxDeduction,
+    includesVAT
   } = req.body;
 
   db.run(
     `INSERT INTO payment_requests
      (project_id, user_id, request_type, vendor_name, description, amount,
-      account_holder, bank_name, account_number, notes, item_name, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      account_holder, bank_name, account_number, notes, item_name,
+      material_amount, labor_amount, original_labor_amount, apply_tax_deduction, includes_vat, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     [
       project_id,
       req.user.id,
@@ -113,7 +119,12 @@ router.post('/', authenticateToken, (req, res) => {
       bank_name,
       account_number,
       notes,
-      itemName || ''
+      itemName || '',
+      materialAmount || 0,
+      laborAmount || 0,
+      originalLaborAmount || 0,
+      applyTaxDeduction ? 1 : 0,
+      includesVAT ? 1 : 0
     ],
     function(err) {
       if (err) {
@@ -153,14 +164,22 @@ router.put('/:id', authenticateToken, (req, res) => {
     bank_name,
     account_number,
     notes,
-    itemName
+    itemName,
+    materialAmount,
+    laborAmount,
+    originalLaborAmount,
+    applyTaxDeduction,
+    includesVAT
   } = req.body;
 
   db.run(
     `UPDATE payment_requests
      SET vendor_name = ?, description = ?, amount = ?,
          account_holder = ?, bank_name = ?, account_number = ?,
-         notes = ?, item_name = ?, updated_at = CURRENT_TIMESTAMP
+         notes = ?, item_name = ?,
+         material_amount = ?, labor_amount = ?, original_labor_amount = ?,
+         apply_tax_deduction = ?, includes_vat = ?,
+         updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`,
     [
       vendor_name,
@@ -171,6 +190,11 @@ router.put('/:id', authenticateToken, (req, res) => {
       account_number,
       notes,
       itemName || '',
+      materialAmount !== undefined ? materialAmount : 0,
+      laborAmount !== undefined ? laborAmount : 0,
+      originalLaborAmount !== undefined ? originalLaborAmount : 0,
+      applyTaxDeduction ? 1 : 0,
+      includesVAT ? 1 : 0,
       id
     ],
     function(err) {
