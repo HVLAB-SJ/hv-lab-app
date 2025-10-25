@@ -29,6 +29,9 @@ class SolapiNotificationService {
             this.messageService = new SolapiMessageService(this.apiKey, this.apiSecret);
             console.log('✅ SOLAPI 서비스가 초기화되었습니다.');
             console.log(`📞 관리자 전화번호: ${this.adminPhones.length}개 등록됨`);
+            console.log(`📋 템플릿 ID: ${this.templateId}`);
+            console.log(`📢 채널 ID: ${this.pfId}`);
+            console.log(`📱 발신번호: ${this.from}`);
         } else {
             console.warn('⚠️ SOLAPI API 키가 설정되지 않았습니다. 알림톡 기능이 비활성화됩니다.');
             console.warn('Railway 환경변수에 다음을 설정해주세요:');
@@ -87,9 +90,11 @@ class SolapiNotificationService {
         });
 
         // 각 관리자에게 알림톡 발송
-        for (const phoneNumber of this.adminPhones) {
+        console.log(`📱 [SOLAPI] 총 ${this.adminPhones.length}명의 관리자에게 알림톡 발송 시작`);
+        for (let i = 0; i < this.adminPhones.length; i++) {
+            const phoneNumber = this.adminPhones[i];
             try {
-                console.log(`📤 [SOLAPI] ${phoneNumber}로 알림톡 발송 시도...`);
+                console.log(`📤 [SOLAPI] 관리자 ${i + 1}/${this.adminPhones.length}: ${phoneNumber}로 알림톡 발송 시도...`);
 
                 // 알림톡 메시지 구성 - SOLAPI v5 형식
                 // variables를 최상위로 이동 (SOLAPI v5 문서 참조)
@@ -109,11 +114,9 @@ class SolapiNotificationService {
                 console.log('📤 [SOLAPI] 템플릿 변수:', JSON.stringify(templateVariables, null, 2));
                 console.log('📤 [SOLAPI] 메시지 객체:', JSON.stringify(message, null, 2));
 
-                // 알림톡 발송 - SOLAPI v5는 배열 형식 필요
-                // messages 키로 감싸서 전송
-                const response = await this.messageService.send({
-                    messages: [message]
-                });
+                // 알림톡 발송 - SOLAPI v5 형식
+                // 배열로 직접 전송 (messages 객체로 감싸지 않음)
+                const response = await this.messageService.send([message]);
 
                 console.log(`✅ [SOLAPI] 알림톡 발송 응답:`, JSON.stringify(response, null, 2));
                 results.push({
@@ -138,8 +141,21 @@ class SolapiNotificationService {
                 console.error(`❌ [SOLAPI] 오류 상세:`, {
                     message: error.message,
                     response: error.response?.data,
-                    status: error.response?.status
+                    status: error.response?.status,
+                    code: error.code,
+                    stack: error.stack
                 });
+
+                // 오류 메시지에서 원인 파악
+                if (error.message?.includes('template')) {
+                    console.error('❌ [SOLAPI] 템플릿 관련 오류 - 템플릿 ID나 변수 확인 필요');
+                }
+                if (error.message?.includes('variable')) {
+                    console.error('❌ [SOLAPI] 변수 관련 오류 - 템플릿 변수명 확인 필요');
+                }
+                if (error.message?.includes('pfId')) {
+                    console.error('❌ [SOLAPI] 채널 ID 관련 오류');
+                }
 
                 // 알림톡 실패 시 SMS로 대체 발송 시도
                 try {
