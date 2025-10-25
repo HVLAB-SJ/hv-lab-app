@@ -12,7 +12,8 @@ class SolapiNotificationService {
         this.apiKey = process.env.SOLAPI_API_KEY;
         this.apiSecret = process.env.SOLAPI_API_SECRET;
         this.pfId = process.env.SOLAPI_PFID || 'KA01PF251010200623410stJ4ZpKzQLv'; // 채널 ID
-        this.templateId = process.env.SOLAPI_TEMPLATE_ID || 'KA01TP2510102016192182Rh5igl5PtG'; // 템플릿 ID (수정됨)
+        this.templateId = process.env.SOLAPI_TEMPLATE_ID || 'KA01TP2510102016192182Rh5igl5PtG'; // 일반 템플릿 ID
+        this.urgentTemplateId = process.env.SOLAPI_URGENT_TEMPLATE_ID || this.templateId; // 긴급 템플릿 ID (없으면 일반 템플릿 사용)
         this.from = process.env.SOLAPI_FROM_NUMBER || '01000000000'; // 발신번호
 
         // 관리자 전화번호 목록 (환경변수에서 콤마로 구분된 문자열로 가져오기)
@@ -29,7 +30,8 @@ class SolapiNotificationService {
             this.messageService = new SolapiMessageService(this.apiKey, this.apiSecret);
             console.log('✅ SOLAPI 서비스가 초기화되었습니다.');
             console.log(`📞 관리자 전화번호: ${this.adminPhones.length}개 등록됨`);
-            console.log(`📋 템플릿 ID: ${this.templateId}`);
+            console.log(`📋 일반 템플릿 ID: ${this.templateId}`);
+            console.log(`📋 긴급 템플릿 ID: ${this.urgentTemplateId}`);
             console.log(`📢 채널 ID: ${this.pfId}`);
             console.log(`📱 발신번호: ${this.from}`);
         } else {
@@ -72,19 +74,19 @@ class SolapiNotificationService {
         const results = [];
 
         // 템플릿 변수 설정 - SOLAPI 템플릿에 정의된 변수명과 일치해야 함
-        // 긴급일 경우 프로젝트명 앞에 (긴급) 추가
-        const projectNameWithUrgency = isUrgent ? `(긴급)${String(data.projectName || '프로젝트')}` : String(data.projectName || '프로젝트');
+        // 템플릿이 분리되어 있으므로 프로젝트명에 (긴급) 추가하지 않음
+        const projectName = String(data.projectName || '프로젝트');
 
         const templateVariables = {
             // 한글 변수명
-            '프로젝트명': projectNameWithUrgency,
+            '프로젝트명': projectName,
             '내용': String(data.itemName || data.purpose || '결제 요청'),
             '금액': String(this.formatAmount(data.amount) || '0'),
             '예금주': String(data.accountHolder || '예금주'),
             '은행명': String(data.bankName || '은행'),
             '계좌번호': String(data.accountNumber || '계좌번호'),
             // 영문 변수명 (템플릿이 영문일 경우)
-            'projectName': projectNameWithUrgency,
+            'projectName': projectName,
             'content': String(data.itemName || data.purpose || '결제 요청'),
             'amount': String(this.formatAmount(data.amount) || '0'),
             'accountHolder': String(data.accountHolder || '예금주'),
@@ -108,13 +110,16 @@ class SolapiNotificationService {
                 console.log(`📤 [SOLAPI] 관리자 ${i + 1}/${this.adminPhones.length}: ${phoneNumber}로 알림톡 발송 시도...`);
 
                 // 알림톡 메시지 구성 - SOLAPI v5 형식
+                // 긴급 여부에 따라 다른 템플릿 사용
+                const selectedTemplateId = isUrgent ? this.urgentTemplateId : this.templateId;
+
                 const message = {
                     to: phoneNumber.replace(/-/g, ''), // 하이픈 제거
                     from: this.from.replace(/-/g, ''), // 하이픈 제거
                     type: 'ATA',  // 알림톡 타입 명시
                     kakaoOptions: {
                         pfId: this.pfId,
-                        templateId: this.templateId,
+                        templateId: selectedTemplateId,  // 긴급 여부에 따라 템플릿 선택
                         variables: templateVariables,  // variables는 kakaoOptions 안에
                         buttons: [
                             {
@@ -127,7 +132,7 @@ class SolapiNotificationService {
                     }
                 };
 
-                console.log('📤 [SOLAPI] 템플릿 ID:', this.templateId);
+                console.log('📤 [SOLAPI] 템플릿 ID:', selectedTemplateId, isUrgent ? '(긴급)' : '(일반)');
                 console.log('📤 [SOLAPI] 채널 ID:', this.pfId);
                 console.log('📤 [SOLAPI] 템플릿 변수:', JSON.stringify(templateVariables, null, 2));
                 console.log('📤 [SOLAPI] 메시지 객체:', JSON.stringify(message, null, 2));
