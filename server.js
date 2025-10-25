@@ -166,6 +166,45 @@ server.listen(PORT, HOST, async () => {
     });
   }, 100);
 
+  // Run payment_requests table migration for new columns
+  setTimeout(() => {
+    console.log('🔄 Checking payment_requests table for new columns...');
+
+    // Check and add missing columns to payment_requests table
+    const paymentColumns = [
+      { name: 'item_name', type: 'TEXT' },
+      { name: 'material_amount', type: 'INTEGER DEFAULT 0' },
+      { name: 'labor_amount', type: 'INTEGER DEFAULT 0' },
+      { name: 'original_labor_amount', type: 'INTEGER DEFAULT 0' },
+      { name: 'apply_tax_deduction', type: 'INTEGER DEFAULT 0' },
+      { name: 'includes_vat', type: 'INTEGER DEFAULT 0' }
+    ];
+
+    paymentColumns.forEach(column => {
+      db.all('PRAGMA table_info(payment_requests)', (err, columns) => {
+        if (err) {
+          console.error('❌ Error checking payment_requests table:', err);
+          return;
+        }
+
+        const hasColumn = columns && columns.some(col => col.name === column.name);
+
+        if (!hasColumn) {
+          console.log(`⚠️  Column ${column.name} not found in payment_requests, adding it now...`);
+          db.run(`ALTER TABLE payment_requests ADD COLUMN ${column.name} ${column.type}`, (err) => {
+            if (err) {
+              console.error(`❌ Error adding ${column.name} column:`, err.message);
+            } else {
+              console.log(`✅ Successfully added ${column.name} column to payment_requests table`);
+            }
+          });
+        } else {
+          console.log(`✅ Column ${column.name} already exists in payment_requests table`);
+        }
+      });
+    });
+  }, 200);
+
   // Run work_requests table migration
   setTimeout(() => {
     console.log('🔄 Checking work_requests table schema...');
