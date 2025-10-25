@@ -147,18 +147,39 @@
         </div>
 
         <div class="section">
+            <h2>🔍 템플릿 정보</h2>
+            <button onclick="checkTemplate()" class="btn btn-secondary">
+                템플릿 정보 확인
+            </button>
+            <div id="templateInfo" class="status-card" style="margin-top: 10px; display: none;">
+            </div>
+        </div>
+
+        <div class="section">
             <h2>❓ 도움말</h2>
             <div class="status-card">
-                <strong>환경변수가 설정되지 않은 경우:</strong><br>
-                1. Railway 대시보드에 접속<br>
-                2. Variables 탭에서 다음 설정:<br>
+                <strong>알림톡이 안 오는 경우 확인사항:</strong><br>
+                1. <strong>템플릿 ID</strong>가 올바른지 확인<br>
+                   - SOLAPI 관리자에서 승인된 템플릿 ID 확인<br>
+                   - Railway Variables에 SOLAPI_TEMPLATE_ID 설정<br><br>
+
+                2. <strong>템플릿 변수</strong>가 일치하는지 확인<br>
+                   - 변수명: 프로젝트명, 금액, 예금주, 은행명, 계좌번호<br>
+                   - #{변수명} 형식으로 템플릿에 등록<br><br>
+
+                3. <strong>발신번호</strong>가 SOLAPI에 등록되었는지 확인<br>
+                   - SOLAPI 관리자에서 발신번호 사전 등록 필요<br><br>
+
+                4. <strong>수신번호</strong>가 올바른지 확인<br>
+                   - ADMIN_PHONE_NUMBERS에 정확한 번호 입력<br><br>
+
+                <strong>Railway 환경변수 설정:</strong><br>
                 - SOLAPI_API_KEY<br>
                 - SOLAPI_API_SECRET<br>
-                - SOLAPI_PFID<br>
-                - SOLAPI_TEMPLATE_ID<br>
+                - SOLAPI_PFID (채널 ID)<br>
+                - SOLAPI_TEMPLATE_ID (템플릿 ID)<br>
                 - SOLAPI_FROM_NUMBER (발신번호)<br>
-                - ADMIN_PHONE_NUMBERS (수신번호, 콤마구분)<br>
-                3. Deploy 버튼 클릭하여 재배포
+                - ADMIN_PHONE_NUMBERS (수신번호들)
             </div>
         </div>
     </div>
@@ -197,6 +218,41 @@
             } catch (error) {
                 addLog(`로그인 오류: ${error.message}`, 'error');
                 return false;
+            }
+        }
+
+        async function checkTemplate() {
+            const templateDiv = document.getElementById('templateInfo');
+
+            if (!token) {
+                await login();
+            }
+
+            try {
+                addLog('템플릿 정보 확인 중...', 'info');
+                const response = await fetch('/api/test/template', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    templateDiv.style.display = 'block';
+                    templateDiv.innerHTML = `
+                        <strong>템플릿 정보:</strong><br>
+                        템플릿 ID: <code>${data.templateId}</code><br>
+                        채널 ID: <code>${data.pfId}</code><br><br>
+                        <strong>예상 템플릿 형식:</strong><br>
+                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px;">${data.templateExample}</pre>
+                        <strong>변수:</strong> ${data.expectedVariables.join(', ')}<br><br>
+                        <em>${data.note}</em>
+                    `;
+                    addLog('템플릿 정보 로드 완료', 'success');
+                } else {
+                    addLog('템플릿 정보 로드 실패', 'error');
+                }
+            } catch (error) {
+                addLog(`템플릿 정보 오류: ${error.message}`, 'error');
             }
         }
 

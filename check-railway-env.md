@@ -13,16 +13,22 @@ SOLAPI_API_SECRET=OUETIQGRMUWMWYYU4KKJMCROBLPMSNMB
 ### 2. SOLAPI 채널 정보
 ```
 SOLAPI_PFID=KA01PF251010200623410stJ4ZpKzQLv
-SOLAPI_TEMPLATE_ID=KA01TP2510102016192182Rh5igI5PtG
 ```
 
-### 3. 발신번호 (중요!)
+### 3. 알림톡 템플릿 ID (중요!)
+```
+SOLAPI_TEMPLATE_ID=KA01TP2510102016192182Rh5igl5PtG
+```
+✅ HV LAB 정산 채널의 템플릿 ID입니다
+템플릿 변수: 프로젝트명, 금액, 예금주, 은행명, 계좌번호
+
+### 4. 발신번호 (중요!)
 ```
 SOLAPI_FROM_NUMBER=01012345678
 ```
 ⚠️ 실제 사용하는 발신번호로 변경하세요 (SOLAPI에 등록된 번호여야 함)
 
-### 4. 관리자 전화번호 목록 (중요!)
+### 5. 관리자 전화번호 목록 (중요!)
 ```
 ADMIN_PHONE_NUMBERS=01012345678,01098765432
 ```

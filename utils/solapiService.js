@@ -12,7 +12,7 @@ class SolapiNotificationService {
         this.apiKey = process.env.SOLAPI_API_KEY;
         this.apiSecret = process.env.SOLAPI_API_SECRET;
         this.pfId = process.env.SOLAPI_PFID || 'KA01PF251010200623410stJ4ZpKzQLv'; // 채널 ID
-        this.templateId = process.env.SOLAPI_TEMPLATE_ID || 'KA01TP2510102016192182Rh5igI5PtG'; // 템플릿 ID
+        this.templateId = process.env.SOLAPI_TEMPLATE_ID || 'KA01TP2510102016192182Rh5igl5PtG'; // 템플릿 ID (수정됨)
         this.from = process.env.SOLAPI_FROM_NUMBER || '01000000000'; // 발신번호
 
         // 관리자 전화번호 목록 (환경변수에서 콤마로 구분된 문자열로 가져오기)
@@ -68,14 +68,14 @@ class SolapiNotificationService {
 
         const results = [];
 
-        // 템플릿 변수 설정
+        // 템플릿 변수 설정 - SOLAPI 템플릿에 정의된 변수명과 일치해야 함
+        // #{변수명} 형식으로 템플릿에 정의되어 있어야 함
         const templateVariables = {
-            urgency: isUrgent ? '⚠️ 긴급 결제 요청' : '',
-            project: data.projectName || '프로젝트',
-            amount: this.formatAmount(data.amount) || '0',
-            accountHolder: data.accountHolder || '',
-            bankName: data.bankName || '',
-            accountNumber: data.accountNumber || ''
+            프로젝트명: data.projectName || '프로젝트',
+            금액: this.formatAmount(data.amount) || '0',
+            예금주: data.accountHolder || '예금주',
+            은행명: data.bankName || '은행',
+            계좌번호: data.accountNumber || '계좌번호'
         };
 
         // 각 관리자에게 알림톡 발송
@@ -85,8 +85,8 @@ class SolapiNotificationService {
 
                 // 알림톡 메시지 구성
                 const message = {
-                    to: phoneNumber,
-                    from: this.from,
+                    to: phoneNumber.replace(/-/g, ''), // 하이픈 제거
+                    from: this.from.replace(/-/g, ''), // 하이픈 제거
                     type: 'ATA',  // 알림톡 타입 명시
                     kakaoOptions: {
                         pfId: this.pfId,
@@ -95,10 +95,13 @@ class SolapiNotificationService {
                     }
                 };
 
+                console.log('📤 [SOLAPI] 템플릿 ID:', this.templateId);
+                console.log('📤 [SOLAPI] 채널 ID:', this.pfId);
+
                 console.log('📤 [SOLAPI] 메시지 객체:', JSON.stringify(message, null, 2));
 
-                // 알림톡 발송
-                const response = await this.messageService.send([message]);
+                // 알림톡 발송 - SOLAPI v5 형식
+                const response = await this.messageService.send(message);
 
                 console.log(`✅ [SOLAPI] 알림톡 발송 응답:`, JSON.stringify(response, null, 2));
                 results.push({

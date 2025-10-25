@@ -4,6 +4,29 @@ const solapiService = require('../../utils/solapiService');
 const { authenticateToken, isManager } = require('../middleware/auth');
 
 /**
+ * SOLAPI 템플릿 확인 엔드포인트
+ * GET /api/test/template
+ */
+router.get('/template', authenticateToken, isManager, (req, res) => {
+    const templateInfo = {
+        templateId: process.env.SOLAPI_TEMPLATE_ID || 'KA01TP2510102016192182Rh5igl5PtG',
+        pfId: process.env.SOLAPI_PFID || 'KA01PF251010200623410stJ4ZpKzQLv',
+        expectedVariables: ['프로젝트명', '금액', '예금주', '은행명', '계좌번호'],
+        templateExample: `[HV LAB 정산]
+결제 요청이 도착했습니다.
+
+프로젝트: #{프로젝트명}
+금액: #{금액}원
+예금주: #{예금주}
+은행: #{은행명}
+계좌번호: #{계좌번호}`,
+        note: '템플릿 변수는 SOLAPI 관리자 페이지에서 확인하세요'
+    };
+
+    res.json(templateInfo);
+});
+
+/**
  * SOLAPI 알림톡 테스트 엔드포인트
  * POST /api/test/alimtalk
  */
