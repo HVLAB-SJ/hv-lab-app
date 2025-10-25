@@ -161,7 +161,7 @@ router.put('/:id', authenticateToken, (req, res) => {
      SET vendor_name = ?, description = ?, amount = ?,
          account_holder = ?, bank_name = ?, account_number = ?,
          notes = ?, item_name = ?, updated_at = CURRENT_TIMESTAMP
-     WHERE id = ? AND user_id = ? AND status = 'pending'`,
+     WHERE id = ?`,
     [
       vendor_name,
       description,
@@ -171,8 +171,7 @@ router.put('/:id', authenticateToken, (req, res) => {
       account_number,
       notes,
       itemName || '',
-      id,
-      req.user.id
+      id
     ],
     function(err) {
       if (err) {
