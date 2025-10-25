@@ -28,6 +28,15 @@ router.get('/', authenticateToken, (req, res) => {
           paymentsArray = [];
         }
 
+        // Parse expected_payment_dates JSON if exists
+        let expectedPaymentDates = null;
+        try {
+          expectedPaymentDates = row.expected_payment_dates ? JSON.parse(row.expected_payment_dates) : null;
+        } catch (e) {
+          console.error('[GET /api/construction-payments] Error parsing expected_payment_dates JSON:', e);
+          expectedPaymentDates = null;
+        }
+
         return {
           _id: row.id.toString(),
           project: row.project_name || '',
@@ -37,6 +46,7 @@ router.get('/', authenticateToken, (req, res) => {
           vatPercentage: row.vat_percentage ?? 100,
           vatAmount: row.vat_amount ?? 0,
           payments: paymentsArray,
+          expectedPaymentDates: expectedPaymentDates,
           createdAt: row.created_at || new Date().toISOString(),
           updatedAt: row.updated_at || new Date().toISOString()
         };
@@ -122,6 +132,15 @@ router.post('/', authenticateToken, (req, res) => {
               paymentsArray = [];
             }
 
+            // Parse expected_payment_dates JSON if exists
+            let expectedPaymentDates = null;
+            try {
+              expectedPaymentDates = row.expected_payment_dates ? JSON.parse(row.expected_payment_dates) : null;
+            } catch (e) {
+              console.error('[POST /api/construction-payments] Error parsing expected_payment_dates JSON:', e);
+              expectedPaymentDates = null;
+            }
+
             const constructionPayment = {
               _id: row.id.toString(),
               project: row.project_name || '',
@@ -131,6 +150,7 @@ router.post('/', authenticateToken, (req, res) => {
               vatPercentage: row.vat_percentage ?? 100,
               vatAmount: row.vat_amount ?? 0,
               payments: paymentsArray,
+              expectedPaymentDates: expectedPaymentDates,
               createdAt: row.created_at || new Date().toISOString(),
               updatedAt: row.updated_at || new Date().toISOString()
             };
@@ -155,6 +175,7 @@ router.put('/:id', authenticateToken, (req, res) => {
   const vat_percentage = req.body.vatPercentage;
   const vat_amount = req.body.vatAmount;
   const payments = req.body.payments;
+  const expectedPaymentDates = req.body.expectedPaymentDates;
 
   // Build dynamic UPDATE query for only provided fields
   const updates = [];
@@ -179,6 +200,10 @@ router.put('/:id', authenticateToken, (req, res) => {
   if (payments !== undefined) {
     updates.push('payments = ?');
     values.push(JSON.stringify(payments));
+  }
+  if (expectedPaymentDates !== undefined) {
+    updates.push('expected_payment_dates = ?');
+    values.push(JSON.stringify(expectedPaymentDates));
   }
 
   if (updates.length === 0) {
@@ -223,6 +248,15 @@ router.put('/:id', authenticateToken, (req, res) => {
           paymentsArray = [];
         }
 
+        // Parse expected_payment_dates JSON if exists
+        let expectedPaymentDatesObj = null;
+        try {
+          expectedPaymentDatesObj = row.expected_payment_dates ? JSON.parse(row.expected_payment_dates) : null;
+        } catch (e) {
+          console.error('[PUT /api/construction-payments/:id] Error parsing expected_payment_dates JSON:', e);
+          expectedPaymentDatesObj = null;
+        }
+
         const constructionPayment = {
           _id: row.id.toString(),
           project: row.project_name || '',
@@ -232,6 +266,7 @@ router.put('/:id', authenticateToken, (req, res) => {
           vatPercentage: row.vat_percentage ?? 100,
           vatAmount: row.vat_amount ?? 0,
           payments: paymentsArray,
+          expectedPaymentDates: expectedPaymentDatesObj,
           createdAt: row.created_at || new Date().toISOString(),
           updatedAt: row.updated_at || new Date().toISOString()
         };
