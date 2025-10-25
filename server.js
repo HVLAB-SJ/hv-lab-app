@@ -83,6 +83,7 @@ const additionalWorksRoutes = require('./server/routes/additionalworks');
 const constructionPaymentsRoutes = require('./server/routes/constructionpayments');
 const contractorsRoutes = require('./server/routes/contractors');
 const bankingRoutes = require('./server/routes/banking');
+const testRoutes = require('./server/routes/test');
 
 // API 라우트 설정
 app.use('/api/auth', authRoutes);
@@ -97,6 +98,7 @@ app.use('/api/additional-works', additionalWorksRoutes);
 app.use('/api/construction-payments', constructionPaymentsRoutes);
 app.use('/api/contractors', contractorsRoutes);
 app.use('/api/banking', bankingRoutes);
+app.use('/api/test', testRoutes); // 테스트 라우트 추가
 
 
 // 로그인 페이지 라우트
