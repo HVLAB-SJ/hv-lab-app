@@ -83,7 +83,7 @@ class SolapiNotificationService {
             try {
                 console.log(`📤 [SOLAPI] ${phoneNumber}로 알림톡 발송 시도...`);
 
-                // 알림톡 메시지 구성
+                // 알림톡 메시지 구성 - SOLAPI v5 형식
                 const message = {
                     to: phoneNumber.replace(/-/g, ''), // 하이픈 제거
                     from: this.from.replace(/-/g, ''), // 하이픈 제거
@@ -97,11 +97,11 @@ class SolapiNotificationService {
 
                 console.log('📤 [SOLAPI] 템플릿 ID:', this.templateId);
                 console.log('📤 [SOLAPI] 채널 ID:', this.pfId);
-
+                console.log('📤 [SOLAPI] 템플릿 변수:', JSON.stringify(templateVariables, null, 2));
                 console.log('📤 [SOLAPI] 메시지 객체:', JSON.stringify(message, null, 2));
 
-                // 알림톡 발송 - SOLAPI v5 형식
-                const response = await this.messageService.send(message);
+                // 알림톡 발송 - SOLAPI v5는 배열 형식 필요
+                const response = await this.messageService.send([message]);
 
                 console.log(`✅ [SOLAPI] 알림톡 발송 응답:`, JSON.stringify(response, null, 2));
                 results.push({

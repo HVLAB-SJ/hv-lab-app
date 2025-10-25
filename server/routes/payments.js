@@ -436,6 +436,15 @@ async function sendPaymentNotification(data, isUrgent = false) {
       });
     });
 
+    console.log('[SOLAPI] 프로젝트 조회 결과:', project);
+    console.log('[SOLAPI] 결제 요청 데이터:', {
+      project_id: data.project_id,
+      amount: data.amount,
+      account_holder: data.account_holder,
+      bank_name: data.bank_name,
+      account_number: data.account_number
+    });
+
     // SOLAPI 알림톡 발송
     const notificationData = {
       projectName: project?.name || '프로젝트',
@@ -447,6 +456,8 @@ async function sendPaymentNotification(data, isUrgent = false) {
       itemName: data.item_name || '',
       category: data.request_type || '자재비'
     };
+
+    console.log('[SOLAPI] 알림톡 발송 데이터:', notificationData);
 
     // SOLAPI로 알림톡 발송 (긴급인 경우 SMS도 추가 발송)
     const results = await solapiService.sendPaymentNotification(notificationData, isUrgent);
