@@ -326,7 +326,9 @@ router.put('/:id', authenticateToken, (req, res) => {
   console.log('[PUT /api/schedules/:id] Received body:', JSON.stringify(req.body, null, 2));
 
   // Support both frontend format (startDate, endDate, assignedTo) and backend format (start_date, end_date, etc)
-  const title = req.body.title;
+  // Clean title to remove any time text that might have been accidentally included
+  const rawTitle = req.body.title;
+  const title = rawTitle ? rawTitle.replace(/ - (오전|오후) \d{1,2}시$/, '').trim() : rawTitle;
   const description = req.body.description;
   const start_date = req.body.start_date || req.body.startDate;
   const end_date = req.body.end_date || req.body.endDate;
