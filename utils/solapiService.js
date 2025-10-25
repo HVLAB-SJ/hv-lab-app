@@ -115,7 +115,15 @@ class SolapiNotificationService {
                     kakaoOptions: {
                         pfId: this.pfId,
                         templateId: this.templateId,
-                        variables: templateVariables  // variables는 kakaoOptions 안에
+                        variables: templateVariables,  // variables는 kakaoOptions 안에
+                        buttons: [
+                            {
+                                buttonType: 'WL',  // Web Link 타입
+                                buttonName: '결제요청 확인',  // 버튼 텍스트
+                                linkMo: 'https://hvlab.app/payments',  // 모바일 링크
+                                linkPc: 'https://hvlab.app/payments'   // PC 링크
+                            }
+                        ]
                     }
                 };
 
