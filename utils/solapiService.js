@@ -72,13 +72,20 @@ class SolapiNotificationService {
         const results = [];
 
         // 템플릿 변수 설정 - SOLAPI 템플릿에 정의된 변수명과 일치해야 함
-        // #{변수명} 형식으로 템플릿에 정의되어 있어야 함
+        // 영문과 한글 모두 시도
         const templateVariables = {
+            // 한글 변수명
             '프로젝트명': String(data.projectName || '프로젝트'),
             '금액': String(this.formatAmount(data.amount) || '0'),
             '예금주': String(data.accountHolder || '예금주'),
             '은행명': String(data.bankName || '은행'),
-            '계좌번호': String(data.accountNumber || '계좌번호')
+            '계좌번호': String(data.accountNumber || '계좌번호'),
+            // 영문 변수명 (템플릿이 영문일 경우)
+            'projectName': String(data.projectName || '프로젝트'),
+            'amount': String(this.formatAmount(data.amount) || '0'),
+            'accountHolder': String(data.accountHolder || '예금주'),
+            'bankName': String(data.bankName || '은행'),
+            'accountNumber': String(data.accountNumber || '계좌번호')
         };
 
         console.log('📱 [SOLAPI] 원본 데이터:', {
@@ -97,16 +104,15 @@ class SolapiNotificationService {
                 console.log(`📤 [SOLAPI] 관리자 ${i + 1}/${this.adminPhones.length}: ${phoneNumber}로 알림톡 발송 시도...`);
 
                 // 알림톡 메시지 구성 - SOLAPI v5 형식
-                // variables를 최상위로 이동 (SOLAPI v5 문서 참조)
                 const message = {
                     to: phoneNumber.replace(/-/g, ''), // 하이픈 제거
                     from: this.from.replace(/-/g, ''), // 하이픈 제거
                     type: 'ATA',  // 알림톡 타입 명시
                     kakaoOptions: {
                         pfId: this.pfId,
-                        templateId: this.templateId
-                    },
-                    variables: templateVariables  // variables를 kakaoOptions 밖으로 이동
+                        templateId: this.templateId,
+                        variables: templateVariables  // variables는 kakaoOptions 안에
+                    }
                 };
 
                 console.log('📤 [SOLAPI] 템플릿 ID:', this.templateId);
