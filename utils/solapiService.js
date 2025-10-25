@@ -19,6 +19,11 @@ class SolapiNotificationService {
         this.adminPhones = process.env.ADMIN_PHONE_NUMBERS ?
             process.env.ADMIN_PHONE_NUMBERS.split(',').map(p => p.trim()) : [];
 
+        // Railway 환경에서는 주로 문자열로 저장되므로 추가 파싱
+        if (this.adminPhones.length === 1 && this.adminPhones[0].includes(',')) {
+            this.adminPhones = this.adminPhones[0].split(',').map(p => p.trim());
+        }
+
         // SOLAPI 서비스 초기화
         if (this.apiKey && this.apiSecret) {
             this.messageService = new SolapiMessageService(this.apiKey, this.apiSecret);
