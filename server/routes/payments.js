@@ -105,8 +105,13 @@ router.post('/', authenticateToken, async (req, res) => {
   // Convert project name to project_id if necessary
   let finalProjectId = project_id;
 
-  // Check if project_id is a string (name) and not a number
-  if (project_id && isNaN(project_id)) {
+  // First, try to parse as a number if it looks like a number
+  if (project_id && !isNaN(project_id)) {
+    // It's a numeric string or number, ensure it's a number
+    finalProjectId = Number(project_id);
+    console.log('[POST /api/payments] Using numeric project_id:', finalProjectId);
+  } else if (project_id) {
+    // It's a non-numeric string, try to look up by name
     console.log('[POST /api/payments] project_id is a name, looking up ID for:', project_id);
 
     // Look up project by name
@@ -125,12 +130,18 @@ router.post('/', authenticateToken, async (req, res) => {
     });
 
     if (!project) {
-      console.error('[POST /api/payments] Project not found:', project_id);
+      console.error('[POST /api/payments] Project not found by name:', project_id);
       return res.status(400).json({ error: '프로젝트를 찾을 수 없습니다: ' + project_id });
     }
 
     finalProjectId = project.id;
     console.log('[POST /api/payments] Found project ID:', finalProjectId);
+  }
+
+  // Check if project exists by ID
+  if (!finalProjectId) {
+    console.error('[POST /api/payments] No valid project_id provided');
+    return res.status(400).json({ error: '프로젝트 ID가 필요합니다' });
   }
 
   db.run(
