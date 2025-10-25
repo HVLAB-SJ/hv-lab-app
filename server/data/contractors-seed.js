@@ -1233,10 +1233,11 @@ module.exports = [
   },
   {
     "name": "목공팀(성정현)",
-    "contact_person": "성정현반장",
+    "contact_person": "성정현",
     "phone": "010-9551-7873",
     "specialty": "목공사",
     "notes": "",
-    "rank": "1순위"
+    "rank": "1순위",
+    "position": "반장"
   }
 ];
