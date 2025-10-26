@@ -1449,7 +1449,10 @@ const Schedule = () => {
                         <div className="flex items-start gap-2">
                           <div
                             className="w-1 h-full rounded-full flex-shrink-0"
-                            style={{ backgroundColor: event.color || '#E7D4C0', minHeight: '28px' }}
+                            style={{
+                              backgroundColor: isUserAssigned ? '#FEF3C7' : (event.color || '#E7D4C0'),
+                              minHeight: '28px'
+                            }}
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-900 truncate">
