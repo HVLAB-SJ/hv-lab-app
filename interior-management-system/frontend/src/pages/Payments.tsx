@@ -356,9 +356,10 @@ const Payments = () => {
 
     const materialCost = Number(formData.materialCost) || 0;
     const laborCost = Number(formData.laborCost) || 0;
-    const totalAmount = materialCost + laborCost;
+    const baseAmount = materialCost + laborCost;
+    const totalAmount = includeTaxDeduction ? Math.round(baseAmount * 0.967) : baseAmount;
 
-    if (totalAmount === 0) {
+    if (baseAmount === 0) {
       toast.error('금액을 입력해주세요');
       return;
     }
@@ -789,15 +790,21 @@ const Payments = () => {
                 <div className="flex justify-between">
                   <span className="font-medium">총액</span>
                   <span className="font-semibold">
-                    {(
-                      (Number(formData.materialCost) || 0) +
-                      (Number(formData.laborCost) || 0)
-                    ).toLocaleString()}원
+                    {(() => {
+                      const baseAmount = (Number(formData.materialCost) || 0) + (Number(formData.laborCost) || 0);
+                      const finalAmount = includeTaxDeduction ? Math.round(baseAmount * 0.967) : baseAmount;
+                      return finalAmount.toLocaleString();
+                    })()}원
                   </span>
                 </div>
                 {includeVat && (
                   <div className="text-xs text-gray-500 mt-1">
                     (부가세 포함 금액)
+                  </div>
+                )}
+                {includeTaxDeduction && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    (3.3% 세금공제 적용)
                   </div>
                 )}
               </div>
