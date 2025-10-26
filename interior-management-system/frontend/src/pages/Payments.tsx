@@ -123,12 +123,19 @@ const Payments = () => {
   // 마지막 선택된 프로젝트 불러오기
   const getInitialProject = () => {
     const lastSelected = localStorage.getItem('lastSelectedProject');
-    if (lastSelected && projects.some(p => p.name === lastSelected)) {
+
+    // 공사완료되지 않은 프로젝트만 필터링
+    const activeProjects = projects.filter(p => p.status !== 'completed');
+
+    if (lastSelected && activeProjects.some(p => p.name === lastSelected)) {
       return lastSelected;
     }
-    if (projects.length > 0) {
-      return projects[0].name;
+
+    // 프로젝트가 있으면 첫 번째 프로젝트를 기본값으로
+    if (activeProjects.length > 0) {
+      return activeProjects[0].name;
     }
+
     return '';
   };
 
@@ -648,7 +655,7 @@ const Payments = () => {
           }}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
-          {projects.map(project => (
+          {projects.filter(p => p.status !== 'completed').map(project => (
             <option key={project.id} value={project.name}>{project.name}</option>
           ))}
         </select>
@@ -711,7 +718,7 @@ const Payments = () => {
                 }}
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
-                {projects.map(project => (
+                {projects.filter(p => p.status !== 'completed').map(project => (
                   <option key={project.id} value={project.name}>{project.name}</option>
                 ))}
               </select>
