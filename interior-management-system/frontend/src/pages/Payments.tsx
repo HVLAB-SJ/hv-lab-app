@@ -93,6 +93,9 @@ const Payments = () => {
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [showProcessPicker, setShowProcessPicker] = useState(false);
   const processButtonRef = useRef<HTMLButtonElement>(null);
+  const [statusFilter, setStatusFilter] = useState<'pending' | 'completed'>('pending');
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailPayment, setDetailPayment] = useState<PaymentRequest | null>(null);
 
   // 협력업체 관련 상태
   const [contractors, setContractors] = useState<Contractor[]>([]);
@@ -269,7 +272,8 @@ const Payments = () => {
       record.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.process?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesProject && matchesSearch;
+    const matchesStatus = record.status === statusFilter;
+    return matchesProject && matchesSearch && matchesStatus;
   });
 
   // 협력업체 선택 핸들러
@@ -413,6 +417,23 @@ const Payments = () => {
     // 모바일에서는 리스트로 전환
     if (isMobileDevice) {
       setMobileView('list');
+    }
+  };
+
+  // 상세보기
+  const handleShowDetail = (payment: PaymentRequest) => {
+    setDetailPayment(payment);
+    setShowDetailModal(true);
+  };
+
+  // 송금완료 처리
+  const handleMarkAsCompleted = async (paymentId: string) => {
+    try {
+      await updatePaymentInAPI(paymentId, { status: 'completed' });
+      toast.success('송금완료 처리되었습니다');
+      setShowDetailModal(false);
+    } catch (error) {
+      toast.error('송금완료 처리 실패');
     }
   };
 
@@ -829,11 +850,37 @@ const Payments = () => {
           </div>
         </div>
 
-        {/* 중앙: 결제요청 목록 - 테이블 형식 (7열) */}
+        {/* 중앙: 결제요청 목록 - 카드 형식 (7열) */}
         <div className={`lg:col-span-7 bg-white rounded-lg border overflow-hidden flex flex-col ${
           mobileView !== 'list' ? 'hidden lg:flex' : ''
         }`}>
-          <div className="flex-1 overflow-auto">
+          {/* 상태 탭 */}
+          <div className="border-b border-gray-200 bg-gray-50">
+            <div className="flex">
+              <button
+                onClick={() => setStatusFilter('pending')}
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                  statusFilter === 'pending'
+                    ? 'text-gray-900 border-b-2 border-gray-900 bg-white'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                대기중 ({allRecords.filter(r => r.status === 'pending').length})
+              </button>
+              <button
+                onClick={() => setStatusFilter('completed')}
+                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                  statusFilter === 'completed'
+                    ? 'text-gray-900 border-b-2 border-gray-900 bg-white'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                송금완료 ({allRecords.filter(r => r.status === 'completed').length})
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-auto p-4">
             {filteredRecords.length > 0 ? (
               <>
                 {/* 데스크톱 테이블 뷰 */}
