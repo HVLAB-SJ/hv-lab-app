@@ -628,7 +628,7 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
                   className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
                 />
                 <span className="text-sm text-gray-700">
-                  3.3% 세금 공제 (프리랜서/개인사업자) - 자재비와 인건비 모두 적용
+                  3.3% 세금공제 - 자재비와 인건비 모두 적용
                 </span>
               </label>
               {applyTaxDeduction && (originalMaterialAmount > 0 || originalLaborAmount > 0) && (
