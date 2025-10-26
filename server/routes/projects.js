@@ -133,8 +133,8 @@ router.get('/:id', authenticateToken, (req, res) => {
   );
 });
 
-// 프로젝트 생성
-router.post('/', authenticateToken, isManager, (req, res) => {
+// 프로젝트 생성 - 모든 인증된 사용자가 생성 가능
+router.post('/', authenticateToken, (req, res) => {
   console.log('[POST /api/projects] Received body:', req.body);
 
   // Support both frontend format and backend format
