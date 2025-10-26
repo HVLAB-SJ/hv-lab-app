@@ -42,6 +42,7 @@ const ExecutionHistory = () => {
   const [selectedRecord, setSelectedRecord] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [includeVat, setIncludeVat] = useState(false);
+  const [includeTaxDeduction, setIncludeTaxDeduction] = useState(false);
   const [showProcessSummary, setShowProcessSummary] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImage, setModalImage] = useState<string>('');
@@ -320,6 +321,7 @@ const ExecutionHistory = () => {
       images: []
     }));
     setIncludeVat(false); // 부가세 체크 초기화
+    setIncludeTaxDeduction(false); // 세금공제 체크 초기화
   };
 
   // 공정별 합계 계산 (상세)
@@ -622,17 +624,31 @@ const ExecutionHistory = () => {
               </div>
 
               {/* 부가세 체크박스 */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="includeVat"
-                  checked={includeVat}
-                  onChange={(e) => setIncludeVat(e.target.checked)}
-                  className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
-                />
-                <label htmlFor="includeVat" className="ml-2 block text-sm text-gray-700">
-                  부가세 포함 (10%)
-                </label>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="includeVat"
+                    checked={includeVat}
+                    onChange={(e) => setIncludeVat(e.target.checked)}
+                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="includeVat" className="ml-2 block text-sm text-gray-700">
+                    부가세 포함 (10%)
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="includeTaxDeduction"
+                    checked={includeTaxDeduction}
+                    onChange={(e) => setIncludeTaxDeduction(e.target.checked)}
+                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="includeTaxDeduction" className="ml-2 block text-sm text-gray-700">
+                    3.3% 세금공제
+                  </label>
+                </div>
               </div>
 
               <div className="pt-2 border-t">
@@ -1147,19 +1163,8 @@ const ExecutionHistory = () => {
               </div>
 
               <div className="p-3 overflow-y-auto max-h-[calc(80vh-100px)]">
-                {/* 빈 값 선택 옵션 */}
-                <button
-                  onClick={() => {
-                    setFormData({ ...formData, process: '' });
-                    setShowProcessPicker(false);
-                  }}
-                  className="w-full mb-2 p-2 text-sm text-center border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 text-gray-500"
-                >
-                  선택 안함
-                </button>
-
                 {/* 공정 목록 그리드 */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 mb-2">
                   {PROCESS_LIST.map((process) => (
                     <button
                       key={process}
@@ -1177,6 +1182,17 @@ const ExecutionHistory = () => {
                     </button>
                   ))}
                 </div>
+
+                {/* 빈 값 선택 옵션 */}
+                <button
+                  onClick={() => {
+                    setFormData({ ...formData, process: '' });
+                    setShowProcessPicker(false);
+                  }}
+                  className="w-full p-2 text-sm text-center border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 text-gray-500"
+                >
+                  선택 안함
+                </button>
               </div>
             </div>
           </div>
@@ -1202,19 +1218,8 @@ const ExecutionHistory = () => {
               </div>
 
               <div className="p-2">
-                {/* 빈 값 선택 옵션 */}
-                <button
-                  onClick={() => {
-                    setFormData({ ...formData, process: '' });
-                    setShowProcessPicker(false);
-                  }}
-                  className="w-full mb-2 p-1.5 text-xs text-center border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 text-gray-500"
-                >
-                  선택 안함
-                </button>
-
                 {/* 공정 목록 그리드 - 4열로 확대하여 모든 공정이 보이도록 */}
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-4 gap-1.5 mb-2">
                   {PROCESS_LIST.map((process) => (
                     <button
                       key={process}
@@ -1232,6 +1237,17 @@ const ExecutionHistory = () => {
                     </button>
                   ))}
                 </div>
+
+                {/* 빈 값 선택 옵션 */}
+                <button
+                  onClick={() => {
+                    setFormData({ ...formData, process: '' });
+                    setShowProcessPicker(false);
+                  }}
+                  className="w-full p-1.5 text-xs text-center border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 text-gray-500"
+                >
+                  선택 안함
+                </button>
               </div>
             </div>
           </div>
