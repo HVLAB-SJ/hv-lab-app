@@ -1,0 +1,915 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-gray-200;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900;
+    font-family: 'Inter', 'Pretendard', system-ui, sans-serif;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input, textarea, select {
+    @apply outline-none;
+    touch-action: manipulation;
+  }
+
+  button, a {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  div, span, p, h1, h2, h3, h4, h5, h6 {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    min-height: 44px; /* iOS 터치 최소 크기 */
+  }
+
+  .btn-primary {
+    @apply bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-950;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-100 text-gray-900 hover:bg-gray-200 active:bg-gray-300;
+  }
+
+  .btn-outline {
+    @apply border border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100;
+  }
+
+  .input {
+    @apply w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-white border border-gray-300 rounded-lg focus:border-gray-500 focus:ring-0 transition-colors text-base;
+    min-height: 44px; /* iOS 터치 최소 크기 */
+  }
+
+  .card {
+    @apply bg-white border border-gray-200 rounded-lg p-4 sm:p-6;
+  }
+
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@layer utilities {
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  /* Scrollbar styles */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+
+  /* 모바일 최적화 */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* 모바일 안전 영역 */
+  @supports(padding: max(0px)) {
+    .safe-top {
+      padding-top: max(env(safe-area-inset-top), 0px);
+    }
+    .safe-bottom {
+      padding-bottom: max(env(safe-area-inset-bottom), 0px);
+    }
+  }
+
+  /* 모바일에서 페이지 제목 숨기기 (헤더에 표시되므로) */
+  @media (max-width: 1023px) {
+    /* 일반적인 페이지 제목 */
+    main h1.text-xl,
+    main h1.text-2xl,
+    main h1[class*="text-xl"],
+    main h1[class*="text-2xl"] {
+      display: none !important;
+    }
+  }
+}
+
+/* React Big Calendar 날짜 클릭 피드백 스타일 - 모든 피드백 제거 */
+.rbc-day-bg {
+  cursor: default;
+}
+
+.rbc-day-bg:hover {
+  background-color: transparent !important;
+}
+
+.rbc-day-bg:active {
+  background-color: transparent !important;
+}
+
+.rbc-off-range-bg {
+  background-color: transparent !important;
+  cursor: default !important;
+}
+
+.rbc-off-range-bg:hover {
+  background-color: transparent !important;
+}
+
+.rbc-off-range-bg:active {
+  background-color: transparent !important;
+}
+
+.rbc-today {
+  background-color: transparent !important;
+}
+
+.rbc-today:hover {
+  background-color: transparent !important;
+}
+
+.rbc-month-view .rbc-today button {
+  font-weight: 900 !important;
+  font-size: 1.1em !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* 이전/다음 달 날짜 색상 - 기본 */
+.rbc-off-range-bg button,
+.rbc-off-range-bg .rbc-button-link,
+.rbc-off-range button,
+.rbc-off-range .rbc-button-link {
+  color: #e5e7eb !important;
+}
+
+/* 주말 색상 스타일 */
+/* 평일 날짜 명시적으로 검정색 지정 */
+.rbc-month-view .rbc-date-cell:not(:nth-child(7n)):not(:nth-child(7n+1)):not(.rbc-off-range-bg) button,
+.rbc-month-view .rbc-date-cell:not(:nth-child(7n)):not(:nth-child(7n+1)):not(.rbc-off-range-bg) .rbc-button-link {
+  color: #000000 !important;
+}
+
+/* 일요일 헤더 */
+.rbc-month-view .rbc-header:nth-child(1) {
+  color: #dc2626 !important;
+}
+
+/* 일요일 현재달 날짜 */
+.rbc-month-view .rbc-date-cell:nth-child(7n+1):not(.rbc-off-range) .flex > span:first-child,
+.rbc-month-view .rbc-row .rbc-date-cell:nth-child(7n+1):not(.rbc-off-range) .flex > span:first-child {
+  color: #dc2626 !important;
+}
+
+/* 일요일 이전/다음 달 날짜 (투명도 30%) */
+.rbc-month-view .rbc-date-cell:nth-child(7n+1).rbc-off-range .flex > span:first-child,
+.rbc-month-view .rbc-month-row .rbc-date-cell:nth-child(7n+1).rbc-off-range .flex > span:first-child {
+  color: #dc2626 !important;
+  opacity: 0.3 !important;
+}
+
+/* 토요일 헤더 */
+.rbc-month-view .rbc-header:nth-child(7) {
+  color: #3b82f6 !important;
+}
+
+/* 토요일 현재달 날짜 */
+.rbc-month-view .rbc-date-cell:nth-child(7n):not(.rbc-off-range) .flex > span:first-child,
+.rbc-month-view .rbc-row .rbc-date-cell:nth-child(7n):not(.rbc-off-range) .flex > span:first-child {
+  color: #3b82f6 !important;
+}
+
+/* 토요일 이전/다음 달 날짜 (투명도 30%) */
+.rbc-month-view .rbc-date-cell:nth-child(7n).rbc-off-range .flex > span:first-child,
+.rbc-month-view .rbc-month-row .rbc-date-cell:nth-child(7n).rbc-off-range .flex > span:first-child {
+  color: #3b82f6 !important;
+  opacity: 0.3 !important;
+}
+
+/* 평일 이전/다음 달 날짜 (투명도 30%) */
+.rbc-month-view .rbc-date-cell.rbc-off-range:not(:nth-child(7n)):not(:nth-child(7n+1)) .flex > span:first-child,
+.rbc-month-view .rbc-month-row .rbc-date-cell.rbc-off-range:not(:nth-child(7n)):not(:nth-child(7n+1)) .flex > span:first-child {
+  color: #000000 !important;
+  opacity: 0.3 !important;
+}
+
+/* 날짜와 요일 왼쪽 정렬 - 데스크톱 */
+.rbc-month-view .rbc-header {
+  text-align: left !important;
+  padding-left: 10px !important;
+}
+
+.rbc-month-view .rbc-date-cell {
+  text-align: left !important;
+  padding-left: 9px !important;
+}
+
+/* 공휴일 날짜 색상 - 일요일과 동일한 채도 낮은 붉은색 */
+.rbc-date-cell.holiday-date button,
+.rbc-date-cell.holiday-date .rbc-button-link,
+.rbc-date-cell.holiday-date .flex > span:first-child {
+  color: #dc2626 !important;
+}
+
+/* 이전/다음 달 공휴일 날짜 (투명도 30% - 일요일과 동일) */
+.rbc-month-view .rbc-month-row .rbc-date-cell.holiday-date.rbc-off-range-bg button,
+.rbc-month-view .rbc-date-cell.holiday-date.rbc-off-range-bg .rbc-button-link,
+.rbc-month-view .rbc-date-cell.holiday-date.rbc-off-range .flex > span:first-child {
+  color: #dc2626 !important;
+  opacity: 0.3 !important;
+}
+
+/* 모바일에서 공휴일 날짜 색상 */
+@media (max-width: 768px) {
+  .rbc-date-cell.holiday-date button,
+  .rbc-date-cell.holiday-date .rbc-button-link,
+  .rbc-date-cell.holiday-date .flex > span:first-child {
+    color: #dc2626 !important;
+  }
+
+  /* 모바일 이전/다음 달 공휴일 */
+  .rbc-month-view .rbc-date-cell.holiday-date.rbc-off-range .flex > span:first-child {
+    color: #dc2626 !important;
+    opacity: 0.3 !important;
+  }
+}
+
+/* 이전/다음 달 일정 배경색 연하게 */
+.rbc-off-range .rbc-event,
+.rbc-off-range-bg .rbc-event,
+.rbc-month-row .rbc-off-range .rbc-event {
+  opacity: 0.3 !important;
+}
+
+.rbc-row-content .rbc-off-range .rbc-event-content {
+  opacity: 0.3 !important;
+}
+
+/* 일정 호버 효과 */
+.rbc-event {
+  cursor: pointer;
+  transition: filter 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.rbc-event:hover,
+.rbc-month-view .rbc-event:hover {
+  filter: brightness(0.95) !important;
+}
+
+/* 선택된 셀과 이벤트의 배경색 변경 방지 - 최우선순위 */
+.rbc-selected,
+.rbc-selected-cell {
+  background-color: transparent !important;
+}
+
+/* 선택된 이벤트도 원래 배경색과 색상 완전히 유지 - 변화 없음 */
+.rbc-month-view .rbc-event.rbc-selected,
+.rbc-event-content.rbc-selected,
+div.rbc-event.rbc-selected,
+.rbc-event.rbc-selected,
+.rbc-event.rbc-selected:hover,
+.rbc-event.rbc-selected:active,
+.rbc-event.rbc-selected:focus,
+.rbc-selected .rbc-event-content {
+  background-color: var(--event-bg-color) !important;
+  color: inherit !important;
+  filter: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.rbc-event:active {
+  filter: brightness(0.9) !important;
+}
+
+/* 일정 내부 텍스트 선택 방지 */
+.rbc-event-content,
+.rbc-event-label {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 이전/다음 달 일요일 */
+.rbc-day-bg:nth-child(7n+1).rbc-off-range-bg button,
+.rbc-day-bg:nth-child(7n+1).rbc-off-range button,
+.rbc-month-row .rbc-day-bg:nth-child(7n+1).rbc-off-range-bg button {
+  color: #dc2626 !important;
+  opacity: 0.5 !important;
+}
+
+/* 이전/다음 달 토요일 */
+.rbc-day-bg:nth-child(7n).rbc-off-range-bg button,
+.rbc-day-bg:nth-child(7n).rbc-off-range button,
+.rbc-month-row .rbc-day-bg:nth-child(7n).rbc-off-range-bg button {
+  color: #60a5fa !important;
+  opacity: 0.5 !important;
+}
+
+/* 모바일 날짜 셀 클릭 개선 */
+@media (max-width: 768px) {
+  /* 날짜 셀 터치 영역 확대 - 피드백 제거 */
+  .rbc-date-cell {
+    cursor: pointer !important;
+    position: relative !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+  }
+
+  /* 날짜 배경 셀도 클릭 가능하게 - 피드백 제거 */
+  .rbc-day-bg {
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+}
+
+/* 모바일 캘린더 최적화 */
+@media (max-width: 768px) {
+  /* 캘린더 헤더 - 요일 가운데 정렬, 텍스트 크기 30% 증가 */
+  .rbc-month-view .rbc-header {
+    font-size: 13px !important; /* 10px * 1.3 = 13px */
+    padding: 8px 2px !important;
+    text-align: center !important;
+    min-height: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* 날짜 셀 폰트 크기 - 더 크게 */
+  .rbc-date-cell button,
+  .rbc-date-cell .rbc-button-link {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+  }
+
+  /* 오늘 날짜 강조 */
+  .rbc-month-view .rbc-today button {
+    font-size: 15px !important;
+  }
+
+  /* 이벤트 폰트 크기 */
+  .rbc-event {
+    font-size: 10px !important;
+    padding: 2px 4px !important;
+  }
+
+  .rbc-event-content {
+    font-size: 10px !important;
+  }
+
+  /* 날짜 셀 - 완전한 가운데 정렬 */
+  .rbc-month-view .rbc-date-cell {
+    padding: 4px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+  }
+
+  /* 캘린더 전체 여백 - 모바일 */
+  .rbc-month-view {
+    padding: 0 !important;
+    height: auto !important;
+  }
+
+  /* 캘린더 컨테이너 높이 자동 */
+  .rbc-calendar {
+    height: auto !important;
+  }
+
+  /* Agenda 뷰 모바일 최적화 */
+  .rbc-agenda-view {
+    font-size: 12px !important;
+  }
+
+  .rbc-agenda-view table {
+    font-size: 12px !important;
+  }
+
+  .rbc-agenda-date-cell,
+  .rbc-agenda-time-cell {
+    font-size: 11px !important;
+    padding: 8px 4px !important;
+  }
+
+  .rbc-agenda-event-cell {
+    font-size: 12px !important;
+    padding: 8px 4px !important;
+  }
+
+  /* 모바일에서 달력 내 일정 내용 숨기기 - 날짜와 요일만 표시 */
+  .rbc-event,
+  .rbc-event-content,
+  .rbc-event-label {
+    display: none !important;
+  }
+
+  /* 날짜 셀 높이 조정 - 30px 원 + 여유 공간 */
+  .rbc-month-view .rbc-month-row {
+    min-height: 40px !important;
+    height: 40px !important;
+  }
+
+  /* row-content는 숨기지 말고 높이만 0으로 */
+  .rbc-month-view .rbc-row-content {
+    min-height: 0 !important;
+    height: 0 !important;
+  }
+
+  /* 날짜 버튼 스타일 */
+  .rbc-month-view .rbc-date-cell button,
+  .rbc-month-view .rbc-date-cell .rbc-button-link {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    width: 26px !important;
+    height: 26px !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+    transition: none !important;
+    position: relative !important;
+  }
+
+  /* 모바일 일요일 날짜 색상 */
+  .rbc-month-view .rbc-date-cell:nth-child(7n+1):not(.rbc-off-range) .flex > span:first-child {
+    color: #dc2626 !important;
+  }
+
+  /* 모바일 토요일 날짜 색상 */
+  .rbc-month-view .rbc-date-cell:nth-child(7n):not(.rbc-off-range) .flex > span:first-child {
+    color: #3b82f6 !important;
+  }
+
+  /* 모바일 이전/다음 달 일요일 */
+  .rbc-month-view .rbc-date-cell:nth-child(7n+1).rbc-off-range .flex > span:first-child {
+    color: #dc2626 !important;
+    opacity: 0.3 !important;
+  }
+
+  /* 모바일 이전/다음 달 토요일 */
+  .rbc-month-view .rbc-date-cell:nth-child(7n).rbc-off-range .flex > span:first-child {
+    color: #3b82f6 !important;
+    opacity: 0.3 !important;
+  }
+
+  /* 모바일 이전/다음 달 평일 */
+  .rbc-month-view .rbc-date-cell.rbc-off-range:not(:nth-child(7n)):not(:nth-child(7n+1)) .flex > span:first-child {
+    color: #000000 !important;
+    opacity: 0.3 !important;
+  }
+
+  /* 선택된 날짜에 동그라미 표시 - 모바일 */
+  .rbc-date-cell.selected-date button,
+  .rbc-date-cell.selected-date .rbc-button-link {
+    background-color: #1f2937 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.1) !important;
+  }
+
+  /* selected-date 배경 제거 */
+  .rbc-date-cell.selected-date {
+    background-color: transparent !important;
+  }
+
+  .rbc-day-bg.selected-date {
+    background-color: transparent !important;
+  }
+
+  /* 선택된 날짜의 색상 오버라이드 */
+  .rbc-month-view .rbc-date-cell.selected-date:nth-child(7n+1) button,
+  .rbc-month-view .rbc-date-cell.selected-date:nth-child(7n) button,
+  .rbc-month-view .rbc-date-cell.selected-date button {
+    color: #ffffff !important;
+  }
+
+  .rbc-month-view .rbc-date-cell.selected-date .flex > span:first-child {
+    color: #ffffff !important;
+    opacity: 1 !important;
+  }
+
+  /* 일정 개수 점 표시 */
+  .rbc-date-cell::after {
+    content: '';
+    position: absolute;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2px;
+  }
+
+  /* 일정 개수별 점 표시 (data attribute로 제어) */
+  .rbc-date-cell[data-event-count="1"]::after {
+    content: '•';
+    font-size: 7px;
+    color: #ef4444;
+  }
+
+  .rbc-date-cell[data-event-count="2"]::after {
+    content: '• •';
+    font-size: 7px;
+    color: #ef4444;
+    letter-spacing: 1px;
+  }
+
+  .rbc-date-cell[data-event-count="3"]::after {
+    content: '• • •';
+    font-size: 7px;
+    color: #ef4444;
+    letter-spacing: 1px;
+  }
+
+  .rbc-date-cell[data-event-count="4"]::after,
+  .rbc-date-cell[data-event-count="5"]::after,
+  .rbc-date-cell[data-event-count="6"]::after,
+  .rbc-date-cell[data-event-count="7"]::after,
+  .rbc-date-cell[data-event-count="8"]::after,
+  .rbc-date-cell[data-event-count="9"]::after {
+    content: '• • • +';
+    font-size: 6px;
+    color: #ef4444;
+    letter-spacing: 0.5px;
+  }
+
+  /* 그리드 라인 제거 */
+  .rbc-month-view,
+  .rbc-month-view .rbc-month-row,
+  .rbc-day-bg,
+  .rbc-date-cell {
+    border: none !important;
+  }
+
+  /* 헤더 하단 보더만 유지 */
+  .rbc-month-view .rbc-header {
+    border-bottom: 1px solid #e5e7eb !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+  }
+
+  /* 캘린더 외곽 테두리만 유지 */
+  .rbc-calendar {
+    border: 1px solid #e5e7eb !important;
+  }
+}
+
+/* 캘린더 컨테이너 높이 설정 */
+.calendar-container {
+  height: auto;
+  min-height: auto;
+}
+
+@media (min-width: 768px) {
+  .calendar-container {
+    height: calc(100vh - 280px);
+    min-height: 500px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .calendar-container {
+    height: calc(100vh - 220px);
+    min-height: 450px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
+  .calendar-container {
+    height: calc(100vh - 260px);
+    min-height: 500px;
+  }
+}
+
+/* ===== 태블릿 최적화 ===== */
+/* 태블릿 세로형 (Portrait) */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
+  /* 컨테이너 패딩 조정 */
+  .container {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+
+  /* 카드 패딩 */
+  .card {
+    padding: 1.25rem !important;
+  }
+
+  /* 버튼 크기 */
+  .btn {
+    padding: 0.625rem 1.25rem !important;
+    font-size: 0.9375rem !important;
+  }
+
+  /* 입력 필드 */
+  .input {
+    padding: 0.625rem 1rem !important;
+    font-size: 0.9375rem !important;
+  }
+
+  /* 테이블 폰트 크기 */
+  table {
+    font-size: 0.875rem !important;
+  }
+
+  table th,
+  table td {
+    padding: 0.75rem !important;
+  }
+
+  /* 캘린더 이벤트 텍스트 */
+  .rbc-event {
+    font-size: 0.75rem !important;
+  }
+
+  /* 모달 크기 조정 */
+  .fixed.inset-0 > div {
+    max-width: 90% !important;
+  }
+}
+
+/* 태블릿 가로형 (Landscape) */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  /* 컨테이너 패딩 */
+  .container {
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+  }
+
+  /* 카드 패딩 */
+  .card {
+    padding: 1.5rem !important;
+  }
+
+  /* 그리드 레이아웃 최적화 */
+  .grid {
+    gap: 1rem !important;
+  }
+
+  /* 캘린더 높이 조정 */
+  .rbc-calendar {
+    height: calc(100vh - 200px) !important;
+    min-height: 500px !important;
+  }
+
+  /* 테이블 뷰 - 2열 그리드 */
+  .grid-cols-1 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* 모달 크기 */
+  .fixed.inset-0 > div {
+    max-width: 85% !important;
+  }
+
+  /* 캘린더 이벤트 */
+  .rbc-event {
+    font-size: 0.8125rem !important;
+    padding: 4px 6px !important;
+  }
+
+  /* 날짜 헤더 */
+  .rbc-month-view .rbc-header {
+    font-size: 0.875rem !important;
+    padding: 0.5rem !important;
+  }
+
+  /* 일정 목록 컴팩트하게 */
+  .space-y-4 {
+    gap: 0.75rem !important;
+  }
+}
+
+/* 태블릿 공통 (세로형 + 가로형) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* 헤더 타이틀 크기 */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  /* 페이지 제목은 보이게 (데스크톱처럼) */
+  main h1.text-xl,
+  main h1.text-2xl,
+  main h1[class*="text-xl"],
+  main h1[class*="text-2xl"] {
+    display: block !important;
+  }
+
+  /* 검색 입력 필드 */
+  input[type="text"],
+  input[type="search"] {
+    font-size: 1rem !important;
+  }
+
+  /* 선택 드롭다운 */
+  select {
+    font-size: 0.9375rem !important;
+    padding: 0.625rem 2.5rem 0.625rem 1rem !important;
+  }
+
+  /* 모달 내부 폼 요소 */
+  .fixed.inset-0 label {
+    font-size: 0.875rem !important;
+  }
+
+  .fixed.inset-0 input,
+  .fixed.inset-0 select,
+  .fixed.inset-0 textarea {
+    font-size: 0.9375rem !important;
+  }
+
+  /* 캘린더 툴바 */
+  .rbc-toolbar {
+    padding: 1rem !important;
+  }
+
+  .rbc-toolbar button {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.9375rem !important;
+  }
+
+  /* AS 요청 카드 */
+  .card.hover\\:border-gray-400 {
+    padding: 1rem !important;
+  }
+
+  /* 프로젝트 카드 그리드 */
+  @media (orientation: portrait) {
+    .grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+  }
+
+  @media (orientation: landscape) {
+    .grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+      grid-template-columns: repeat(3, 1fr) !important;
+    }
+  }
+
+  /* AS 관리 카드 뷰 2열 그리드 (태블릿 가로형) */
+  @media (orientation: landscape) {
+    .lg\\:hidden.space-y-3 {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 1rem !important;
+    }
+
+    .lg\\:hidden.space-y-3 > * {
+      margin-top: 0 !important;
+    }
+  }
+
+  /* ===== 태블릿 일정관리 최적화 ===== */
+
+  /* 캘린더 날짜 헤더 (요일) 크기 */
+  .rbc-month-view .rbc-header {
+    font-size: 0.9375rem !important;
+    padding: 0.75rem 0.5rem !important;
+    font-weight: 600 !important;
+  }
+
+  /* 캘린더 날짜 셀 */
+  .rbc-month-view .rbc-date-cell {
+    padding: 0.5rem !important;
+  }
+
+  /* 날짜 버튼 크기 */
+  .rbc-date-cell button,
+  .rbc-date-cell .rbc-button-link {
+    font-size: 1rem !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+
+  /* 캘린더 행 높이 - 증가 */
+  .rbc-month-view .rbc-month-row {
+    min-height: 140px !important;
+  }
+
+  /* 일정 이벤트 크기 - 폰트 증가 */
+  .rbc-event {
+    font-size: 0.8125rem !important;
+    padding: 3px 6px !important;
+    margin-bottom: 2px !important;
+    border-radius: 4px !important;
+    line-height: 1.3 !important;
+    min-height: 44px !important;
+    height: auto !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* 일정 이벤트 내용 - 플렉스 컨테이너로 */
+  .rbc-event-content {
+    font-size: 0.8125rem !important;
+    line-height: 1.3 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: visible !important;
+    word-break: keep-all !important;
+    white-space: normal !important;
+    height: 100% !important;
+  }
+
+  /* 일정 더보기 링크 */
+  .rbc-show-more {
+    font-size: 0.75rem !important;
+    padding: 2px 4px !important;
+    margin-top: 2px !important;
+  }
+
+  /* 캘린더 툴바 개선 */
+  .rbc-toolbar {
+    flex-wrap: nowrap !important;
+    padding: 1rem 1.5rem !important;
+  }
+
+  .rbc-toolbar-label {
+    font-size: 1.125rem !important;
+    font-weight: 700 !important;
+  }
+
+  /* 캘린더 내비게이션 버튼 */
+  .rbc-toolbar button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    touch-action: manipulation !important;
+  }
+
+  /* 모달 크기 최적화 */
+  .fixed.inset-0 > div {
+    max-width: 90% !important;
+    max-height: 85vh !important;
+  }
+
+  /* 모달 내 버튼 크기 */
+  .fixed.inset-0 button {
+    min-height: 44px !important;
+    padding: 0.625rem 1.25rem !important;
+    font-size: 0.9375rem !important;
+  }
+
+  /* 모달 내 입력 필드 간격 */
+  .fixed.inset-0 .space-y-3 > * + *,
+  .fixed.inset-0 .space-y-4 > * + * {
+    margin-top: 1rem !important;
+  }
+
+  /* 캘린더 전체 뷰 개선 */
+  .calendar-container .rbc-calendar {
+    font-size: 1rem !important;
+  }
+
+  /* 오늘 날짜 강조 */
+  .rbc-month-view .rbc-today button {
+    font-weight: 800 !important;
+    font-size: 1.1rem !important;
+  }
+
+  /* 선택된 날짜 배경 제거 - 태블릿도 동일하게 */
+  .rbc-date-cell.selected-date {
+    background-color: transparent !important;
+  }
+}
