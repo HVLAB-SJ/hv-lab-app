@@ -213,6 +213,7 @@ router.put('/:id', authenticateToken, (req, res) => {
     itemName,
     materialAmount,
     laborAmount,
+    originalMaterialAmount,
     originalLaborAmount,
     applyTaxDeduction,
     includesVAT
@@ -223,7 +224,8 @@ router.put('/:id', authenticateToken, (req, res) => {
      SET vendor_name = ?, description = ?, amount = ?,
          account_holder = ?, bank_name = ?, account_number = ?,
          notes = ?, item_name = ?,
-         material_amount = ?, labor_amount = ?, original_labor_amount = ?,
+         material_amount = ?, labor_amount = ?,
+         original_material_amount = ?, original_labor_amount = ?,
          apply_tax_deduction = ?, includes_vat = ?,
          updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`,
@@ -238,6 +240,7 @@ router.put('/:id', authenticateToken, (req, res) => {
       itemName || '',
       materialAmount !== undefined ? materialAmount : 0,
       laborAmount !== undefined ? laborAmount : 0,
+      originalMaterialAmount !== undefined ? originalMaterialAmount : 0,
       originalLaborAmount !== undefined ? originalLaborAmount : 0,
       applyTaxDeduction ? 1 : 0,
       includesVAT ? 1 : 0,
