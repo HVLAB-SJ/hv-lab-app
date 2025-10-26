@@ -97,6 +97,7 @@ router.post('/', authenticateToken, async (req, res) => {
     itemName,
     materialAmount,
     laborAmount,
+    originalMaterialAmount,
     originalLaborAmount,
     applyTaxDeduction,
     includesVAT
@@ -148,8 +149,9 @@ router.post('/', authenticateToken, async (req, res) => {
     `INSERT INTO payment_requests
      (project_id, user_id, request_type, vendor_name, description, amount,
       account_holder, bank_name, account_number, notes, item_name,
-      material_amount, labor_amount, original_labor_amount, apply_tax_deduction, includes_vat, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      material_amount, labor_amount, original_material_amount, original_labor_amount,
+      apply_tax_deduction, includes_vat, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     [
       finalProjectId,
       req.user.id,
@@ -164,6 +166,7 @@ router.post('/', authenticateToken, async (req, res) => {
       itemName || '',
       materialAmount || 0,
       laborAmount || 0,
+      originalMaterialAmount || 0,
       originalLaborAmount || 0,
       applyTaxDeduction ? 1 : 0,
       includesVAT ? 1 : 0
