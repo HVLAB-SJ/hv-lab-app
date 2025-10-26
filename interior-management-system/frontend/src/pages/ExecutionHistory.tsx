@@ -261,10 +261,6 @@ const ExecutionHistory = () => {
       toast.error('프로젝트를 선택해주세요');
       return;
     }
-    if (!formData.itemName) {
-      toast.error('항목명을 입력해주세요');
-      return;
-    }
 
     const now = new Date();
     let materialCost = Number(formData.materialCost) || 0;
@@ -594,7 +590,7 @@ const ExecutionHistory = () => {
 
             {/* 항목명 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">항목명 *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">항목명</label>
               <input
                 type="text"
                 value={formData.itemName}
