@@ -50,6 +50,8 @@ const ExecutionHistory = () => {
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [showProcessPicker, setShowProcessPicker] = useState(false);
   const processButtonRef = useRef<HTMLButtonElement>(null);
+  // 항목명 추천
+  const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
   // 결제요청 레코드의 이미지를 저장하는 별도의 상태 (페이지 이동 시에도 유지)
   const [paymentRecordImages, setPaymentRecordImages] = useState<Record<string, string[]>>(() => {
     // localStorage에서 이미지 복원
@@ -125,6 +127,26 @@ const ExecutionHistory = () => {
   useEffect(() => {
     localStorage.setItem('hiddenPaymentIds', JSON.stringify(hiddenPaymentIds));
   }, [hiddenPaymentIds]);
+
+  // 항목명 입력 시 기존 실행내역에서 추천
+  useEffect(() => {
+    if (formData.itemName && formData.itemName.trim().length >= 1) {
+      const searchText = formData.itemName.trim().toLowerCase();
+
+      // 모든 실행내역에서 항목명 추출 (최신순)
+      const allItemNames = [...executionRecords]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .map(r => r.itemName)
+        .filter(name => name && name.toLowerCase().includes(searchText));
+
+      // 중복 제거
+      const uniqueItemNames = Array.from(new Set(allItemNames));
+
+      setItemNameSuggestions(uniqueItemNames.slice(0, 10)); // 최대 10개만 표시
+    } else {
+      setItemNameSuggestions([]);
+    }
+  }, [formData.itemName, executionRecords]);
 
   // 클립보드 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
@@ -591,7 +613,7 @@ const ExecutionHistory = () => {
             </div>
 
             {/* 항목명 */}
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">항목명</label>
               <input
                 type="text"
@@ -599,6 +621,24 @@ const ExecutionHistory = () => {
                 onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
+              {/* 항목명 추천 목록 */}
+              {itemNameSuggestions.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {itemNameSuggestions.map((itemName, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => {
+                        setFormData({ ...formData, itemName });
+                        setItemNameSuggestions([]);
+                      }}
+                      className="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm"
+                    >
+                      <div className="font-medium text-gray-900">{itemName}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* 금액 입력 */}
