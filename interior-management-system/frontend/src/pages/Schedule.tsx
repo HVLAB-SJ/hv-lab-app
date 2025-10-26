@@ -788,9 +788,36 @@ const Schedule = () => {
   );
 
   // 필터링된 이벤트 (여기로 이동)
-  const filteredEvents = filterProject === 'all'
+  const filteredEvents = (filterProject === 'all'
     ? events
-    : events.filter(e => e.projectName === filterProject);
+    : events.filter(e => e.projectName === filterProject))
+    .sort((a, b) => {
+      const aDate = a.start.toISOString().split('T')[0];
+      const bDate = b.start.toISOString().split('T')[0];
+
+      // 날짜가 다르면 날짜순 정렬
+      if (aDate !== bDate) {
+        return a.start.getTime() - b.start.getTime();
+      }
+
+      // 같은 날짜인 경우, 사용자 포함 여부로 정렬
+      const aHasUser = a.assignedTo && (
+        a.assignedTo.includes(user?.name || '') ||
+        (userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname))
+      );
+      const bHasUser = b.assignedTo && (
+        b.assignedTo.includes(user?.name || '') ||
+        (userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname))
+      );
+
+      // 둘 다 사용자 포함 또는 둘 다 미포함인 경우 시간순 정렬
+      if (aHasUser === bHasUser) {
+        return a.start.getTime() - b.start.getTime();
+      }
+
+      // 사용자 포함된 것을 우선
+      return aHasUser ? -1 : 1;
+    });
 
   // 인라인 입력 상태
   const [inlineEdit, setInlineEdit] = useState<{
