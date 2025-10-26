@@ -16,6 +16,10 @@ const io = socketIO(server, {
   }
 });
 
+// Run migrations
+const addOriginalMaterialAmount = require('./server/migrations/add-original-material-amount');
+addOriginalMaterialAmount().catch(console.error);
+
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 
