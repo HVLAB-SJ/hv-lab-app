@@ -181,7 +181,7 @@ router.post('/', authenticateToken, async (req, res) => {
       // 긴급 여부 확인 (프론트엔드에서 urgency 필드 또는 includesVAT로 판단)
       const isUrgent = req.body.urgency === 'urgent' || req.body.urgency === 'emergency';
 
-      // 알림 전송 (관리자에게)
+      // 알림 전송 (관리자에게) - 모든 결제요청에 대해 SMS 발송
       sendPaymentNotification({
         id: this.lastID,
         requester: req.user.username,
@@ -193,7 +193,7 @@ router.post('/', authenticateToken, async (req, res) => {
         account_number: account_number,
         account_holder: account_holder,
         item_name: itemName || ''
-      }, isUrgent);
+      }, true); // 항상 SMS 발송하도록 true로 설정
 
       res.status(201).json({
         id: this.lastID,

@@ -56,14 +56,18 @@ class CoolSMSService {
         }
 
         try {
+            // CoolSMS API v4 형식
             const data = {
-                message: {
-                    to: to.replace(/-/g, ''),
-                    from: this.from.replace(/-/g, ''),
-                    text: text,
-                    type: 'SMS'
-                }
+                messages: [
+                    {
+                        to: to.replace(/-/g, ''),
+                        from: this.from.replace(/-/g, ''),
+                        text: text
+                    }
+                ]
             };
+
+            console.log('📤 [CoolSMS] 발송 요청 데이터:', JSON.stringify(data, null, 2));
 
             const response = await axios.post(
                 'https://api.coolsms.co.kr/messages/v4/send',
@@ -71,11 +75,15 @@ class CoolSMSService {
                 { headers: this.getAuthHeaders() }
             );
 
-            console.log(`✅ SMS 발송 성공: ${to}`);
+            console.log(`✅ SMS 발송 성공: ${to}`, response.data);
             return { success: true, response: response.data };
         } catch (error) {
             console.error(`❌ SMS 발송 실패 (${to}):`, error.response?.data || error.message);
-            return { success: false, error: error.message };
+            if (error.response) {
+                console.error('❌ 응답 상태:', error.response.status);
+                console.error('❌ 응답 데이터:', JSON.stringify(error.response.data, null, 2));
+            }
+            return { success: false, error: error.message, details: error.response?.data };
         }
     }
 
