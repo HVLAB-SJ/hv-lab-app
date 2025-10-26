@@ -1,4 +1,4 @@
-import { format, isToday, isFuture } from 'date-fns';
+import { format, isToday, isFuture, isTomorrow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
@@ -61,7 +61,7 @@ const Dashboard = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2.5 py-1 ${isCurrentUser && todaySchedules.length > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-900'} rounded-full font-semibold whitespace-nowrap`}>
+                    <span className={`text-xs px-2.5 py-1 ${isCurrentUser && todaySchedules.length > 0 ? 'bg-yellow-100 text-gray-900' : 'bg-gray-100 text-gray-900'} rounded-full font-semibold whitespace-nowrap`}>
                       {todaySchedules.length} 오늘
                     </span>
                     <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full font-semibold whitespace-nowrap">
@@ -133,21 +133,27 @@ const Dashboard = () => {
                           return acc;
                         }, {} as Record<string, { date: string; project: string; schedules: typeof upcomingSchedules }>);
 
-                        return Object.values(grouped).map(({ date, project, schedules }) => (
-                          <div key={`${date}-${project}`} className="border-l-3 border-gray-400 bg-gray-50 rounded-r overflow-hidden">
-                            <div className="px-3 py-1.5 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
-                              <span className="text-xs font-semibold text-gray-700">{project}</span>
-                              <span className="text-xs text-gray-500 font-medium">{date}</span>
+                        return Object.values(grouped).map(({ date, project, schedules }) => {
+                          // 내일인지 확인 (첫 번째 일정으로 체크)
+                          const isTomorrowSchedule = schedules.length > 0 && isTomorrow(new Date(schedules[0].start));
+                          const dateDisplay = isTomorrowSchedule ? `${date} (내일)` : date;
+
+                          return (
+                            <div key={`${date}-${project}`} className="border-l-3 border-gray-400 bg-gray-50 rounded-r overflow-hidden">
+                              <div className="px-3 py-1.5 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-700">{project}</span>
+                                <span className="text-xs text-gray-500 font-medium">{dateDisplay}</span>
+                              </div>
+                              <div className="px-3 py-2 space-y-1">
+                                {schedules.map((schedule) => (
+                                  <p key={schedule.id} className="font-medium text-gray-900 text-sm leading-relaxed">
+                                    • {schedule.title}
+                                  </p>
+                                ))}
+                              </div>
                             </div>
-                            <div className="px-3 py-2 space-y-1">
-                              {schedules.map((schedule) => (
-                                <p key={schedule.id} className="font-medium text-gray-900 text-sm leading-relaxed">
-                                  • {schedule.title}
-                                </p>
-                              ))}
-                            </div>
-                          </div>
-                        ));
+                          );
+                        });
                       })()}
                     </div>
                   </div>
