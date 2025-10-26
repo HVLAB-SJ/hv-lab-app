@@ -406,17 +406,22 @@ export const useDataStore = create<DataStore>()(
 
   updatePaymentInAPI: async (id: string, updatedPayment: Partial<Payment>) => {
     try {
-      await paymentService.updatePayment(id, {
-        projectId: updatedPayment.project,
-        purpose: updatedPayment.purpose,
-        process: updatedPayment.process,
-        itemName: updatedPayment.itemName,
-        amount: updatedPayment.amount,
-        category: updatedPayment.category,
-        urgency: updatedPayment.urgency,
-        bankInfo: updatedPayment.bankInfo,
-        notes: updatedPayment.notes
-      });
+      // If only status is being updated, use the status endpoint
+      if (updatedPayment.status && Object.keys(updatedPayment).length === 1) {
+        await paymentService.updatePaymentStatus(id, updatedPayment.status);
+      } else {
+        await paymentService.updatePayment(id, {
+          projectId: updatedPayment.project,
+          purpose: updatedPayment.purpose,
+          process: updatedPayment.process,
+          itemName: updatedPayment.itemName,
+          amount: updatedPayment.amount,
+          category: updatedPayment.category,
+          urgency: updatedPayment.urgency,
+          bankInfo: updatedPayment.bankInfo,
+          notes: updatedPayment.notes
+        });
+      }
 
       // Reload all payments from API to get the updated list
       const apiPayments = await paymentService.getAllPayments();

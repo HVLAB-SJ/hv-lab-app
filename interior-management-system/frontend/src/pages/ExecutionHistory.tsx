@@ -65,13 +65,16 @@ const ExecutionHistory = () => {
   const getInitialProject = () => {
     const lastSelected = localStorage.getItem('lastSelectedProject');
 
-    if (lastSelected && projects.some(p => p.name === lastSelected)) {
+    // 공사완료되지 않은 프로젝트만 필터링
+    const activeProjects = projects.filter(p => p.status !== 'completed');
+
+    if (lastSelected && activeProjects.some(p => p.name === lastSelected)) {
       return lastSelected;
     }
 
     // 프로젝트가 있으면 첫 번째 프로젝트를 기본값으로
-    if (projects.length > 0) {
-      return projects[0].name;
+    if (activeProjects.length > 0) {
+      return activeProjects[0].name;
     }
 
     return '';
@@ -486,7 +489,7 @@ const ExecutionHistory = () => {
           }}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
-          {projects.map(project => (
+          {projects.filter(p => p.status !== 'completed').map(project => (
             <option key={project.id} value={project.name}>{project.name}</option>
           ))}
         </select>
@@ -536,8 +539,8 @@ const ExecutionHistory = () => {
           mobileView !== 'form' ? 'hidden lg:block' : ''
         }`}>
           <div className="space-y-4">
-            {/* 프로젝트 */}
-            <div>
+            {/* 프로젝트 - 데스크톱에서만 표시 */}
+            <div className="hidden lg:block">
               <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트 *</label>
               <select
                 value={formData.project}
@@ -551,17 +554,19 @@ const ExecutionHistory = () => {
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 {/* 빈칸 옵션 제거 - 모든 환경에서 */}
-                {projects.map(project => (
+                {projects.filter(p => p.status !== 'completed').map(project => (
                   <option key={project.id} value={project.name}>{project.name}</option>
                 ))}
               </select>
             </div>
 
-            {/* 날짜 & 공정 (side by side) */}
+            {/* 날짜 & 공정 */}
             <div className="grid grid-cols-2 gap-2">
               {/* 날짜 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  날짜 {formData.date && `(${format(new Date(formData.date), 'E', { locale: ko })})`}
+                </label>
                 <input
                   type="date"
                   value={formData.date}
@@ -569,11 +574,6 @@ const ExecutionHistory = () => {
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
                   style={{ colorScheme: 'light' }}
                 />
-                {formData.date && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {format(new Date(formData.date), 'EEEE', { locale: ko })}
-                  </p>
-                )}
               </div>
 
               {/* 공정 */}
@@ -630,7 +630,12 @@ const ExecutionHistory = () => {
                     type="checkbox"
                     id="includeVat"
                     checked={includeVat}
-                    onChange={(e) => setIncludeVat(e.target.checked)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setIncludeTaxDeduction(false);
+                      }
+                      setIncludeVat(e.target.checked);
+                    }}
                     className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
                   />
                   <label htmlFor="includeVat" className="ml-2 block text-sm text-gray-700">
@@ -642,7 +647,12 @@ const ExecutionHistory = () => {
                     type="checkbox"
                     id="includeTaxDeduction"
                     checked={includeTaxDeduction}
-                    onChange={(e) => setIncludeTaxDeduction(e.target.checked)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setIncludeVat(false);
+                      }
+                      setIncludeTaxDeduction(e.target.checked);
+                    }}
                     className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
                   />
                   <label htmlFor="includeTaxDeduction" className="ml-2 block text-sm text-gray-700">
@@ -652,20 +662,23 @@ const ExecutionHistory = () => {
               </div>
 
               <div className="pt-2 border-t">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-baseline">
                   <span className="font-medium">총액</span>
-                  <span className="font-semibold">
-                    {(
-                      (Number(formData.materialCost) || 0) +
-                      (Number(formData.laborCost) || 0)
-                    ).toLocaleString()}원
-                  </span>
-                </div>
-                {includeVat && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    (부가세 포함 금액)
+                  <div className="text-right">
+                    {(includeVat || includeTaxDeduction) && (
+                      <span className="text-xs text-gray-500 mr-2">
+                        ({includeVat && '부가세 포함'}{includeTaxDeduction && '3.3% 세금공제'})
+                      </span>
+                    )}
+                    <span className="font-semibold">
+                      {(() => {
+                        const baseAmount = (Number(formData.materialCost) || 0) + (Number(formData.laborCost) || 0);
+                        const finalAmount = includeTaxDeduction ? Math.round(baseAmount * 0.967) : baseAmount;
+                        return finalAmount.toLocaleString();
+                      })()}원
+                    </span>
                   </div>
-                )}
+                </div>
               </div>
 
               {/* 내역추가 버튼 */}

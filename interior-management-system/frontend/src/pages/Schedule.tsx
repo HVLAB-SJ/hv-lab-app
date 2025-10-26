@@ -369,6 +369,9 @@ const Schedule = () => {
   } = useDataStore();
   const { user } = useAuth();
 
+  // 사용자 이름에서 성 제거 (마지막 2글자만 사용)
+  const userNameWithoutSurname = user?.name ? user.name.slice(-2) : null;
+
   // Load schedules from API on mount
   useEffect(() => {
     loadSchedulesFromAPI().catch(error => {
@@ -740,7 +743,34 @@ const Schedule = () => {
       }
     });
 
-    return finalEvents;
+    // 날짜별로 그룹화하여 같은 날짜 내에서 사용자 일정을 상단에 배치
+    return finalEvents.sort((a, b) => {
+      const aDate = a.start.toISOString().split('T')[0];
+      const bDate = b.start.toISOString().split('T')[0];
+
+      // 날짜가 다르면 날짜순 정렬
+      if (aDate !== bDate) {
+        return a.start.getTime() - b.start.getTime();
+      }
+
+      // 같은 날짜인 경우, 사용자 포함 여부로 정렬
+      const aHasUser = a.assignedTo && (
+        a.assignedTo.includes(user?.name || '') ||
+        (userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname))
+      );
+      const bHasUser = b.assignedTo && (
+        b.assignedTo.includes(user?.name || '') ||
+        (userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname))
+      );
+
+      // 둘 다 사용자 포함 또는 둘 다 미포함인 경우 시간순 정렬
+      if (aHasUser === bHasUser) {
+        return a.start.getTime() - b.start.getTime();
+      }
+
+      // 사용자 포함된 것을 우선
+      return aHasUser ? -1 : 1;
+    });
   };
 
   // 그룹화 적용
@@ -882,15 +912,15 @@ const Schedule = () => {
     let bgColor = event.color || '#E7D4C0';
     let textColor = '#1f2937';
 
-    // AS 방문 일정은 노란색 배경
+    // AS 방문 일정은 녹색 배경
     if (event.isASVisit) {
-      bgColor = '#FEF3C7';
-      textColor = '#92400e';
+      bgColor = '#E8F5E9';
+      textColor = '#1f2937';
     } else {
-      // 로그인한 사용자가 담당자에 포함된 일정은 채도 낮은 녹색
+      // 로그인한 사용자가 담당자에 포함된 일정은 노란색
       const isUserAssigned = event.assignedTo && event.assignedTo.includes(user?.name || '');
       if (isUserAssigned) {
-        bgColor = '#E8F5E9';
+        bgColor = '#FEF3C7';
         textColor = '#1f2937';
       }
     }

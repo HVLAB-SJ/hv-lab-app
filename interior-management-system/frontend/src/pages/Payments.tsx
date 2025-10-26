@@ -104,6 +104,13 @@ const Payments = () => {
   const [recommendedContractors, setRecommendedContractors] = useState<Contractor[]>([]);
   const [selectedContractorId, setSelectedContractorId] = useState<string | null>(null);
 
+  // 송금완료 내역에서 계좌정보 추천
+  const [accountSuggestions, setAccountSuggestions] = useState<Array<{
+    accountHolder: string;
+    bankName: string;
+    accountNumber: string;
+  }>>([]);
+
   // 결제요청 레코드의 이미지를 저장하는 별도의 상태
   const [paymentRecordImages, setPaymentRecordImages] = useState<Record<string, string[]>>(() => {
     const stored = localStorage.getItem('paymentRecordImages');
@@ -222,6 +229,69 @@ const Payments = () => {
     }
   }, [formData.process, contractors, payments]);
 
+  // 예금주 이름 입력 시 송금완료 내역과 협력업체에서 계좌정보 검색
+  useEffect(() => {
+    if (formData.accountHolder && formData.accountHolder.trim().length >= 2) {
+      const searchName = formData.accountHolder.trim().toLowerCase();
+
+      const uniqueAccounts = new Map<string, {
+        accountHolder: string;
+        bankName: string;
+        accountNumber: string;
+      }>();
+
+      // 1. 송금완료된 결제 내역에서 예금주 이름으로 검색
+      const completedPayments = payments.filter(p =>
+        p.status === 'completed' &&
+        p.bankInfo?.accountHolder &&
+        p.bankInfo?.bankName &&
+        p.bankInfo?.accountNumber
+      );
+
+      completedPayments.forEach(p => {
+        const holder = p.bankInfo!.accountHolder.trim();
+        const holderLower = holder.toLowerCase();
+
+        // 예금주 이름이 포함되어 있으면 추천 목록에 추가
+        if (holderLower.includes(searchName) || searchName.includes(holderLower)) {
+          const key = `${holder}_${p.bankInfo!.bankName}_${p.bankInfo!.accountNumber}`;
+          if (!uniqueAccounts.has(key)) {
+            uniqueAccounts.set(key, {
+              accountHolder: holder,
+              bankName: p.bankInfo!.bankName,
+              accountNumber: p.bankInfo!.accountNumber
+            });
+          }
+        }
+      });
+
+      // 2. 협력업체 데이터에서 예금주 이름으로 검색
+      contractors.forEach(contractor => {
+        // 계좌번호와 은행 정보가 있는 협력업체만 추천
+        if (contractor.accountNumber && contractor.bankName) {
+          const cleanName = removePosition(contractor.name).trim();
+          const nameLower = cleanName.toLowerCase();
+
+          // 예금주 이름이 포함되어 있으면 추천 목록에 추가
+          if (nameLower.includes(searchName) || searchName.includes(nameLower)) {
+            const key = `${cleanName}_${contractor.bankName}_${contractor.accountNumber}`;
+            if (!uniqueAccounts.has(key)) {
+              uniqueAccounts.set(key, {
+                accountHolder: cleanName,
+                bankName: contractor.bankName,
+                accountNumber: contractor.accountNumber
+              });
+            }
+          }
+        }
+      });
+
+      setAccountSuggestions(Array.from(uniqueAccounts.values()));
+    } else {
+      setAccountSuggestions([]);
+    }
+  }, [formData.accountHolder, payments, contractors]);
+
   // paymentRecordImages가 변경될 때마다 localStorage에 저장
   useEffect(() => {
     localStorage.setItem('paymentRecordImages', JSON.stringify(paymentRecordImages));
@@ -267,15 +337,14 @@ const Payments = () => {
     new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
   );
 
-  // 필터링
+  // 필터링 (대기중/송금완료 탭에서는 모든 프로젝트 표시)
   const filteredRecords = allRecords.filter(record => {
-    const matchesProject = formData.project === '' || record.project === formData.project;
     const matchesSearch = searchTerm === '' ||
       record.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.process?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = record.status === statusFilter;
-    return matchesProject && matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
 
   // 협력업체 선택 핸들러
@@ -363,12 +432,16 @@ const Payments = () => {
     const materialCost = Number(formData.materialCost) || 0;
     const laborCost = Number(formData.laborCost) || 0;
     const baseAmount = materialCost + laborCost;
-    const totalAmount = includeTaxDeduction ? Math.round(baseAmount * 0.967) : baseAmount;
 
     if (baseAmount === 0) {
       toast.error('금액을 입력해주세요');
       return;
     }
+
+    // 3.3% 세금공제 시 각 금액에 0.967 적용
+    const finalMaterialCost = includeTaxDeduction ? Math.round(materialCost * 0.967) : materialCost;
+    const finalLaborCost = includeTaxDeduction ? Math.round(laborCost * 0.967) : laborCost;
+    const totalAmount = finalMaterialCost + finalLaborCost;
 
     const now = new Date();
     const newPayment: PaymentRequest = {
@@ -383,9 +456,12 @@ const Payments = () => {
       itemName: formData.itemName,
       includesVAT: includeVat,
       applyTaxDeduction: includeTaxDeduction,
-      materialAmount: materialCost,
-      laborAmount: laborCost,
+      materialAmount: finalMaterialCost,
+      laborAmount: finalLaborCost,
       originalLaborAmount: laborCost,
+      accountHolder: formData.accountHolder,
+      bank: formData.bankName,
+      accountNumber: formData.accountNumber,
       bankInfo: formData.accountHolder || formData.bankName || formData.accountNumber ? {
         accountHolder: formData.accountHolder,
         bankName: formData.bankName,
@@ -532,8 +608,8 @@ const Payments = () => {
   return (
     <div className="space-y-4 md:space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between lg:justify-start">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">결제요청 관리</h1>
+      <div className="flex items-center justify-start">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">결제요청</h1>
       </div>
 
       {/* 모바일에서 프로젝트 선택 */}
@@ -599,8 +675,8 @@ const Payments = () => {
           mobileView !== 'form' ? 'hidden lg:block' : ''
         }`}>
           <div className="space-y-4">
-            {/* 프로젝트 */}
-            <div>
+            {/* 프로젝트 - 데스크톱에서만 표시 */}
+            <div className="hidden lg:block">
               <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트 *</label>
               <select
                 value={formData.project}
@@ -621,7 +697,9 @@ const Payments = () => {
             {/* 날짜 & 공정 */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  날짜 {formData.date && `(${format(new Date(formData.date), 'E', { locale: ko })})`}
+                </label>
                 <input
                   type="date"
                   value={formData.date}
@@ -629,11 +707,6 @@ const Payments = () => {
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
                   style={{ colorScheme: 'light' }}
                 />
-                {formData.date && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {format(new Date(formData.date), 'EEEE', { locale: ko })}
-                  </p>
-                )}
               </div>
 
               <div className="relative">
@@ -775,6 +848,42 @@ const Payments = () => {
                 />
               </div>
 
+              {/* 송금완료 내역에서 찾은 계좌정보 추천 */}
+              {accountSuggestions.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <label className="block text-sm font-medium text-blue-900 mb-2">이전 송금 내역</label>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {accountSuggestions.map((account, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            accountHolder: account.accountHolder,
+                            bankName: account.bankName,
+                            accountNumber: account.accountNumber
+                          }));
+                          setAccountSuggestions([]);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg border border-blue-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-medium text-sm text-gray-900">
+                              {account.accountHolder}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {account.bankName} {account.accountNumber}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">은행</label>
                 <select
@@ -852,263 +961,172 @@ const Payments = () => {
           </div>
         </div>
 
-        {/* 중앙: 결제요청 목록 - 카드 형식 (7열) */}
-        <div className={`lg:col-span-7 bg-white rounded-lg border overflow-hidden flex flex-col ${
+        {/* 중앙: 결제요청 목록 - 카드 형식 (4열) */}
+        <div className={`lg:col-span-4 bg-white rounded-lg border overflow-hidden flex flex-col ${
           mobileView !== 'list' ? 'hidden lg:flex' : ''
         }`}>
           {/* 상태 탭 */}
-          <div className="border-b border-gray-200 bg-gray-50">
-            <div className="flex">
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">
               <button
                 onClick={() => setStatusFilter('pending')}
-                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                className={`py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
                   statusFilter === 'pending'
-                    ? 'text-gray-900 border-b-2 border-gray-900 bg-white'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'border-gray-700 text-gray-700'
+                    : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                대기중 ({allRecords.filter(r => r.status === 'pending').length})
+                대기중
+                <span className={`ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold ${
+                  statusFilter === 'pending' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {allRecords.filter(r => r.status === 'pending').length}
+                </span>
               </button>
               <button
                 onClick={() => setStatusFilter('completed')}
-                className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                className={`py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
                   statusFilter === 'completed'
-                    ? 'text-gray-900 border-b-2 border-gray-900 bg-white'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'border-gray-700 text-gray-700'
+                    : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                송금완료 ({allRecords.filter(r => r.status === 'completed').length})
+                송금완료
+                <span className={`ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold ${
+                  statusFilter === 'completed' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {allRecords.filter(r => r.status === 'completed').length}
+                </span>
               </button>
-            </div>
+            </nav>
           </div>
 
           <div className="flex-1 overflow-auto p-4">
             {filteredRecords.length > 0 ? (
-              <>
-                {/* 데스크톱 테이블 뷰 */}
-                <table className="hidden lg:table w-full">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr className="text-left text-xs text-gray-700 border-b">
-                      <th className="px-3 py-3 font-medium w-[10%]">요청자</th>
-                      <th className="px-3 py-3 font-medium w-[12%]">날짜</th>
-                      <th className="px-3 py-3 font-medium w-[8%]">공정</th>
-                      <th className="px-3 py-3 font-medium w-[20%]">용도</th>
-                      <th className="px-3 py-3 font-medium text-right w-[10%]">자재비</th>
-                      <th className="px-3 py-3 font-medium text-right w-[10%]">인건비</th>
-                      <th className="px-3 py-3 font-medium text-right w-[10%]">부가세</th>
-                      <th className="px-3 py-3 font-medium text-right w-[10%]">총액</th>
-                      <th className="px-3 py-3 font-medium w-[10%]">상태</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredRecords.map((record) => {
-                      const materialCost = record.materialAmount || 0;
-                      const laborCost = record.laborAmount || 0;
-                      const totalAmount = record.amount || 0;
+              <div className="space-y-3">
+                {filteredRecords.map((record) => {
+                  const totalAmount = record.amount || 0;
+                  // bankInfo 객체가 있으면 그것을 사용, 없으면 개별 필드 사용
+                  const accountHolder = record.bankInfo?.accountHolder || record.accountHolder || '';
+                  const bank = record.bankInfo?.bankName || record.bank || '';
+                  const accountNumber = record.bankInfo?.accountNumber || record.accountNumber || '';
+                  const accountInfo = accountHolder && bank && accountNumber
+                    ? `${accountHolder} | ${bank} ${accountNumber}`
+                    : '계좌정보 없음';
 
-                      let materialSupplyAmount = materialCost;
-                      let laborSupplyAmount = laborCost;
-                      let vatAmount = 0;
-
-                      if (materialCost === 0 && laborCost === 0 && totalAmount > 0) {
-                        if (record.includesVAT) {
-                          materialSupplyAmount = Math.round(totalAmount / 1.1);
-                          vatAmount = totalAmount - materialSupplyAmount;
-                        } else {
-                          materialSupplyAmount = totalAmount;
-                        }
-                      } else {
-                        if (record.includesVAT) {
-                          if (materialCost > 0) {
-                            materialSupplyAmount = Math.round(materialCost / 1.1);
-                          }
-                          if (laborCost > 0) {
-                            laborSupplyAmount = Math.round(laborCost / 1.1);
-                          }
-                          vatAmount = totalAmount - (materialSupplyAmount + laborSupplyAmount);
-                        }
-                      }
-
-                      return (
-                        <tr
-                          key={record.id}
-                          className={`hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === record.id ? 'bg-blue-50' : ''}`}
-                          onClick={() => setSelectedRecord(record.id)}
-                        >
-                          <td className="px-3 py-3 text-gray-600">
-                            {record.requestedBy || '-'}
-                          </td>
-                          <td className="px-3 py-3 text-gray-600">
-                            {format(new Date(record.requestDate), 'yyyy-MM-dd (EEE)', { locale: ko })}
-                          </td>
-                          <td className="px-3 py-3 text-gray-600">
-                            {record.process || '-'}
-                          </td>
-                          <td className="px-3 py-3 font-medium">
-                            {record.purpose || record.itemName}
-                          </td>
-                          <td className="px-3 py-3 text-right">
-                            {materialSupplyAmount.toLocaleString()}
-                          </td>
-                          <td className="px-3 py-3 text-right">
-                            {laborSupplyAmount.toLocaleString()}
-                          </td>
-                          <td className="px-3 py-3 text-right">
-                            {vatAmount.toLocaleString()}
-                          </td>
-                          <td className="px-3 py-3 text-right font-semibold">
-                            {totalAmount.toLocaleString()}원
-                          </td>
-                          <td className="px-3 py-3">
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              record.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              record.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              record.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {record.status === 'approved' ? '승인됨' :
-                               record.status === 'rejected' ? '반려됨' :
-                               record.status === 'completed' ? '완료됨' :
-                               '대기중'}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                {/* 모바일 카드 뷰 */}
-                <div className="lg:hidden space-y-3 p-3">
-                  {filteredRecords.map((record) => {
-                    const totalAmount = record.amount || 0;
-                    return (
-                      <div
-                        key={record.id}
-                        className={`border rounded-lg p-4 ${
-                          selectedRecord === record.id ? 'bg-blue-50 border-blue-300' : 'bg-white'
-                        }`}
-                        onClick={() => setSelectedRecord(record.id)}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{record.purpose || record.itemName}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {record.process || '-'} • {record.requestedBy || '-'}
-                            </p>
+                  return (
+                    <div
+                      key={record.id}
+                      onClick={() => setSelectedRecord(record.id)}
+                      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                        selectedRecord === record.id
+                          ? 'border-gray-900 bg-gray-50'
+                          : 'border-gray-200 bg-white hover:border-gray-400'
+                      }`}
+                    >
+                      {/* 상단: 항목명, 프로젝트, 금액 */}
+                      <div className="flex justify-between items-start mb-2.5">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-2">
+                            {record.process && (
+                              <span className="text-xs text-gray-500 shrink-0">[{record.process}]</span>
+                            )}
+                            <h3 className="font-semibold text-gray-900 text-sm truncate">
+                              {record.purpose || record.itemName || '-'}
+                            </h3>
                           </div>
-                          <div className="text-right">
-                            <p className="text-sm font-bold text-gray-900">
-                              ₩{totalAmount.toLocaleString()}
-                            </p>
-                            <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full mt-1 ${
-                              record.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              record.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              record.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {record.status === 'approved' ? '승인됨' :
-                               record.status === 'rejected' ? '반려됨' :
-                               record.status === 'completed' ? '완료됨' :
-                               '대기중'}
-                            </span>
-                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">{record.project || '-'}</p>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {format(new Date(record.requestDate), 'yyyy.MM.dd (EEE)', { locale: ko })}
+                        <div className="flex items-start gap-2 ml-3 shrink-0">
+                          <div className="text-right">
+                            <p className="text-base font-bold text-gray-900">
+                              {totalAmount.toLocaleString()}원
+                            </p>
+                            <p className="text-[10px] text-gray-400">
+                              {record.requestedBy || '-'} · {format(new Date(record.requestDate), 'MM/dd', { locale: ko })}
+                            </p>
+                          </div>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (window.confirm('이 결제요청을 삭제하시겠습니까?')) {
+                                await deletePaymentFromAPI(record.id);
+                                toast.success('삭제되었습니다');
+                              }
+                            }}
+                            className="p-0.5 text-gray-300 hover:text-red-500 transition-colors"
+                            title="삭제"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </>
+
+                      {/* 금액 상세 + 뱃지 */}
+                      <div className="flex items-center gap-2 mb-2.5 text-xs">
+                        <span className="text-gray-400">자재비 {(record.materialAmount || 0).toLocaleString()}</span>
+                        <span className="text-gray-300">·</span>
+                        <span className="text-gray-400">인건비 {(record.laborAmount || 0).toLocaleString()}</span>
+                        {record.includesVAT && (
+                          <>
+                            <span className="text-gray-300">·</span>
+                            <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] rounded">VAT</span>
+                          </>
+                        )}
+                        {record.applyTaxDeduction && (
+                          <>
+                            <span className="text-gray-300">·</span>
+                            <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 text-[10px] rounded">3.3%</span>
+                          </>
+                        )}
+                      </div>
+
+                      {/* 계좌정보 */}
+                      <div className="text-xs text-gray-500 mb-2.5 truncate">
+                        {accountInfo}
+                      </div>
+
+                      {/* 버튼 */}
+                      {statusFilter === 'pending' && (
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkAsCompleted(record.id);
+                            }}
+                            className="flex-1 py-1.5 px-2 bg-gray-700 text-white rounded text-xs font-medium hover:bg-gray-800 transition-colors"
+                          >
+                            즉시송금
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkAsCompleted(record.id);
+                            }}
+                            className="flex-1 py-1.5 px-2 text-white rounded text-xs font-medium transition-colors"
+                            style={{ backgroundColor: '#5f81a5' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4a6b8a'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#5f81a5'}
+                          >
+                            송금완료
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
                 결제요청이 없습니다
               </div>
             )}
           </div>
-
-          {/* 하단 검색 영역 */}
-          <div className="border-t bg-gray-50 p-3">
-            {mobileView === 'list' && (
-              <>
-                {/* 모바일 검색 입력창 */}
-                <div className="lg:hidden mb-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="검색..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
-                    />
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  </div>
-                </div>
-
-                {/* 모바일 총계 표시 */}
-                <div className="lg:hidden bg-white rounded-lg p-3 mb-3 space-y-2 border">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">자재비 총합:</span>
-                    <span className="text-sm font-medium text-gray-900">{projectTotals.material.toLocaleString()}원</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">인건비 총합:</span>
-                    <span className="text-sm font-medium text-gray-900">{projectTotals.labor.toLocaleString()}원</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">부가세 총합:</span>
-                    <span className="text-sm font-medium text-gray-900">{projectTotals.vat.toLocaleString()}원</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    <span className="text-sm font-bold text-gray-900">총 합계:</span>
-                    <span className="text-base font-bold text-gray-900">{projectTotals.total.toLocaleString()}원</span>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-              {/* 데스크톱 검색 입력창 */}
-              <div className="hidden lg:block flex-1 lg:max-w-sm">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="검색..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm lg:text-base"
-                  />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-              </div>
-
-              {/* 삭제 버튼 */}
-              <div className="flex items-center justify-between lg:justify-end gap-2">
-                {selectedRecord && (
-                  <button
-                    onClick={async () => {
-                      if (confirm('선택한 결제요청을 삭제하시겠습니까?')) {
-                        await deletePaymentFromAPI(selectedRecord);
-                        setSelectedRecord(null);
-                        toast.success('결제요청이 삭제되었습니다');
-                      }
-                    }}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="삭제"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* 오른쪽: 이미지 업로드 및 뷰어 (3열) */}
+        {/* 오른쪽: 이미지 업로드 및 뷰어 (6열) */}
         <div
-          className={`lg:col-span-3 bg-white rounded-lg border flex flex-col overflow-hidden ${
+          className={`lg:col-span-6 bg-white rounded-lg border flex flex-col overflow-hidden ${
             mobileView !== 'image' ? 'hidden lg:flex' : ''
           }`}
           onDragOver={handleDragOver}
