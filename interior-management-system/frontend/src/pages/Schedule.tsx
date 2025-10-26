@@ -1422,19 +1422,30 @@ const Schedule = () => {
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
-                    {selectedDateEvents.map((event) => (
-                      <div
-                        key={event.id}
-                        onClick={() => {
-                          // 원본 제목을 사용하여 이벤트 선택
-                          const eventWithOriginalTitle = {
-                            ...event,
-                            title: event.originalTitle || event.title
-                          };
-                          onSelectEvent(eventWithOriginalTitle);
-                        }}
-                        className="p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
-                      >
+                    {selectedDateEvents.map((event) => {
+                      // 로그인한 사용자가 담당자인지 확인
+                      const isUserAssigned = event.assignedTo && (
+                        event.assignedTo.includes(user?.name || '') ||
+                        (userNameWithoutSurname && event.assignedTo.includes(userNameWithoutSurname))
+                      );
+
+                      return (
+                        <div
+                          key={event.id}
+                          onClick={() => {
+                            // 원본 제목을 사용하여 이벤트 선택
+                            const eventWithOriginalTitle = {
+                              ...event,
+                              title: event.originalTitle || event.title
+                            };
+                            onSelectEvent(eventWithOriginalTitle);
+                          }}
+                          className={`p-3 transition-colors cursor-pointer ${
+                            isUserAssigned
+                              ? 'bg-yellow-50 hover:bg-yellow-100 active:bg-yellow-200'
+                              : 'hover:bg-gray-50 active:bg-gray-100'
+                          }`}
+                        >
                         <div className="flex items-start gap-2">
                           <div
                             className="w-1 h-full rounded-full flex-shrink-0"
@@ -1460,7 +1471,8 @@ const Schedule = () => {
                           </svg>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
