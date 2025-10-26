@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useDataStore, type PaymentRequest } from '../store/dataStore';
+import { useDataStore, type Payment } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
+
+type PaymentRequest = Payment;
 import { Search, Trash2, ImageIcon, X, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
