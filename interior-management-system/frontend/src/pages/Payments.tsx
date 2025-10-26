@@ -382,16 +382,6 @@ const Payments = () => {
       <div className="flex items-center justify-between lg:justify-start">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">결제 요청 관리</h1>
         <div className="hidden lg:flex items-center gap-3 ml-auto">
-          {/* 송금완료 내역이 있을 때만 실행내역 수정 버튼 표시 */}
-          {payments.filter(p => p.status === 'completed').length > 0 && (
-            <button
-              onClick={fixExecutionRecords}
-              disabled={isMigrating}
-              className="btn btn-outline px-4 py-2 text-sm border-gray-600 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-            >
-              {isMigrating ? '처리 중...' : '실행내역 정리'}
-            </button>
-          )}
           <button
             onClick={() => {
               setSelectedPayment(null);
