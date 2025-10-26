@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const solapiService = require('../../utils/solapiService');
 const { authenticateToken, isManager } = require('../middleware/auth');
+const { db } = require('../config/database');
 
 /**
  * SOLAPI 템플릿 확인 엔드포인트
@@ -132,6 +133,54 @@ router.post('/sms', authenticateToken, isManager, async (req, res) => {
             details: error.message
         });
     }
+});
+
+/**
+ * 데이터베이스 스키마 확인 엔드포인트
+ * GET /api/test/check-payment-schema
+ */
+router.get('/check-payment-schema', (req, res) => {
+    db.all("PRAGMA table_info(payment_requests)", [], (err, columns) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        const columnNames = columns.map(col => col.name);
+        const hasOriginalMaterial = columnNames.includes('original_material_amount');
+        res.json({
+            columns: columnNames,
+            hasOriginalMaterialAmount: hasOriginalMaterial,
+            totalColumns: columns.length,
+            needsFix: !hasOriginalMaterial
+        });
+    });
+});
+
+/**
+ * 데이터베이스 스키마 수정 엔드포인트
+ * GET /api/test/fix-payment-schema
+ */
+router.get('/fix-payment-schema', (req, res) => {
+    db.run(`
+        ALTER TABLE payment_requests
+        ADD COLUMN original_material_amount INTEGER DEFAULT 0
+    `, (err) => {
+        if (err) {
+            if (err.message.includes('duplicate column name')) {
+                return res.json({
+                    message: 'Column already exists',
+                    status: 'ok'
+                });
+            }
+            return res.status(500).json({
+                error: 'Failed to add column',
+                details: err.message
+            });
+        }
+        res.json({
+            message: 'Successfully added original_material_amount column',
+            status: 'success'
+        });
+    });
 });
 
 module.exports = router;

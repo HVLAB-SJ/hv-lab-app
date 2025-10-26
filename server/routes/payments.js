@@ -248,7 +248,12 @@ router.put('/:id', authenticateToken, (req, res) => {
     ],
     function(err) {
       if (err) {
-        return res.status(500).json({ error: '결제 요청 수정 실패' });
+        console.error('Payment update error:', err);
+        return res.status(500).json({
+          error: '결제 요청 수정 실패',
+          details: err.message,
+          sql: err.sql
+        });
       }
       if (this.changes === 0) {
         return res.status(404).json({ error: '수정할 수 없는 요청입니다.' });
