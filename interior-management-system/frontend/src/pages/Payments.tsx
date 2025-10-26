@@ -1014,40 +1014,41 @@ const Payments = () => {
           mobileView !== 'list' ? 'hidden lg:flex' : ''
         }`}>
           {/* 상태 탭 */}
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">
+          <div className="bg-gray-50 px-4 pt-3 pb-0">
+            <nav className="flex gap-2 overflow-x-auto">
               <button
                 onClick={() => setStatusFilter('pending')}
-                className={`py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
+                className={`px-4 py-2.5 rounded-t-lg font-medium text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
                   statusFilter === 'pending'
-                    ? 'border-gray-700 text-gray-700'
-                    : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-white text-gray-900 shadow-sm border-b-2 border-gray-900'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 대기중
-                <span className={`ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold ${
-                  statusFilter === 'pending' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                  statusFilter === 'pending' ? 'bg-gray-900 text-white' : 'bg-gray-300 text-gray-600'
                 }`}>
                   {allRecords.filter(r => r.status === 'pending').length}
                 </span>
               </button>
               <button
                 onClick={() => setStatusFilter('completed')}
-                className={`py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
+                className={`px-4 py-2.5 rounded-t-lg font-medium text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
                   statusFilter === 'completed'
-                    ? 'border-gray-700 text-gray-700'
-                    : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-white text-gray-900 shadow-sm border-b-2 border-gray-900'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 송금완료
-                <span className={`ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold ${
-                  statusFilter === 'completed' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                  statusFilter === 'completed' ? 'bg-gray-900 text-white' : 'bg-gray-300 text-gray-600'
                 }`}>
                   {allRecords.filter(r => r.status === 'completed').length}
                 </span>
               </button>
             </nav>
           </div>
+          <div className="border-b border-gray-200"></div>
 
           <div className="flex-1 overflow-auto p-4">
             {filteredRecords.length > 0 ? (
