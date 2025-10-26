@@ -241,7 +241,7 @@ const Payments = () => {
 
   // 예금주 이름 입력 시 송금완료 내역과 협력업체에서 계좌정보 검색
   useEffect(() => {
-    if (formData.accountHolder && formData.accountHolder.trim().length >= 2) {
+    if (formData.accountHolder && formData.accountHolder.trim().length >= 1) {
       const searchName = formData.accountHolder.trim().toLowerCase();
 
       const uniqueAccounts = new Map<string, {
