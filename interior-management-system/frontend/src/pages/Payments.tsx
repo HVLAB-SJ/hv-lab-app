@@ -616,6 +616,57 @@ const Payments = () => {
               />
             </div>
 
+            {/* 금액 입력 */}
+            <div className="space-y-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">자재비</label>
+                <input
+                  type="number"
+                  value={formData.materialCost}
+                  onChange={(e) => setFormData({ ...formData, materialCost: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">인건비</label>
+                <input
+                  type="number"
+                  value={formData.laborCost}
+                  onChange={(e) => setFormData({ ...formData, laborCost: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                />
+              </div>
+
+              {/* 부가세 체크박스 */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="includeVat"
+                    checked={includeVat}
+                    onChange={(e) => setIncludeVat(e.target.checked)}
+                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="includeVat" className="ml-2 block text-sm text-gray-700">
+                    부가세 포함 (10%)
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="includeTaxDeduction"
+                    checked={includeTaxDeduction}
+                    onChange={(e) => setIncludeTaxDeduction(e.target.checked)}
+                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="includeTaxDeduction" className="ml-2 block text-sm text-gray-700">
+                    3.3% 세금공제
+                  </label>
+                </div>
+              </div>
+            </div>
+
             {/* 추천 협력업체 */}
             {recommendedContractors.length > 0 && (
               <div className="border-t pt-3">
@@ -672,13 +723,35 @@ const Payments = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">은행</label>
-                <input
-                  type="text"
+                <select
                   value={formData.bankName}
                   onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  placeholder="은행명을 입력하세요"
-                />
+                >
+                  <option value="">은행 선택</option>
+                  <option value="KB국민은행">KB국민은행</option>
+                  <option value="신한은행">신한은행</option>
+                  <option value="우리은행">우리은행</option>
+                  <option value="하나은행">하나은행</option>
+                  <option value="NH농협은행">NH농협은행</option>
+                  <option value="IBK기업은행">IBK기업은행</option>
+                  <option value="SC제일은행">SC제일은행</option>
+                  <option value="한국씨티은행">한국씨티은행</option>
+                  <option value="카카오뱅크">카카오뱅크</option>
+                  <option value="케이뱅크">케이뱅크</option>
+                  <option value="토스뱅크">토스뱅크</option>
+                  <option value="새마을금고">새마을금고</option>
+                  <option value="신협">신협</option>
+                  <option value="우체국">우체국</option>
+                  <option value="KDB산업은행">KDB산업은행</option>
+                  <option value="수협은행">수협은행</option>
+                  <option value="대구은행">대구은행</option>
+                  <option value="부산은행">부산은행</option>
+                  <option value="경남은행">경남은행</option>
+                  <option value="광주은행">광주은행</option>
+                  <option value="전북은행">전북은행</option>
+                  <option value="제주은행">제주은행</option>
+                </select>
               </div>
 
               <div>
@@ -690,57 +763,6 @@ const Payments = () => {
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="계좌번호를 입력하세요"
                 />
-              </div>
-            </div>
-
-            {/* 금액 입력 */}
-            <div className="space-y-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">자재비</label>
-                <input
-                  type="number"
-                  value={formData.materialCost}
-                  onChange={(e) => setFormData({ ...formData, materialCost: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">인건비</label>
-                <input
-                  type="number"
-                  value={formData.laborCost}
-                  onChange={(e) => setFormData({ ...formData, laborCost: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                />
-              </div>
-
-              {/* 부가세 체크박스 */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="includeVat"
-                    checked={includeVat}
-                    onChange={(e) => setIncludeVat(e.target.checked)}
-                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="includeVat" className="ml-2 block text-sm text-gray-700">
-                    부가세 포함 (10%)
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="includeTaxDeduction"
-                    checked={includeTaxDeduction}
-                    onChange={(e) => setIncludeTaxDeduction(e.target.checked)}
-                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="includeTaxDeduction" className="ml-2 block text-sm text-gray-700">
-                    3.3% 세금공제
-                  </label>
-                </div>
               </div>
 
               <div className="pt-2 border-t">
