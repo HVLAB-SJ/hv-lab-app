@@ -593,8 +593,14 @@ const ExecutionHistory = () => {
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
-                  style={{ colorScheme: 'light', backgroundColor: 'white', minHeight: '42px', height: '42px' }}
+                  className="w-full px-3 py-2 border rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer text-gray-900"
+                  style={{
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    appearance: 'none',
+                    backgroundColor: 'white',
+                    backgroundImage: 'none'
+                  }}
                 />
               </div>
 
