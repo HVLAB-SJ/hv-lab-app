@@ -69,13 +69,9 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   const selectedProjectId = watch('projectId');
 
-  // 모달이 처음 마운트될 때 한 번만 초기화
+  // 모달이 처음 마운트될 때 한 번만 초기화 (시간 상태는 제외)
   useEffect(() => {
-    // 초기 상태 설정
-    setHasTime(false);
-    setTimePeriod('오전');
-    setTimeHour(9);
-    setTimeMinute(0);
+    // 초기 상태 설정 (시간 관련 상태는 사용자가 설정할 때까지 유지)
     setSelectedMembers([]);
     setCustomProjectName('');
     setCustomMember('');
@@ -186,11 +182,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
       setSelectedMembers([]);
       setCustomProjectName('');
-      // DON'T reset time states here - let user control them
-      // setHasTime(false);
-      // setTimePeriod('오전');
-      // setTimeHour(9);
-      // setTimeMinute(0);
+      // 시간 상태는 초기화하지 않음 - 사용자가 설정한 값 유지
 
       // Set default project if provided
       if (defaultProjectName) {

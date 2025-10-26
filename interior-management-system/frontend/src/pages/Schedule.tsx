@@ -383,14 +383,20 @@ const Schedule = () => {
     return index >= 0 ? projectColors[index % projectColors.length] : '#6B7280';
   };
 
-  // Format time to Korean format (14:00 -> 오후 2시)
+  // Format time to Korean format (14:30 -> 오후 2시 30분)
   const formatTimeKorean = (time: string): string => {
     if (!time || time === '-') return '';
-    const [hoursStr] = time.split(':');
+    const [hoursStr, minutesStr] = time.split(':');
     const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
     const period = hours >= 12 ? '오후' : '오전';
     const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
-    return `${period} ${displayHours}시`;
+
+    // 분이 0이면 시만 표시, 아니면 분까지 표시
+    if (minutes === 0) {
+      return `${period} ${displayHours}시`;
+    }
+    return `${period} ${displayHours}시 ${minutes}분`;
   };
 
   // Store 데이터를 Calendar 이벤트 형식으로 변환
@@ -1470,7 +1476,7 @@ const Schedule = () => {
                     console.log('📤 Updating schedule with projectId:', newEvent.projectId, 'projectName:', newEvent.projectName);
                     // title에서 시간 텍스트 제거 (있다면)
                     let cleanTitle = newEvent.title;
-                    const timePattern = / - (오전|오후) \d{1,2}시$/;
+                    const timePattern = / - (오전|오후) \d{1,2}시( \d{1,2}분)?$/;
                     cleanTitle = cleanTitle.replace(timePattern, '');
 
                     // 병합된 일정인 경우 모든 관련 일정을 업데이트
