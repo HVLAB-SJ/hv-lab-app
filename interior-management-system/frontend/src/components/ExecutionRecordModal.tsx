@@ -179,11 +179,6 @@ const ExecutionRecordModal = ({ record, onClose, onSave }: ExecutionRecordModalP
       return;
     }
 
-    if (!formData.itemName) {
-      toast.error('항목명을 입력해주세요');
-      return;
-    }
-
     const total = formData.materialCost + formData.laborCost + formData.vatAmount;
 
     onSave({
@@ -258,7 +253,7 @@ const ExecutionRecordModal = ({ record, onClose, onSave }: ExecutionRecordModalP
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                항목명 *
+                항목명
               </label>
               <input
                 type="text"
@@ -266,7 +261,6 @@ const ExecutionRecordModal = ({ record, onClose, onSave }: ExecutionRecordModalP
                 onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
                 placeholder="예: LED 조명 설치"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                required
               />
             </div>
           </div>
