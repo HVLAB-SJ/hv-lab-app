@@ -669,8 +669,8 @@ const Payments = () => {
 
             {/* 추천 협력업체 */}
             {recommendedContractors.length > 0 && (
-              <div className="border-t pt-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">추천 협력업체</label>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
+                <label className="block text-sm font-medium text-amber-900 mb-2">추천 협력업체</label>
                 <div className="space-y-1 max-h-32 overflow-y-auto">
                   {recommendedContractors.map((contractor) => {
                     const contractorId = contractor.id || contractor._id;
@@ -782,13 +782,13 @@ const Payments = () => {
                 )}
               </div>
 
-              {/* 결제요청 추가 버튼 */}
+              {/* 결제요청 버튼 */}
               <div className="my-6 lg:my-[50px]">
                 <button
                   onClick={handleSave}
                   className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
                 >
-                  결제요청 추가
+                  결제요청
                 </button>
               </div>
             </div>
