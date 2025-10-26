@@ -140,7 +140,7 @@ const CustomDateHeader = React.memo(({
   // 날짜 색상 결정
   let dateColor = '#000000'; // 기본 검정
   if (isHoliday || isSunday) {
-    dateColor = '#dc2626'; // 공휴일과 일요일은 채도 낮은 빨강
+    dateColor = '#f4361e'; // 공휴일과 일요일은 채도 낮은 빨강
   } else if (isSaturday) {
     dateColor = '#3b82f6'; // 토요일은 파랑
   }
@@ -219,7 +219,7 @@ const CustomDateHeader = React.memo(({
         <>
           <span style={dateStyle}>{displayLabel}</span>
           {holidayName && (
-            <span className="text-xs font-medium" style={{ color: '#ef4444' }}>
+            <span className="text-xs font-medium" style={{ color: '#f4361e' }}>
               {holidayName}
             </span>
           )}
