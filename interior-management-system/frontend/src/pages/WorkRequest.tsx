@@ -536,12 +536,14 @@ const WorkRequest = () => {
               )}
             >
               {tab.label}
-              <span className={clsx(
-                'ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold',
-                activeTab === tab.id ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
-              )}>
-                {tab.count}
-              </span>
+              {tab.count > 0 && (
+                <span className={clsx(
+                  'ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold',
+                  activeTab === tab.id ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+                )}>
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
         </nav>
