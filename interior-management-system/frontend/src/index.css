@@ -176,19 +176,19 @@
 
 /* 일요일 헤더 */
 .rbc-month-view .rbc-header:nth-child(1) {
-  color: #f4361e !important;
+  color: #dc2626 !important;
 }
 
 /* 일요일 현재달 날짜 */
 .rbc-month-view .rbc-date-cell:nth-child(7n+1):not(.rbc-off-range) .flex > span:first-child,
 .rbc-month-view .rbc-row .rbc-date-cell:nth-child(7n+1):not(.rbc-off-range) .flex > span:first-child {
-  color: #f4361e !important;
+  color: #dc2626 !important;
 }
 
 /* 일요일 이전/다음 달 날짜 (투명도 30%) */
 .rbc-month-view .rbc-date-cell:nth-child(7n+1).rbc-off-range .flex > span:first-child,
 .rbc-month-view .rbc-month-row .rbc-date-cell:nth-child(7n+1).rbc-off-range .flex > span:first-child {
-  color: #f4361e !important;
+  color: #dc2626 !important;
   opacity: 0.3 !important;
 }
 
@@ -232,14 +232,14 @@
 .rbc-date-cell.holiday-date button,
 .rbc-date-cell.holiday-date .rbc-button-link,
 .rbc-date-cell.holiday-date .flex > span:first-child {
-  color: #f4361e !important;
+  color: #dc2626 !important;
 }
 
 /* 이전/다음 달 공휴일 날짜 (투명도 30% - 일요일과 동일) */
 .rbc-month-view .rbc-month-row .rbc-date-cell.holiday-date.rbc-off-range-bg button,
 .rbc-month-view .rbc-date-cell.holiday-date.rbc-off-range-bg .rbc-button-link,
 .rbc-month-view .rbc-date-cell.holiday-date.rbc-off-range .flex > span:first-child {
-  color: #f4361e !important;
+  color: #dc2626 !important;
   opacity: 0.3 !important;
 }
 
@@ -248,12 +248,12 @@
   .rbc-date-cell.holiday-date button,
   .rbc-date-cell.holiday-date .rbc-button-link,
   .rbc-date-cell.holiday-date .flex > span:first-child {
-    color: #f4361e !important;
+    color: #dc2626 !important;
   }
 
   /* 모바일 이전/다음 달 공휴일 */
   .rbc-month-view .rbc-date-cell.holiday-date.rbc-off-range .flex > span:first-child {
-    color: #f4361e !important;
+    color: #dc2626 !important;
     opacity: 0.3 !important;
   }
 }
@@ -325,7 +325,7 @@ div.rbc-event.rbc-selected,
 .rbc-day-bg:nth-child(7n+1).rbc-off-range-bg button,
 .rbc-day-bg:nth-child(7n+1).rbc-off-range button,
 .rbc-month-row .rbc-day-bg:nth-child(7n+1).rbc-off-range-bg button {
-  color: #f4361e !important;
+  color: #dc2626 !important;
   opacity: 0.5 !important;
 }
 
@@ -468,7 +468,7 @@ div.rbc-event.rbc-selected,
 
   /* 모바일 일요일 날짜 색상 */
   .rbc-month-view .rbc-date-cell:nth-child(7n+1):not(.rbc-off-range) .flex > span:first-child {
-    color: #f4361e !important;
+    color: #dc2626 !important;
   }
 
   /* 모바일 토요일 날짜 색상 */
@@ -478,7 +478,7 @@ div.rbc-event.rbc-selected,
 
   /* 모바일 이전/다음 달 일요일 */
   .rbc-month-view .rbc-date-cell:nth-child(7n+1).rbc-off-range .flex > span:first-child {
-    color: #f4361e !important;
+    color: #dc2626 !important;
     opacity: 0.3 !important;
   }
 
@@ -539,20 +539,20 @@ div.rbc-event.rbc-selected,
   .rbc-date-cell[data-event-count="1"]::after {
     content: '•';
     font-size: 7px;
-    color: #f4361e;
+    color: #ef4444;
   }
 
   .rbc-date-cell[data-event-count="2"]::after {
     content: '• •';
     font-size: 7px;
-    color: #f4361e;
+    color: #ef4444;
     letter-spacing: 1px;
   }
 
   .rbc-date-cell[data-event-count="3"]::after {
     content: '• • •';
     font-size: 7px;
-    color: #f4361e;
+    color: #ef4444;
     letter-spacing: 1px;
   }
 
@@ -564,7 +564,7 @@ div.rbc-event.rbc-selected,
   .rbc-date-cell[data-event-count="9"]::after {
     content: '• • • +';
     font-size: 6px;
-    color: #f4361e;
+    color: #ef4444;
     letter-spacing: 0.5px;
   }
 
