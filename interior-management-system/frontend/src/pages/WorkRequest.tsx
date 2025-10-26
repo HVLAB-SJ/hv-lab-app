@@ -648,7 +648,10 @@ const WorkRequest = () => {
               {request.status === 'pending' && (
                 <button
                   onClick={() => handleStatusChange(request.id, 'in-progress')}
-                  className="flex-1 px-3 py-2 text-xs font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  className="flex-1 px-3 py-2 text-xs font-semibold text-white rounded-lg transition-colors"
+                  style={{ backgroundColor: '#81857d' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6a6e66'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81857d'}
                 >
                   수락
                 </button>
@@ -827,7 +830,10 @@ const WorkRequest = () => {
                     {request.status === 'pending' && (
                       <button
                         onClick={() => handleStatusChange(request.id, 'in-progress')}
-                        className="px-3 py-1 text-xs font-semibold bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors"
+                        className="px-3 py-1 text-xs font-semibold text-white rounded transition-colors"
+                        style={{ backgroundColor: '#81857d' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6a6e66'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81857d'}
                       >
                         수락
                       </button>
