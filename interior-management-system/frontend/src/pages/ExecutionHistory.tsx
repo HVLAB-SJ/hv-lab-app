@@ -475,6 +475,25 @@ const ExecutionHistory = () => {
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">실행내역</h1>
       </div>
 
+      {/* 모바일에서 프로젝트 선택 */}
+      <div className="lg:hidden mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트</label>
+        <select
+          value={formData.project}
+          onChange={(e) => {
+            setFormData({ ...formData, project: e.target.value });
+            if (e.target.value) {
+              localStorage.setItem('lastSelectedProject', e.target.value);
+            }
+          }}
+          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          {projects.map(project => (
+            <option key={project.id} value={project.name}>{project.name}</option>
+          ))}
+        </select>
+      </div>
+
       {/* 모바일에서 탭 표시 */}
       <div className="lg:hidden border-b border-gray-200 mb-4">
         <nav className="flex space-x-4">
@@ -540,34 +559,37 @@ const ExecutionHistory = () => {
               </select>
             </div>
 
-            {/* 날짜 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
-                style={{ colorScheme: 'light' }}
-              />
-              {formData.date && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {format(new Date(formData.date), 'EEEE', { locale: ko })}
-                </p>
-              )}
-            </div>
+            {/* 날짜 & 공정 (side by side) */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* 날짜 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
+                  style={{ colorScheme: 'light' }}
+                />
+                {formData.date && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {format(new Date(formData.date), 'EEEE', { locale: ko })}
+                  </p>
+                )}
+              </div>
 
-            {/* 공정 */}
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">공정</label>
-              <button
-                ref={processButtonRef}
-                type="button"
-                onClick={() => setShowProcessPicker(true)}
-                className="w-full px-3 py-2 border rounded-lg text-left bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
-              >
-                {formData.process || <span className="text-gray-400">선택하세요</span>}
-              </button>
+              {/* 공정 */}
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-1">공정</label>
+                <button
+                  ref={processButtonRef}
+                  type="button"
+                  onClick={() => setShowProcessPicker(true)}
+                  className="w-full px-3 py-2 border rounded-lg text-left bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  {formData.process || <span className="text-gray-400">선택하세요</span>}
+                </button>
+              </div>
             </div>
 
             {/* 항목명 */}
