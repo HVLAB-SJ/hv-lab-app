@@ -5,6 +5,18 @@ const { authenticateToken, isManager } = require('../middleware/auth');
 const { db } = require('../config/database');
 
 /**
+ * 서버 상태 확인 (인증 불필요)
+ * GET /api/test/health
+ */
+router.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        message: 'Server is running'
+    });
+});
+
+/**
  * SOLAPI 템플릿 확인 엔드포인트
  * GET /api/test/template
  */
@@ -136,7 +148,7 @@ router.post('/sms', authenticateToken, isManager, async (req, res) => {
 });
 
 /**
- * 데이터베이스 스키마 확인 엔드포인트
+ * 데이터베이스 스키마 확인 엔드포인트 (인증 불필요)
  * GET /api/test/check-payment-schema
  */
 router.get('/check-payment-schema', (req, res) => {
@@ -156,7 +168,7 @@ router.get('/check-payment-schema', (req, res) => {
 });
 
 /**
- * 데이터베이스 스키마 수정 엔드포인트
+ * 데이터베이스 스키마 수정 엔드포인트 (인증 불필요)
  * GET /api/test/fix-payment-schema
  */
 router.get('/fix-payment-schema', (req, res) => {
