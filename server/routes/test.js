@@ -195,4 +195,55 @@ router.get('/fix-payment-schema', (req, res) => {
     });
 });
 
+/**
+ * 결제 요청 테스트 업데이트 (디버깅용)
+ * PUT /api/test/payment/:id
+ */
+router.put('/payment/:id', (req, res) => {
+    const { id } = req.params;
+    console.log('Test payment update for ID:', id);
+    console.log('Request body:', req.body);
+
+    // 먼저 해당 결제 요청이 존재하는지 확인
+    db.get('SELECT * FROM payment_requests WHERE id = ?', [id], (err, payment) => {
+        if (err) {
+            console.error('Error checking payment:', err);
+            return res.status(500).json({
+                error: 'Database error',
+                details: err.message
+            });
+        }
+
+        if (!payment) {
+            return res.status(404).json({
+                error: 'Payment not found',
+                id: id
+            });
+        }
+
+        // 간단한 업데이트 테스트
+        const { notes } = req.body;
+        db.run(
+            'UPDATE payment_requests SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [notes || payment.notes, id],
+            function(updateErr) {
+                if (updateErr) {
+                    console.error('Update error:', updateErr);
+                    return res.status(500).json({
+                        error: 'Update failed',
+                        details: updateErr.message,
+                        sql: updateErr.sql
+                    });
+                }
+
+                res.json({
+                    message: 'Test update successful',
+                    payment: payment,
+                    changes: this.changes
+                });
+            }
+        );
+    });
+});
+
 module.exports = router;

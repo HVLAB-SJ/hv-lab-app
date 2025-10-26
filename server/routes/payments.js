@@ -202,6 +202,10 @@ router.post('/', authenticateToken, async (req, res) => {
 // 결제 요청 수정
 router.put('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
+
+  console.log('Payment update request for ID:', id);
+  console.log('Request body:', req.body);
+
   const {
     vendor_name,
     description,
