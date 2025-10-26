@@ -61,7 +61,7 @@ const Dashboard = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2.5 py-1 ${isCurrentUser && todaySchedules.length > 0 ? 'bg-yellow-100 text-gray-900' : 'bg-gray-100 text-gray-900'} rounded-full font-semibold whitespace-nowrap`}>
+                    <span className={`text-xs px-2.5 py-1 ${isCurrentUser && todaySchedules.length > 0 ? 'bg-amber-100 text-gray-900' : 'bg-gray-100 text-gray-900'} rounded-full font-semibold whitespace-nowrap`}>
                       {todaySchedules.length} 오늘
                     </span>
                     <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full font-semibold whitespace-nowrap">
@@ -94,9 +94,9 @@ const Dashboard = () => {
                           return (
                             <div
                               key={projectName}
-                              className={`border-l-3 ${isCurrentUser ? 'border-gray-400' : 'border-gray-900'} ${isCurrentUser ? 'bg-yellow-50' : 'bg-gray-50'} rounded-r overflow-hidden`}
+                              className={`border-l-3 ${isCurrentUser ? 'border-gray-400' : 'border-gray-900'} ${isCurrentUser ? 'bg-amber-50' : 'bg-gray-50'} rounded-r overflow-hidden`}
                             >
-                              <div className={`px-3 py-1.5 ${isCurrentUser ? 'bg-yellow-100' : 'bg-gray-100'} border-b ${isCurrentUser ? 'border-yellow-200' : 'border-gray-200'}`}>
+                              <div className={`px-3 py-1.5 ${isCurrentUser ? 'bg-amber-100' : 'bg-gray-100'} border-b ${isCurrentUser ? 'border-amber-200' : 'border-gray-200'}`}>
                                 <span className="text-xs font-semibold text-gray-900">{projectName}</span>
                               </div>
                               <div className="px-3 py-2 space-y-1">
