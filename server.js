@@ -18,7 +18,9 @@ const io = socketIO(server, {
 
 // Run migrations
 const addOriginalMaterialAmount = require('./server/migrations/add-original-material-amount');
+const createQuoteInquiriesTable = require('./server/migrations/create-quote-inquiries-table');
 addOriginalMaterialAmount().catch(console.error);
+createQuoteInquiriesTable().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
@@ -88,6 +90,7 @@ const constructionPaymentsRoutes = require('./server/routes/constructionpayments
 const contractorsRoutes = require('./server/routes/contractors');
 const bankingRoutes = require('./server/routes/banking');
 const testRoutes = require('./server/routes/test');
+const quoteInquiriesRoutes = require('./server/routes/quoteInquiries');
 
 // API 라우트 설정
 app.use('/api/auth', authRoutes);
@@ -103,6 +106,7 @@ app.use('/api/construction-payments', constructionPaymentsRoutes);
 app.use('/api/contractors', contractorsRoutes);
 app.use('/api/banking', bankingRoutes);
 app.use('/api/test', testRoutes); // 테스트 라우트 추가
+app.use('/api/quote-inquiries', quoteInquiriesRoutes);
 
 
 // 로그인 페이지 라우트
