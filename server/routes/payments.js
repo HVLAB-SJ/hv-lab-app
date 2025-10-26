@@ -258,6 +258,40 @@ router.put('/:id', authenticateToken, (req, res) => {
       if (this.changes === 0) {
         return res.status(404).json({ error: '수정할 수 없는 요청입니다.' });
       }
+
+      // 송금완료된 경우 실행내역도 함께 업데이트
+      db.get('SELECT status FROM payment_requests WHERE id = ?', [id], (err, payment) => {
+        if (!err && payment && payment.status === 'completed') {
+          // 실행내역 업데이트
+          db.run(
+            `UPDATE execution_records
+             SET project_name = (SELECT name FROM projects WHERE id =
+                                (SELECT project_id FROM payment_requests WHERE id = ?)),
+                 amount = ?,
+                 material_cost = ?,
+                 labor_cost = ?,
+                 notes = ?,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE payment_id = ?`,
+            [
+              id,
+              amount,
+              materialAmount !== undefined ? materialAmount : 0,
+              laborAmount !== undefined ? laborAmount : 0,
+              notes || '',
+              id
+            ],
+            (updateErr) => {
+              if (updateErr) {
+                console.error('실행내역 업데이트 실패:', updateErr);
+              } else {
+                console.log('실행내역도 함께 업데이트됨');
+              }
+            }
+          );
+        }
+      });
+
       res.json({ message: '결제 요청이 수정되었습니다.' });
     }
   );
