@@ -800,6 +800,11 @@ const Payments = () => {
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium">총액</span>
                   <div className="text-right">
+                    {(includeVat || includeTaxDeduction) && (
+                      <span className="text-xs text-gray-500 mr-2">
+                        ({includeVat && '부가세 포함'}{includeTaxDeduction && '3.3% 세금공제'})
+                      </span>
+                    )}
                     <span className="font-semibold">
                       {(() => {
                         const baseAmount = (Number(formData.materialCost) || 0) + (Number(formData.laborCost) || 0);
@@ -807,11 +812,6 @@ const Payments = () => {
                         return finalAmount.toLocaleString();
                       })()}원
                     </span>
-                    {(includeVat || includeTaxDeduction) && (
-                      <span className="text-xs text-gray-500 ml-2">
-                        ({includeVat && '부가세 포함'}{includeVat && includeTaxDeduction && ', '}{includeTaxDeduction && '3.3% 세금공제'})
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
