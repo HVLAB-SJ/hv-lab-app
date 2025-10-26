@@ -819,26 +819,6 @@ const Payments = () => {
                 </button>
               </div>
             </div>
-
-            {/* 총계 표시 - 데스크톱에서만 표시 */}
-            <div className="hidden lg:block bg-gray-50 rounded-lg p-4 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">자재비 총합:</span>
-                <span className="text-sm font-medium text-gray-900">{projectTotals.material.toLocaleString()}원</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">인건비 총합:</span>
-                <span className="text-sm font-medium text-gray-900">{projectTotals.labor.toLocaleString()}원</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">부가세 총합:</span>
-                <span className="text-sm font-medium text-gray-900">{projectTotals.vat.toLocaleString()}원</span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                <span className="text-sm font-bold text-gray-900">총 합계:</span>
-                <span className="text-base font-bold text-gray-900">{projectTotals.total.toLocaleString()}원</span>
-              </div>
-            </div>
           </div>
         </div>
 
