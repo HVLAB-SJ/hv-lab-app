@@ -6,6 +6,8 @@ import { Plus } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
 import { useNotificationStore } from '../store/notificationStore';
 import workRequestService from '../services/workRequestService';
+import paymentService from '../services/paymentService';
+import asRequestService from '../services/asRequestService';
 
 interface NavigationItem {
   name: string;
@@ -21,18 +23,20 @@ const Layout = () => {
   const location = useLocation();
   const { unreadCount } = useNotificationStore();
   const [pendingWorkRequestCount, setPendingWorkRequestCount] = useState(0);
+  const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
+  const [inProgressASCount, setInProgressASCount] = useState(0);
 
   const navigation: NavigationItem[] = [
     { name: '담당업무', href: '/dashboard' },
     { name: '프로젝트', href: '/projects' },
     { name: '일정관리', href: '/schedule' },
-    { name: 'AS 관리', href: '/after-service' },
+    { name: 'AS 관리', href: '/after-service', badge: inProgressASCount },
     { name: '추가내역', href: '/additional-work' },
     { name: '공사대금', href: '/construction-payment', roles: ['admin', 'manager'] },
     { name: '협력업체', href: '/contractors' },
     { name: '업무요청', href: '/work-request', badge: pendingWorkRequestCount },
     { name: '실행내역', href: '/execution-history' },
-    { name: '결제요청', href: '/payments' },
+    { name: '결제요청', href: '/payments', badge: pendingPaymentCount },
   ];
 
   // Load pending work requests count for current user
@@ -55,6 +59,52 @@ const Layout = () => {
     loadPendingWorkRequests();
     // Refresh every 30 seconds
     const interval = setInterval(loadPendingWorkRequests, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Load pending payment requests count
+  useEffect(() => {
+    const loadPendingPayments = async () => {
+      if (!user) return;
+
+      try {
+        const payments = await paymentService.getAllPayments();
+        // Count payments with 'pending' status
+        const pendingCount = payments.filter(
+          payment => payment.status === 'pending'
+        ).length;
+        setPendingPaymentCount(pendingCount);
+      } catch (error) {
+        console.error('Failed to load pending payments:', error);
+      }
+    };
+
+    loadPendingPayments();
+    // Refresh every 30 seconds
+    const interval = setInterval(loadPendingPayments, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Load in-progress AS requests count
+  useEffect(() => {
+    const loadInProgressAS = async () => {
+      if (!user) return;
+
+      try {
+        const asRequests = await asRequestService.getAllASRequests();
+        // Count AS requests with 'in-progress' status
+        const inProgressCount = asRequests.filter(
+          req => req.status === 'in-progress'
+        ).length;
+        setInProgressASCount(inProgressCount);
+      } catch (error) {
+        console.error('Failed to load in-progress AS requests:', error);
+      }
+    };
+
+    loadInProgressAS();
+    // Refresh every 30 seconds
+    const interval = setInterval(loadInProgressAS, 30000);
     return () => clearInterval(interval);
   }, [user]);
 
