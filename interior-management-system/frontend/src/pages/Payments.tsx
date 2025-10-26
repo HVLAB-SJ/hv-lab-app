@@ -276,11 +276,31 @@ const Payments = () => {
   const handleContractorSelect = (contractor: Contractor) => {
     setSelectedContractorId(contractor.id || contractor._id || null);
     const cleanName = removePosition(contractor.name);
+
+    // accountNumber에서 은행 이름과 계좌번호 분리
+    let bankName = contractor.bankName || '';
+    let accountNumber = contractor.accountNumber || '';
+
+    // accountNumber에 은행 이름이 포함되어 있는 경우 분리
+    if (accountNumber && !bankName) {
+      // "은행이름 계좌번호" 형태인 경우
+      const parts = accountNumber.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        // 첫 번째 부분이 은행 이름일 가능성이 높음
+        const firstPart = parts[0];
+        // 은행 이름으로 끝나는지 확인
+        if (firstPart.includes('은행') || firstPart.includes('뱅크') || firstPart.includes('금고') || firstPart.includes('신협') || firstPart.includes('우체국')) {
+          bankName = firstPart;
+          accountNumber = parts.slice(1).join('');
+        }
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
       accountHolder: cleanName,
-      bankName: contractor.bankName || '',
-      accountNumber: contractor.accountNumber || ''
+      bankName: bankName,
+      accountNumber: accountNumber
     }));
   };
 
