@@ -75,9 +75,9 @@ const Payments = () => {
   const {
     payments,
     loadPaymentsFromAPI,
-    addPaymentRequest,
-    deletePaymentRequest,
-    updatePaymentRequest,
+    addPaymentToAPI,
+    deletePaymentFromAPI,
+    updatePaymentInAPI,
     projects
   } = useDataStore();
   const { user } = useAuth();
@@ -344,7 +344,7 @@ const Payments = () => {
   }, { material: 0, labor: 0, vat: 0, total: 0 });
 
   // 폼 저장
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.project) {
       toast.error('프로젝트를 선택해주세요');
       return;
@@ -389,7 +389,7 @@ const Payments = () => {
       updatedAt: now
     };
 
-    addPaymentRequest(newPayment);
+    await addPaymentToAPI(newPayment);
     toast.success('결제요청이 추가되었습니다');
 
     // 폼 초기화 (프로젝트는 유지)
@@ -1039,9 +1039,9 @@ const Payments = () => {
               <div className="flex items-center justify-between lg:justify-end gap-2">
                 {selectedRecord && (
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (confirm('선택한 결제요청을 삭제하시겠습니까?')) {
-                        deletePaymentRequest(selectedRecord);
+                        await deletePaymentFromAPI(selectedRecord);
                         setSelectedRecord(null);
                         toast.success('결제요청이 삭제되었습니다');
                       }
