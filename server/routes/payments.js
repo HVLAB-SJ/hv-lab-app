@@ -234,13 +234,13 @@ router.put('/:id', authenticateToken, (req, res) => {
          updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`,
     [
-      vendor_name,
-      description,
+      vendor_name || '',
+      description || '',  // NULL 대신 빈 문자열
       amount,
-      account_holder,
-      bank_name,
-      account_number,
-      notes,
+      account_holder || '',
+      bank_name || '',
+      account_number || '',
+      notes || '',
       itemName || '',
       materialAmount !== undefined ? materialAmount : 0,
       laborAmount !== undefined ? laborAmount : 0,
