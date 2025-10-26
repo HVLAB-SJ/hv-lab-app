@@ -787,26 +787,23 @@ const Payments = () => {
               </div>
 
               <div className="pt-2 border-t">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-baseline">
                   <span className="font-medium">총액</span>
-                  <span className="font-semibold">
-                    {(() => {
-                      const baseAmount = (Number(formData.materialCost) || 0) + (Number(formData.laborCost) || 0);
-                      const finalAmount = includeTaxDeduction ? Math.round(baseAmount * 0.967) : baseAmount;
-                      return finalAmount.toLocaleString();
-                    })()}원
-                  </span>
+                  <div className="text-right">
+                    <span className="font-semibold">
+                      {(() => {
+                        const baseAmount = (Number(formData.materialCost) || 0) + (Number(formData.laborCost) || 0);
+                        const finalAmount = includeTaxDeduction ? Math.round(baseAmount * 0.967) : baseAmount;
+                        return finalAmount.toLocaleString();
+                      })()}원
+                    </span>
+                    {(includeVat || includeTaxDeduction) && (
+                      <span className="text-xs text-gray-500 ml-2">
+                        ({includeVat && '부가세 포함'}{includeVat && includeTaxDeduction && ', '}{includeTaxDeduction && '3.3% 세금공제'})
+                      </span>
+                    )}
+                  </div>
                 </div>
-                {includeVat && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    (부가세 포함 금액)
-                  </div>
-                )}
-                {includeTaxDeduction && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    (3.3% 세금공제 적용)
-                  </div>
-                )}
               </div>
 
               {/* 결제요청 버튼 */}
