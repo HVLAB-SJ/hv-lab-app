@@ -4,7 +4,9 @@ const cors = require('cors');
 const path = require('path');
 const http = require('http');
 const socketIO = require('socket.io');
+const cron = require('node-cron');
 const { db, initDatabase } = require('./server/config/database');
+const emailService = require('./utils/emailService');
 
 const app = express();
 const server = http.createServer(app);
@@ -344,6 +346,35 @@ server.listen(PORT, HOST, async () => {
       }
     });
   }, 2000); // Wait for tables to be created
+
+  // 이메일 체크 스케줄러 - 5분마다 실행
+  console.log('📧 이메일 체크 스케줄러를 시작합니다 (5분마다 실행)');
+  cron.schedule('*/5 * * * *', async () => {
+    console.log('⏰ [스케줄러] 견적문의 메일 확인 중...');
+    try {
+      const newInquiries = await emailService.checkNewQuoteInquiries();
+      if (newInquiries && newInquiries.length > 0) {
+        console.log(`✅ [스케줄러] ${newInquiries.length}개의 새로운 견적문의가 등록되었습니다.`);
+        // Socket.IO로 실시간 알림 전송 (추후 구현)
+        // io.emit('new-quote-inquiry', { count: newInquiries.length });
+      }
+    } catch (error) {
+      console.error('❌ [스케줄러] 이메일 확인 중 오류:', error.message);
+    }
+  });
+
+  // 서버 시작 시 한 번 실행
+  setTimeout(async () => {
+    console.log('📧 서버 시작 시 견적문의 메일 확인...');
+    try {
+      const newInquiries = await emailService.checkNewQuoteInquiries();
+      if (newInquiries && newInquiries.length > 0) {
+        console.log(`✅ ${newInquiries.length}개의 새로운 견적문의가 등록되었습니다.`);
+      }
+    } catch (error) {
+      console.error('❌ 초기 이메일 확인 중 오류:', error.message);
+    }
+  }, 5000); // 서버 시작 5초 후 실행
 });
 
 // 우아한 종료 처리
