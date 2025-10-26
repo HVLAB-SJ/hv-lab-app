@@ -666,7 +666,12 @@ const Payments = () => {
                     type="checkbox"
                     id="includeVat"
                     checked={includeVat}
-                    onChange={(e) => setIncludeVat(e.target.checked)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setIncludeTaxDeduction(false);
+                      }
+                      setIncludeVat(e.target.checked);
+                    }}
                     className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
                   />
                   <label htmlFor="includeVat" className="ml-2 block text-sm text-gray-700">
@@ -678,7 +683,12 @@ const Payments = () => {
                     type="checkbox"
                     id="includeTaxDeduction"
                     checked={includeTaxDeduction}
-                    onChange={(e) => setIncludeTaxDeduction(e.target.checked)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setIncludeVat(false);
+                      }
+                      setIncludeTaxDeduction(e.target.checked);
+                    }}
                     className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
                   />
                   <label htmlFor="includeTaxDeduction" className="ml-2 block text-sm text-gray-700">
