@@ -656,14 +656,22 @@ const Payments = () => {
 
   // 수정하기
   const handleEdit = (payment: PaymentRequest) => {
+    // 원본 금액 사용 (세금공제 적용 전 금액)
+    const originalMaterial = payment.originalMaterialAmount !== undefined
+      ? payment.originalMaterialAmount
+      : payment.materialAmount || 0;
+    const originalLabor = payment.originalLaborAmount !== undefined
+      ? payment.originalLaborAmount
+      : payment.laborAmount || 0;
+
     // 폼 데이터 채우기
     setFormData({
       project: payment.project,
       date: format(new Date(payment.requestDate), 'yyyy-MM-dd'),
       process: payment.process || '',
       itemName: payment.itemName || payment.purpose || '',
-      materialCost: payment.materialAmount?.toString() || '',
-      laborCost: payment.laborAmount?.toString() || '',
+      materialCost: originalMaterial > 0 ? originalMaterial.toString() : '',
+      laborCost: originalLabor > 0 ? originalLabor.toString() : '',
       amount: payment.amount?.toString() || '',
       accountHolder: payment.bankInfo?.accountHolder || '',
       bankName: payment.bankInfo?.bankName || '',
