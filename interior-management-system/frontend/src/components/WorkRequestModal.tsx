@@ -88,13 +88,13 @@ const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) =
           {/* Project */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              프로젝트 *
+              프로젝트
             </label>
             <select
-              {...register('project', { required: '프로젝트를 선택하세요' })}
+              {...register('project')}
               className="input w-full"
             >
-              <option value="">프로젝트를 선택하세요</option>
+              <option value=""></option>
               {projects
                 .filter(project => project.status !== 'completed')
                 .map((project) => (
@@ -103,21 +103,18 @@ const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) =
                   </option>
                 ))}
             </select>
-            {errors.project && (
-              <p className="mt-1 text-sm text-red-600">{String(errors.project.message)}</p>
-            )}
           </div>
 
           {/* Request Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              요청유형 *
+              요청유형
             </label>
             <select
-              {...register('requestType', { required: '요청유형을 선택하세요' })}
+              {...register('requestType')}
               className="input w-full"
             >
-              <option value="">선택하세요</option>
+              <option value=""></option>
               <option value="3D모델링">3D모델링</option>
               <option value="철거도면">철거도면</option>
               <option value="설비도면">설비도면</option>
@@ -136,9 +133,6 @@ const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) =
               <option value="마감">마감</option>
               <option value="직접입력">직접입력</option>
             </select>
-            {errors.requestType && (
-              <p className="mt-1 text-sm text-red-600">{String(errors.requestType.message)}</p>
-            )}
 
             {/* Custom Request Type Input */}
             {selectedRequestType === '직접입력' && (

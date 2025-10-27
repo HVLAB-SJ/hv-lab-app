@@ -240,28 +240,41 @@ const WorkRequest = () => {
 
         // 일정관리에 마감일 자동 추가
         try {
-          // 프로젝트 이름으로 프로젝트 ID 찾기
-          const matchingProject = projects.find(p => p.name === created.project);
-          const projectId = matchingProject ? matchingProject.id : null;
+          // 프로젝트가 있으면 프로젝트 ID 찾기, 없으면 null
+          let projectId = null;
+          let scheduleTitle = '';
 
-          if (!projectId) {
-            console.warn('⚠️ Project not found for work request:', created.project);
-            // 프로젝트를 찾지 못하면 일정을 생성하지 않음
-            throw new Error('Project not found');
+          if (created.project) {
+            // 프로젝트가 선택된 경우
+            const matchingProject = projects.find(p => p.name === created.project);
+            projectId = matchingProject ? matchingProject.id : null;
+
+            if (!projectId) {
+              console.warn('⚠️ Project not found for work request:', created.project);
+              throw new Error('Project not found');
+            }
+
+            // 프로젝트가 있으면 요청유형을 제목으로
+            scheduleTitle = created.requestType
+              ? `[업무요청] ${created.requestType}`
+              : `[업무요청] ${created.description.substring(0, 20)}`;
+          } else {
+            // 프로젝트가 없으면 요청내용을 제목으로
+            scheduleTitle = created.description;
           }
 
           await addScheduleToAPI({
             id: `workrequest-${created._id}`,
-            title: `[업무요청] ${created.requestType}`,
+            title: scheduleTitle,
             start: new Date(created.dueDate),
             end: new Date(created.dueDate),
             type: 'other',
-            project: projectId, // 프로젝트 ID로 전달
+            project: projectId, // 프로젝트 ID로 전달 (없으면 null)
             location: '',
             attendees: [created.assignedTo],
             description: `${created.description}\n\n담당자: ${created.assignedTo}\n요청자: ${created.requestedBy}\n우선순위: ${created.priority}\n${created.notes || ''}`
           });
-          console.log('✅ Schedule created with project ID:', projectId);
+          console.log('✅ Schedule created:', scheduleTitle, 'with project ID:', projectId);
         } catch (schedError) {
           console.error('Failed to create schedule:', schedError);
           // 일정 생성 실패해도 업무요청은 생성됨
