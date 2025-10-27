@@ -22,7 +22,8 @@ router.get('/', authenticateToken, (req, res) => {
   const params = [];
 
   // 비공개 일정은 작성자에게만 보이도록 필터링
-  query += ' AND (s.project_name != ? OR s.created_by = ?)';
+  // project_name이 NULL이거나, '비공개'가 아니거나, 작성자인 경우 모두 보여줌
+  query += ' AND (s.project_name IS NULL OR s.project_name != ? OR s.created_by = ?)';
   params.push('비공개', currentUserId);
 
   if (project_id) {
