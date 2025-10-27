@@ -21,8 +21,10 @@ const io = socketIO(server, {
 // Run migrations
 const addOriginalMaterialAmount = require('./server/migrations/add-original-material-amount');
 const createQuoteInquiriesTable = require('./server/migrations/create-quote-inquiries-table');
+const updateSchedulesProjectNullable = require('./server/migrations/update-schedules-project-nullable');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
+updateSchedulesProjectNullable().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";

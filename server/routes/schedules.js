@@ -8,7 +8,10 @@ const { sanitizeDatesArray, sanitizeDates } = require('../utils/dateUtils');
 router.get('/', authenticateToken, (req, res) => {
   const { project_id, start_date, end_date, status } = req.query;
   let query = `
-    SELECT s.*, p.name as project_name, p.color as project_color, u.username as creator_name
+    SELECT s.*,
+           COALESCE(p.name, s.project_name) as project_name,
+           p.color as project_color,
+           u.username as creator_name
     FROM schedules s
     LEFT JOIN projects p ON s.project_id = p.id
     LEFT JOIN users u ON s.created_by = u.id
@@ -59,15 +62,22 @@ router.get('/', authenticateToken, (req, res) => {
       // Handle project data - can be object or string
       let projectData;
       if (schedule.project_id && schedule.project_name) {
-        // Full project object
+        // Full project object (project exists in projects table)
         projectData = {
           _id: schedule.project_id.toString(),
           name: schedule.project_name,
           color: schedule.project_color || '#4A90E2'
         };
       } else if (schedule.project_name) {
-        // Just project name as string
+        // Just project name as string (direct input, no project_id)
         projectData = schedule.project_name;
+      } else if (schedule.project_id) {
+        // Has project_id but no name from join (shouldn't happen but handle it)
+        projectData = {
+          _id: schedule.project_id.toString(),
+          name: 'Unknown Project',
+          color: '#4A90E2'
+        };
       } else {
         // No project - return empty string to prevent null errors
         projectData = '';
@@ -160,6 +170,9 @@ router.post('/', authenticateToken, (req, res) => {
     project_id, title, description, start_date, end_date, type, status, priority, color, assigned_to, assignee_ids
   });
 
+  // Store project name for reference
+  const project_name_input = typeof project_id === 'string' && isNaN(Number(project_id)) ? project_id : null;
+
   // If project_id is a string (project name), look it up
   if (project_id && typeof project_id === 'string' && isNaN(Number(project_id))) {
     console.log('[POST /api/schedules] Project is string, looking up project by name:', project_id);
@@ -169,25 +182,28 @@ router.post('/', authenticateToken, (req, res) => {
         return res.status(500).json({ error: '프로젝트 조회 실패' });
       }
       if (!project) {
-        console.error('[POST /api/schedules] Project not found:', project_id);
-        return res.status(400).json({ error: '프로젝트를 찾을 수 없습니다' });
+        // 프로젝트가 없으면 직접입력으로 간주하고 project_id는 NULL로, 이름만 저장
+        console.log('[POST /api/schedules] Project not found in DB, treating as direct input:', project_id);
+        createSchedule(null, project_id);
+      } else {
+        console.log('[POST /api/schedules] Found project ID:', project.id);
+        createSchedule(project.id, project_id);
       }
-      console.log('[POST /api/schedules] Found project ID:', project.id);
-      createSchedule(project.id);
     });
   } else {
-    createSchedule(project_id);
+    createSchedule(project_id, project_name_input);
   }
 
-  function createSchedule(finalProjectId) {
-    console.log('[POST /api/schedules] Creating schedule with project_id:', finalProjectId);
+  function createSchedule(finalProjectId, projectNameForStorage) {
+    console.log('[POST /api/schedules] Creating schedule with project_id:', finalProjectId, 'project_name:', projectNameForStorage);
 
     db.run(
       `INSERT INTO schedules
-       (project_id, title, description, start_date, end_date, type, status, priority, color, assigned_to, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (project_id, project_name, title, description, start_date, end_date, type, status, priority, color, assigned_to, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         finalProjectId,
+        projectNameForStorage,
         title,
         description,
         start_date,
