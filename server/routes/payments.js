@@ -224,11 +224,49 @@ router.put('/:id', authenticateToken, (req, res) => {
     originalMaterialAmount,
     originalLaborAmount,
     applyTaxDeduction,
-    includesVAT
+    includesVAT,
+    requestDate,
+    request_date
   } = req.body;
 
-  db.run(
-    `UPDATE payment_requests
+  // 날짜 처리 (requestDate 또는 request_date)
+  const dateToUpdate = requestDate || request_date;
+
+  // Build SQL dynamically based on whether date should be updated
+  let sql;
+  let params;
+
+  if (dateToUpdate) {
+    sql = `UPDATE payment_requests
+     SET vendor_name = ?, description = ?, amount = ?,
+         account_holder = ?, bank_name = ?, account_number = ?,
+         notes = ?, item_name = ?,
+         material_amount = ?, labor_amount = ?,
+         original_material_amount = ?, original_labor_amount = ?,
+         apply_tax_deduction = ?, includes_vat = ?,
+         created_at = ?,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`;
+    params = [
+      vendor_name || '',
+      description || '',
+      amount,
+      account_holder || '',
+      bank_name || '',
+      account_number || '',
+      notes || '',
+      itemName || '',
+      materialAmount !== undefined ? materialAmount : 0,
+      laborAmount !== undefined ? laborAmount : 0,
+      originalMaterialAmount !== undefined ? originalMaterialAmount : 0,
+      originalLaborAmount !== undefined ? originalLaborAmount : 0,
+      applyTaxDeduction ? 1 : 0,
+      includesVAT ? 1 : 0,
+      dateToUpdate,
+      id
+    ];
+  } else {
+    sql = `UPDATE payment_requests
      SET vendor_name = ?, description = ?, amount = ?,
          account_holder = ?, bank_name = ?, account_number = ?,
          notes = ?, item_name = ?,
@@ -236,10 +274,10 @@ router.put('/:id', authenticateToken, (req, res) => {
          original_material_amount = ?, original_labor_amount = ?,
          apply_tax_deduction = ?, includes_vat = ?,
          updated_at = CURRENT_TIMESTAMP
-     WHERE id = ?`,
-    [
+     WHERE id = ?`;
+    params = [
       vendor_name || '',
-      description || '',  // NULL 대신 빈 문자열
+      description || '',
       amount,
       account_holder || '',
       bank_name || '',
@@ -253,7 +291,10 @@ router.put('/:id', authenticateToken, (req, res) => {
       applyTaxDeduction ? 1 : 0,
       includesVAT ? 1 : 0,
       id
-    ],
+    ];
+  }
+
+  db.run(sql, params,
     function(err) {
       if (err) {
         console.error('Payment update error:', err);
