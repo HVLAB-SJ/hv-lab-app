@@ -52,7 +52,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   const { register, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm({
     defaultValues: {
-      projectId: getLastProjectId(), // 마지막 선택한 프로젝트를 기본값으로
+      projectId: '', // 빈칸을 기본값으로
       title: '',
       date: '',
       description: ''
@@ -108,24 +108,29 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
       setValue('description', event.description || '', { shouldValidate: false, shouldDirty: false });
 
       // projectId 설정
-      if (event.projectId === 'custom' && event.projectName) {
-        console.log('🔵 Setting custom project:', event.projectName);
-        setValue('projectId', 'custom', { shouldValidate: false, shouldDirty: false });
-        setCustomProjectName(event.projectName);
-      } else if (event.projectId && event.projectId !== '') {
+      if (event.projectId && event.projectId !== '' && event.projectId !== 'undefined') {
         console.log('🔵 Setting projectId from event:', event.projectId);
         setValue('projectId', event.projectId, { shouldValidate: false, shouldDirty: false });
+        setCustomProjectName(''); // Clear custom project name
       } else if (event.projectName) {
+        // If no valid projectId but has projectName, try to find matching project
         const project = projects.find(p => p.name === event.projectName);
         console.log('🔵 Finding project by name:', event.projectName, 'found:', project);
         if (project) {
           console.log('🔵 Setting projectId from found project:', project.id);
           setValue('projectId', project.id, { shouldValidate: false, shouldDirty: false });
+          setCustomProjectName(''); // Clear custom project name
         } else {
-          console.log('🔵 Project not found, setting as custom');
-          setValue('projectId', 'custom', { shouldValidate: false, shouldDirty: false });
-          setCustomProjectName(event.projectName);
+          // Project not found - leave empty
+          console.log('🔵 Project not found, leaving empty');
+          setValue('projectId', '', { shouldValidate: false, shouldDirty: false });
+          setCustomProjectName('');
         }
+      } else {
+        // No projectId and no projectName - empty project (allowed)
+        console.log('🔵 No project info, leaving empty');
+        setValue('projectId', '', { shouldValidate: false, shouldDirty: false });
+        setCustomProjectName('');
       }
       // assignedTo와 attendees 둘 다 확인
       const members = event.assignedTo || event.attendees || [];
@@ -171,10 +176,9 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
       // 새로운 일정 추가 모드 (event가 없고 slotInfo만 있을 때)
       console.log('🟢 New schedule from slot:', slotInfo);
 
-      // 폼 리셋 (프로젝트 ID는 마지막 선택한 값 유지)
-      const lastProjectId = localStorage.getItem('lastSelectedProjectId') || '';
+      // 폼 리셋 (프로젝트는 빈칸으로)
       reset({
-        projectId: lastProjectId,
+        projectId: '',
         title: '',
         date: format(slotInfo.start, 'yyyy-MM-dd'),
         description: ''
@@ -198,7 +202,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
   // 프로젝트 선택 시 자동으로 해당 프로젝트의 팀원을 담당자로 설정
   useEffect(() => {
     // 새 일정 추가 모드일 때만 작동 (기존 일정 수정 시에는 작동하지 않음)
-    if (!event?.id && selectedProjectId && selectedProjectId !== 'custom') {
+    if (!event?.id && selectedProjectId && selectedProjectId !== '') {
       const selectedProject = projects.find(p =>
         p.id === selectedProjectId ||
         p.id === parseInt(selectedProjectId) ||
@@ -233,17 +237,11 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   const onSubmit = (data: ScheduleFormData) => {
     console.log('🔴 Form onSubmit called with data:', data);
-    console.log('🔴 customProjectName:', customProjectName);
     console.log('🔴 selectedMembers:', selectedMembers);
     console.log('🔴 hasTime state:', hasTime);
     console.log('🔴 timePeriod:', timePeriod, 'timeHour:', timeHour, 'timeMinute:', timeMinute);
     console.log('🔴 Available projects:', projects.map(p => ({ id: p.id, name: p.name, idType: typeof p.id })));
     console.log('🔴 Merged event IDs:', event?.mergedEventIds);
-
-    // 선택한 프로젝트 ID를 localStorage에 저장 (custom이 아닌 경우만)
-    if (data.projectId && data.projectId !== 'custom') {
-      localStorage.setItem('lastSelectedProjectId', data.projectId);
-    }
 
     // 제목에서 시간 텍스트 제거 (혹시 남아있을 경우를 대비)
     const timePattern = / - (오전|오후) \d{1,2}시$/;
@@ -252,11 +250,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
     let projectName = '';
     let projectId = '';
 
-    if (data.projectId === 'custom') {
-      // 직접 입력한 경우
-      projectName = customProjectName || '';
-      projectId = 'custom';
-    } else if (data.projectId) {
+    if (data.projectId) {
       // 기존 프로젝트를 선택한 경우
       // ID는 문자열 또는 숫자일 수 있으므로 둘 다 비교
       const selectedProject = projects.find(p =>
@@ -268,6 +262,10 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
       console.log('🔴 Found project:', selectedProject);
       projectName = selectedProject?.name || '';
       projectId = data.projectId;
+    } else {
+      // 프로젝트를 선택하지 않은 경우 (빈칸)
+      projectName = '';
+      projectId = '';
     }
 
     console.log('🔴 Final projectId:', projectId, 'projectName:', projectName, 'cleanedTitle:', cleanedTitle);
@@ -328,19 +326,13 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
           {/* Project */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              프로젝트 *
+              프로젝트
             </label>
             <select
-              {...register('projectId', { required: '프로젝트를 선택하세요' })}
+              {...register('projectId')}
               className="input w-full"
-              onChange={(e) => {
-                // 프로젝트 선택 시 즉시 localStorage에 저장
-                if (e.target.value && e.target.value !== 'custom') {
-                  localStorage.setItem('lastSelectedProjectId', e.target.value);
-                }
-              }}
             >
-              <option value="">선택하세요</option>
+              <option value=""></option>
               {projects
                 .filter(project => {
                   // AS 일정인 경우 모든 프로젝트 표시, 아니면 진행중인 프로젝트만
@@ -354,24 +346,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
                     {project.name}
                   </option>
                 ))}
-              <option value="custom">직접 입력</option>
             </select>
-            {errors.projectId && (
-              <p className="mt-1 text-sm text-red-600">{String(errors.projectId.message)}</p>
-            )}
-
-            {/* Custom Project Name Input */}
-            {selectedProjectId === 'custom' && (
-              <div className="mt-2">
-                <input
-                  type="text"
-                  value={customProjectName}
-                  onChange={(e) => setCustomProjectName(e.target.value)}
-                  placeholder="프로젝트명을 입력하세요"
-                  className="input w-full"
-                />
-              </div>
-            )}
           </div>
 
           {/* Title */}

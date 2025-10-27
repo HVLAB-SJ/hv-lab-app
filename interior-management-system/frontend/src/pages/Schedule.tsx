@@ -407,6 +407,8 @@ const Schedule = () => {
   const scheduleEvents: ScheduleEvent[] = schedules
     .filter(schedule => !schedule.asRequestId) // AS 요청 관련 일정 제외
     .map(schedule => {
+      // 비공개 일정은 "[개인일정]"으로 표시
+      const displayProjectName = schedule.project === '비공개' ? '[개인일정]' : schedule.project;
       const project = projects.find(p => p.name === schedule.project);
       const scheduleTime = schedule.time;
       // 시간이 있고 "-"가 아닌 경우에만 시간 텍스트 추가
@@ -419,7 +421,7 @@ const Schedule = () => {
         start: schedule.start,
         end: schedule.end,
         projectId: project?.id || '',
-        projectName: schedule.project || '',
+        projectName: displayProjectName || '',
         type: (schedule.type as ScheduleEvent['type']) || 'other',
         phase: '',
         assignedTo: schedule.attendees || [],

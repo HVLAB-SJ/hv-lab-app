@@ -86,6 +86,7 @@ const Payments = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<string | null>(null);
+  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null); // 수정 모드 추적
   const [isDragging, setIsDragging] = useState(false);
   const [includeVat, setIncludeVat] = useState(false);
   const [includeTaxDeduction, setIncludeTaxDeduction] = useState(false);
@@ -113,6 +114,7 @@ const Payments = () => {
 
   // 항목명 추천
   const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
+  const [isItemNameFocused, setIsItemNameFocused] = useState(false);
 
   // 결제요청 레코드의 이미지를 저장하는 별도의 상태
   const [paymentRecordImages, setPaymentRecordImages] = useState<Record<string, string[]>>(() => {
@@ -250,6 +252,18 @@ const Payments = () => {
         accountNumber: string;
       }>();
 
+      // 현재 선택된 협력업체의 계좌정보 (중복 추천 방지용)
+      let selectedContractorAccount: string | null = null;
+      if (selectedContractorId) {
+        const selectedContractor = contractors.find(c =>
+          (c.id || c._id) === selectedContractorId
+        );
+        if (selectedContractor && selectedContractor.accountNumber && selectedContractor.bankName) {
+          const cleanName = removePosition(selectedContractor.name).trim();
+          selectedContractorAccount = `${cleanName}_${selectedContractor.bankName}_${selectedContractor.accountNumber}`;
+        }
+      }
+
       // 1. 송금완료된 결제 내역에서 예금주 이름으로 검색
       const completedPayments = payments.filter(p =>
         p.status === 'completed' &&
@@ -265,7 +279,9 @@ const Payments = () => {
         // 예금주 이름이 포함되어 있으면 추천 목록에 추가
         if (holderLower.includes(searchName) || searchName.includes(holderLower)) {
           const key = `${holder}_${p.bankInfo!.bankName}_${p.bankInfo!.accountNumber}`;
-          if (!uniqueAccounts.has(key)) {
+
+          // 선택된 협력업체와 중복되는 경우 제외
+          if (key !== selectedContractorAccount && !uniqueAccounts.has(key)) {
             uniqueAccounts.set(key, {
               accountHolder: holder,
               bankName: p.bankInfo!.bankName,
@@ -275,8 +291,13 @@ const Payments = () => {
         }
       });
 
-      // 2. 협력업체 데이터에서 예금주 이름으로 검색
+      // 2. 협력업체 데이터에서 예금주 이름으로 검색 (선택된 협력업체는 제외)
       contractors.forEach(contractor => {
+        // 이미 선택된 협력업체는 제외
+        if ((contractor.id || contractor._id) === selectedContractorId) {
+          return;
+        }
+
         // 계좌번호와 은행 정보가 있는 협력업체만 추천
         if (contractor.accountNumber && contractor.bankName) {
           const cleanName = removePosition(contractor.name).trim();
@@ -300,11 +321,11 @@ const Payments = () => {
     } else {
       setAccountSuggestions([]);
     }
-  }, [formData.accountHolder, payments, contractors]);
+  }, [formData.accountHolder, payments, contractors, selectedContractorId]);
 
-  // 항목명 입력 시 기존 결제요청 내역에서 추천
+  // 항목명 입력 시 기존 결제요청 내역에서 추천 (포커스 시에만)
   useEffect(() => {
-    if (formData.itemName && formData.itemName.trim().length >= 1) {
+    if (isItemNameFocused && formData.itemName && formData.itemName.trim().length >= 1) {
       const searchText = formData.itemName.trim().toLowerCase();
 
       // 모든 결제 내역에서 항목명 추출 (최신순)
@@ -320,7 +341,63 @@ const Payments = () => {
     } else {
       setItemNameSuggestions([]);
     }
-  }, [formData.itemName, payments]);
+  }, [formData.itemName, payments, isItemNameFocused]);
+
+  // 예금주 입력칸 포커스 시 모든 이전 송금내역 표시
+  const handleAccountHolderFocus = useCallback(() => {
+    // 추천 협력업체에서 선택한 경우는 제외
+    if (selectedContractorId) {
+      return;
+    }
+
+    // 예금주가 비어있을 때만 모든 내역 표시
+    if (!formData.accountHolder || formData.accountHolder.trim().length === 0) {
+      const uniqueAccounts = new Map<string, {
+        accountHolder: string;
+        bankName: string;
+        accountNumber: string;
+      }>();
+
+      // 송금완료된 결제 내역에서 모든 계좌정보 가져오기
+      const completedPayments = payments.filter(p =>
+        p.status === 'completed' &&
+        p.bankInfo?.accountHolder &&
+        p.bankInfo?.bankName &&
+        p.bankInfo?.accountNumber
+      );
+
+      completedPayments.forEach(p => {
+        const holder = p.bankInfo!.accountHolder.trim();
+        const key = `${holder}_${p.bankInfo!.bankName}_${p.bankInfo!.accountNumber}`;
+
+        if (!uniqueAccounts.has(key)) {
+          uniqueAccounts.set(key, {
+            accountHolder: holder,
+            bankName: p.bankInfo!.bankName,
+            accountNumber: p.bankInfo!.accountNumber
+          });
+        }
+      });
+
+      // 협력업체 데이터에서 계좌정보가 있는 업체 추가
+      contractors.forEach(contractor => {
+        if (contractor.accountNumber && contractor.bankName) {
+          const cleanName = removePosition(contractor.name).trim();
+          const key = `${cleanName}_${contractor.bankName}_${contractor.accountNumber}`;
+
+          if (!uniqueAccounts.has(key)) {
+            uniqueAccounts.set(key, {
+              accountHolder: cleanName,
+              bankName: contractor.bankName,
+              accountNumber: contractor.accountNumber
+            });
+          }
+        }
+      });
+
+      setAccountSuggestions(Array.from(uniqueAccounts.values()));
+    }
+  }, [formData.accountHolder, payments, contractors, selectedContractorId]);
 
   // paymentRecordImages가 변경될 때마다 localStorage에 저장
   useEffect(() => {
@@ -379,7 +456,22 @@ const Payments = () => {
 
   // 협력업체 선택 핸들러
   const handleContractorSelect = (contractor: Contractor) => {
-    setSelectedContractorId(contractor.id || contractor._id || null);
+    const contractorId = contractor.id || contractor._id || null;
+
+    // 이미 선택된 협력업체를 다시 클릭하면 선택 해제
+    if (selectedContractorId === contractorId) {
+      setSelectedContractorId(null);
+      // 예금주 필드를 포커스하여 이전 송금내역 표시
+      const accountHolderInput = document.querySelector('input[placeholder="예금주명을 입력하세요"]') as HTMLInputElement;
+      if (accountHolderInput) {
+        setTimeout(() => {
+          accountHolderInput.focus();
+        }, 100);
+      }
+      return;
+    }
+
+    setSelectedContractorId(contractorId);
     const cleanName = removePosition(contractor.name);
 
     // accountNumber에서 은행 이름과 계좌번호 분리
@@ -474,35 +566,69 @@ const Payments = () => {
     const totalAmount = finalMaterialCost + finalLaborCost;
 
     const now = new Date();
-    const newPayment: PaymentRequest = {
-      id: `payment_${Date.now()}`,
-      project: formData.project,
-      requestDate: new Date(formData.date),
-      requestedBy: user?.name || '알 수 없음',
-      purpose: formData.itemName,
-      amount: totalAmount,
-      status: 'pending',
-      process: formData.process,
-      itemName: formData.itemName,
-      includesVAT: includeVat,
-      applyTaxDeduction: includeTaxDeduction,
-      materialAmount: finalMaterialCost,
-      laborAmount: finalLaborCost,
-      originalLaborAmount: laborCost,
-      accountHolder: formData.accountHolder,
-      bank: formData.bankName,
-      accountNumber: formData.accountNumber,
-      bankInfo: formData.accountHolder || formData.bankName || formData.accountNumber ? {
-        accountHolder: formData.accountHolder,
-        bankName: formData.bankName,
-        accountNumber: formData.accountNumber
-      } : undefined,
-      createdAt: now,
-      updatedAt: now
-    };
 
-    await addPaymentToAPI(newPayment);
-    toast.success('결제요청이 추가되었습니다');
+    // 수정 모드인 경우
+    if (editingPaymentId) {
+      const updatedPayment: Partial<PaymentRequest> = {
+        project: formData.project,
+        requestDate: new Date(formData.date),
+        purpose: formData.itemName,
+        amount: totalAmount,
+        process: formData.process,
+        itemName: formData.itemName,
+        includesVAT: includeVat,
+        applyTaxDeduction: includeTaxDeduction,
+        materialAmount: finalMaterialCost,
+        laborAmount: finalLaborCost,
+        originalLaborAmount: laborCost,
+        accountHolder: formData.accountHolder,
+        bank: formData.bankName,
+        accountNumber: formData.accountNumber,
+        bankInfo: formData.accountHolder || formData.bankName || formData.accountNumber ? {
+          accountHolder: formData.accountHolder,
+          bankName: formData.bankName,
+          accountNumber: formData.accountNumber
+        } : undefined,
+        updatedAt: now
+      };
+
+      await updatePaymentInAPI(editingPaymentId, updatedPayment);
+      toast.success('결제요청이 수정되었습니다');
+
+      // 수정 모드 해제
+      setEditingPaymentId(null);
+    } else {
+      // 새 결제요청 추가
+      const newPayment: PaymentRequest = {
+        id: `payment_${Date.now()}`,
+        project: formData.project,
+        requestDate: new Date(formData.date),
+        requestedBy: user?.name || '알 수 없음',
+        purpose: formData.itemName,
+        amount: totalAmount,
+        status: 'pending',
+        process: formData.process,
+        itemName: formData.itemName,
+        includesVAT: includeVat,
+        applyTaxDeduction: includeTaxDeduction,
+        materialAmount: finalMaterialCost,
+        laborAmount: finalLaborCost,
+        originalLaborAmount: laborCost,
+        accountHolder: formData.accountHolder,
+        bank: formData.bankName,
+        accountNumber: formData.accountNumber,
+        bankInfo: formData.accountHolder || formData.bankName || formData.accountNumber ? {
+          accountHolder: formData.accountHolder,
+          bankName: formData.bankName,
+          accountNumber: formData.accountNumber
+        } : undefined,
+        createdAt: now,
+        updatedAt: now
+      };
+
+      await addPaymentToAPI(newPayment);
+      toast.success('결제요청이 추가되었습니다');
+    }
 
     // 폼 초기화 (프로젝트는 유지)
     setFormData(prev => ({
@@ -526,6 +652,41 @@ const Payments = () => {
     if (isMobileDevice) {
       setMobileView('list');
     }
+  };
+
+  // 수정하기
+  const handleEdit = (payment: PaymentRequest) => {
+    // 폼 데이터 채우기
+    setFormData({
+      project: payment.project,
+      date: format(new Date(payment.requestDate), 'yyyy-MM-dd'),
+      process: payment.process || '',
+      itemName: payment.itemName || payment.purpose || '',
+      materialCost: payment.materialAmount?.toString() || '',
+      laborCost: payment.laborAmount?.toString() || '',
+      amount: payment.amount?.toString() || '',
+      accountHolder: payment.bankInfo?.accountHolder || '',
+      bankName: payment.bankInfo?.bankName || '',
+      accountNumber: payment.bankInfo?.accountNumber || '',
+      images: payment.attachments || []
+    });
+
+    // VAT 및 세금공제 체크박스 설정
+    setIncludeVat(payment.includesVAT || false);
+    setIncludeTaxDeduction(payment.applyTaxDeduction || false);
+
+    // 선택된 레코드 설정
+    setSelectedRecord(payment.id);
+
+    // 수정 모드 설정
+    setEditingPaymentId(payment.id);
+
+    // 모바일에서는 폼 화면으로 전환
+    if (isMobileDevice) {
+      setMobileView('form');
+    }
+
+    toast.success('수정할 내역을 불러왔습니다');
   };
 
   // 상세보기
@@ -765,6 +926,8 @@ const Payments = () => {
                 type="text"
                 value={formData.itemName}
                 onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
+                onFocus={() => setIsItemNameFocused(true)}
+                onBlur={() => setTimeout(() => setIsItemNameFocused(false), 200)}
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
               {/* 항목명 추천 목록 */}
@@ -867,18 +1030,23 @@ const Payments = () => {
                             : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'
                         }`}
                       >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-medium text-sm text-gray-900">
+                        <div className="space-y-1">
+                          {/* 이름과 협력업체명 */}
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm text-gray-900">
                               {removePosition(contractor.name)}
-                            </div>
+                            </span>
                             {contractor.companyName && (
-                              <div className="text-xs text-gray-500">{contractor.companyName}</div>
+                              <>
+                                <span className="text-gray-300">|</span>
+                                <span className="text-xs text-gray-600">{contractor.companyName}</span>
+                              </>
                             )}
                           </div>
-                          {contractor.accountNumber && (
+                          {/* 은행 계좌 */}
+                          {contractor.accountNumber && contractor.bankName && (
                             <div className="text-xs text-gray-500">
-                              {contractor.bankName}
+                              {contractor.bankName} {contractor.accountNumber}
                             </div>
                           )}
                         </div>
@@ -897,13 +1065,14 @@ const Payments = () => {
                   type="text"
                   value={formData.accountHolder}
                   onChange={(e) => setFormData({ ...formData, accountHolder: e.target.value })}
+                  onFocus={handleAccountHolderFocus}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="예금주명을 입력하세요"
                 />
               </div>
 
-              {/* 송금완료 내역에서 찾은 계좌정보 추천 */}
-              {accountSuggestions.length > 0 && (
+              {/* 송금완료 내역에서 찾은 계좌정보 추천 - 추천 협력업체에서 선택한 경우 숨김 */}
+              {accountSuggestions.length > 0 && !selectedContractorId && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <label className="block text-sm font-medium text-blue-900 mb-2">이전 송금 내역</label>
                   <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -1002,13 +1171,40 @@ const Payments = () => {
                 </div>
               </div>
 
-              {/* 결제요청 버튼 */}
+              {/* 결제요청/수정완료 버튼 */}
               <div className="my-6 lg:my-[50px]">
+                {editingPaymentId && (
+                  <button
+                    onClick={() => {
+                      setEditingPaymentId(null);
+                      setFormData(prev => ({
+                        project: prev.project,
+                        date: format(new Date(), 'yyyy-MM-dd'),
+                        process: '',
+                        itemName: '',
+                        materialCost: '',
+                        laborCost: '',
+                        amount: '',
+                        accountHolder: '',
+                        bankName: '',
+                        accountNumber: '',
+                        images: []
+                      }));
+                      setIncludeVat(false);
+                      setIncludeTaxDeduction(false);
+                      setSelectedContractorId(null);
+                      toast.info('수정이 취소되었습니다');
+                    }}
+                    className="w-full py-2 mb-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  >
+                    취소
+                  </button>
+                )}
                 <button
                   onClick={handleSave}
                   className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
                 >
-                  결제요청
+                  {editingPaymentId ? '수정완료' : '결제요청'}
                 </button>
               </div>
             </div>
@@ -1143,7 +1339,16 @@ const Payments = () => {
 
                       {/* 버튼 */}
                       {statusFilter === 'pending' && (
-                        <div className="flex gap-1.5">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(record);
+                            }}
+                            className="text-xs text-gray-600 hover:text-gray-900"
+                          >
+                            수정
+                          </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1164,6 +1369,19 @@ const Payments = () => {
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#5f81a5'}
                           >
                             송금완료
+                          </button>
+                        </div>
+                      )}
+                      {statusFilter === 'completed' && (
+                        <div className="flex">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(record);
+                            }}
+                            className="text-xs text-gray-600 hover:text-gray-900"
+                          >
+                            수정
                           </button>
                         </div>
                       )}
