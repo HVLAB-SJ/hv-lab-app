@@ -7,6 +7,8 @@ const { sanitizeDatesArray, sanitizeDates } = require('../utils/dateUtils');
 // 일정 목록 조회 (프로젝트별 또는 전체)
 router.get('/', authenticateToken, (req, res) => {
   const { project_id, start_date, end_date, status } = req.query;
+  const currentUserId = req.user.id; // 현재 로그인한 사용자 ID
+
   let query = `
     SELECT s.*,
            COALESCE(p.name, s.project_name) as project_name,
@@ -18,6 +20,10 @@ router.get('/', authenticateToken, (req, res) => {
     WHERE 1=1
   `;
   const params = [];
+
+  // 비공개 일정은 작성자에게만 보이도록 필터링
+  query += ' AND (s.project_name != ? OR s.created_by = ?)';
+  params.push('비공개', currentUserId);
 
   if (project_id) {
     query += ' AND s.project_id = ?';
