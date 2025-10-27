@@ -14,6 +14,17 @@ const Dashboard = () => {
   // 예: "김상준" → "상준", "상준" → "상준"
   const userNameWithoutSurname = user?.name ? user.name.slice(-2) : null;
 
+  // 시간을 한국어 형식으로 변환 (14:30 -> 오후 2시 30분)
+  const formatTimeKorean = (time: string): string => {
+    if (!time || time === '-') return '';
+    const [hoursStr, minutesStr] = time.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
+    const period = hours >= 12 ? '오후' : '오전';
+    const displayHours = hours % 12 || 12;
+    return minutes > 0 ? `${period} ${displayHours}시 ${minutes}분` : `${period} ${displayHours}시`;
+  };
+
   // 로그인한 사용자를 맨 앞으로 정렬
   const TEAM_MEMBERS = userNameWithoutSurname
     ? [userNameWithoutSurname, ...ALL_TEAM_MEMBERS.filter(member => member !== userNameWithoutSurname)]
@@ -100,11 +111,14 @@ const Dashboard = () => {
                                 <span className="text-xs font-semibold text-gray-900">{projectName}</span>
                               </div>
                               <div className="px-3 py-2 space-y-1">
-                                {schedules.map((schedule) => (
-                                  <p key={schedule.id} className="font-medium text-gray-900 text-sm leading-relaxed">
-                                    • {schedule.title}
-                                  </p>
-                                ))}
+                                {schedules.map((schedule) => {
+                                  const timeText = schedule.time && schedule.time !== '-' ? ` - ${formatTimeKorean(schedule.time)}` : '';
+                                  return (
+                                    <p key={schedule.id} className="font-medium text-gray-900 text-sm leading-relaxed">
+                                      • {schedule.title}{timeText}
+                                    </p>
+                                  );
+                                })}
                               </div>
                             </div>
                           );
@@ -145,11 +159,14 @@ const Dashboard = () => {
                                 <span className="text-xs text-gray-500 font-medium">{dateDisplay}</span>
                               </div>
                               <div className="px-3 py-2 space-y-1">
-                                {schedules.map((schedule) => (
-                                  <p key={schedule.id} className="font-medium text-gray-900 text-sm leading-relaxed">
-                                    • {schedule.title}
-                                  </p>
-                                ))}
+                                {schedules.map((schedule) => {
+                                  const timeText = schedule.time && schedule.time !== '-' ? ` - ${formatTimeKorean(schedule.time)}` : '';
+                                  return (
+                                    <p key={schedule.id} className="font-medium text-gray-900 text-sm leading-relaxed">
+                                      • {schedule.title}{timeText}
+                                    </p>
+                                  );
+                                })}
                               </div>
                             </div>
                           );
