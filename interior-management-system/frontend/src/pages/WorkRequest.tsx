@@ -174,12 +174,14 @@ const WorkRequest = () => {
         };
 
         // 관련 일정 찾아서 업데이트
-        const relatedSchedule = schedules.find(s =>
-          s.id === `workrequest-${updated._id}` ||
-          (s.title.includes(`[업무요청]`) && s.title.includes(updated.requestType))
-        );
+        const scheduleId = `workrequest-${updated._id}`;
+        console.log('🔍 Looking for schedule with ID:', scheduleId);
+        console.log('📋 Available schedules:', schedules.map(s => ({ id: s.id, title: s.title })));
+
+        const relatedSchedule = schedules.find(s => s.id === scheduleId);
 
         if (relatedSchedule) {
+          console.log('✅ Found related schedule:', relatedSchedule.id);
           try {
             // 프로젝트 ID 찾기
             let projectId = null;
@@ -201,6 +203,8 @@ const WorkRequest = () => {
               ? ['신애', '재성', '재현']
               : [updated.assignedTo];
 
+            console.log('📝 Updating schedule with attendees:', attendees);
+
             await updateScheduleInAPI(relatedSchedule.id, {
               title: scheduleTitle,
               start: new Date(updated.dueDate),
@@ -209,10 +213,12 @@ const WorkRequest = () => {
               attendees: attendees,
               description: `${updated.description}\n\n담당자: ${updated.assignedTo}\n요청자: ${updated.requestedBy}\n우선순위: ${updated.priority}\n${updated.notes || ''}`
             });
-            console.log('✅ Related schedule updated:', relatedSchedule.id);
+            console.log('✅ Related schedule updated successfully');
           } catch (schedError) {
-            console.error('Failed to update related schedule:', schedError);
+            console.error('❌ Failed to update related schedule:', schedError);
           }
+        } else {
+          console.warn('⚠️ No related schedule found for work request:', scheduleId);
         }
 
         setRequests(requests.map(req =>
