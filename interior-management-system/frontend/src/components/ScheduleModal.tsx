@@ -37,8 +37,8 @@ interface ScheduleModalProps {
   slotInfo: SlotInfo | null;
   defaultProjectName?: string;
   onClose: () => void;
-  onSave: (event: ScheduleEvent) => void;
-  onDelete: (id: string) => void;
+  onSave: (event: ScheduleEvent) => void | Promise<void>;
+  onDelete: (id: string) => void | Promise<void>;
 }
 
 const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현'];

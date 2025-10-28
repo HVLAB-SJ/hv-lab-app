@@ -492,12 +492,7 @@ const ExecutionHistory = () => {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between lg:justify-start">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">실행내역</h1>
-      </div>
-
+    <div className="space-y-3 md:space-y-4">
       {/* 모바일에서 프로젝트 선택 */}
       <div className="lg:hidden mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트</label>

@@ -25,7 +25,7 @@ interface ScheduleEvent {
 }
 
 const Dashboard = () => {
-  const { schedules, fetchSchedules, addScheduleToAPI, deleteScheduleFromAPI } = useDataStore();
+  const { schedules, loadSchedulesFromAPI, addScheduleToAPI, deleteScheduleFromAPI } = useDataStore();
   const { user } = useAuth();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
 
@@ -254,7 +254,7 @@ const Dashboard = () => {
                 time: newEvent.time
               });
               console.log('Dashboard: Schedule added successfully');
-              await fetchSchedules();
+              await loadSchedulesFromAPI();
               console.log('Dashboard: Schedules fetched, closing modal');
               setShowScheduleModal(false);
             } catch (error) {
@@ -265,7 +265,7 @@ const Dashboard = () => {
           onDelete={async (id: string) => {
             try {
               await deleteScheduleFromAPI(id);
-              await fetchSchedules();
+              await loadSchedulesFromAPI();
               setShowScheduleModal(false);
             } catch (error) {
               console.error('Failed to delete schedule:', error);

@@ -97,6 +97,7 @@ const Payments = () => {
   const [showProcessPicker, setShowProcessPicker] = useState(false);
   const processButtonRef = useRef<HTMLButtonElement>(null);
   const [statusFilter, setStatusFilter] = useState<'pending' | 'completed'>('pending');
+  const [projectFilter, setProjectFilter] = useState<string>('all');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailPayment, setDetailPayment] = useState<PaymentRequest | null>(null);
 
@@ -451,7 +452,8 @@ const Payments = () => {
       record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.process?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = record.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesProject = projectFilter === 'all' || record.project === projectFilter;
+    return matchesSearch && matchesStatus && matchesProject;
   });
 
   // 협력업체 선택 핸들러
@@ -805,12 +807,7 @@ const Payments = () => {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* 헤더 */}
-      <div className="flex items-center justify-start">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">결제요청</h1>
-      </div>
-
+    <div className="space-y-3 md:space-y-4">
       {/* 모바일에서 프로젝트 선택 */}
       <div className="lg:hidden mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트</label>
@@ -1223,40 +1220,56 @@ const Payments = () => {
         <div className={`lg:col-span-4 bg-white rounded-lg border overflow-hidden flex flex-col ${
           mobileView !== 'list' ? 'hidden lg:flex' : ''
         }`}>
-          {/* 상태 탭 */}
+          {/* 상태 탭 + 선택된 프로젝트 필터 */}
           <div className="bg-gray-50 px-4 pt-3 pb-0">
-            <nav className="flex gap-2 overflow-x-auto">
-              <button
-                onClick={() => setStatusFilter('pending')}
-                className={`px-4 py-2.5 rounded-t-lg font-medium text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
-                  statusFilter === 'pending'
-                    ? 'bg-white text-gray-900 shadow-sm border-b-2 border-gray-900'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                대기중
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                  statusFilter === 'pending' ? 'bg-gray-900 text-white' : 'bg-gray-300 text-gray-600'
-                }`}>
-                  {allRecords.filter(r => r.status === 'pending').length}
-                </span>
-              </button>
-              <button
-                onClick={() => setStatusFilter('completed')}
-                className={`px-4 py-2.5 rounded-t-lg font-medium text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
-                  statusFilter === 'completed'
-                    ? 'bg-white text-gray-900 shadow-sm border-b-2 border-gray-900'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                송금완료
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                  statusFilter === 'completed' ? 'bg-gray-900 text-white' : 'bg-gray-300 text-gray-600'
-                }`}>
-                  {allRecords.filter(r => r.status === 'completed').length}
-                </span>
-              </button>
-            </nav>
+            <div className="flex items-center justify-between gap-4">
+              <nav className="flex gap-2 overflow-x-auto flex-1">
+                <button
+                  onClick={() => setStatusFilter('pending')}
+                  className={`px-4 py-2.5 rounded-t-lg font-medium text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
+                    statusFilter === 'pending'
+                      ? 'bg-white text-gray-900 shadow-sm border-b-2 border-gray-900'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  대기중
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    statusFilter === 'pending' ? 'bg-gray-900 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}>
+                    {allRecords.filter(r => r.status === 'pending').length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('completed')}
+                  className={`px-4 py-2.5 rounded-t-lg font-medium text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
+                    statusFilter === 'completed'
+                      ? 'bg-white text-gray-900 shadow-sm border-b-2 border-gray-900'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  송금완료
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    statusFilter === 'completed' ? 'bg-gray-900 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}>
+                    {allRecords.filter(r => r.status === 'completed').length}
+                  </span>
+                </button>
+              </nav>
+
+              {/* 선택된 프로젝트 보기 버튼 */}
+              {formData.project && (
+                <button
+                  onClick={() => setProjectFilter(projectFilter === 'all' ? formData.project : 'all')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
+                    projectFilter === formData.project
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {projectFilter === formData.project ? '전체보기' : `${formData.project} 보기`}
+                </button>
+              )}
+            </div>
           </div>
           <div className="border-b border-gray-200"></div>
 
@@ -1340,23 +1353,25 @@ const Payments = () => {
                         )}
                       </div>
 
-                      {/* 계좌정보 */}
-                      <div className="text-xs text-gray-500 mb-2.5 truncate">
-                        {accountInfo}
+                      {/* 계좌정보 + 수정 버튼 */}
+                      <div className="flex items-center justify-between mb-2.5">
+                        <div className="text-xs text-gray-500 truncate flex-1">
+                          {accountInfo}
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(record);
+                          }}
+                          className="text-xs text-gray-600 hover:text-gray-900 ml-2 flex-shrink-0"
+                        >
+                          수정
+                        </button>
                       </div>
 
-                      {/* 버튼 */}
-                      {statusFilter === 'pending' && (
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(record);
-                            }}
-                            className="text-xs text-gray-600 hover:text-gray-900"
-                          >
-                            수정
-                          </button>
+                      {/* 송금 버튼 (manager 이상만) */}
+                      {statusFilter === 'pending' && user?.role && ['manager', 'admin'].includes(user.role) && (
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1377,19 +1392,6 @@ const Payments = () => {
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#5f81a5'}
                           >
                             송금완료
-                          </button>
-                        </div>
-                      )}
-                      {statusFilter === 'completed' && (
-                        <div className="flex">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(record);
-                            }}
-                            className="text-xs text-gray-600 hover:text-gray-900"
-                          >
-                            수정
                           </button>
                         </div>
                       )}

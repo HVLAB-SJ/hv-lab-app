@@ -598,8 +598,8 @@ div.rbc-event.rbc-selected,
 
 @media (min-width: 768px) {
   .calendar-container {
-    height: calc(100vh - 280px);
-    min-height: 500px;
+    height: calc(100vh - 180px);
+    min-height: 600px;
   }
 }
 

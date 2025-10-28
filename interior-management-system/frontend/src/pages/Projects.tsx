@@ -520,73 +520,73 @@ const Projects = () => {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between lg:justify-start">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">프로젝트 관리</h1>
-        <button
-          onClick={() => {
-            setSelectedProject(null);
-            setShowModal(true);
-          }}
-          className="hidden lg:inline-flex btn btn-primary px-4 py-2 ml-auto"
-        >
-          + 새 프로젝트
-        </button>
-      </div>
-
-      {/* Tabs */}
+    <div className="space-y-3 md:space-y-4">
+      {/* Header with Tabs and Controls */}
       <div className="border-b border-gray-200">
-        <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">
-          {[
-            { id: 'planning' as TabStatus, label: '공사대기', count: stats.planning, color: 'text-gray-700' },
-            { id: 'in-progress' as TabStatus, label: '공사진행중', count: stats.inProgress, color: 'text-gray-700' },
-            { id: 'completed' as TabStatus, label: '공사완료', count: stats.completed, color: 'text-gray-700' },
-            { id: 'all' as TabStatus, label: '전체', count: projects.length, color: 'text-gray-600' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={clsx(
-                'py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap',
-                activeTab === tab.id
-                  ? `border-gray-700 ${tab.color}`
-                  : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
-              )}
-            >
-              {tab.label}
-              <span className={clsx(
-                'ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold',
-                activeTab === tab.id ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
-              )}>
-                {tab.count}
-              </span>
-            </button>
-          ))}
-        </nav>
-      </div>
+        <div className="flex items-center justify-between">
+          {/* Tabs */}
+          <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">
+            {[
+              { id: 'planning' as TabStatus, label: '공사대기', count: stats.planning, color: 'text-gray-700' },
+              { id: 'in-progress' as TabStatus, label: '공사진행중', count: stats.inProgress, color: 'text-gray-700' },
+              { id: 'completed' as TabStatus, label: '공사완료', count: stats.completed, color: 'text-gray-700' },
+              { id: 'all' as TabStatus, label: '전체', count: projects.length, color: 'text-gray-600' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={clsx(
+                  'py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap',
+                  activeTab === tab.id
+                    ? `border-gray-700 ${tab.color}`
+                    : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+                )}
+              >
+                {tab.label}
+                <span className={clsx(
+                  'ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold',
+                  activeTab === tab.id ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+                )}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </nav>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end space-y-3 sm:space-y-0 gap-3">
-        <div className="hidden sm:flex border border-gray-300 overflow-hidden rounded">
-          <button
-            onClick={() => setViewType('grid')}
-            className={clsx(
-              'px-3 md:px-4 py-2 text-xs md:text-sm',
-              viewType === 'grid' ? 'bg-gray-100' : 'hover:bg-gray-50'
-            )}
-          >
-            그리드
-          </button>
-          <button
-            onClick={() => setViewType('list')}
-            className={clsx(
-              'px-3 md:px-4 py-2 text-xs md:text-sm border-l border-gray-300',
-              viewType === 'list' ? 'bg-gray-100' : 'hover:bg-gray-50'
-            )}
-          >
-            리스트
-          </button>
+          {/* View Controls */}
+          <div className="flex items-center gap-6 mb-3 md:mb-4">
+            {/* View Type Toggle */}
+            <div className="hidden sm:flex border border-gray-300 overflow-hidden rounded">
+              <button
+                onClick={() => setViewType('grid')}
+                className={clsx(
+                  'px-3 md:px-4 py-2 text-xs md:text-sm',
+                  viewType === 'grid' ? 'bg-gray-100' : 'hover:bg-gray-50'
+                )}
+              >
+                그리드
+              </button>
+              <button
+                onClick={() => setViewType('list')}
+                className={clsx(
+                  'px-3 md:px-4 py-2 text-xs md:text-sm border-l border-gray-300',
+                  viewType === 'list' ? 'bg-gray-100' : 'hover:bg-gray-50'
+                )}
+              >
+                리스트
+              </button>
+            </div>
+
+            <button
+              onClick={() => {
+                setSelectedProject(null);
+                setShowModal(true);
+              }}
+              className="hidden lg:inline-flex btn btn-primary px-4 py-2"
+            >
+              + 새 프로젝트
+            </button>
+          </div>
         </div>
       </div>
 

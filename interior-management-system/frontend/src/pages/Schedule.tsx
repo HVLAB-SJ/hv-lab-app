@@ -237,6 +237,13 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
   );
   const [showTooltip, setShowTooltip] = useState(false);
 
+  // 사용자 이름에서 성 제거
+  const userNameWithoutSurname = user?.name ? user.name.slice(-2) : null;
+
+  // 현재 사용자가 팀에 속하는지 확인
+  const isUserInFieldTeam = userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+  const isUserInDesignTeam = userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+
   useEffect(() => {
     const handleResize = () => {
       setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
@@ -275,10 +282,20 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
           )}
           {attendees.length > 0 && (
             <span style={{ flexShrink: 0, fontSize: '11px' }}>
-              {attendees.length > 2
-                ? `${attendees[0]} 외 ${attendees.length - 1}명`
-                : attendees.join('·')
-              }
+              {attendees.map((attendee, index) => {
+                const isBold = attendee === 'HV LAB' ||
+                  (attendee === '현장팀' && isUserInFieldTeam) ||
+                  (attendee === '디자인팀' && isUserInDesignTeam) ||
+                  attendee === user?.name;
+                return (
+                  <React.Fragment key={attendee}>
+                    <span style={{ fontWeight: isBold ? 'bold' : 'normal' }}>
+                      {attendee}
+                    </span>
+                    {index < attendees.length - 1 && '·'}
+                  </React.Fragment>
+                );
+              })}
             </span>
           )}
         </div>
@@ -340,14 +357,20 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
       </div>
       {attendees.length > 0 && (
         <span className="text-xs opacity-80 flex-shrink-0 ml-auto">
-          {attendees.map((attendee, index) => (
-            <React.Fragment key={attendee}>
-              <span className={attendee === user?.name ? 'font-bold' : ''}>
-                {attendee}
-              </span>
-              {index < attendees.length - 1 && '·'}
-            </React.Fragment>
-          ))}
+          {attendees.map((attendee, index) => {
+            const isBold = attendee === 'HV LAB' ||
+              (attendee === '현장팀' && isUserInFieldTeam) ||
+              (attendee === '디자인팀' && isUserInDesignTeam) ||
+              attendee === user?.name;
+            return (
+              <React.Fragment key={attendee}>
+                <span className={isBold ? 'font-bold' : ''}>
+                  {attendee}
+                </span>
+                {index < attendees.length - 1 && '·'}
+              </React.Fragment>
+            );
+          })}
         </span>
       )}
     </div>
@@ -756,13 +779,25 @@ const Schedule = () => {
       }
 
       // 같은 날짜인 경우, 사용자 포함 여부로 정렬
+      const aHasHVLab = a.assignedTo && a.assignedTo.includes('HV LAB');
+      const bHasHVLab = b.assignedTo && b.assignedTo.includes('HV LAB');
+      const aHasFieldTeam = a.assignedTo && a.assignedTo.includes('현장팀') &&
+        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+      const bHasFieldTeam = b.assignedTo && b.assignedTo.includes('현장팀') &&
+        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+      const aHasDesignTeam = a.assignedTo && a.assignedTo.includes('디자인팀') &&
+        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+      const bHasDesignTeam = b.assignedTo && b.assignedTo.includes('디자인팀') &&
+        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
       const aHasUser = a.assignedTo && (
         a.assignedTo.includes(user?.name || '') ||
-        (userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname))
+        (userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname)) ||
+        aHasHVLab || aHasFieldTeam || aHasDesignTeam
       );
       const bHasUser = b.assignedTo && (
         b.assignedTo.includes(user?.name || '') ||
-        (userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname))
+        (userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname)) ||
+        bHasHVLab || bHasFieldTeam || bHasDesignTeam
       );
 
       // 둘 다 사용자 포함 또는 둘 다 미포함인 경우 시간순 정렬
@@ -803,13 +838,25 @@ const Schedule = () => {
       }
 
       // 같은 날짜인 경우, 사용자 포함 여부로 정렬
+      const aHasHVLab = a.assignedTo && a.assignedTo.includes('HV LAB');
+      const bHasHVLab = b.assignedTo && b.assignedTo.includes('HV LAB');
+      const aHasFieldTeam = a.assignedTo && a.assignedTo.includes('현장팀') &&
+        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+      const bHasFieldTeam = b.assignedTo && b.assignedTo.includes('현장팀') &&
+        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+      const aHasDesignTeam = a.assignedTo && a.assignedTo.includes('디자인팀') &&
+        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+      const bHasDesignTeam = b.assignedTo && b.assignedTo.includes('디자인팀') &&
+        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
       const aHasUser = a.assignedTo && (
         a.assignedTo.includes(user?.name || '') ||
-        (userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname))
+        (userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname)) ||
+        aHasHVLab || aHasFieldTeam || aHasDesignTeam
       );
       const bHasUser = b.assignedTo && (
         b.assignedTo.includes(user?.name || '') ||
-        (userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname))
+        (userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname)) ||
+        bHasHVLab || bHasFieldTeam || bHasDesignTeam
       );
 
       // 둘 다 사용자 포함 또는 둘 다 미포함인 경우 시간순 정렬
@@ -938,7 +985,7 @@ const Schedule = () => {
 
   // 커스텀 이벤트 스타일 (프로젝트별 색상 적용)
   const eventStyleGetter = (event: ScheduleEvent) => {
-    let bgColor = event.color || '#E7D4C0';
+    let bgColor = event.color || '#E0E7FF'; // 연한 인디고/보라색 (기본값)
     let textColor = '#1f2937';
 
     // AS 방문 일정은 녹색 배경
@@ -947,10 +994,20 @@ const Schedule = () => {
       textColor = '#1f2937';
     } else {
       // 로그인한 사용자가 담당자에 포함된 일정은 노란색
+      // 팀 담당자인 경우 해당 팀원들에게 노란색으로 표시
+      const isHVLabAssigned = event.assignedTo && event.assignedTo.includes('HV LAB');
+      const isFieldTeamAssigned = event.assignedTo && event.assignedTo.includes('현장팀') &&
+        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+      const isDesignTeamAssigned = event.assignedTo && event.assignedTo.includes('디자인팀') &&
+        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
       const isUserAssigned = event.assignedTo && event.assignedTo.includes(user?.name || '');
-      if (isUserAssigned) {
+
+      if (isUserAssigned || isHVLabAssigned || isFieldTeamAssigned || isDesignTeamAssigned) {
         bgColor = '#FEF3C7';
         textColor = '#1f2937';
+      } else if (!event.color) {
+        // 프로젝트가 없고 내 이름이 포함되지 않은 일정은 연한 보라색
+        bgColor = '#e2dae5';
       }
     }
 
@@ -1206,12 +1263,51 @@ const Schedule = () => {
     }
   }), [CustomDateHeaderWrapper, CustomEventWrapper]);
 
-  // 선택된 날짜의 일정 필터링
-  const selectedDateEvents = selectedDate
-    ? filteredEvents.filter(event =>
-        moment(event.start).isSame(selectedDate, 'day')
-      )
-    : [];
+  // 선택된 날짜의 일정 필터링 및 정렬
+  const selectedDateEvents = React.useMemo(() => {
+    if (!selectedDate) return [];
+
+    const filtered = filteredEvents.filter(event =>
+      moment(event.start).isSame(selectedDate, 'day')
+    );
+
+    const sorted = [...filtered].sort((a, b) => {
+      // 사용자 할당 여부 확인
+      const aHasHVLab = a.assignedTo && a.assignedTo.includes('HV LAB');
+      const aHasFieldTeam = a.assignedTo && a.assignedTo.includes('현장팀') &&
+        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+      const aHasDesignTeam = a.assignedTo && a.assignedTo.includes('디자인팀') &&
+        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+      const aHasUser = (a.assignedTo && userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname)) ||
+        (a.assignedTo && user?.name && a.assignedTo.includes(user.name)) ||
+        aHasHVLab || aHasFieldTeam || aHasDesignTeam;
+
+      const bHasHVLab = b.assignedTo && b.assignedTo.includes('HV LAB');
+      const bHasFieldTeam = b.assignedTo && b.assignedTo.includes('현장팀') &&
+        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+      const bHasDesignTeam = b.assignedTo && b.assignedTo.includes('디자인팀') &&
+        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+      const bHasUser = (b.assignedTo && userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname)) ||
+        (b.assignedTo && user?.name && b.assignedTo.includes(user.name)) ||
+        bHasHVLab || bHasFieldTeam || bHasDesignTeam;
+
+      // 사용자 일정을 먼저 표시 (우선순위 1)
+      if (aHasUser && !bHasUser) return -1;
+      if (!aHasUser && bHasUser) return 1;
+
+      // 둘 다 사용자 일정이거나, 둘 다 아닌 경우 시간순 (우선순위 2)
+      return new Date(a.start).getTime() - new Date(b.start).getTime();
+    });
+
+    console.log('Sorted events:', sorted.map(e => ({
+      title: e.title,
+      assignedTo: e.assignedTo,
+      user: user?.name,
+      userShort: userNameWithoutSurname
+    })));
+
+    return sorted;
+  }, [selectedDate, filteredEvents, user, userNameWithoutSurname]);
 
   // 날짜 셀에 일정 개수 data attribute 추가 및 선택된 날짜 스타일 적용
   useEffect(() => {
@@ -1321,11 +1417,7 @@ const Schedule = () => {
   }, [filteredEvents, date, isMobileView, selectedDate]);
 
   return (
-      <div className="space-y-3 md:space-y-4">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">일정 관리</h1>
-        </div>
-
+      <div className="space-y-3 md:space-y-2">
         {/* 인라인 입력 폼 */}
         {inlineEdit.date && (
           <div className="bg-white border border-gray-200 rounded-lg p-3 md:p-4 shadow-sm">
@@ -1453,10 +1545,20 @@ const Schedule = () => {
                   <div className="divide-y divide-gray-100">
                     {selectedDateEvents.map((event) => {
                       // 로그인한 사용자가 담당자인지 확인
+                      // 팀 담당자인 경우 해당 팀원들에게 노란색으로 표시
+                      const isHVLabAssigned = event.assignedTo && event.assignedTo.includes('HV LAB');
+                      const isFieldTeamAssigned = event.assignedTo && event.assignedTo.includes('현장팀') &&
+                        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+                      const isDesignTeamAssigned = event.assignedTo && event.assignedTo.includes('디자인팀') &&
+                        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
                       const isUserAssigned = event.assignedTo && (
                         event.assignedTo.includes(user?.name || '') ||
                         (userNameWithoutSurname && event.assignedTo.includes(userNameWithoutSurname))
                       );
+                      const shouldHighlight = isUserAssigned || isHVLabAssigned || isFieldTeamAssigned || isDesignTeamAssigned;
+
+                      // 프로젝트가 없고 사용자에게 할당되지 않은 경우
+                      const isUnassignedNoProject = !event.color && !shouldHighlight;
 
                       return (
                         <div
@@ -1470,16 +1572,21 @@ const Schedule = () => {
                             onSelectEvent(eventWithOriginalTitle);
                           }}
                           className={`p-3 transition-colors cursor-pointer ${
-                            isUserAssigned
+                            shouldHighlight
                               ? 'bg-yellow-50 hover:bg-yellow-100 active:bg-yellow-200'
+                              : isUnassignedNoProject
+                              ? 'hover:bg-purple-50 active:bg-purple-100'
                               : 'hover:bg-gray-50 active:bg-gray-100'
                           }`}
+                          style={isUnassignedNoProject ? { backgroundColor: '#f3f0f5' } : undefined}
                         >
                         <div className="flex items-start gap-2">
                           <div
                             className="w-1 h-full rounded-full flex-shrink-0"
                             style={{
-                              backgroundColor: isUserAssigned ? '#FEF3C7' : (event.color || '#E7D4C0'),
+                              backgroundColor: shouldHighlight
+                                ? '#FEF3C7'
+                                : (event.color || '#e2dae5'),
                               minHeight: '28px'
                             }}
                           />

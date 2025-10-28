@@ -337,13 +337,12 @@ export default function Contractors() {
     });
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-3 md:space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between lg:justify-start">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">협력업체 관리</h1>
+      <div className="flex items-center justify-end">
         <button
           onClick={() => handleOpenModal()}
-          className="hidden lg:inline-flex btn btn-primary px-4 py-2 ml-auto"
+          className="hidden lg:inline-flex btn btn-primary px-4 py-2"
         >
           + 새 협력업체
         </button>

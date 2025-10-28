@@ -28,7 +28,7 @@ type TabStatus = 'pending' | 'in-progress' | 'completed' | 'all';
 const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현'];
 
 const WorkRequest = () => {
-  const { addScheduleToAPI, deleteScheduleFromAPI, updateScheduleInAPI, schedules, projects } = useDataStore();
+  const { addScheduleToAPI, deleteScheduleFromAPI, updateScheduleInAPI, schedules, projects, fetchSchedules } = useDataStore();
   const [requests, setRequests] = useState<WorkRequest[]>([]);
 
   const [showModal, setShowModal] = useState(false);
@@ -108,22 +108,43 @@ const WorkRequest = () => {
   const handleDelete = async (id: string, projectName: string) => {
     if (window.confirm(`"${projectName}" 업무요청을 삭제하시겠습니까?\n\n삭제된 내역은 복구할 수 없습니다.`)) {
       try {
+        // 먼저 업무요청 정보 가져오기 (일정 제목 생성을 위해)
+        const requestToDelete = workRequests.find(r => r.id === id);
+
         // 업무요청 삭제
         await workRequestService.deleteWorkRequest(id);
 
-        // 연결된 일정 찾기 (업무요청 ID로 시작하는 일정)
-        const relatedSchedule = schedules.find(s =>
-          s.id === `workrequest-${id}` || s.title.includes(`[업무요청]`) && s.project === projectName
-        );
-
-        // 연결된 일정이 있으면 삭제
-        if (relatedSchedule) {
-          try {
-            await deleteScheduleFromAPI(relatedSchedule.id);
-            console.log('✅ Related schedule deleted:', relatedSchedule.id);
-          } catch (schedError) {
-            console.error('Failed to delete related schedule:', schedError);
+        // 연결된 일정 찾기 및 삭제
+        if (requestToDelete) {
+          // 제목 생성 로직 (생성 시와 동일)
+          let expectedTitle = '';
+          if (requestToDelete.project) {
+            expectedTitle = requestToDelete.requestType
+              ? `[업무요청] ${requestToDelete.requestType}`
+              : `[업무요청] ${requestToDelete.description.substring(0, 20)}`;
+          } else {
+            expectedTitle = requestToDelete.description;
           }
+
+          // 제목과 날짜로 일정 찾기
+          const relatedSchedules = schedules.filter(s => {
+            const isSameDate = s.start && new Date(s.start).toDateString() === requestToDelete.dueDate.toDateString();
+            const isSameTitle = s.title === expectedTitle;
+            return isSameDate && isSameTitle;
+          });
+
+          // 연결된 일정들 모두 삭제
+          for (const schedule of relatedSchedules) {
+            try {
+              await deleteScheduleFromAPI(schedule.id);
+              console.log('✅ Related schedule deleted:', schedule.id);
+            } catch (schedError) {
+              console.error('Failed to delete related schedule:', schedError);
+            }
+          }
+
+          // 일정 목록 새로고침
+          await fetchSchedules();
         }
 
         setRequests(requests.filter(req => req.id !== id));
@@ -178,9 +199,17 @@ const WorkRequest = () => {
 
         // 관련 일정 찾아서 업데이트
         // 일정을 제목과 날짜로 찾기 (ID가 숫자 형식이므로)
-        const expectedTitle = updated.requestType
-          ? `[업무요청] ${updated.requestType}`
-          : updated.description;
+        // 제목 생성 로직을 schedule 생성과 동일하게 맞춤
+        let expectedTitle = '';
+        if (updated.project) {
+          // 프로젝트가 있는 경우
+          expectedTitle = updated.requestType
+            ? `[업무요청] ${updated.requestType}`
+            : `[업무요청] ${updated.description.substring(0, 20)}`;
+        } else {
+          // 프로젝트가 없는 경우 - 요청내용을 제목으로
+          expectedTitle = updated.description;
+        }
 
         console.log('🔍 Looking for schedule with title:', expectedTitle);
         console.log('🔍 Looking for schedule on date:', updated.dueDate);
@@ -191,9 +220,9 @@ const WorkRequest = () => {
         const relatedSchedule = schedules.find(s => {
           const isSameDate = s.start &&
             new Date(s.start).toDateString() === new Date(updated.dueDate).toDateString();
-          const isSameTitle = s.title.includes(expectedTitle) ||
-            s.title.includes('[업무요청]');
-          console.log(`🔍 Checking schedule ${s.id}: date=${isSameDate}, title=${isSameTitle}, s.title="${s.title}"`);
+          // 제목이 정확히 일치하는지 확인 (부분 일치가 아닌)
+          const isSameTitle = s.title === expectedTitle;
+          console.log(`🔍 Checking schedule ${s.id}: date=${isSameDate}, title=${isSameTitle}, s.title="${s.title}", expected="${expectedTitle}"`);
           return isSameDate && isSameTitle;
         });
 
@@ -562,10 +591,9 @@ const WorkRequest = () => {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-3 md:space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between lg:justify-start">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">업무요청</h1>
+      <div className="flex items-center justify-end">
         <button
           onClick={() => {
             setSelectedRequest(null);
@@ -711,10 +739,7 @@ const WorkRequest = () => {
               {request.status === 'pending' && (
                 <button
                   onClick={() => handleStatusChange(request.id, 'in-progress')}
-                  className="flex-1 px-3 py-2 text-xs font-semibold text-white rounded-lg transition-colors"
-                  style={{ backgroundColor: '#81857d' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6a6e66'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81857d'}
+                  className="flex-1 px-3 py-2 text-xs font-semibold text-white rounded-lg transition-colors bg-emerald-600 hover:bg-emerald-700"
                 >
                   수락
                 </button>
@@ -893,10 +918,7 @@ const WorkRequest = () => {
                     {request.status === 'pending' && (
                       <button
                         onClick={() => handleStatusChange(request.id, 'in-progress')}
-                        className="px-3 py-1 text-xs font-semibold text-white rounded transition-colors"
-                        style={{ backgroundColor: '#81857d' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6a6e66'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#81857d'}
+                        className="px-3 py-1 text-xs font-semibold text-white rounded transition-colors bg-emerald-600 hover:bg-emerald-700"
                       >
                         수락
                       </button>

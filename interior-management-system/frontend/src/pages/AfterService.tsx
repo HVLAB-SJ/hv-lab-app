@@ -186,11 +186,10 @@ const AfterService = () => {
   });
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-3 md:space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between lg:justify-start">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">AS 관리</h1>
-        <button onClick={handleAddRequest} className="hidden lg:inline-flex btn btn-primary px-4 py-2 ml-auto">
+      <div className="flex items-center justify-end">
+        <button onClick={handleAddRequest} className="hidden lg:inline-flex btn btn-primary px-4 py-2">
           + AS 요청
         </button>
       </div>
