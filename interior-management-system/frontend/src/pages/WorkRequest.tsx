@@ -184,12 +184,16 @@ const WorkRequest = () => {
 
         console.log('🔍 Looking for schedule with title:', expectedTitle);
         console.log('🔍 Looking for schedule on date:', updated.dueDate);
+        console.log('🔍 All schedules on same date:', schedules.filter(s =>
+          s.start && new Date(s.start).toDateString() === new Date(updated.dueDate).toDateString()
+        ).map(s => ({ id: s.id, title: s.title, start: s.start })));
 
         const relatedSchedule = schedules.find(s => {
           const isSameDate = s.start &&
             new Date(s.start).toDateString() === new Date(updated.dueDate).toDateString();
           const isSameTitle = s.title.includes(expectedTitle) ||
             s.title.includes('[업무요청]');
+          console.log(`🔍 Checking schedule ${s.id}: date=${isSameDate}, title=${isSameTitle}, s.title="${s.title}"`);
           return isSameDate && isSameTitle;
         });
 
@@ -233,7 +237,9 @@ const WorkRequest = () => {
             console.error('❌ Failed to update related schedule:', schedError);
           }
         } else {
-          console.warn('⚠️ No related schedule found for work request:', scheduleId);
+          console.warn('⚠️ No related schedule found for work request ID:', updated._id);
+          console.warn('⚠️ Expected title:', expectedTitle);
+          console.warn('⚠️ Expected date:', new Date(updated.dueDate).toDateString());
         }
 
         setRequests(requests.map(req =>
