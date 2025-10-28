@@ -2,13 +2,32 @@ import { format, isToday, isFuture, isTomorrow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, Plus } from 'lucide-react';
+import { useState } from 'react';
+import ScheduleModal from '../components/ScheduleModal';
 
 const ALL_TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현'];
 
+interface ScheduleEvent {
+  id?: string;
+  title: string;
+  start: Date;
+  end: Date;
+  projectId?: string;
+  projectName?: string;
+  assignedTo?: string[];
+  attendees?: string[];
+  description?: string;
+  time?: string;
+  originalTitle?: string;
+  mergedEventIds?: string[];
+  isASVisit?: boolean;
+}
+
 const Dashboard = () => {
-  const { schedules } = useDataStore();
+  const { schedules, fetchSchedules, addScheduleToAPI, deleteScheduleFromAPI } = useDataStore();
   const { user } = useAuth();
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
 
   // 사용자 이름에서 성 제거 (마지막 2글자만 사용)
   // 예: "김상준" → "상준", "상준" → "상준"
@@ -32,9 +51,27 @@ const Dashboard = () => {
 
   // 각 사람별 일정 계산
   const getMemberSchedules = (member: string) => {
-    const memberSchedules = schedules.filter(schedule =>
-      schedule.attendees && schedule.attendees.includes(member)
-    );
+    const memberSchedules = schedules.filter(schedule => {
+      if (!schedule.attendees) return false;
+
+      // 직접 담당자로 지정된 경우
+      if (schedule.attendees.includes(member)) return true;
+
+      // HV LAB 일정은 모든 팀원에게 표시
+      if (schedule.attendees.includes('HV LAB')) return true;
+
+      // 현장팀 일정은 재천, 민기에게 표시
+      if (schedule.attendees.includes('현장팀') && ['재천', '민기'].includes(member)) {
+        return true;
+      }
+
+      // 디자인팀 일정은 신애, 재성, 재현에게 표시
+      if (schedule.attendees.includes('디자인팀') && ['신애', '재성', '재현'].includes(member)) {
+        return true;
+      }
+
+      return false;
+    });
 
     const todaySchedules = memberSchedules.filter(s => isToday(new Date(s.start)));
     const upcomingSchedules = memberSchedules
@@ -46,14 +83,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">담당업무</h1>
-      </div>
-
+    <div className="space-y-3 md:space-y-4">
       {/* 사람별 할일 섹션 */}
       <div>
-        <h2 className="hidden md:block text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">담당자별 할일</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {TEAM_MEMBERS.map((member) => {
             const { todaySchedules, upcomingSchedules } = getMemberSchedules(member);
@@ -72,6 +104,15 @@ const Dashboard = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    {isCurrentUser && (
+                      <button
+                        onClick={() => setShowScheduleModal(true)}
+                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                        title="일정 추가"
+                      >
+                        <Plus className="h-4 w-4 text-gray-700" />
+                      </button>
+                    )}
                     <span className={`text-xs px-2.5 py-1 ${isCurrentUser && todaySchedules.length > 0 ? 'bg-amber-100 text-gray-900' : 'bg-gray-100 text-gray-900'} rounded-full font-semibold whitespace-nowrap`}>
                       {todaySchedules.length} 오늘
                     </span>
@@ -187,6 +228,52 @@ const Dashboard = () => {
           })}
         </div>
       </div>
+
+      {/* 일정 추가 모달 */}
+      {showScheduleModal && (
+        <ScheduleModal
+          event={null}
+          slotInfo={{
+            start: new Date(),
+            end: new Date()
+          }}
+          onClose={() => setShowScheduleModal(false)}
+          onSave={async (newEvent: Partial<ScheduleEvent>) => {
+            try {
+              console.log('Dashboard: Adding schedule...', newEvent);
+              await addScheduleToAPI({
+                id: Date.now().toString(),
+                title: newEvent.title || '',
+                start: newEvent.start || new Date(),
+                end: newEvent.end || new Date(),
+                type: 'other',
+                project: newEvent.projectId || newEvent.projectName || '',
+                location: '',
+                attendees: newEvent.assignedTo || [],
+                description: newEvent.description || '',
+                time: newEvent.time
+              });
+              console.log('Dashboard: Schedule added successfully');
+              await fetchSchedules();
+              console.log('Dashboard: Schedules fetched, closing modal');
+              setShowScheduleModal(false);
+            } catch (error) {
+              console.error('Failed to add schedule:', error);
+              alert('일정 추가에 실패했습니다: ' + (error instanceof Error ? error.message : '알 수 없는 오류'));
+            }
+          }}
+          onDelete={async (id: string) => {
+            try {
+              await deleteScheduleFromAPI(id);
+              await fetchSchedules();
+              setShowScheduleModal(false);
+            } catch (error) {
+              console.error('Failed to delete schedule:', error);
+              alert('일정 삭제에 실패했습니다: ' + (error instanceof Error ? error.message : '알 수 없는 오류'));
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

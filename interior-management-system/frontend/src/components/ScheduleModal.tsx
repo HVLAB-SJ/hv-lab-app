@@ -224,6 +224,36 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
     );
   };
 
+  // HV LAB 토글 함수 (단일 담당자로 처리)
+  const toggleHVLab = () => {
+    const hvLabMember = 'HV LAB';
+    if (selectedMembers.includes(hvLabMember)) {
+      setSelectedMembers(prev => prev.filter(m => m !== hvLabMember));
+    } else {
+      setSelectedMembers(prev => [...prev, hvLabMember]);
+    }
+  };
+
+  // 현장팀 토글 함수 (단일 멤버)
+  const toggleFieldTeam = () => {
+    const fieldTeamMember = '현장팀';
+    if (selectedMembers.includes(fieldTeamMember)) {
+      setSelectedMembers(prev => prev.filter(m => m !== fieldTeamMember));
+    } else {
+      setSelectedMembers(prev => [...prev, fieldTeamMember]);
+    }
+  };
+
+  // 디자인팀 토글 함수 (단일 담당자로 처리)
+  const toggleDesignTeam = () => {
+    const designTeamMember = '디자인팀';
+    if (selectedMembers.includes(designTeamMember)) {
+      setSelectedMembers(prev => prev.filter(m => m !== designTeamMember));
+    } else {
+      setSelectedMembers(prev => [...prev, designTeamMember]);
+    }
+  };
+
   const addCustomMember = () => {
     if (customMember.trim() && !selectedMembers.includes(customMember.trim())) {
       setSelectedMembers(prev => [...prev, customMember.trim()]);
@@ -235,7 +265,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
     setSelectedMembers(prev => prev.filter(m => m !== member));
   };
 
-  const onSubmit = (data: ScheduleFormData) => {
+  const onSubmit = async (data: ScheduleFormData) => {
     console.log('🔴 Form onSubmit called with data:', data);
     console.log('🔴 selectedMembers:', selectedMembers);
     console.log('🔴 hasTime state:', hasTime);
@@ -302,7 +332,13 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
     };
 
     console.log('🔴 Calling onSave with newEvent:', newEvent);
-    onSave(newEvent);
+    try {
+      await onSave(newEvent);
+      console.log('🔴 onSave completed successfully');
+    } catch (error) {
+      console.error('🔴 onSave failed:', error);
+      throw error;
+    }
   };
 
   return (
@@ -466,6 +502,45 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
             {/* 기본 팀원 버튼 및 선택된 커스텀 멤버 */}
             <div className="flex flex-wrap gap-1.5 mb-2">
+              {/* HV LAB 버튼 (전체 팀원) */}
+              <button
+                type="button"
+                onClick={toggleHVLab}
+                className={`px-2.5 py-1.5 rounded border transition-colors text-sm ${
+                  selectedMembers.includes('HV LAB')
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                HV LAB
+              </button>
+
+              {/* 현장팀 버튼 */}
+              <button
+                type="button"
+                onClick={toggleFieldTeam}
+                className={`px-2.5 py-1.5 rounded border transition-colors text-sm ${
+                  selectedMembers.includes('현장팀')
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                현장팀
+              </button>
+
+              {/* 디자인팀 버튼 */}
+              <button
+                type="button"
+                onClick={toggleDesignTeam}
+                className={`px-2.5 py-1.5 rounded border transition-colors text-sm ${
+                  selectedMembers.includes('디자인팀')
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                디자인팀
+              </button>
+
               {/* 기본 팀원 버튼 */}
               {TEAM_MEMBERS.map((member) => (
                 <button
@@ -482,9 +557,9 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
                 </button>
               ))}
 
-              {/* 커스텀 멤버 버튼 (기본 팀원이 아닌 선택된 멤버들) */}
+              {/* 커스텀 멤버 버튼 (기본 팀원이 아닌 선택된 멤버들, 팀 이름 제외) */}
               {selectedMembers
-                .filter(member => !TEAM_MEMBERS.includes(member))
+                .filter(member => !TEAM_MEMBERS.includes(member) && member !== 'HV LAB' && member !== '현장팀' && member !== '디자인팀')
                 .map((member) => (
                   <button
                     key={member}
