@@ -90,6 +90,21 @@ router.get('/', authenticateToken, (req, res) => {
         projectData = '';
       }
 
+      // Combine assignees from schedule_assignees table and assigned_to column
+      // This handles both individual users and team names (HV LAB, 현장팀, 디자인팀)
+      let allAssigneeNames = assignees.map(u => u.name || u.username);
+
+      // If assigned_to column has additional names (like team names), add them
+      if (schedule.assigned_to) {
+        const assignedToNames = schedule.assigned_to.split(',').map(name => name.trim()).filter(name => name);
+        // Add names from assigned_to that aren't already in the list
+        assignedToNames.forEach(name => {
+          if (!allAssigneeNames.includes(name)) {
+            allAssigneeNames.push(name);
+          }
+        });
+      }
+
       return {
         _id: schedule.id.toString(),
         title: schedule.title,
@@ -101,7 +116,7 @@ router.get('/', authenticateToken, (req, res) => {
         priority: schedule.priority || 'normal',
         project: projectData,
         assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
-        assigneeNames: assignees.map(u => u.name || u.username),
+        assigneeNames: allAssigneeNames,
         time: schedule.time,
         createdBy: schedule.created_by ? {
           _id: schedule.created_by.toString(),
@@ -311,6 +326,21 @@ router.post('/', authenticateToken, (req, res) => {
             projectData = '';
           }
 
+          // Combine assignees from schedule_assignees table and assigned_to column
+          // This handles both individual users and team names (HV LAB, 현장팀, 디자인팀)
+          let allAssigneeNames = assignees.map(u => u.name || u.username);
+
+          // If assigned_to column has additional names (like team names), add them
+          if (schedule.assigned_to) {
+            const assignedToNames = schedule.assigned_to.split(',').map(name => name.trim()).filter(name => name);
+            // Add names from assigned_to that aren't already in the list
+            assignedToNames.forEach(name => {
+              if (!allAssigneeNames.includes(name)) {
+                allAssigneeNames.push(name);
+              }
+            });
+          }
+
           // Convert to MongoDB format for frontend
           const convertedSchedule = {
             _id: schedule.id.toString(),
@@ -323,7 +353,7 @@ router.post('/', authenticateToken, (req, res) => {
             priority: schedule.priority || 'normal',
             project: projectData,
             assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
-            assigneeNames: assignees.map(u => u.name || u.username),
+            assigneeNames: allAssigneeNames,
             time: schedule.time,
             createdBy: schedule.created_by ? {
               _id: schedule.created_by.toString(),
@@ -480,6 +510,21 @@ router.put('/:id', authenticateToken, (req, res) => {
             projectData = '';
           }
 
+          // Combine assignees from schedule_assignees table and assigned_to column
+          // This handles both individual users and team names (HV LAB, 현장팀, 디자인팀)
+          let allAssigneeNames = assignees.map(u => u.name || u.username);
+
+          // If assigned_to column has additional names (like team names), add them
+          if (schedule.assigned_to) {
+            const assignedToNames = schedule.assigned_to.split(',').map(name => name.trim()).filter(name => name);
+            // Add names from assigned_to that aren't already in the list
+            assignedToNames.forEach(name => {
+              if (!allAssigneeNames.includes(name)) {
+                allAssigneeNames.push(name);
+              }
+            });
+          }
+
           // Convert to MongoDB format for frontend
           const convertedSchedule = {
             _id: schedule.id.toString(),
@@ -492,7 +537,7 @@ router.put('/:id', authenticateToken, (req, res) => {
             priority: schedule.priority || 'normal',
             project: projectData,
             assignedTo: assignees.map(u => ({ _id: u.id.toString(), name: u.name || u.username, username: u.username })),
-            assigneeNames: assignees.map(u => u.name || u.username),
+            assigneeNames: allAssigneeNames,
             time: schedule.time,
             createdBy: schedule.created_by ? {
               _id: schedule.created_by.toString(),
