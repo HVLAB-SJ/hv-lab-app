@@ -179,7 +179,8 @@ const WorkRequest = () => {
         // 관련 일정 찾아서 업데이트
         const scheduleId = `workrequest-${updated._id}`;
         console.log('🔍 Looking for schedule with ID:', scheduleId);
-        console.log('📋 Available schedules:', schedules.map(s => ({ id: s.id, title: s.title })));
+        console.log('📋 All schedule IDs:', schedules.map(s => s.id));
+        console.log('📋 Work request related schedules:', schedules.filter(s => s.id.includes('workrequest')).map(s => ({ id: s.id, title: s.title })));
 
         const relatedSchedule = schedules.find(s => s.id === scheduleId);
 
