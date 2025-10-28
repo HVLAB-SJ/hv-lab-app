@@ -75,6 +75,20 @@ router.put('/profile/me', authenticateToken, async (req, res) => {
   });
 });
 
+// 임시: 자신을 admin으로 승격 (나중에 삭제할 것)
+router.post('/profile/make-admin', authenticateToken, (req, res) => {
+  db.run(
+    'UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    ['admin', req.user.id],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Role 업데이트 실패' });
+      }
+      res.json({ message: 'Admin 권한이 부여되었습니다.' });
+    }
+  );
+});
+
 // 사용자 생성 (관리자 전용)
 router.post('/', authenticateToken, isAdmin, async (req, res) => {
   const { username, password, name, role, department, phone, email } = req.body;
