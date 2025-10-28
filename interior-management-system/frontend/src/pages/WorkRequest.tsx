@@ -141,8 +141,11 @@ const WorkRequest = () => {
   };
 
   const handleSave = async (data: Partial<WorkRequest>) => {
+    console.log('💾 handleSave called with data:', data);
+    console.log('💾 selectedRequest:', selectedRequest);
     try {
       if (selectedRequest) {
+        console.log('✏️ Update mode - selectedRequest.id:', selectedRequest.id);
         // 수정
         const updated = await workRequestService.updateWorkRequest(selectedRequest.id, {
           project: data.project,
