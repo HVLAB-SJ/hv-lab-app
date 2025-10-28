@@ -1494,7 +1494,14 @@ const Schedule = () => {
                             )}
                             {event.assignedTo && event.assignedTo.length > 0 && (
                               <p className="text-xs text-gray-500 mt-0.5">
-                                {event.assignedTo.join(', ')}
+                                {(() => {
+                                  // 디자인팀 3명이 모두 포함되어 있으면 "디자인팀"으로 표시
+                                  const designTeam = ['신애', '재성', '재현'];
+                                  const hasAllDesignTeam = designTeam.every(member =>
+                                    event.assignedTo.includes(member)
+                                  );
+                                  return hasAllDesignTeam ? '디자인팀' : event.assignedTo.join(', ');
+                                })()}
                               </p>
                             )}
                           </div>

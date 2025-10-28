@@ -182,15 +182,31 @@ const WorkRequest = () => {
         if (relatedSchedule) {
           try {
             // 프로젝트 ID 찾기
-            const matchingProject = projects.find(p => p.name === updated.project);
-            const projectId = matchingProject ? matchingProject.id : relatedSchedule.project;
+            let projectId = null;
+            let scheduleTitle = '';
+
+            if (updated.project) {
+              const matchingProject = projects.find(p => p.name === updated.project);
+              projectId = matchingProject ? matchingProject.id : relatedSchedule.project;
+              scheduleTitle = updated.requestType
+                ? `[업무요청] ${updated.requestType}`
+                : `[업무요청] ${updated.description.substring(0, 20)}`;
+            } else {
+              scheduleTitle = updated.description;
+              projectId = relatedSchedule.project;
+            }
+
+            // 담당자 처리: 디자인팀이면 세 명 모두 추가
+            const attendees = updated.assignedTo === '디자인팀'
+              ? ['신애', '재성', '재현']
+              : [updated.assignedTo];
 
             await updateScheduleInAPI(relatedSchedule.id, {
-              title: `[업무요청] ${updated.requestType}`,
+              title: scheduleTitle,
               start: new Date(updated.dueDate),
               end: new Date(updated.dueDate),
               project: projectId,
-              attendees: [updated.assignedTo],
+              attendees: attendees,
               description: `${updated.description}\n\n담당자: ${updated.assignedTo}\n요청자: ${updated.requestedBy}\n우선순위: ${updated.priority}\n${updated.notes || ''}`
             });
             console.log('✅ Related schedule updated:', relatedSchedule.id);
@@ -263,6 +279,11 @@ const WorkRequest = () => {
             scheduleTitle = created.description;
           }
 
+          // 담당자 처리: 디자인팀이면 세 명 모두 추가
+          const attendees = created.assignedTo === '디자인팀'
+            ? ['신애', '재성', '재현']
+            : [created.assignedTo];
+
           await addScheduleToAPI({
             id: `workrequest-${created._id}`,
             title: scheduleTitle,
@@ -271,7 +292,7 @@ const WorkRequest = () => {
             type: 'other',
             project: projectId, // 프로젝트 ID로 전달 (없으면 null)
             location: '',
-            attendees: [created.assignedTo],
+            attendees: attendees,
             description: `${created.description}\n\n담당자: ${created.assignedTo}\n요청자: ${created.requestedBy}\n우선순위: ${created.priority}\n${created.notes || ''}`
           });
           console.log('✅ Schedule created:', scheduleTitle, 'with project ID:', projectId);
