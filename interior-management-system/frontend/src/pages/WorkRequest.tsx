@@ -177,12 +177,23 @@ const WorkRequest = () => {
         };
 
         // 관련 일정 찾아서 업데이트
-        const scheduleId = `workrequest-${updated._id}`;
-        console.log('🔍 Looking for schedule with ID:', scheduleId);
-        console.log('📋 All schedule IDs:', schedules.map(s => s.id));
-        console.log('📋 Work request related schedules:', schedules.filter(s => s.id.includes('workrequest')).map(s => ({ id: s.id, title: s.title })));
+        // 일정을 제목과 날짜로 찾기 (ID가 숫자 형식이므로)
+        const expectedTitle = updated.requestType
+          ? `[업무요청] ${updated.requestType}`
+          : updated.description;
 
-        const relatedSchedule = schedules.find(s => s.id === scheduleId);
+        console.log('🔍 Looking for schedule with title:', expectedTitle);
+        console.log('🔍 Looking for schedule on date:', updated.dueDate);
+
+        const relatedSchedule = schedules.find(s => {
+          const isSameDate = s.start &&
+            new Date(s.start).toDateString() === new Date(updated.dueDate).toDateString();
+          const isSameTitle = s.title.includes(expectedTitle) ||
+            s.title.includes('[업무요청]');
+          return isSameDate && isSameTitle;
+        });
+
+        console.log('🔍 Found schedule?', relatedSchedule ? `Yes: ${relatedSchedule.id}` : 'No');
 
         if (relatedSchedule) {
           console.log('✅ Found related schedule:', relatedSchedule.id);
