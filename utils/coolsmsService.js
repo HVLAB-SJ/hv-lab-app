@@ -133,8 +133,8 @@ class CoolSMSService {
      * @param {Object} data - 결제 요청 데이터
      */
     createPaymentMessage(data) {
-        // 점 3개로 시작하여 제목 중복 방지 (첫 줄이 제목으로 잘림)
-        let message = '...\n\n';
+        // 첫 줄을 완전히 공백으로 만들어 제목에 아무것도 표시 안되게 함
+        let message = ' \n\n';
         message += `[${data.projectName || '프로젝트'}]\n`;
 
         // 공정(카테고리)을 한글로 변환
