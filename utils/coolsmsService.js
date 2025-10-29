@@ -135,16 +135,32 @@ class CoolSMSService {
         let message = '';
         message += `[${data.projectName || '프로젝트'}]\n`;
 
-        // 공정과 내용 (itemName이나 purpose를 사용)
-        const category = data.category || '자재비';
+        // 공정(카테고리)을 한글로 변환
+        let categoryKorean = '자재비';
+        if (data.category === 'labor') {
+            categoryKorean = '인건비';
+        } else if (data.category === 'material') {
+            categoryKorean = '자재비';
+        } else if (data.category === 'other') {
+            categoryKorean = '기타';
+        }
+
         const content = data.itemName || data.purpose || '결제요청';
-        message += `  ${category} ${content}\n`;
+        message += `  ${categoryKorean} ${content}\n`;
 
         // 계좌 정보
         message += `  ${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;
 
-        // 금액
+        // 금액과 세금 정보
         message += `  ${this.formatAmount(data.amount)}원`;
+
+        // VAT 포함 여부와 세금공제 여부 표시
+        if (data.includesVat) {
+            message += ' (VAT포함)';
+        }
+        if (data.applyTaxDeduction) {
+            message += ' (3.3%공제)';
+        }
 
         return message;
     }

@@ -17,7 +17,9 @@ const testData = {
     requesterName: '김철수',
     itemName: '테스트 자재',
     purpose: '테스트 결제 요청',
-    category: '자재비'
+    category: 'labor',  // 'material', 'labor', 'other'
+    includesVat: false,  // VAT 포함 여부
+    applyTaxDeduction: true  // 3.3% 세금공제 여부
 };
 
 console.log('\n========================================');

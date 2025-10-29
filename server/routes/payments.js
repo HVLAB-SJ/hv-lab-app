@@ -188,7 +188,9 @@ router.post('/', authenticateToken, async (req, res) => {
         bank_name: bank_name,
         account_number: account_number,
         account_holder: account_holder,
-        item_name: itemName || ''
+        item_name: itemName || '',
+        includes_vat: includesVAT,
+        apply_tax_deduction: applyTaxDeduction
       });
 
       res.status(201).json({
@@ -542,7 +544,9 @@ async function sendPaymentNotification(data) {
       requesterName: data.requester,
       itemName: data.item_name || '',
       purpose: data.description || '',
-      category: data.request_type || '자재비'
+      category: data.request_type || 'material',
+      includesVat: data.includes_vat,
+      applyTaxDeduction: data.apply_tax_deduction
     };
 
     console.log('[CoolSMS] 문자 발송 데이터:', notificationData);
