@@ -137,21 +137,23 @@ class CoolSMSService {
         let message = ' \n\n';
         message += `[${data.projectName || '프로젝트'}]\n`;
 
-        // 공정(카테고리)을 한글로 변환
-        let categoryKorean = '';
-        if (data.category === 'labor') {
-            categoryKorean = '인건비';
-        } else if (data.category === 'material') {
-            categoryKorean = '자재비';
-        } else if (data.category === 'other') {
-            categoryKorean = '기타';
+        // 공정 정보 표시 (description에 공정명이 들어옴: 목공, 가구, 마루 등)
+        const process = data.purpose || data.description || '';  // 공정명
+        const itemName = data.itemName || '';  // 항목명 (선택사항)
+
+        // 공정과 항목명 조합
+        let contentLine = '';
+        if (process && itemName) {
+            contentLine = `${process} ${itemName}`;
+        } else if (process) {
+            contentLine = process;
+        } else if (itemName) {
+            contentLine = itemName;
         } else {
-            // category가 이미 한글이거나 다른 값인 경우 그대로 사용
-            categoryKorean = data.category || '자재비';
+            contentLine = '결제요청';  // 둘 다 없는 경우 기본값
         }
 
-        const content = data.itemName || data.purpose || '결제요청';
-        message += `  ${categoryKorean} ${content}\n`;
+        message += `  ${contentLine}\n`;
 
         // 계좌 정보
         message += `  ${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;

@@ -9,17 +9,18 @@ const coolsmsService = require('./utils/coolsmsService');
 
 // 테스트 데이터
 const testData = {
-    projectName: '테스트 프로젝트',
-    amount: 100000,
-    accountHolder: '홍길동',
-    bankName: 'KB국민은행',
-    accountNumber: '123-456-789012',
+    projectName: '대림아크로텔_엄상진님',
+    amount: 350000,
+    accountHolder: '조준',
+    bankName: '신한은행',
+    accountNumber: '100-031-475333',
     requesterName: '김철수',
-    itemName: '테스트 자재',
-    purpose: '테스트 결제 요청',
-    category: 'labor',  // 'material', 'labor', 'other'
-    includesVat: false,  // VAT 포함 여부
-    applyTaxDeduction: true  // 3.3% 세금공제 여부
+    itemName: '문틀 설치',  // 항목명 있는 경우 테스트
+    purpose: '목공',  // 공정명 (목공, 가구, 마루, 도배, 타일 등)
+    description: '목공',  // description도 공정명으로 사용
+    category: 'material',  // 이제 사용하지 않음
+    includesVat: true,  // VAT 포함 여부
+    applyTaxDeduction: false  // 3.3% 세금공제 여부
 };
 
 console.log('\n========================================');
