@@ -56,15 +56,13 @@ class CoolSMSService {
         }
 
         try {
-            // CoolSMS API v4 형식
+            // CoolSMS API v4 형식 - 단일 메시지
             const data = {
-                messages: [
-                    {
-                        to: to.replace(/-/g, ''),
-                        from: this.from.replace(/-/g, ''),
-                        text: text
-                    }
-                ]
+                message: {
+                    to: to.replace(/-/g, ''),
+                    from: this.from.replace(/-/g, ''),
+                    text: text
+                }
             };
 
             console.log('📤 [CoolSMS] 발송 요청 데이터:', JSON.stringify(data, null, 2));
