@@ -883,12 +883,13 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end items-center pt-4 border-t space-x-2">
+          {/* Actions - 모바일 최적화 */}
+          <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center pt-4 border-t space-y-2 sm:space-y-0 sm:space-x-2 sticky bottom-0 bg-white pb-4 -mb-4">
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-outline"
+              className="btn btn-outline w-full sm:w-auto touch-manipulation"
+              style={{ minHeight: '44px' }}
             >
               취소
             </button>
@@ -898,11 +899,12 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
               <button
                 type="button"
                 onClick={() => setIsUrgent(!isUrgent)}
-                className={`px-3 py-2 text-xs font-medium rounded-lg transition-colors flex items-center space-x-1 ${
+                className={`px-3 py-2 text-xs font-medium rounded-lg transition-colors flex items-center justify-center space-x-1 w-full sm:w-auto touch-manipulation ${
                   isUrgent
                     ? 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200'
                     : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
                 }`}
+                style={{ minHeight: '44px' }}
                 title={isUrgent ? "긴급 해제" : "긴급 설정"}
               >
                 <AlertCircle className="h-3.5 w-3.5" />
@@ -918,7 +920,8 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
                   console.log('💰 Button type:', e.currentTarget.type);
                   console.log('💰 Form errors:', errors);
                 }}
-                className={`btn ${isUrgent ? 'bg-red-600 hover:bg-red-700 text-white' : 'btn-primary'}`}
+                className={`btn w-full sm:w-auto touch-manipulation ${isUrgent ? 'bg-red-600 hover:bg-red-700 text-white' : 'btn-primary'}`}
+                style={{ minHeight: '44px', zIndex: 10, position: 'relative' }}
               >
                 {isUrgent ? '긴급 요청하기' : '요청하기'}
               </button>
@@ -927,7 +930,8 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
             {payment && (
               <button
                 type="submit"
-                className="btn btn-primary"
+                className="btn btn-primary w-full sm:w-auto touch-manipulation"
+                style={{ minHeight: '44px' }}
               >
                 수정하기
               </button>
