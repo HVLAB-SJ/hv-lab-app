@@ -10,4 +10,5 @@ build/
 *.local
 .claude/
 hvlab-app-backup/
-interior-management-system/
+interior-management-system/nul
+nul

@@ -828,44 +828,30 @@ const Schedule = () => {
   const filteredEvents = (filterProject === 'all'
     ? events
     : events.filter(e => e.projectName === filterProject))
+    .map(event => {
+      // 사용자 할당 여부 확인
+      const hasHVLab = event.assignedTo && event.assignedTo.includes('HV LAB');
+      const hasFieldTeam = event.assignedTo && event.assignedTo.includes('현장팀') &&
+        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+      const hasDesignTeam = event.assignedTo && event.assignedTo.includes('디자인팀') &&
+        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+      const hasUser = event.assignedTo && (
+        event.assignedTo.includes(user?.name || '') ||
+        (userNameWithoutSurname && event.assignedTo.includes(userNameWithoutSurname)) ||
+        hasHVLab || hasFieldTeam || hasDesignTeam
+      );
+
+      // 사용자 일정은 시작 시간에서 1초를 빼서 먼저 표시되도록 함
+      // 이렇게 하면 react-big-calendar의 내부 정렬에서도 사용자 일정이 먼저 나옴
+      if (hasUser) {
+        const adjustedStart = new Date(event.start.getTime() - 1000); // 1초 빼기
+        return { ...event, start: adjustedStart };
+      }
+      return event;
+    })
     .sort((a, b) => {
-      const aDate = a.start.toISOString().split('T')[0];
-      const bDate = b.start.toISOString().split('T')[0];
-
-      // 날짜가 다르면 날짜순 정렬
-      if (aDate !== bDate) {
-        return a.start.getTime() - b.start.getTime();
-      }
-
-      // 같은 날짜인 경우, 사용자 포함 여부로 정렬
-      const aHasHVLab = a.assignedTo && a.assignedTo.includes('HV LAB');
-      const bHasHVLab = b.assignedTo && b.assignedTo.includes('HV LAB');
-      const aHasFieldTeam = a.assignedTo && a.assignedTo.includes('현장팀') &&
-        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
-      const bHasFieldTeam = b.assignedTo && b.assignedTo.includes('현장팀') &&
-        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
-      const aHasDesignTeam = a.assignedTo && a.assignedTo.includes('디자인팀') &&
-        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
-      const bHasDesignTeam = b.assignedTo && b.assignedTo.includes('디자인팀') &&
-        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
-      const aHasUser = a.assignedTo && (
-        a.assignedTo.includes(user?.name || '') ||
-        (userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname)) ||
-        aHasHVLab || aHasFieldTeam || aHasDesignTeam
-      );
-      const bHasUser = b.assignedTo && (
-        b.assignedTo.includes(user?.name || '') ||
-        (userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname)) ||
-        bHasHVLab || bHasFieldTeam || bHasDesignTeam
-      );
-
-      // 둘 다 사용자 포함 또는 둘 다 미포함인 경우 시간순 정렬
-      if (aHasUser === bHasUser) {
-        return a.start.getTime() - b.start.getTime();
-      }
-
-      // 사용자 포함된 것을 우선
-      return aHasUser ? -1 : 1;
+      // 날짜와 조정된 시간으로 정렬 (사용자 일정은 이미 시간이 1초 빨라짐)
+      return a.start.getTime() - b.start.getTime();
     });
 
   // 더보기 버튼과 팝업 오버레이 강제 숨김
