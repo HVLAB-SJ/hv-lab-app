@@ -133,11 +133,13 @@ class CoolSMSService {
      * @param {Object} data - 결제 요청 데이터
      */
     createPaymentMessage(data) {
-        // 첫 줄에 zero-width space로 제목 중복 방지 (보이지 않는 문자)
-        let message = '\u200B\n';
+        // 빈 줄로 시작 (제목 중복 방지)
+        let message = '\n';
+
+        // 프로젝트명
         message += `[${data.projectName || '프로젝트'}]\n`;
 
-        // 공정 정보 표시 (description에 공정명이 들어옴: 목공, 가구, 마루 등)
+        // 공정 및 항목
         const process = data.purpose || data.description || '';  // 공정명
         const itemName = data.itemName || '';  // 항목명 (선택사항)
 
@@ -158,7 +160,7 @@ class CoolSMSService {
         // 계좌 정보
         message += `  ${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;
 
-        // 금액과 세금 정보
+        // 금액
         message += `  ${this.formatAmount(data.amount)}원`;
 
         // VAT 포함 여부와 세금공제 여부 표시
