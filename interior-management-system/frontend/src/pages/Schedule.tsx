@@ -1254,12 +1254,16 @@ const Schedule = () => {
     );
   };
 
+  // 더보기 버튼을 렌더링하지 않는 커스텀 컴포넌트
+  const CustomShowMore = () => null;
+
   // Calendar 컴포넌트에 전달할 components prop을 메모이제이션
   const calendarComponents = useMemo(() => ({
     toolbar: CustomToolbar,
     event: CustomEventWrapper,
     month: {
-      dateHeader: CustomDateHeaderWrapper
+      dateHeader: CustomDateHeaderWrapper,
+      showMore: CustomShowMore
     }
   }), [CustomDateHeaderWrapper, CustomEventWrapper]);
 
