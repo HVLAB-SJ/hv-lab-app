@@ -61,8 +61,8 @@ class CoolSMSService {
                 message: {
                     to: to.replace(/-/g, ''),
                     from: this.from.replace(/-/g, ''),
-                    text: text,
-                    type: 'LMS'  // 강제로 LMS 타입 설정 (긴 메시지)
+                    text: text
+                    // type을 지정하지 않으면 자동으로 메시지 길이에 따라 SMS/LMS 선택
                 }
             };
 
