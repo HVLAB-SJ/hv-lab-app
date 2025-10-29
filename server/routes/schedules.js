@@ -180,7 +180,9 @@ router.post('/', authenticateToken, (req, res) => {
   const status = req.body.status || 'pending';
   const priority = req.body.priority || 'normal';
   const color = req.body.color;
-  const assigned_to = req.body.assigned_to || (req.body.assignedTo ? req.body.assignedTo.join(', ') : null);
+  // Don't auto-populate assigned_to from assignedTo array - keep them separate
+  // assigned_to is for legacy team names, assignee_ids is for specific user selections
+  const assigned_to = req.body.assigned_to || null; // Only use if explicitly provided
   const assignee_ids = req.body.assignee_ids || req.body.assignedTo;
 
   console.log('[POST /api/schedules] Initial parsed data:', {
@@ -383,7 +385,9 @@ router.put('/:id', authenticateToken, (req, res) => {
   const priority = req.body.priority;
   const color = req.body.color;
   const progress = req.body.progress;
-  const assigned_to = req.body.assigned_to || (req.body.assignedTo ? req.body.assignedTo.join(', ') : null);
+  // Don't auto-populate assigned_to from assignedTo array - keep them separate
+  // assigned_to is for legacy team names, assignee_ids is for specific user selections
+  const assigned_to = req.body.assigned_to || null; // Only use if explicitly provided
   const assignee_ids = req.body.assignee_ids || req.body.assignedTo;
   const project_id = req.body.project_id || req.body.project;
   const time = req.body.time;
