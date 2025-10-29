@@ -321,6 +321,52 @@ div.rbc-event.rbc-selected,
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 더보기 버튼과 팝업 오버레이 완전히 제거 - 전역 */
+.rbc-show-more,
+button.rbc-show-more,
+a.rbc-show-more,
+.rbc-overlay,
+.rbc-overlay-header,
+div.rbc-overlay,
+div[class*="rbc-overlay"],
+.rbc-popup,
+div.rbc-popup {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  z-index: -1 !important;
+}
+
+/* 월 뷰 행 높이 자동 조정 - 모든 일정 표시 (데스크톱) */
+.rbc-month-row {
+  min-height: 120px !important;
+  height: auto !important;
+}
+
+/* 이벤트 오버플로우 허용 (데스크톱) */
+.rbc-row-segment {
+  height: auto !important;
+}
+
+.rbc-row-content,
+.rbc-row-content-scrollable {
+  height: auto !important;
+  min-height: 100px !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.rbc-addons-dnd .rbc-row-content-scrollable {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
 /* 이전/다음 달 일요일 */
 .rbc-day-bg:nth-child(7n+1).rbc-off-range-bg button,
 .rbc-day-bg:nth-child(7n+1).rbc-off-range button,
@@ -864,6 +910,22 @@ div.rbc-event.rbc-selected,
     height: 0 !important;
     width: 0 !important;
     pointer-events: none !important;
+  }
+
+  /* 팝업 오버레이 완전히 숨기기 - 데스크톱 */
+  .rbc-overlay,
+  div.rbc-overlay,
+  .rbc-overlay-header,
+  div[class*="rbc-overlay"],
+  .rbc-popup,
+  div.rbc-popup {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+    z-index: -1 !important;
   }
 
   /* 월 뷰 행 높이 자동 조정 - 모든 일정 표시 */

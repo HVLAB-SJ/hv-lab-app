@@ -80,6 +80,10 @@ export const createSchedule = async (req: Request, res: Response): Promise<void>
       });
     }
 
+    console.log('🔴 CREATE SCHEDULE - Received assignedTo:', assignedTo);
+    console.log('🔴 CREATE SCHEDULE - Is Array?', Array.isArray(assignedTo));
+    console.log('🔴 CREATE SCHEDULE - Array contents:', Array.isArray(assignedTo) ? assignedTo : 'Not an array');
+
     const schedule = new Schedule({
       project: projectExists._id,
       title,
@@ -103,11 +107,20 @@ export const createSchedule = async (req: Request, res: Response): Promise<void>
       createdBy: '000000000000000000000000' // Temporary
     });
 
+    console.log('🔴 CREATE SCHEDULE - Before save, assigneeNames:', schedule.assigneeNames);
+    console.log('🔴 CREATE SCHEDULE - Before save, assignedTo:', schedule.assignedTo);
+
     await schedule.save();
+
+    console.log('🔴 CREATE SCHEDULE - After save, assigneeNames:', schedule.assigneeNames);
+    console.log('🔴 CREATE SCHEDULE - After save, assignedTo:', schedule.assignedTo);
 
     const populatedSchedule = await Schedule.findById(schedule._id)
       .populate('project', 'name')
       .populate('assignedTo', 'name username');
+
+    console.log('🔴 CREATE SCHEDULE - After populate, assigneeNames:', populatedSchedule.assigneeNames);
+    console.log('🔴 CREATE SCHEDULE - After populate, assignedTo:', populatedSchedule.assignedTo);
 
     res.status(201).json(populatedSchedule);
   } catch (error) {

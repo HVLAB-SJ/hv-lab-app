@@ -403,20 +403,36 @@ const Schedule = () => {
     });
   }, [loadSchedulesFromAPI]);
 
-  // 더보기 버튼 강제 숨김
+  // 더보기 버튼과 팝업 오버레이 강제 숨김
   useEffect(() => {
-    const hideShowMore = () => {
+    const hideShowMoreAndOverlays = () => {
+      // 더보기 버튼 숨기기
       const showMoreButtons = document.querySelectorAll('.rbc-show-more, .rbc-button-link');
       showMoreButtons.forEach(button => {
         (button as HTMLElement).style.display = 'none';
+        (button as HTMLElement).style.visibility = 'hidden';
+        (button as HTMLElement).style.pointerEvents = 'none';
+      });
+
+      // 팝업 오버레이 숨기기
+      const overlays = document.querySelectorAll('.rbc-overlay, .rbc-overlay-header, .rbc-popup, [class*="rbc-overlay"]');
+      overlays.forEach(overlay => {
+        (overlay as HTMLElement).style.display = 'none';
+        (overlay as HTMLElement).style.visibility = 'hidden';
+        (overlay as HTMLElement).style.opacity = '0';
+        (overlay as HTMLElement).style.pointerEvents = 'none';
+        (overlay as HTMLElement).style.position = 'absolute';
+        (overlay as HTMLElement).style.left = '-9999px';
+        (overlay as HTMLElement).style.top = '-9999px';
+        (overlay as HTMLElement).style.zIndex = '-1';
       });
     };
 
     // 초기 실행
-    hideShowMore();
+    hideShowMoreAndOverlays();
 
     // DOM 변경 감지
-    const observer = new MutationObserver(hideShowMore);
+    const observer = new MutationObserver(hideShowMoreAndOverlays);
     const calendarContainer = document.querySelector('.rbc-calendar');
 
     if (calendarContainer) {
@@ -426,7 +442,17 @@ const Schedule = () => {
       });
     }
 
-    return () => observer.disconnect();
+    // body에도 옵저버 추가 (오버레이가 body 직접 자식으로 추가될 수 있음)
+    const bodyObserver = new MutationObserver(hideShowMoreAndOverlays);
+    bodyObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    return () => {
+      observer.disconnect();
+      bodyObserver.disconnect();
+    };
   }, [filteredEvents, view, date]);
 
   // 프로젝트별 색상 매핑
