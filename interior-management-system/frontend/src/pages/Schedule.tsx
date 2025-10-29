@@ -1492,6 +1492,7 @@ const Schedule = () => {
               eventPropGetter={eventStyleGetter}
               dayPropGetter={dayPropGetter}
               components={calendarComponents}
+              popup={false}
               messages={{
                 today: '오늘',
                 previous: '이전',
