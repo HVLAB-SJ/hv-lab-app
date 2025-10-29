@@ -133,39 +133,35 @@ class CoolSMSService {
      * @param {Object} data - 결제 요청 데이터
      */
     createPaymentMessage(data) {
-        // 메시지 시작 - Web발신 다음에 바로 이 내용이 표시됨
-        let message = `[${data.projectName || '프로젝트'}]\n`;
+        // 프로젝트명에서 앞 2글자 추출 (예: "대림아크로텔_엄상진님" -> "대림")
+        const projectName = data.projectName || '프로젝트';
+        const projectPrefix = projectName.substring(0, 2);
 
-        // 공정 및 항목
-        const process = data.purpose || data.description || '';  // 공정명 (목공, 타일, 가구 등)
-        const itemName = data.itemName || '';  // 항목명 (선택사항)
-
-        // 공정과 항목명 조합 - 공정명을 명확히 표시하고 항목명을 우측에 배치
-        let contentLine = '';
-        if (process && itemName) {
-            contentLine = `${process} - ${itemName}`;  // 구분자로 ' - ' 사용
-        } else if (process) {
-            contentLine = process;
-        } else if (itemName) {
-            contentLine = itemName;
+        // 고객명 추출 (프로젝트명에서 "_" 뒤의 이름 부분)
+        let customerName = '';
+        if (projectName.includes('_')) {
+            const namePart = projectName.split('_')[1];
+            // "님" 제거
+            customerName = namePart.replace('님', '');
         } else {
-            contentLine = '결제요청';  // 둘 다 없는 경우 기본값
+            customerName = projectName.substring(2, 5) || '고객';
         }
 
-        message += `  ${contentLine}\n`;
+        // 항목명만 사용 (공정명 제외)
+        const itemName = data.itemName || '항목';
+
+        // 첫 줄: 프로젝트앞2글자/고객명/항목명
+        let message = `  ${projectPrefix}/${customerName}/${itemName}\n`;
 
         // 계좌 정보
-        message += `  ${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;
+        message += `    ${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;
 
         // 금액
-        message += `  ${this.formatAmount(data.amount)}원`;
+        message += `    ${this.formatAmount(data.amount)}원`;
 
-        // VAT 포함 여부와 세금공제 여부 표시
+        // VAT 포함 여부만 표시 (간결하게)
         if (data.includesVat) {
-            message += ' (VAT포함)';
-        }
-        if (data.applyTaxDeduction) {
-            message += ' (3.3%공제)';
+            message += '(VAT)';
         }
 
         return message;
