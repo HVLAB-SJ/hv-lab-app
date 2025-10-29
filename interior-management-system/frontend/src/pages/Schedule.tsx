@@ -769,6 +769,8 @@ const Schedule = () => {
     });
 
     // 사용자 일정의 시작 시간을 조정하여 먼저 표시되도록 함
+    console.log(`🔍 groupEventsByProjectAndDate: Processing ${finalEvents.length} events, user:`, user?.name, 'userShort:', userNameWithoutSurname);
+
     return finalEvents.map(event => {
       const hasHVLab = event.assignedTo && event.assignedTo.includes('HV LAB');
       const hasFieldTeam = event.assignedTo && event.assignedTo.includes('현장팀') &&
@@ -781,10 +783,12 @@ const Schedule = () => {
         hasHVLab || hasFieldTeam || hasDesignTeam
       );
 
+      console.log(`🔍 Event "${event.title}": assignedTo=`, event.assignedTo, `hasUser=${hasUser}, hasHVLab=${hasHVLab}`);
+
       // 사용자 일정은 시작 시간을 6시간 앞당김
       if (hasUser) {
         const adjustedStart = new Date(event.start.getTime() - 21600000);
-        console.log(`📌 User event adjusted in groupEventsByProjectAndDate: ${event.title}, hasUser: ${hasUser}, assignedTo:`, event.assignedTo);
+        console.log(`📌 User event adjusted: ${event.title}, original: ${event.start}, adjusted: ${adjustedStart}`);
         return { ...event, start: adjustedStart };
       }
       return event;
