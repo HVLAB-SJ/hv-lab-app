@@ -281,53 +281,64 @@ router.post('/', authenticateToken, (req, res) => {
 
       const scheduleId = this.lastID;
 
-      // 담당자 할당 (assignee_ids가 배열일 경우)
-      console.log('[POST /api/schedules] assignee_ids:', assignee_ids);
-      if (assignee_ids && Array.isArray(assignee_ids) && assignee_ids.length > 0) {
-        console.log('[POST /api/schedules] Processing assignees:', assignee_ids);
-        // assignee_ids가 숫자 배열인지 확인하고, 문자열이면 user id로 변환
-        const userPromises = assignee_ids.map(assignee => {
-          // 숫자면 그대로 사용
-          if (typeof assignee === 'number') {
-            return Promise.resolve(assignee);
-          }
-          // 문자열이면 username으로 user id 찾기
-          return new Promise((resolve, reject) => {
-            db.get('SELECT id FROM users WHERE username = ? OR name = ?', [assignee, assignee], (err, user) => {
-              if (err) reject(err);
-              else resolve(user ? user.id : null);
+      // 담당자 할당 (assignee_ids가 배열일 경우) - await를 사용하기 위해 async 함수로 처리
+      const processAssignees = async () => {
+        console.log('[POST /api/schedules] assignee_ids:', assignee_ids);
+        if (assignee_ids && Array.isArray(assignee_ids) && assignee_ids.length > 0) {
+          console.log('[POST /api/schedules] Processing assignees:', assignee_ids);
+          // assignee_ids가 숫자 배열인지 확인하고, 문자열이면 user id로 변환
+          const userPromises = assignee_ids.map(assignee => {
+            // 숫자면 그대로 사용
+            if (typeof assignee === 'number') {
+              return Promise.resolve(assignee);
+            }
+            // 문자열이면 username으로 user id 찾기
+            return new Promise((resolve, reject) => {
+              db.get('SELECT id FROM users WHERE username = ? OR name = ?', [assignee, assignee], (err, user) => {
+                if (err) reject(err);
+                else resolve(user ? user.id : null);
+              });
             });
           });
-        });
 
-        Promise.all(userPromises).then(userIds => {
-          const validUserIds = userIds.filter(id => id !== null);
-          if (validUserIds.length > 0) {
-            const assigneeValues = validUserIds.map(userId => `(${scheduleId}, ${userId})`).join(',');
-            db.run(
-              `INSERT INTO schedule_assignees (schedule_id, user_id) VALUES ${assigneeValues}`,
-              [],
-              (err) => {
-                if (err) {
-                  console.error('담당자 할당 실패:', err);
-                }
-              }
-            );
+          try {
+            const userIds = await Promise.all(userPromises);
+            const validUserIds = userIds.filter(id => id !== null);
+            if (validUserIds.length > 0) {
+              const assigneeValues = validUserIds.map(userId => `(${scheduleId}, ${userId})`).join(',');
+              await new Promise((resolve, reject) => {
+                db.run(
+                  `INSERT INTO schedule_assignees (schedule_id, user_id) VALUES ${assigneeValues}`,
+                  [],
+                  (err) => {
+                    if (err) {
+                      console.error('담당자 할당 실패:', err);
+                      reject(err);
+                    } else {
+                      console.log('[POST /api/schedules] Assignees inserted successfully');
+                      resolve();
+                    }
+                  }
+                );
+              });
+            }
+          } catch (err) {
+            console.error('담당자 ID 변환 또는 할당 실패:', err);
           }
-        }).catch(err => {
-          console.error('담당자 ID 변환 실패:', err);
-        });
-      }
+        }
+      };
 
-      // Fetch the created schedule with full data and convert to MongoDB format
-      db.get(
-        `SELECT s.*, p.name as project_name, p.color as project_color, u.username as creator_name
-         FROM schedules s
-         LEFT JOIN projects p ON s.project_id = p.id
-         LEFT JOIN users u ON s.created_by = u.id
-         WHERE s.id = ?`,
-        [scheduleId],
-        async (err, schedule) => {
+      // 담당자 할당 완료 후 응답 반환
+      processAssignees().then(() => {
+        // Fetch the created schedule with full data and convert to MongoDB format
+        db.get(
+          `SELECT s.*, p.name as project_name, p.color as project_color, u.username as creator_name
+           FROM schedules s
+           LEFT JOIN projects p ON s.project_id = p.id
+           LEFT JOIN users u ON s.created_by = u.id
+           WHERE s.id = ?`,
+          [scheduleId],
+          async (err, schedule) => {
           if (err) {
             console.error('[POST /api/schedules] Failed to fetch created schedule:', err);
             return res.status(500).json({ error: '일정 조회 실패' });
@@ -365,15 +376,9 @@ router.post('/', authenticateToken, (req, res) => {
             projectData = '';
           }
 
-          // Get assignee names from schedule_assignees table
+          // Get assignee names from schedule_assignees table only
+          // Do NOT fall back to assigned_to column to prevent unwanted auto-assignment
           let allAssigneeNames = assignees.map(u => u.name || u.username);
-
-          // Only use assigned_to column if no assignees were found in schedule_assignees table
-          // This prevents auto-adding team names when specific users are selected
-          if (allAssigneeNames.length === 0 && schedule.assigned_to) {
-            const assignedToNames = schedule.assigned_to.split(',').map(name => name.trim()).filter(name => name);
-            allAssigneeNames = assignedToNames;
-          }
 
           // Convert to MongoDB format for frontend
           const convertedSchedule = {
@@ -401,6 +406,7 @@ router.post('/', authenticateToken, (req, res) => {
           res.status(201).json(convertedSchedule);
         }
       );
+      });
     }
     );
     }
@@ -550,15 +556,9 @@ router.put('/:id', authenticateToken, (req, res) => {
             projectData = '';
           }
 
-          // Get assignee names from schedule_assignees table
+          // Get assignee names from schedule_assignees table only
+          // Do NOT fall back to assigned_to column to prevent unwanted auto-assignment
           let allAssigneeNames = assignees.map(u => u.name || u.username);
-
-          // Only use assigned_to column if no assignees were found in schedule_assignees table
-          // This prevents auto-adding team names when specific users are selected
-          if (allAssigneeNames.length === 0 && schedule.assigned_to) {
-            const assignedToNames = schedule.assigned_to.split(',').map(name => name.trim()).filter(name => name);
-            allAssigneeNames = assignedToNames;
-          }
 
           // Convert to MongoDB format for frontend
           const convertedSchedule = {
