@@ -178,9 +178,10 @@ router.post('/', authenticateToken, (req, res) => {
   // assigned_to is for legacy team names, assignee_ids is for specific user selections
   const assigned_to = req.body.assigned_to || null; // Only use if explicitly provided
   const assignee_ids = req.body.assignee_ids || req.body.assignedTo;
+  const time = req.body.time || null;
 
   console.log('[POST /api/schedules] Initial parsed data:', {
-    project_id, title, description, start_date, end_date, type, status, priority, color, assigned_to, assignee_ids
+    project_id, title, description, start_date, end_date, type, status, priority, color, assigned_to, assignee_ids, time
   });
 
   // Store project name for reference
@@ -255,8 +256,8 @@ router.post('/', authenticateToken, (req, res) => {
     function insertSchedule(finalTitle) {
       db.run(
         `INSERT INTO schedules
-         (project_id, project_name, title, description, start_date, end_date, type, status, priority, color, assigned_to, created_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (project_id, project_name, title, description, start_date, end_date, type, status, priority, color, assigned_to, time, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           finalProjectId,
           projectNameForStorage,
@@ -269,6 +270,7 @@ router.post('/', authenticateToken, (req, res) => {
           priority,
           color,
           assigned_to,
+          time,
           req.user.id
         ],
     function(err) {
