@@ -147,25 +147,62 @@ class CoolSMSService {
             customerName = projectName.substring(2, 5) || '고객';
         }
 
-        // 항목명만 사용 (공정명 제외)
-        const itemName = data.itemName || '항목';
+        // 공정명과 항목명
+        const process = data.purpose || data.description || '';  // 공정명 (목공, 타일, 가구 등)
+        const itemName = data.itemName || '';  // 항목명
 
-        // 첫 줄: 프로젝트앞2글자/고객명/항목명
-        let message = `  ${projectPrefix}/${customerName}/${itemName}\n`;
+        // 계좌 정보와 금액 부분 (고정)
+        const bankInfo = `${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}`;
+        const amountPart = `${this.formatAmount(data.amount)}원`;
 
-        // 계좌 정보
-        message += `    ${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;
-
-        // 금액
-        message += `    ${this.formatAmount(data.amount)}원`;
-
-        // VAT 포함 또는 세금공제 표시
+        // VAT/세금공제 표시
+        let taxPart = '';
         if (data.includesVat) {
-            message += '(VAT)';
+            taxPart = '(VAT)';
         } else if (data.applyTaxDeduction) {
-            message += '(3.3%)';
+            taxPart = '(3.3%)';
         }
-        // 둘 다 체크 안 하면 금액만 표시
+
+        // 메시지 기본 구조 (공정명-항목명 제외한 부분)
+        const fixedPart = `    ${bankInfo}\n      ${amountPart}${taxPart}`;
+        const fixedBytes = Buffer.byteLength(`    /${customerName}/\n${fixedPart}`, 'utf8');
+        const projectBytes = Buffer.byteLength(projectPrefix, 'utf8');
+
+        // 95바이트 제한에서 고정 부분을 뺀 나머지 바이트
+        const availableBytes = 95 - fixedBytes - projectBytes;
+
+        // 공정명-항목명 조합
+        let contentPart = '';
+        if (process && itemName) {
+            const fullContent = `${process}-${itemName}`;
+            const fullBytes = Buffer.byteLength(fullContent, 'utf8');
+
+            if (fullBytes <= availableBytes) {
+                contentPart = fullContent;
+            } else {
+                // 초과 시 공정명만 사용
+                const processOnly = process;
+                const processBytes = Buffer.byteLength(processOnly, 'utf8');
+
+                if (processBytes <= availableBytes) {
+                    contentPart = processOnly;
+                } else {
+                    // 공정명도 길면 공정명만 축약
+                    contentPart = process.substring(0, 2);
+                }
+            }
+        } else if (process) {
+            contentPart = process;
+        } else if (itemName) {
+            contentPart = itemName;
+        } else {
+            contentPart = '결제';
+        }
+
+        // 최종 메시지 조합
+        let message = `    ${projectPrefix}/${customerName}/${contentPart}\n`;
+        message += `      ${bankInfo}\n`;
+        message += `      ${amountPart}${taxPart}`;
 
         return message;
     }
