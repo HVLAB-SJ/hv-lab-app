@@ -670,7 +670,7 @@ export const useDataStore = create<DataStore>()(
         spent: apiProject.actualCost || apiProject.spent || 0,
         // Backend returns 'manager' field with manager name(s)
         manager: apiProject.manager || '미지정',
-        team: apiProject.fieldManagers?.map(fm => typeof fm === 'object' ? fm.name : fm) || [],
+        team: [], // 팀 정보를 항상 빈 배열로 설정하여 자동 할당 방지
         description: apiProject.description || '',
         meetingNotes: (apiProject as { meetingNotes?: Array<{ id: string; content: string; date: string | Date }> }).meetingNotes?.map((note) => ({
           id: note.id,
@@ -713,7 +713,7 @@ export const useDataStore = create<DataStore>()(
         spent: apiProject.actualCost || apiProject.spent || 0,
         // Backend returns 'manager' field with manager name(s)
         manager: apiProject.manager || '미지정',
-        team: apiProject.fieldManagers?.map(fm => typeof fm === 'object' ? fm.name : fm) || [],
+        team: [], // 팀 정보를 항상 빈 배열로 설정하여 자동 할당 방지
         description: apiProject.description || '',
         meetingNotes: (apiProject as { meetingNotes?: Array<{ id: string; content: string; date: string | Date }> }).meetingNotes?.map((note) => ({
           id: note.id,
