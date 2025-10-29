@@ -535,6 +535,20 @@ export const useDataStore = create<DataStore>()(
         project: apiSchedule.project
       });
 
+      // 서버가 잘못 추가한 담당자를 필터링 - 원래 요청한 담당자만 유지
+      const requestedAttendees = schedule.attendees || [];
+      let finalAttendees = apiSchedule.assigneeNames || apiSchedule.assignedTo?.map(a => typeof a === 'object' ? a.name : a) || [];
+
+      // 만약 요청한 담당자가 있고, 서버에서 더 많은 담당자를 반환했다면 필터링
+      if (requestedAttendees.length > 0 && finalAttendees.length > requestedAttendees.length) {
+        console.log('⚠️ Server added extra attendees, filtering to match request:', {
+          requested: requestedAttendees,
+          serverReturned: finalAttendees
+        });
+        // 요청한 담당자만 유지
+        finalAttendees = requestedAttendees;
+      }
+
       const newSchedule: Schedule = {
         id: apiSchedule._id,
         title: apiSchedule.title,
@@ -543,7 +557,7 @@ export const useDataStore = create<DataStore>()(
         type: apiSchedule.type as Schedule['type'],
         project: typeof apiSchedule.project === 'object' ? apiSchedule.project.name : apiSchedule.project,
         location: apiSchedule.location,
-        attendees: apiSchedule.assigneeNames || apiSchedule.assignedTo?.map(a => typeof a === 'object' ? a.name : a) || [],
+        attendees: finalAttendees,
         description: apiSchedule.description,
         time: apiSchedule.time
       };
