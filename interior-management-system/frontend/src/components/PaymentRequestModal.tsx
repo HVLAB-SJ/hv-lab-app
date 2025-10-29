@@ -321,6 +321,12 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
   };
 
   const onSubmit = (data: Partial<PaymentRequestFormData>) => {
+    console.log('💰 Payment form onSubmit called');
+    console.log('💰 Form data:', data);
+    console.log('💰 Validation errors:', errors);
+    console.log('💰 Material amount:', materialAmount);
+    console.log('💰 Labor amount:', laborAmount);
+
     // Calculate total amount from material and labor
     const totalAmount = materialAmount + laborAmount;
 
@@ -340,6 +346,7 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
       status: payment ? payment.status : 'pending',
       requestDate: new Date()
     };
+    console.log('💰 Final form data:', formData);
     onSave(formData);
   };
 
@@ -906,6 +913,11 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
             {!payment && (
               <button
                 type="submit"
+                onClick={(e) => {
+                  console.log('💰 Submit button clicked!');
+                  console.log('💰 Button type:', e.currentTarget.type);
+                  console.log('💰 Form errors:', errors);
+                }}
                 className={`btn ${isUrgent ? 'bg-red-600 hover:bg-red-700 text-white' : 'btn-primary'}`}
               >
                 {isUrgent ? '긴급 요청하기' : '요청하기'}
