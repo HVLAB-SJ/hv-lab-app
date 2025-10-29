@@ -1206,8 +1206,12 @@ const Payments = () => {
                   </button>
                 )}
                 <button
-                  onClick={handleSave}
-                  className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+                  onClick={(e) => {
+                    console.log('💰 Payment button clicked!', e);
+                    handleSave();
+                  }}
+                  className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 touch-manipulation"
+                  style={{ minHeight: '44px', position: 'relative', zIndex: 10 }}
                 >
                   {editingPaymentId ? '수정완료' : '결제요청'}
                 </button>
