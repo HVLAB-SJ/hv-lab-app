@@ -403,6 +403,32 @@ const Schedule = () => {
     });
   }, [loadSchedulesFromAPI]);
 
+  // 더보기 버튼 강제 숨김
+  useEffect(() => {
+    const hideShowMore = () => {
+      const showMoreButtons = document.querySelectorAll('.rbc-show-more, .rbc-button-link');
+      showMoreButtons.forEach(button => {
+        (button as HTMLElement).style.display = 'none';
+      });
+    };
+
+    // 초기 실행
+    hideShowMore();
+
+    // DOM 변경 감지
+    const observer = new MutationObserver(hideShowMore);
+    const calendarContainer = document.querySelector('.rbc-calendar');
+
+    if (calendarContainer) {
+      observer.observe(calendarContainer, {
+        childList: true,
+        subtree: true
+      });
+    }
+
+    return () => observer.disconnect();
+  }, [filteredEvents, view, date]);
+
   // 프로젝트별 색상 매핑
   const getProjectColor = (projectName: string) => {
     const index = projects.findIndex(p => p.name === projectName);
