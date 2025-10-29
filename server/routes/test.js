@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const solapiService = require('../../utils/solapiService');
+const coolsmsService = require('../../utils/coolsmsService');
 const { authenticateToken, isManager } = require('../middleware/auth');
 const { db } = require('../config/database');
 
@@ -17,35 +17,35 @@ router.get('/health', (req, res) => {
 });
 
 /**
- * SOLAPI 템플릿 확인 엔드포인트
+ * CoolSMS 설정 확인 엔드포인트
  * GET /api/test/template
  */
 router.get('/template', authenticateToken, isManager, (req, res) => {
-    const templateInfo = {
-        templateId: process.env.SOLAPI_TEMPLATE_ID || 'KA01TP2510102016192182Rh5igl5PtG',
-        pfId: process.env.SOLAPI_PFID || 'KA01PF251010200623410stJ4ZpKzQLv',
-        expectedVariables: ['프로젝트명', '금액', '예금주', '은행명', '계좌번호'],
-        templateExample: `[HV LAB 정산]
-결제 요청이 도착했습니다.
+    const smsInfo = {
+        service: 'CoolSMS',
+        fromNumber: process.env.COOLSMS_FROM_NUMBER || '01074088864',
+        adminPhones: process.env.ADMIN_PHONE_NUMBERS ? process.env.ADMIN_PHONE_NUMBERS.split(',') : [],
+        messageExample: `[HV LAB 결제요청]
+프로젝트: 테스트 프로젝트
+금액: 100,000원
+항목: 테스트 자재
 
-프로젝트: #{프로젝트명}
-금액: #{금액}원
-예금주: #{예금주}
-은행: #{은행명}
-계좌번호: #{계좌번호}`,
-        note: '템플릿 변수는 SOLAPI 관리자 페이지에서 확인하세요'
+KB국민은행
+123-456-789012
+예금주: 홍길동`,
+        configured: !!process.env.COOLSMS_API_KEY && !!process.env.COOLSMS_API_SECRET
     };
 
-    res.json(templateInfo);
+    res.json(smsInfo);
 });
 
 /**
- * SOLAPI 알림톡 테스트 엔드포인트
+ * CoolSMS 문자 테스트 엔드포인트
  * POST /api/test/alimtalk
  */
 router.post('/alimtalk', authenticateToken, isManager, async (req, res) => {
     try {
-        console.log('📧 알림톡 테스트 시작...');
+        console.log('📧 SMS 테스트 시작...');
 
         // 테스트 데이터
         const testData = {
@@ -58,42 +58,37 @@ router.post('/alimtalk', authenticateToken, isManager, async (req, res) => {
             itemName: '테스트 항목'
         };
 
-        // 긴급 여부
-        const isUrgent = req.body.urgent || false;
+        // SMS 발송
+        const results = await coolsmsService.sendPaymentNotification(testData);
 
-        // 알림톡 발송
-        const results = await solapiService.sendPaymentNotification(testData, isUrgent);
-
-        console.log('📧 알림톡 테스트 결과:', results);
+        console.log('📧 SMS 테스트 결과:', results);
 
         res.json({
             success: true,
-            message: `테스트 알림톡이 ${isUrgent ? '긴급으로' : '일반으로'} 발송되었습니다`,
+            message: '테스트 SMS가 발송되었습니다',
             results: results,
             testData: testData
         });
 
     } catch (error) {
-        console.error('❌ 알림톡 테스트 실패:', error);
+        console.error('❌ SMS 테스트 실패:', error);
         res.status(500).json({
             success: false,
-            error: '알림톡 테스트 실패',
+            error: 'SMS 테스트 실패',
             details: error.message
         });
     }
 });
 
 /**
- * SOLAPI 설정 확인 엔드포인트
+ * CoolSMS 설정 확인 엔드포인트
  * GET /api/test/config
  */
 router.get('/config', authenticateToken, isManager, (req, res) => {
     const config = {
-        apiKeySet: !!process.env.SOLAPI_API_KEY,
-        apiSecretSet: !!process.env.SOLAPI_API_SECRET,
-        pfIdSet: !!process.env.SOLAPI_PFID,
-        templateIdSet: !!process.env.SOLAPI_TEMPLATE_ID,
-        fromNumberSet: !!process.env.SOLAPI_FROM_NUMBER,
+        apiKeySet: !!process.env.COOLSMS_API_KEY,
+        apiSecretSet: !!process.env.COOLSMS_API_SECRET,
+        fromNumberSet: !!process.env.COOLSMS_FROM_NUMBER,
         adminPhonesSet: !!process.env.ADMIN_PHONE_NUMBERS,
         adminPhoneCount: process.env.ADMIN_PHONE_NUMBERS ?
             process.env.ADMIN_PHONE_NUMBERS.split(',').length : 0
@@ -105,7 +100,7 @@ router.get('/config', authenticateToken, isManager, (req, res) => {
         configured: allSet,
         details: config,
         message: allSet ?
-            '✅ SOLAPI가 올바르게 설정되었습니다' :
+            '✅ CoolSMS가 올바르게 설정되었습니다' :
             '⚠️ 일부 환경변수가 설정되지 않았습니다'
     });
 });

@@ -563,86 +563,15 @@ async function sendPaymentNotification(data) {
 async function notifyApproval(requestId, status) {
   console.log(`결제 요청 #${requestId}이 ${status === 'approved' ? '승인' : '거절'}되었습니다.`);
 
-  try {
-    // 결제 요청 정보 조회
-    const request = await new Promise((resolve, reject) => {
-      db.get(
-        `SELECT pr.*, u.username as requester_name, a.username as approver_name
-         FROM payment_requests pr
-         LEFT JOIN users u ON pr.user_id = u.id
-         LEFT JOIN users a ON pr.approved_by = a.id
-         WHERE pr.id = ?`,
-        [requestId],
-        (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        }
-      );
-    });
-
-    if (!request) return;
-
-    // 승인 메시지 생성
-    if (status === 'approved') {
-      const message = kakaoMessage.createPaymentApprovalMessage({
-        requesterName: request.requester_name,
-        amount: request.amount,
-        approverName: request.approver_name,
-        approvalTime: new Date()
-      });
-
-      // 요청자에게 메시지 발송 (요청자의 토큰이 있는 경우)
-      // 실제 서비스에서는 요청자의 user_id로 토큰을 조회하여 발송
-      if (kakaoMessage.tokenStore.has(`user_${request.user_id}`)) {
-        await kakaoMessage.sendToMe(
-          kakaoMessage.tokenStore.get(`user_${request.user_id}`).accessToken,
-          message
-        );
-      }
-    }
-  } catch (error) {
-    console.error('승인 알림 발송 실패:', error);
-  }
+  // 현재는 카카오톡 알림 대신 콘솔 로그만 출력
+  // 추후 필요시 SMS 또는 이메일 알림 추가 가능
 }
 
 async function notifyCompletion(requestId) {
   console.log(`결제 요청 #${requestId}의 결제가 완료되었습니다.`);
 
-  try {
-    // 결제 요청 정보 조회
-    const request = await new Promise((resolve, reject) => {
-      db.get(
-        `SELECT pr.*, u.username as requester_name
-         FROM payment_requests pr
-         LEFT JOIN users u ON pr.user_id = u.id
-         WHERE pr.id = ?`,
-        [requestId],
-        (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        }
-      );
-    });
-
-    if (!request) return;
-
-    // 완료 메시지 생성
-    const message = kakaoMessage.createPaymentCompleteMessage({
-      requesterName: request.requester_name,
-      amount: request.amount,
-      completeTime: new Date()
-    });
-
-    // 요청자에게 메시지 발송
-    if (kakaoMessage.tokenStore.has(`user_${request.user_id}`)) {
-      await kakaoMessage.sendToMe(
-        kakaoMessage.tokenStore.get(`user_${request.user_id}`).accessToken,
-        message
-      );
-    }
-  } catch (error) {
-    console.error('완료 알림 발송 실패:', error);
-  }
+  // 현재는 카카오톡 알림 대신 콘솔 로그만 출력
+  // 추후 필요시 SMS 또는 이메일 알림 추가 가능
 }
 
 module.exports = router;
