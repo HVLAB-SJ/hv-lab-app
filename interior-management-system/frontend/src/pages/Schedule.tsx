@@ -406,7 +406,7 @@ const Schedule = () => {
   // 프로젝트별 색상 매핑
   const getProjectColor = (projectName: string) => {
     const index = projects.findIndex(p => p.name === projectName);
-    return index >= 0 ? projectColors[index % projectColors.length] : '#e2dae5';
+    return index >= 0 ? projectColors[index % projectColors.length] : '#e8e2ea';
   };
 
   // Format time to Korean format (14:30 -> 오후 2시 30분)
@@ -1059,7 +1059,7 @@ const Schedule = () => {
         textColor = '#1f2937';
       } else if (!event.color) {
         // 프로젝트가 없고 내 이름이 포함되지 않은 일정은 연한 보라색
-        bgColor = '#e2dae5';
+        bgColor = '#e8e2ea';
       }
     }
 
@@ -1645,7 +1645,7 @@ const Schedule = () => {
                             style={{
                               backgroundColor: shouldHighlight
                                 ? '#FEF3C7'
-                                : (event.color || '#e2dae5'),
+                                : (event.color || '#e8e2ea'),
                               minHeight: '28px'
                             }}
                           />
