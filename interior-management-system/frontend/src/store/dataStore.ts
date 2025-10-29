@@ -472,18 +472,33 @@ export const useDataStore = create<DataStore>()(
   loadSchedulesFromAPI: async () => {
     try {
       const apiSchedules = await scheduleService.getAllSchedules();
-      const schedules: Schedule[] = apiSchedules.map((s: ScheduleResponse) => ({
-        id: s._id,
-        title: s.title,
-        start: new Date(s.startDate),
-        end: new Date(s.endDate),
-        type: s.type as Schedule['type'],
-        project: typeof s.project === 'object' ? s.project.name : s.project,
-        location: s.location,
-        attendees: s.assigneeNames || s.assignedTo?.map(a => typeof a === 'object' ? a.name : a) || [],
-        description: s.description,
-        time: s.time
-      }));
+      console.log('🟣 LOAD SCHEDULES - Raw API response sample:', apiSchedules[0]);
+      const schedules: Schedule[] = apiSchedules.map((s: ScheduleResponse) => {
+        console.log('🟣 Processing schedule:', {
+          id: s._id,
+          title: s.title,
+          assigneeNames: s.assigneeNames,
+          assignedTo: s.assignedTo,
+          assignedToType: typeof s.assignedTo,
+          assignedToLength: Array.isArray(s.assignedTo) ? s.assignedTo.length : 'not array'
+        });
+
+        const attendees = s.assigneeNames || s.assignedTo?.map(a => typeof a === 'object' ? a.name : a) || [];
+        console.log('🟣 Final attendees:', attendees);
+
+        return {
+          id: s._id,
+          title: s.title,
+          start: new Date(s.startDate),
+          end: new Date(s.endDate),
+          type: s.type as Schedule['type'],
+          project: typeof s.project === 'object' ? s.project.name : s.project,
+          location: s.location,
+          attendees,
+          description: s.description,
+          time: s.time
+        };
+      });
       set({ schedules });
     } catch (error) {
       console.error('Failed to load schedules from API:', error);
