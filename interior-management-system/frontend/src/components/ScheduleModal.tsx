@@ -72,6 +72,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
   // 모달이 처음 마운트될 때 한 번만 초기화 (시간 상태는 제외)
   useEffect(() => {
     // 초기 상태 설정 (시간 관련 상태는 사용자가 설정할 때까지 유지)
+    console.log('🟡 Modal mount - initializing states');
     setSelectedMembers([]);
     setCustomProjectName('');
     setCustomMember('');
@@ -184,6 +185,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
         description: ''
       });
 
+      console.log('🟡 New schedule - resetting selectedMembers to empty array');
       setSelectedMembers([]);
       setCustomProjectName('');
       // 시간 상태는 초기화하지 않음 - 사용자가 설정한 값 유지
@@ -219,11 +221,13 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   const toggleMember = (member: string) => {
     console.log('🔵 toggleMember called with:', member);
+    console.log('🔵 Current selectedMembers before toggle:', selectedMembers);
     setSelectedMembers(prev => {
+      console.log('🔵 Previous members in setState:', prev);
       const newMembers = prev.includes(member)
         ? prev.filter(m => m !== member)
         : [...prev, member];
-      console.log('🔵 Updated members:', newMembers);
+      console.log('🔵 Updated members after toggle:', newMembers);
       return newMembers;
     });
   };
@@ -344,6 +348,8 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
       throw error;
     }
   };
+
+  console.log('🔶 Rendering ScheduleModal with selectedMembers:', selectedMembers);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-3 md:p-4">
