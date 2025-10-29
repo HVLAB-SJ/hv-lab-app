@@ -768,45 +768,29 @@ const Schedule = () => {
       }
     });
 
-    // 날짜별로 그룹화하여 같은 날짜 내에서 사용자 일정을 상단에 배치
-    return finalEvents.sort((a, b) => {
-      const aDate = a.start.toISOString().split('T')[0];
-      const bDate = b.start.toISOString().split('T')[0];
-
-      // 날짜가 다르면 날짜순 정렬
-      if (aDate !== bDate) {
-        return a.start.getTime() - b.start.getTime();
-      }
-
-      // 같은 날짜인 경우, 사용자 포함 여부로 정렬
-      const aHasHVLab = a.assignedTo && a.assignedTo.includes('HV LAB');
-      const bHasHVLab = b.assignedTo && b.assignedTo.includes('HV LAB');
-      const aHasFieldTeam = a.assignedTo && a.assignedTo.includes('현장팀') &&
+    // 사용자 일정의 시작 시간을 조정하여 먼저 표시되도록 함
+    return finalEvents.map(event => {
+      const hasHVLab = event.assignedTo && event.assignedTo.includes('HV LAB');
+      const hasFieldTeam = event.assignedTo && event.assignedTo.includes('현장팀') &&
         userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
-      const bHasFieldTeam = b.assignedTo && b.assignedTo.includes('현장팀') &&
-        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
-      const aHasDesignTeam = a.assignedTo && a.assignedTo.includes('디자인팀') &&
+      const hasDesignTeam = event.assignedTo && event.assignedTo.includes('디자인팀') &&
         userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
-      const bHasDesignTeam = b.assignedTo && b.assignedTo.includes('디자인팀') &&
-        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
-      const aHasUser = a.assignedTo && (
-        a.assignedTo.includes(user?.name || '') ||
-        (userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname)) ||
-        aHasHVLab || aHasFieldTeam || aHasDesignTeam
-      );
-      const bHasUser = b.assignedTo && (
-        b.assignedTo.includes(user?.name || '') ||
-        (userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname)) ||
-        bHasHVLab || bHasFieldTeam || bHasDesignTeam
+      const hasUser = event.assignedTo && (
+        event.assignedTo.includes(user?.name || '') ||
+        (userNameWithoutSurname && event.assignedTo.includes(userNameWithoutSurname)) ||
+        hasHVLab || hasFieldTeam || hasDesignTeam
       );
 
-      // 둘 다 사용자 포함 또는 둘 다 미포함인 경우 시간순 정렬
-      if (aHasUser === bHasUser) {
-        return a.start.getTime() - b.start.getTime();
+      // 사용자 일정은 시작 시간을 6시간 앞당김
+      if (hasUser) {
+        const adjustedStart = new Date(event.start.getTime() - 21600000);
+        console.log(`📌 User event adjusted in groupEventsByProjectAndDate: ${event.title}, hasUser: ${hasUser}, assignedTo:`, event.assignedTo);
+        return { ...event, start: adjustedStart };
       }
-
-      // 사용자 포함된 것을 우선
-      return aHasUser ? -1 : 1;
+      return event;
+    }).sort((a, b) => {
+      // 조정된 시간으로 정렬 (사용자 일정은 자동으로 먼저 나옴)
+      return a.start.getTime() - b.start.getTime();
     });
   };
 
@@ -825,35 +809,10 @@ const Schedule = () => {
   );
 
   // 필터링된 이벤트를 먼저 정의 (useEffect보다 먼저 와야 함)
+  // 이미 groupEventsByProjectAndDate에서 사용자 일정의 시간을 조정했으므로 여기서는 필터링만
   const filteredEvents = (filterProject === 'all'
     ? events
-    : events.filter(e => e.projectName === filterProject))
-    .map(event => {
-      // 사용자 할당 여부 확인
-      const hasHVLab = event.assignedTo && event.assignedTo.includes('HV LAB');
-      const hasFieldTeam = event.assignedTo && event.assignedTo.includes('현장팀') &&
-        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
-      const hasDesignTeam = event.assignedTo && event.assignedTo.includes('디자인팀') &&
-        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
-      const hasUser = event.assignedTo && (
-        event.assignedTo.includes(user?.name || '') ||
-        (userNameWithoutSurname && event.assignedTo.includes(userNameWithoutSurname)) ||
-        hasHVLab || hasFieldTeam || hasDesignTeam
-      );
-
-      // 사용자 일정은 시작 시간을 크게 앞당겨서 먼저 표시되도록 함
-      // react-big-calendar의 내부 정렬에서도 사용자 일정이 먼저 나오도록 6시간(21600초) 앞당김
-      if (hasUser) {
-        const adjustedStart = new Date(event.start.getTime() - 21600000); // 6시간 빼기
-        console.log(`📌 User event adjusted: ${event.title}, original: ${event.start}, adjusted: ${adjustedStart}, hasUser: ${hasUser}, assignedTo:`, event.assignedTo);
-        return { ...event, start: adjustedStart };
-      }
-      return event;
-    })
-    .sort((a, b) => {
-      // 날짜와 조정된 시간으로 정렬 (사용자 일정은 이미 시간이 6시간 빨라짐)
-      return a.start.getTime() - b.start.getTime();
-    });
+    : events.filter(e => e.projectName === filterProject));
 
   // 더보기 버튼과 팝업 오버레이 강제 숨김
   useEffect(() => {
