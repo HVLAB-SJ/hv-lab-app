@@ -90,15 +90,9 @@ router.get('/', authenticateToken, (req, res) => {
         projectData = '';
       }
 
-      // Get assignee names from schedule_assignees table
+      // Get assignee names from schedule_assignees table only
+      // Do NOT fall back to assigned_to column to prevent unwanted auto-assignment
       let allAssigneeNames = assignees.map(u => u.name || u.username);
-
-      // Only use assigned_to column if no assignees were found in schedule_assignees table
-      // This prevents auto-adding team names when specific users are selected
-      if (allAssigneeNames.length === 0 && schedule.assigned_to) {
-        const assignedToNames = schedule.assigned_to.split(',').map(name => name.trim()).filter(name => name);
-        allAssigneeNames = assignedToNames;
-      }
 
       return {
         _id: schedule.id.toString(),
