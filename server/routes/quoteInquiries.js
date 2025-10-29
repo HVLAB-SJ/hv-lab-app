@@ -3,6 +3,7 @@ const router = express.Router();
 const { db } = require('../config/database');
 const { authenticateToken, isManager } = require('../middleware/auth');
 const { sanitizeDatesArray } = require('../utils/dateUtils');
+const emailService = require('../../utils/emailService');
 
 // 모든 견적문의 조회 (manager만 가능)
 router.get('/', authenticateToken, isManager, (req, res) => {
@@ -80,6 +81,26 @@ router.post('/submit', (req, res) => {
       });
     }
   );
+});
+
+// 이메일 수동 체크 (관리자만 가능)
+router.post('/check-email', authenticateToken, isManager, async (req, res) => {
+  try {
+    console.log('📧 수동 이메일 체크 시작...');
+    const emails = await emailService.checkNewQuoteInquiries();
+    res.json({
+      success: true,
+      message: `${emails.length}개의 견적문의를 가져왔습니다.`,
+      count: emails.length
+    });
+  } catch (error) {
+    console.error('❌ 이메일 체크 실패:', error);
+    res.status(500).json({
+      success: false,
+      error: '이메일 체크 실패',
+      details: error.message
+    });
+  }
 });
 
 module.exports = router;
