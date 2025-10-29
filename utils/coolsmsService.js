@@ -138,7 +138,7 @@ class CoolSMSService {
         const projectPrefix = projectName.substring(0, 2);
 
         // 공정명과 항목명
-        const process = data.purpose || data.description || '';  // 공정명 (목공, 타일, 가구 등)
+        const process = data.purpose || '';  // 공정명 (목공, 타일, 가구 등) - purpose 필드 사용
         const itemName = data.itemName ? data.itemName.replace(/\s+/g, '') : '';  // 항목명 (공백 제거)
 
         // 계좌 정보와 금액 부분 (고정)

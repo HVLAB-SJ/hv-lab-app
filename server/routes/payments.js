@@ -107,6 +107,12 @@ router.post('/', authenticateToken, async (req, res) => {
   // process 필드가 있으면 description으로 사용
   const finalDescription = process || description || '';
 
+  console.log('[POST /api/payments] 필드 값 확인:');
+  console.log('  - process:', process);
+  console.log('  - description:', description);
+  console.log('  - vendor_name:', vendor_name);
+  console.log('  - itemName:', itemName);
+
   // Convert project name to project_id if necessary
   let finalProjectId = project_id;
 
