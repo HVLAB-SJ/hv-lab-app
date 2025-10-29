@@ -159,10 +159,13 @@ class CoolSMSService {
         // 금액
         message += `    ${this.formatAmount(data.amount)}원`;
 
-        // VAT 포함 여부만 표시 (간결하게)
+        // VAT 포함 또는 세금공제 표시
         if (data.includesVat) {
             message += '(VAT)';
+        } else if (data.applyTaxDeduction) {
+            message += '(3.3%)';
         }
+        // 둘 다 체크 안 하면 금액만 표시
 
         return message;
     }
