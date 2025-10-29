@@ -137,19 +137,9 @@ class CoolSMSService {
         const projectName = data.projectName || '프로젝트';
         const projectPrefix = projectName.substring(0, 2);
 
-        // 고객명 추출 (프로젝트명에서 "_" 뒤의 이름 부분)
-        let customerName = '';
-        if (projectName.includes('_')) {
-            const namePart = projectName.split('_')[1];
-            // "님" 제거
-            customerName = namePart.replace('님', '');
-        } else {
-            customerName = projectName.substring(2, 5) || '고객';
-        }
-
         // 공정명과 항목명
         const process = data.purpose || data.description || '';  // 공정명 (목공, 타일, 가구 등)
-        const itemName = data.itemName || '';  // 항목명
+        const itemName = data.itemName ? data.itemName.replace(/\s+/g, '') : '';  // 항목명 (공백 제거)
 
         // 계좌 정보와 금액 부분 (고정)
         const bankInfo = `${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}`;
@@ -163,46 +153,43 @@ class CoolSMSService {
             taxPart = '(3.3%)';
         }
 
-        // 메시지 기본 구조 (공정명-항목명 제외한 부분)
-        const fixedPart = `    ${bankInfo}\n      ${amountPart}${taxPart}`;
-        const fixedBytes = Buffer.byteLength(`    /${customerName}/\n${fixedPart}`, 'utf8');
+        // 메시지 기본 구조 (공정/항목 제외한 부분)
+        const fixedPart = `\n${bankInfo}\n${amountPart}${taxPart}`;
+        const fixedBytes = Buffer.byteLength(` //\n${fixedPart}`, 'utf8');
         const projectBytes = Buffer.byteLength(projectPrefix, 'utf8');
 
         // 95바이트 제한에서 고정 부분을 뺀 나머지 바이트
         const availableBytes = 95 - fixedBytes - projectBytes;
 
-        // 공정명-항목명 조합
-        let contentPart = '';
-        if (process && itemName) {
-            const fullContent = `${process}-${itemName}`;
-            const fullBytes = Buffer.byteLength(fullContent, 'utf8');
+        // 공정/항목명 조합
+        let processContent = process || '공정';
+        let itemContent = itemName || '항목';
 
-            if (fullBytes <= availableBytes) {
-                contentPart = fullContent;
-            } else {
-                // 초과 시 공정명만 사용
-                const processOnly = process;
-                const processBytes = Buffer.byteLength(processOnly, 'utf8');
+        // 전체 내용 생성 및 바이트 체크
+        let fullContent = `/${processContent}/${itemContent}`;
+        let fullBytes = Buffer.byteLength(fullContent, 'utf8');
 
-                if (processBytes <= availableBytes) {
-                    contentPart = processOnly;
-                } else {
-                    // 공정명도 길면 공정명만 축약
-                    contentPart = process.substring(0, 2);
-                }
+        // 95바이트 초과 시 항목명 축약
+        if (fullBytes > availableBytes) {
+            // 항목명을 점진적으로 줄임
+            let maxItemLength = itemContent.length;
+            while (fullBytes > availableBytes && maxItemLength > 0) {
+                maxItemLength--;
+                itemContent = itemName.substring(0, maxItemLength);
+                fullContent = `/${processContent}/${itemContent}`;
+                fullBytes = Buffer.byteLength(fullContent, 'utf8');
             }
-        } else if (process) {
-            contentPart = process;
-        } else if (itemName) {
-            contentPart = itemName;
-        } else {
-            contentPart = '결제';
+
+            // 그래도 초과하면 공정명만
+            if (fullBytes > availableBytes) {
+                fullContent = `/${processContent}`;
+            }
         }
 
         // 최종 메시지 조합
-        let message = `    ${projectPrefix}/${customerName}/${contentPart}\n`;
-        message += `      ${bankInfo}\n`;
-        message += `      ${amountPart}${taxPart}`;
+        let message = ` ${projectPrefix}${fullContent}\n`;
+        message += `${bankInfo}\n`;
+        message += `${amountPart}${taxPart}`;
 
         return message;
     }
