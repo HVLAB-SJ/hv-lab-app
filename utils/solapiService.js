@@ -45,12 +45,10 @@ class SolapiNotificationService {
     /**
      * 알림톡 발송 (결제 요청)
      * @param {Object} data - 결제 요청 데이터
-     * @param {boolean} isUrgent - 긴급 여부
      */
-    async sendPaymentNotification(data, isUrgent = false) {
+    async sendPaymentNotification(data) {
         console.log('📱 [SOLAPI] sendPaymentNotification 호출됨');
         console.log('📱 [SOLAPI] 데이터:', JSON.stringify(data, null, 2));
-        console.log('📱 [SOLAPI] 긴급여부:', isUrgent);
         console.log('📱 [SOLAPI] API Key 설정:', !!this.apiKey);
         console.log('📱 [SOLAPI] API Secret 설정:', !!this.apiSecret);
         console.log('📱 [SOLAPI] 발신번호:', this.from);
@@ -72,20 +70,18 @@ class SolapiNotificationService {
         const results = [];
 
         // 템플릿 변수 설정 - SOLAPI 템플릿에 정의된 변수명과 일치해야 함
-        // 긴급일 경우 프로젝트명 앞에 (긴급) 추가
         const projectName = String(data.projectName || '프로젝트');
-        const projectNameWithUrgency = isUrgent ? `(긴급)${projectName}` : projectName;
 
         const templateVariables = {
             // 한글 변수명
-            '프로젝트명': projectNameWithUrgency,
+            '프로젝트명': projectName,
             '내용': String(data.itemName || data.purpose || '결제 요청'),
             '금액': String(this.formatAmount(data.amount) || '0'),
             '예금주': String(data.accountHolder || '예금주'),
             '은행명': String(data.bankName || '은행'),
             '계좌번호': String(data.accountNumber || '계좌번호'),
             // 영문 변수명 (템플릿이 영문일 경우)
-            'projectName': projectNameWithUrgency,
+            'projectName': projectName,
             'content': String(data.itemName || data.purpose || '결제 요청'),
             'amount': String(this.formatAmount(data.amount) || '0'),
             'accountHolder': String(data.accountHolder || '예금주'),
@@ -145,16 +141,6 @@ class SolapiNotificationService {
                     response: response
                 });
 
-                // 긴급 요청인 경우 SMS도 추가 발송
-                if (isUrgent) {
-                    await this.sendUrgentSMS(phoneNumber, data);
-                    results.push({
-                        phone: phoneNumber,
-                        type: 'sms',
-                        success: true
-                    });
-                }
-
             } catch (error) {
                 console.error(`❌ [SOLAPI] 알림톡 발송 실패 (${phoneNumber}):`, error);
                 console.error(`❌ [SOLAPI] 오류 상세:`, {
@@ -179,7 +165,7 @@ class SolapiNotificationService {
                 // 알림톡 실패 시 SMS로 대체 발송 시도
                 try {
                     console.log(`📱 [SOLAPI] SMS로 대체 발송 시도...`);
-                    await this.sendFallbackSMS(phoneNumber, data, isUrgent);
+                    await this.sendFallbackSMS(phoneNumber, data);
                     results.push({
                         phone: phoneNumber,
                         type: 'sms-fallback',
@@ -200,39 +186,14 @@ class SolapiNotificationService {
         return results;
     }
 
-    /**
-     * 긴급 SMS 발송
-     * @param {string} phoneNumber - 수신자 전화번호
-     * @param {Object} data - 결제 요청 데이터
-     */
-    async sendUrgentSMS(phoneNumber, data) {
-        const message = this.createUrgentSMSMessage(data);
-
-        const smsOptions = {
-            to: phoneNumber,
-            from: this.from,
-            text: message,
-            type: 'SMS'
-        };
-
-        try {
-            const response = await this.messageService.send([smsOptions]);
-            console.log(`📱 긴급 SMS 발송 성공: ${phoneNumber}`);
-            return response;
-        } catch (error) {
-            console.error(`❌ 긴급 SMS 발송 실패: ${error.message}`);
-            throw error;
-        }
-    }
 
     /**
      * 알림톡 실패 시 대체 SMS 발송
      * @param {string} phoneNumber - 수신자 전화번호
      * @param {Object} data - 결제 요청 데이터
-     * @param {boolean} isUrgent - 긴급 여부
      */
-    async sendFallbackSMS(phoneNumber, data, isUrgent) {
-        const message = this.createSMSMessage(data, isUrgent);
+    async sendFallbackSMS(phoneNumber, data) {
+        const message = this.createSMSMessage(data);
 
         const smsOptions = {
             to: phoneNumber,
@@ -254,10 +215,8 @@ class SolapiNotificationService {
     /**
      * SMS 메시지 생성
      * @param {Object} data - 결제 요청 데이터
-     * @param {boolean} isUrgent - 긴급 여부
      */
-    createSMSMessage(data, isUrgent) {
-        const urgencyPrefix = isUrgent ? '[긴급] ' : '';
+    createSMSMessage(data) {
         const projectName = data.projectName || '프로젝트';
         const content = data.itemName || data.purpose || '결제 요청';
         const bankName = data.bankName || '';
@@ -266,7 +225,7 @@ class SolapiNotificationService {
         const amount = this.formatAmount(data.amount) || '0';
 
         // 요청하신 형식대로 메시지 생성
-        let message = `${urgencyPrefix}[${projectName}]\n`;
+        let message = `[${projectName}]\n`;
         message += `  ${content}\n`;
         message += `  ${bankName} ${accountNumber} ${accountHolder}\n`;
         message += `  ${amount}원`;
@@ -274,26 +233,6 @@ class SolapiNotificationService {
         return message;
     }
 
-    /**
-     * 긴급 SMS 메시지 생성 (더 간결하게)
-     * @param {Object} data - 결제 요청 데이터
-     */
-    createUrgentSMSMessage(data) {
-        const projectName = data.projectName || '프로젝트';
-        const content = data.itemName || data.purpose || '결제 요청';
-        const bankName = data.bankName || '';
-        const accountNumber = data.accountNumber || '';
-        const accountHolder = data.accountHolder || '';
-        const amount = this.formatAmount(data.amount) || '0';
-
-        // 긴급 메시지도 동일한 형식 유지
-        let message = `[긴급] [${projectName}]\n`;
-        message += `  ${content}\n`;
-        message += `  ${bankName} ${accountNumber} ${accountHolder}\n`;
-        message += `  ${amount}원`;
-
-        return message;
-    }
 
     /**
      * 결제 완료 알림톡 발송

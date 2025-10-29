@@ -178,9 +178,6 @@ router.post('/', authenticateToken, async (req, res) => {
         return res.status(500).json({ error: '결제 요청 생성 실패', details: err.message });
       }
 
-      // 긴급 여부 확인 (프론트엔드에서 urgency 필드 또는 includesVAT로 판단)
-      const isUrgent = req.body.urgency === 'urgent' || req.body.urgency === 'emergency';
-
       // 알림 전송 (관리자에게) - 모든 결제요청에 대해 SMS 발송
       sendPaymentNotification({
         id: this.lastID,
@@ -193,7 +190,7 @@ router.post('/', authenticateToken, async (req, res) => {
         account_number: account_number,
         account_holder: account_holder,
         item_name: itemName || ''
-      }, true); // 항상 SMS 발송하도록 true로 설정
+      });
 
       res.status(201).json({
         id: this.lastID,
@@ -515,8 +512,8 @@ router.get('/stats/summary', authenticateToken, (req, res) => {
 });
 
 // 알림 전송 함수들 - SOLAPI 알림톡 연동
-async function sendPaymentNotification(data, isUrgent = false) {
-  console.log(`새 결제 요청: ${data.requester}님이 ${data.amount.toLocaleString()}원 요청${isUrgent ? ' [긴급]' : ''}`);
+async function sendPaymentNotification(data) {
+  console.log(`새 결제 요청: ${data.requester}님이 ${data.amount.toLocaleString()}원 요청`);
 
   try {
     // 프로젝트 정보 조회
@@ -553,7 +550,7 @@ async function sendPaymentNotification(data, isUrgent = false) {
 
     // SOLAPI로 알림톡 발송 시도
     try {
-      const results = await solapiService.sendPaymentNotification(notificationData, isUrgent);
+      const results = await solapiService.sendPaymentNotification(notificationData);
       console.log('✅ SOLAPI 알림 발송 결과:', results);
 
       // SOLAPI가 제대로 초기화되지 않았거나 실패한 경우 CoolSMS로 대체
