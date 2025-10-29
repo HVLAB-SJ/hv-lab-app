@@ -257,15 +257,19 @@ class SolapiNotificationService {
      * @param {boolean} isUrgent - 긴급 여부
      */
     createSMSMessage(data, isUrgent) {
-        let message = isUrgent ? '[긴급] ' : '';
-        message += `HV LAB 결제요청\n`;
-        message += `${data.projectName}\n`;
-        message += `${this.formatAmount(data.amount)}원\n`;
+        const urgencyPrefix = isUrgent ? '[긴급] ' : '';
+        const projectName = data.projectName || '프로젝트';
+        const content = data.itemName || data.purpose || '결제 요청';
+        const bankName = data.bankName || '';
+        const accountNumber = data.accountNumber || '';
+        const accountHolder = data.accountHolder || '';
+        const amount = this.formatAmount(data.amount) || '0';
 
-        if (data.bankName && data.accountNumber) {
-            message += `${data.bankName} ${data.accountNumber}\n`;
-            message += `예금주: ${data.accountHolder}`;
-        }
+        // 요청하신 형식대로 메시지 생성
+        let message = `${urgencyPrefix}[${projectName}]\n`;
+        message += `  ${content}\n`;
+        message += `  ${bankName} ${accountNumber} ${accountHolder}\n`;
+        message += `  ${amount}원`;
 
         return message;
     }
@@ -275,7 +279,20 @@ class SolapiNotificationService {
      * @param {Object} data - 결제 요청 데이터
      */
     createUrgentSMSMessage(data) {
-        return `[HV LAB 긴급]\n${data.projectName}\n${this.formatAmount(data.amount)}원 결제요청\n즉시 확인 요망`;
+        const projectName = data.projectName || '프로젝트';
+        const content = data.itemName || data.purpose || '결제 요청';
+        const bankName = data.bankName || '';
+        const accountNumber = data.accountNumber || '';
+        const accountHolder = data.accountHolder || '';
+        const amount = this.formatAmount(data.amount) || '0';
+
+        // 긴급 메시지도 동일한 형식 유지
+        let message = `[긴급] [${projectName}]\n`;
+        message += `  ${content}\n`;
+        message += `  ${bankName} ${accountNumber} ${accountHolder}\n`;
+        message += `  ${amount}원`;
+
+        return message;
     }
 
     /**
