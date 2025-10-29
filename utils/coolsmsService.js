@@ -133,11 +133,8 @@ class CoolSMSService {
      * @param {Object} data - 결제 요청 데이터
      */
     createPaymentMessage(data) {
-        // "결제요청"으로 시작 (제목 중복 방지)
-        let message = '결제요청\n\n';
-
-        // 프로젝트명
-        message += `프로젝트: ${data.projectName || '미지정'}\n`;
+        // 메시지 시작 - Web발신 다음에 바로 이 내용이 표시됨
+        let message = `[${data.projectName || '프로젝트'}]\n`;
 
         // 공정 및 항목
         const process = data.purpose || data.description || '';  // 공정명
@@ -152,16 +149,16 @@ class CoolSMSService {
         } else if (itemName) {
             contentLine = itemName;
         } else {
-            contentLine = '내용 미지정';  // 둘 다 없는 경우 기본값
+            contentLine = '결제요청';  // 둘 다 없는 경우 기본값
         }
 
-        message += `내용: ${contentLine}\n`;
+        message += `  ${contentLine}\n`;
 
         // 계좌 정보
-        message += `계좌: ${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;
+        message += `  ${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;
 
         // 금액
-        message += `금액: ${this.formatAmount(data.amount)}원`;
+        message += `  ${this.formatAmount(data.amount)}원`;
 
         // VAT 포함 여부와 세금공제 여부 표시
         if (data.includesVat) {
