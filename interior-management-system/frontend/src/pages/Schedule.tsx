@@ -1493,6 +1493,8 @@ const Schedule = () => {
               dayPropGetter={dayPropGetter}
               components={calendarComponents}
               popup={false}
+              doShowMoreDrillDown={false}
+              onShowMore={() => {}}
               messages={{
                 today: '오늘',
                 previous: '이전',

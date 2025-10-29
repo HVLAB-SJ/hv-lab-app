@@ -852,12 +852,18 @@ div.rbc-event.rbc-selected,
     height: 100% !important;
   }
 
-  /* 일정 더보기 링크 숨기기 */
-  .rbc-show-more {
+  /* 일정 더보기 링크 숨기기 - 강력하게 */
+  .rbc-show-more,
+  button.rbc-show-more,
+  a.rbc-show-more,
+  .rbc-overlay,
+  .rbc-overlay-header {
     display: none !important;
-    font-size: 0.75rem !important;
-    padding: 2px 4px !important;
-    margin-top: 2px !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    pointer-events: none !important;
   }
 
   /* 월 뷰 행 높이 자동 조정 - 모든 일정 표시 */
