@@ -136,10 +136,7 @@ class CoolSMSService {
         // 빈 줄로 시작 (제목 중복 방지)
         let message = '\n';
 
-        // 프로젝트명
-        message += `[${data.projectName || '프로젝트'}]\n`;
-
-        // 공정 및 항목
+        // 공정 및 항목을 먼저 표시
         const process = data.purpose || data.description || '';  // 공정명
         const itemName = data.itemName || '';  // 항목명 (선택사항)
 
@@ -155,13 +152,16 @@ class CoolSMSService {
             contentLine = '결제요청';  // 둘 다 없는 경우 기본값
         }
 
-        message += `  ${contentLine}\n`;
+        message += `${contentLine}\n`;
+
+        // 프로젝트명
+        message += `[${data.projectName || '프로젝트'}]\n`;
 
         // 계좌 정보
-        message += `  ${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;
+        message += `${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;
 
         // 금액
-        message += `  ${this.formatAmount(data.amount)}원`;
+        message += `${this.formatAmount(data.amount)}원`;
 
         // VAT 포함 여부와 세금공제 여부 표시
         if (data.includesVat) {
