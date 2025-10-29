@@ -877,9 +877,17 @@ div.rbc-event.rbc-selected,
     height: auto !important;
   }
 
-  .rbc-row-content {
+  .rbc-row-content,
+  .rbc-row-content-scrollable {
     height: auto !important;
     min-height: 100px !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .rbc-addons-dnd .rbc-row-content-scrollable {
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   /* 캘린더 툴바 개선 */
