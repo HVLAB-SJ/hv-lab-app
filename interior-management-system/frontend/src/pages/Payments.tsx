@@ -1176,8 +1176,8 @@ const Payments = () => {
                 </div>
               </div>
 
-              {/* 결제요청/수정완료 버튼 */}
-              <div className="my-6 lg:my-[50px]">
+              {/* 결제요청/수정완료 버튼 - 모바일 최적화 */}
+              <div className="my-6 lg:my-[50px] sticky bottom-0 bg-white pt-4 pb-4 -mb-4 lg:static lg:pb-0" style={{ zIndex: 100 }}>
                 {editingPaymentId && (
                   <button
                     onClick={() => {
@@ -1200,7 +1200,8 @@ const Payments = () => {
                       setSelectedContractorId(null);
                       toast.info('수정이 취소되었습니다');
                     }}
-                    className="w-full py-2 mb-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                    className="w-full py-2 mb-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 touch-manipulation"
+                    style={{ minHeight: '48px' }}
                   >
                     취소
                   </button>
@@ -1208,10 +1209,12 @@ const Payments = () => {
                 <button
                   onClick={(e) => {
                     console.log('💰 Payment button clicked!', e);
+                    console.log('💰 Button element:', e.currentTarget);
+                    console.log('💰 Form data:', formData);
                     handleSave();
                   }}
-                  className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 touch-manipulation"
-                  style={{ minHeight: '44px', position: 'relative', zIndex: 10 }}
+                  className="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 active:bg-gray-950 touch-manipulation font-medium text-base"
+                  style={{ minHeight: '48px', position: 'relative', zIndex: 101, WebkitTapHighlightColor: 'transparent' }}
                 >
                   {editingPaymentId ? '수정완료' : '결제요청'}
                 </button>
