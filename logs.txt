@@ -1,0 +1,463 @@
+Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/d18ef4a3-e51e-4147-a0c1-b8db800583c8/vol_qezfz4bdxuuyyiqt
+Starting Container
+
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+npm WARN config production Use `--omit=dev` instead.
+
+> interior-schedule-app@1.0.0 start
+> node server.js
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+✅ 이메일 서비스가 초기화되었습니다.
+📧 이메일: hv_lab@naver.com
+🔄 Updating schedules table to allow NULL project_id...
+Port configuration: 8080
+CORS Origin: https://hvlab.app
+Environment: production
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+✅ CoolSMS 서비스가 초기화되었습니다.
+📞 관리자 전화번호: 2개 등록됨
+📱 발신번호: 01074088864
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+서버가 0.0.0.0:8080에서 실행 중입니다.
+http://localhost:8080
+데이터베이스 초기 사용자 생성 완료
+데이터베이스 테이블 초기화 완료
+📧 이메일 체크 스케줄러를 시작합니다 (5분마다 실행)
+SQLite 데이터베이스 연결 성공
+✅ original_material_amount column already exists
+✅ quote_inquiries table created successfully
+✓ meeting_notes column already exists
+✓ entrance_password column already exists
+✓ site_password column already exists
+✓ customer_requests column already exists
+✓ No quotes found in contractors table
+사용자 상준 생성 완료
+사용자 신애 생성 완료
+사용자 재천 생성 완료
+사용자 민기 생성 완료
+사용자 재성 생성 완료
+🔄 Checking schedules table for time column...
+사용자 재현 생성 완료
+데이터베이스에 이미 157개의 협력업체가 있습니다.
+✅ Time column already exists in schedules table
+✅ schedules table updated successfully - project_id is now nullable and project_name column added
+🔄 Checking payment_requests table for new columns...
+✅ Column item_name already exists in payment_requests table
+✅ Column apply_tax_deduction already exists in payment_requests table
+✅ Column includes_vat already exists in payment_requests table
+✅ Column original_labor_amount already exists in payment_requests table
+✅ Column material_amount already exists in payment_requests table
+✅ Column labor_amount already exists in payment_requests table
+🔄 Checking work_requests table schema...
+✅ Column 'project' already exists
+✅ Column 'request_date' already exists
+✅ Column 'request_type' already exists
+✅ Column 'requested_by' already exists
+✅ work_requests migration completed
+✅ 데이터베이스에 6명의 사용자가 있습니다.
+📧 서버 시작 시 견적문의 메일 확인...
+📬 새로운 견적문의 메일을 확인합니다...
+❌ IMAP 연결 오류: Error: "hv_lab@naver.com": access denied. (Please check your OTP number)
+    at Connection._resTagged (/app/node_modules/imap/lib/Connection.js:1502:11)
+    at Parser.<anonymous> (/app/node_modules/imap/lib/Connection.js:194:10)
+    at Parser.emit (node:events:513:28)
+    at Parser._resTagged (/app/node_modules/imap/lib/Parser.js:175:10)
+    at Parser._parse (/app/node_modules/imap/lib/Parser.js:139:16)
+    at Parser._tryread (/app/node_modules/imap/lib/Parser.js:82:15)
+    at TLSSocket.Parser._cbReadable (/app/node_modules/imap/lib/Parser.js:53:12)
+    at TLSSocket.emit (node:events:513:28)
+    at emitReadable_ (node:internal/streams/readable:578:12)
+    at processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  type: 'no',
+  textCode: 'AUTH',
+  source: 'authentication'
+}
+❌ 초기 이메일 확인 중 오류: "hv_lab@naver.com": access denied. (Please check your OTP number)
+📪 IMAP 연결 종료
+새로운 클라이언트 연결: suwPvF0IGMfDMXhrAAAB
+  "receipt_url": null,
+  "notes": "",
+  "created_at": "2025-10-29 21:28:05",
+  "updated_at": "2025-10-29 21:28:05",
+  "apply_tax_deduction": 1,
+  "amount": 338450,
+[GET /api/payments] Request received
+  "account_holder": "박상현",
+  "bank_name": "NH농협은행",
+[GET /api/payments] Found 7 payments
+  "account_number": "100136-56-031677",
+[GET /api/payments] Sample: {
+  "status": "pending",
+  "id": 48,
+  "approved_by": null,
+  "project_id": 6,
+  "approved_at": null,
+  "paid_at": null,
+  "user_id": 1,
+  "request_type": "material",
+  "vendor_name": "도배",
+  "description": "항test",
+  "material_amount": 0,
+  "labor_amount": 338450,
+  "original_labor_amount": 350000,
+  "item_name": "항test",
+  "includes_vat": 0,
+  "original_material_amount": 0,
+  "requester_name": "상준",
+  "project_name": "대림아크로텔_엄상진님",
+  "project_color": "#4A90E2",
+  "approver_name": null
+}
+[GET /api/payments] Request received
+[GET /api/payments] Found 7 payments
+  "vendor_name": "도배",
+[GET /api/payments] Sample: {
+  "id": 48,
+  "project_id": 6,
+  "description": "항test",
+  "user_id": 1,
+  "request_type": "material",
+  "amount": 338450,
+  "account_holder": "박상현",
+  "bank_name": "NH농협은행",
+  "account_number": "100136-56-031677",
+  "status": "pending",
+  "approved_by": null,
+  "approved_at": null,
+  "paid_at": null,
+  "receipt_url": null,
+  "notes": "",
+  "created_at": "2025-10-29 21:28:05",
+  "updated_at": "2025-10-29 21:28:05",
+  "apply_tax_deduction": 1,
+  "material_amount": 0,
+  "labor_amount": 338450,
+  "original_labor_amount": 350000,
+  "item_name": "항test",
+  "includes_vat": 0,
+  "original_material_amount": 0,
+  "requester_name": "상준",
+  "project_name": "대림아크로텔_엄상진님",
+  "project_color": "#4A90E2",
+  "approver_name": null
+}
+새로운 클라이언트 연결: pcahjzbpPz3TvX1OAAAD
+새로운 클라이언트 연결: 0noWpjhRsYrKGZ6OAAAF
+  - description: 항목te
+  - vendor_name: 도배
+  - itemName: 항목te
+[POST /api/payments] project_id is a name, looking up ID for: 대림아크로텔_엄상진님
+  originalLaborAmount: 350000,
+  account_number: '100136-56-031677',
+  applyTaxDeduction: true,
+  notes: '',
+  includesVAT: false
+  itemName: '항목te',
+}
+  materialAmount: 0,
+[POST /api/payments] User: {
+  laborAmount: 338450,
+  id: 1,
+[POST /api/payments] Received request body: {
+  username: '상준',
+  description: '항목te',
+  project_id: '대림아크로텔_엄상진님',
+  role: 'manager',
+  amount: 338450,
+  vendor_name: '도배',
+  iat: 1761773227,
+  account_holder: '박상현',
+  exp: 2077133227
+  bank_name: 'NH농협은행',
+}
+[POST /api/payments] 필드 값 확인:
+  - process: undefined
+[POST /api/payments] Found project ID: 6
+새 결제 요청: 상준님이 338,450원 요청
+[CoolSMS] 프로젝트 조회 결과: { name: '대림아크로텔_엄상진님' }
+[CoolSMS] 결제 요청 데이터: {
+  project_id: 6,
+  amount: 338450,
+  account_holder: '박상현',
+  bank_name: 'NH농협은행',
+  account_number: '100136-56-031677'
+}
+[CoolSMS] 문자 발송 데이터: {
+  projectName: '대림아크로텔_엄상진님',
+  amount: 338450,
+  accountHolder: '박상현',
+  bankName: 'NH농협은행',
+  accountNumber: '100136-56-031677',
+  requesterName: '상준',
+  itemName: '항목te',
+  purpose: '항목te',
+  category: 'material',
+  includesVat: false,
+  applyTaxDeduction: true
+}
+[DEBUG] request_type 원본값: material
+📱 [CoolSMS] sendPaymentNotification 호출됨
+📱 [CoolSMS] 데이터: {
+  "projectName": "대림아크로텔_엄상진님",
+  "includes_vat": 0,
+  "material_amount": 0,
+  "original_material_amount": 0,
+  "labor_amount": 338450,
+  "requester_name": "상준",
+  "original_labor_amount": 350000,
+  "project_name": "대림아크로텔_엄상진님",
+  "item_name": "항목te",
+  "project_color": "#4A90E2",
+  "approver_name": null
+}
+  "apply_tax_deduction": 1,
+  "amount": 338450,
+  "accountHolder": "박상현",
+  "bankName": "NH농협은행",
+  "accountNumber": "100136-56-031677",
+  "requesterName": "상준",
+  "itemName": "항목te",
+  "purpose": "항목te",
+  "category": "material",
+  "includesVat": false,
+  "applyTaxDeduction": true
+}
+[createPaymentMessage] 받은 데이터: {
+  "projectName": "대림아크로텔_엄상진님",
+  "amount": 338450,
+  "accountHolder": "박상현",
+  "bankName": "NH농협은행",
+  "accountNumber": "100136-56-031677",
+  "requesterName": "상준",
+  "itemName": "항목te",
+  "purpose": "항목te",
+  "category": "material",
+  "includesVat": false,
+  "applyTaxDeduction": true
+}
+[createPaymentMessage] process: 항목te
+[createPaymentMessage] itemName: 항목te
+📱 [CoolSMS] 총 2명의 관리자에게 SMS 발송 시작
+📤 [CoolSMS] 01074088864로 SMS 발송 시도...
+📤 [CoolSMS] 발송 요청 데이터: {
+  "message": {
+    "to": "01074088864",
+    "from": "01074088864",
+    "text": "대림/항목te/항목te\nNH농협은행 100136-56-031677 박상현\n338,450원(3.3%)"
+  }
+}
+[GET /api/payments] Request received
+[GET /api/payments] Found 8 payments
+[GET /api/payments] Sample: {
+  "id": 49,
+  "project_id": 6,
+  "user_id": 1,
+  "request_type": "material",
+  "vendor_name": "도배",
+  "description": "항목te",
+  "amount": 338450,
+  "account_holder": "박상현",
+  "bank_name": "NH농협은행",
+  "account_number": "100136-56-031677",
+  "status": "pending",
+  "approved_by": null,
+  "approved_at": null,
+  "paid_at": null,
+  "receipt_url": null,
+  "notes": "",
+  "created_at": "2025-10-29 21:31:05",
+  "updated_at": "2025-10-29 21:31:05",
+✅ SMS 발송 성공: 01074088864 {
+  groupId: 'G4V20251030063105L5RCP2S9F68TYJN',
+  to: '01074088864',
+  from: '01074088864',
+  type: 'SMS',
+  statusMessage: '정상 접수(이통사로 접수 예정) ',
+  country: '82',
+  messageId: 'M4V202510300631050JBBFQDKDRQP4AH',
+  statusCode: '2000',
+  accountId: '25101068262046'
+}
+📤 [CoolSMS] 01089423283로 SMS 발송 시도...
+📤 [CoolSMS] 발송 요청 데이터: {
+  "message": {
+    "to": "01089423283",
+    "from": "01074088864",
+    "text": "대림/항목te/항목te\nNH농협은행 100136-56-031677 박상현\n338,450원(3.3%)"
+  }
+}
+      groupId: 'G4V20251030063106EDD7UZT5ZILZR1O',
+      to: '01089423283',
+      from: '01074088864',
+      type: 'SMS',
+      statusMessage: '정상 접수(이통사로 접수 예정) ',
+      country: '82',
+      messageId: 'M4V20251030063106XXOOILYFW3XACUU',
+    success: true,
+    response: {
+✅ SMS 발송 성공: 01089423283 {
+  groupId: 'G4V20251030063106EDD7UZT5ZILZR1O',
+  to: '01089423283',
+  from: '01074088864',
+  type: 'SMS',
+  statusMessage: '정상 접수(이통사로 접수 예정) ',
+  country: '82',
+  messageId: 'M4V20251030063106XXOOILYFW3XACUU',
+  statusCode: '2000',
+  accountId: '25101068262046'
+}
+✅ CoolSMS 발송 결과: [
+  {
+    phone: '01074088864',
+    success: true,
+    response: {
+      groupId: 'G4V20251030063105L5RCP2S9F68TYJN',
+      to: '01074088864',
+      from: '01074088864',
+      type: 'SMS',
+      statusMessage: '정상 접수(이통사로 접수 예정) ',
+      country: '82',
+      messageId: 'M4V202510300631050JBBFQDKDRQP4AH',
+      statusCode: '2000',
+      accountId: '25101068262046'
+    }
+  },
+  {
+    phone: '01089423283',
+      statusCode: '2000',
+      accountId: '25101068262046'
+    }
+  }
+]
+  "approved_by": null,
+[GET /api/payments] Request received
+  "requester_name": "상준",
+[GET /api/payments] Found 8 payments
+  "approved_at": null,
+[GET /api/payments] Sample: {
+  "paid_at": null,
+  "id": 49,
+  "receipt_url": null,
+  "project_id": 6,
+  "notes": "",
+  "user_id": 1,
+  "created_at": "2025-10-29 21:31:05",
+  "request_type": "material",
+  "updated_at": "2025-10-29 21:31:05",
+  "vendor_name": "도배",
+  "apply_tax_deduction": 1,
+  "material_amount": 0,
+  "description": "항목te",
+  "labor_amount": 338450,
+  "amount": 338450,
+  "original_labor_amount": 350000,
+  "account_holder": "박상현",
+  "item_name": "항목te",
+  "includes_vat": 0,
+  "bank_name": "NH농협은행",
+  "original_material_amount": 0,
+  "account_number": "100136-56-031677",
+  "status": "pending",
+  "project_name": "대림아크로텔_엄상진님",
+  "project_color": "#4A90E2",
+  "approver_name": null
+}
+[GET /api/payments] Request received
+[GET /api/payments] Found 8 payments
+[GET /api/payments] Sample: {
+  "id": 49,
+  "project_id": 6,
+  "user_id": 1,
+  "request_type": "material",
+  "vendor_name": "도배",
+  "description": "항목te",
+  "amount": 338450,
+  "account_holder": "박상현",
+  "bank_name": "NH농협은행",
+  "account_number": "100136-56-031677",
+  "status": "pending",
+  "approved_by": null,
+  "approved_at": null,
+  "paid_at": null,
+  "receipt_url": null,
+  "notes": "",
+  "created_at": "2025-10-29 21:31:05",
+  "updated_at": "2025-10-29 21:31:05",
+  "apply_tax_deduction": 1,
+  "material_amount": 0,
+  "labor_amount": 338450,
+  "original_labor_amount": 350000,
+  "paid_at": null,
+  "item_name": "항목te",
+  "receipt_url": null,
+  "includes_vat": 0,
+  "notes": "",
+  "original_material_amount": 0,
+  "created_at": "2025-10-29 21:31:05",
+  "requester_name": "상준",
+  "updated_at": "2025-10-29 21:31:05",
+  "project_name": "대림아크로텔_엄상진님",
+  "project_color": "#4A90E2",
+  "approver_name": null
+}
+[GET /api/payments] Request received
+[GET /api/payments] Found 8 payments
+[GET /api/payments] Sample: {
+  "id": 49,
+  "project_id": 6,
+  "user_id": 1,
+  "request_type": "material",
+  "vendor_name": "도배",
+  "description": "항목te",
+  "amount": 338450,
+  "account_holder": "박상현",
+  "bank_name": "NH농협은행",
+  "account_number": "100136-56-031677",
+  "status": "pending",
+  "approved_by": null,
+  "approved_at": null,
+  "apply_tax_deduction": 1,
+  "material_amount": 0,
+  "labor_amount": 338450,
+  "original_labor_amount": 350000,
+  "item_name": "항목te",
+  "includes_vat": 0,
+  "original_material_amount": 0,
+  "requester_name": "상준",
+  "project_name": "대림아크로텔_엄상진님",
+  "project_color": "#4A90E2",
+  "approver_name": null
+}
+[GET /api/payments] Request received
+[GET /api/payments] Found 8 payments
+[GET /api/payments] Sample: {
+  "id": 49,
+  "project_id": 6,
+  "user_id": 1,
+  "request_type": "material",
+  "vendor_name": "도배",
+  "description": "항목te",
+  "amount": 338450,
+  "account_holder": "박상현",
+  "bank_name": "NH농협은행",
+  "account_number": "100136-56-031677",
+  "status": "pending",
+  "approved_by": null,
+  "approved_at": null,
+  "paid_at": null,
+  "receipt_url": null,
+  "notes": "",
+  "created_at": "2025-10-29 21:31:05",
+  "updated_at": "2025-10-29 21:31:05",
+  "apply_tax_deduction": 1,
+  "material_amount": 0,
+  "labor_amount": 338450,
+  "original_labor_amount": 350000,
+  "item_name": "항목te",
+  "includes_vat": 0,
+  "original_material_amount": 0,
+  "requester_name": "상준",
+  "project_name": "대림아크로텔_엄상진님",
+  "project_color": "#4A90E2",
+  "approver_name": null
+}

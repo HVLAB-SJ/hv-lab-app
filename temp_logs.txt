@@ -1,0 +1,200 @@
+  "requesterName": "상준",
+  "itemName": "항목te",
+  "purpose": "항목te",
+  "category": "material",
+  "includesVat": false,
+  "applyTaxDeduction": true
+}
+[createPaymentMessage] process: 항목te
+[createPaymentMessage] itemName: 항목te
+📱 [CoolSMS] 총 2명의 관리자에게 SMS 발송 시작
+📤 [CoolSMS] 01074088864로 SMS 발송 시도...
+📤 [CoolSMS] 발송 요청 데이터: {
+  "message": {
+    "to": "01074088864",
+    "from": "01074088864",
+    "text": "대림/항목te/항목te\nNH농협은행 100136-56-031677 박상현\n338,450원(3.3%)"
+  }
+}
+[GET /api/payments] Request received
+[GET /api/payments] Found 8 payments
+[GET /api/payments] Sample: {
+  "id": 49,
+  "project_id": 6,
+  "user_id": 1,
+  "request_type": "material",
+  "vendor_name": "도배",
+  "description": "항목te",
+  "amount": 338450,
+  "account_holder": "박상현",
+  "bank_name": "NH농협은행",
+  "account_number": "100136-56-031677",
+  "status": "pending",
+  "approved_by": null,
+  "approved_at": null,
+  "paid_at": null,
+  "receipt_url": null,
+  "notes": "",
+  "created_at": "2025-10-29 21:31:05",
+  "updated_at": "2025-10-29 21:31:05",
+✅ SMS 발송 성공: 01074088864 {
+  groupId: 'G4V20251030063105L5RCP2S9F68TYJN',
+  to: '01074088864',
+  from: '01074088864',
+  type: 'SMS',
+  statusMessage: '정상 접수(이통사로 접수 예정) ',
+  country: '82',
+  messageId: 'M4V202510300631050JBBFQDKDRQP4AH',
+  statusCode: '2000',
+  accountId: '25101068262046'
+}
+📤 [CoolSMS] 01089423283로 SMS 발송 시도...
+📤 [CoolSMS] 발송 요청 데이터: {
+  "message": {
+    "to": "01089423283",
+    "from": "01074088864",
+    "text": "대림/항목te/항목te\nNH농협은행 100136-56-031677 박상현\n338,450원(3.3%)"
+  }
+}
+      groupId: 'G4V20251030063106EDD7UZT5ZILZR1O',
+      to: '01089423283',
+      from: '01074088864',
+      type: 'SMS',
+      statusMessage: '정상 접수(이통사로 접수 예정) ',
+      country: '82',
+      messageId: 'M4V20251030063106XXOOILYFW3XACUU',
+    success: true,
+    response: {
+✅ SMS 발송 성공: 01089423283 {
+  groupId: 'G4V20251030063106EDD7UZT5ZILZR1O',
+  to: '01089423283',
+  from: '01074088864',
+  type: 'SMS',
+  statusMessage: '정상 접수(이통사로 접수 예정) ',
+  country: '82',
+  messageId: 'M4V20251030063106XXOOILYFW3XACUU',
+  statusCode: '2000',
+  accountId: '25101068262046'
+}
+✅ CoolSMS 발송 결과: [
+  {
+    phone: '01074088864',
+    success: true,
+    response: {
+      groupId: 'G4V20251030063105L5RCP2S9F68TYJN',
+      to: '01074088864',
+      from: '01074088864',
+      type: 'SMS',
+      statusMessage: '정상 접수(이통사로 접수 예정) ',
+      country: '82',
+      messageId: 'M4V202510300631050JBBFQDKDRQP4AH',
+      statusCode: '2000',
+      accountId: '25101068262046'
+    }
+  },
+  {
+    phone: '01089423283',
+      statusCode: '2000',
+      accountId: '25101068262046'
+    }
+  }
+]
+  "approved_by": null,
+[GET /api/payments] Request received
+  "requester_name": "상준",
+[GET /api/payments] Found 8 payments
+  "approved_at": null,
+[GET /api/payments] Sample: {
+  "paid_at": null,
+  "id": 49,
+  "receipt_url": null,
+  "project_id": 6,
+  "notes": "",
+  "user_id": 1,
+  "created_at": "2025-10-29 21:31:05",
+  "request_type": "material",
+  "updated_at": "2025-10-29 21:31:05",
+  "vendor_name": "도배",
+  "apply_tax_deduction": 1,
+  "material_amount": 0,
+  "description": "항목te",
+  "labor_amount": 338450,
+  "amount": 338450,
+  "original_labor_amount": 350000,
+  "account_holder": "박상현",
+  "item_name": "항목te",
+  "includes_vat": 0,
+  "bank_name": "NH농협은행",
+  "original_material_amount": 0,
+  "account_number": "100136-56-031677",
+  "status": "pending",
+  "project_name": "대림아크로텔_엄상진님",
+  "project_color": "#4A90E2",
+  "approver_name": null
+}
+[GET /api/payments] Request received
+[GET /api/payments] Found 8 payments
+[GET /api/payments] Sample: {
+  "id": 49,
+  "project_id": 6,
+  "user_id": 1,
+  "request_type": "material",
+  "vendor_name": "도배",
+  "description": "항목te",
+  "amount": 338450,
+  "account_holder": "박상현",
+  "bank_name": "NH농협은행",
+  "account_number": "100136-56-031677",
+  "status": "pending",
+  "approved_by": null,
+  "approved_at": null,
+  "paid_at": null,
+  "receipt_url": null,
+  "notes": "",
+  "created_at": "2025-10-29 21:31:05",
+  "updated_at": "2025-10-29 21:31:05",
+  "apply_tax_deduction": 1,
+  "material_amount": 0,
+  "labor_amount": 338450,
+  "original_labor_amount": 350000,
+  "paid_at": null,
+  "item_name": "항목te",
+  "receipt_url": null,
+  "includes_vat": 0,
+  "notes": "",
+  "original_material_amount": 0,
+  "created_at": "2025-10-29 21:31:05",
+  "requester_name": "상준",
+  "updated_at": "2025-10-29 21:31:05",
+  "project_name": "대림아크로텔_엄상진님",
+  "project_color": "#4A90E2",
+  "approver_name": null
+}
+[GET /api/payments] Request received
+[GET /api/payments] Found 8 payments
+[GET /api/payments] Sample: {
+  "id": 49,
+  "project_id": 6,
+  "user_id": 1,
+  "request_type": "material",
+  "vendor_name": "도배",
+  "description": "항목te",
+  "amount": 338450,
+  "account_holder": "박상현",
+  "bank_name": "NH농협은행",
+  "account_number": "100136-56-031677",
+  "status": "pending",
+  "approved_by": null,
+  "approved_at": null,
+  "apply_tax_deduction": 1,
+  "material_amount": 0,
+  "labor_amount": 338450,
+  "original_labor_amount": 350000,
+  "item_name": "항목te",
+  "includes_vat": 0,
+  "original_material_amount": 0,
+  "requester_name": "상준",
+  "project_name": "대림아크로텔_엄상진님",
+  "project_color": "#4A90E2",
+  "approver_name": null
+}
