@@ -133,18 +133,18 @@ class CoolSMSService {
      */
     createPaymentMessage(data) {
         let message = '[HV LAB 결제요청]\n';
-        message += `프로젝트: ${data.projectName || '미지정'}\n`;
-        message += `금액: ${this.formatAmount(data.amount)}원\n`;
+        message += `[${data.projectName || '프로젝트'}]\n`;
 
-        if (data.itemName) {
-            message += `항목: ${data.itemName}\n`;
-        }
+        // 공정과 내용 (itemName이나 purpose를 사용)
+        const category = data.category || '자재비';
+        const content = data.itemName || data.purpose || '결제요청';
+        message += `  ${category} ${content}\n`;
 
-        if (data.accountHolder && data.bankName && data.accountNumber) {
-            message += `\n${data.bankName}\n`;
-            message += `${data.accountNumber}\n`;
-            message += `예금주: ${data.accountHolder}`;
-        }
+        // 계좌 정보
+        message += `  ${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}\n`;
+
+        // 금액
+        message += `  ${this.formatAmount(data.amount)}원`;
 
         return message;
     }
