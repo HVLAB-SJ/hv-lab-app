@@ -450,6 +450,22 @@ const initDatabase = () => {
     )
   `);
 
+  // 견적문의 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS quote_inquiries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      email TEXT NOT NULL,
+      address TEXT,
+      project_type TEXT,
+      budget TEXT,
+      message TEXT NOT NULL,
+      is_read INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Add missing columns to contractors table (migration)
   db.run(`ALTER TABLE contractors ADD COLUMN bank_name TEXT`, (err) => {
     if (err && !err.message.includes('duplicate column name')) {
