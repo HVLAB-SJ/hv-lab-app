@@ -89,6 +89,7 @@ router.post('/', authenticateToken, async (req, res) => {
     request_type,
     vendor_name,
     description,
+    process,  // 프론트엔드에서 보내는 공정명 필드
     amount,
     account_holder,
     bank_name,
@@ -102,6 +103,9 @@ router.post('/', authenticateToken, async (req, res) => {
     applyTaxDeduction,
     includesVAT
   } = req.body;
+
+  // process 필드가 있으면 description으로 사용
+  const finalDescription = process || description || '';
 
   // Convert project name to project_id if necessary
   let finalProjectId = project_id;
@@ -157,7 +161,7 @@ router.post('/', authenticateToken, async (req, res) => {
       req.user.id,
       request_type || 'material',
       vendor_name,
-      description || '',
+      finalDescription,
       amount,
       account_holder,
       bank_name,
@@ -182,7 +186,7 @@ router.post('/', authenticateToken, async (req, res) => {
         id: this.lastID,
         requester: req.user.username,
         amount: amount,
-        description: description,
+        description: finalDescription,
         project_id: finalProjectId,
         request_type: request_type || 'material',
         bank_name: bank_name,
