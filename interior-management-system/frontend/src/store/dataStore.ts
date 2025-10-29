@@ -508,6 +508,12 @@ export const useDataStore = create<DataStore>()(
 
   addScheduleToAPI: async (schedule: Schedule & { asRequestId?: string }) => {
     try {
+      console.log('🚀 addScheduleToAPI - Input schedule:', {
+        project: schedule.project,
+        attendees: schedule.attendees,
+        title: schedule.title
+      });
+
       const apiSchedule = await scheduleService.createSchedule({
         project: schedule.project || '',
         title: schedule.title,
@@ -522,6 +528,13 @@ export const useDataStore = create<DataStore>()(
         time: schedule.time
       });
 
+      console.log('🚀 addScheduleToAPI - API Response:', {
+        id: apiSchedule._id,
+        assigneeNames: apiSchedule.assigneeNames,
+        assignedTo: apiSchedule.assignedTo,
+        project: apiSchedule.project
+      });
+
       const newSchedule: Schedule = {
         id: apiSchedule._id,
         title: apiSchedule.title,
@@ -534,6 +547,8 @@ export const useDataStore = create<DataStore>()(
         description: apiSchedule.description,
         time: apiSchedule.time
       };
+
+      console.log('🚀 addScheduleToAPI - Final schedule attendees:', newSchedule.attendees);
 
       set((state) => ({ schedules: [newSchedule, ...state.schedules] }));
     } catch (error) {
