@@ -155,7 +155,7 @@ class CoolSMSService {
 
         // 메시지 기본 구조 (공정/항목 제외한 부분)
         const fixedPart = `\n${bankInfo}\n${amountPart}${taxPart}`;
-        const fixedBytes = Buffer.byteLength(` //\n${fixedPart}`, 'utf8');
+        const fixedBytes = Buffer.byteLength(`//\n${fixedPart}`, 'utf8');
         const projectBytes = Buffer.byteLength(projectPrefix, 'utf8');
 
         // 95바이트 제한에서 고정 부분을 뺀 나머지 바이트
@@ -187,7 +187,7 @@ class CoolSMSService {
         }
 
         // 최종 메시지 조합
-        let message = ` ${projectPrefix}${fullContent}\n`;
+        let message = `${projectPrefix}${fullContent}\n`;
         message += `${bankInfo}\n`;
         message += `${amountPart}${taxPart}`;
 
