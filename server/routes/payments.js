@@ -554,7 +554,7 @@ async function sendPaymentNotification(data) {
       accountNumber: data.account_number || '',
       requesterName: data.requester,
       itemName: data.item_name || '',
-      purpose: data.process || data.description || '',  // 공정명 우선 (목공, 도배 등)
+      purpose: data.vendor_name || data.process || data.description || '',  // vendor_name이 공정명 (목공, 도배 등)
       category: data.request_type || 'material',
       includesVat: data.includes_vat,
       applyTaxDeduction: data.apply_tax_deduction
