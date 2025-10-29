@@ -216,24 +216,56 @@ router.post('/', authenticateToken, (req, res) => {
   function createSchedule(finalProjectId, projectNameForStorage) {
     console.log('[POST /api/schedules] Creating schedule with project_id:', finalProjectId, 'project_name:', projectNameForStorage);
 
-    db.run(
-      `INSERT INTO schedules
-       (project_id, project_name, title, description, start_date, end_date, type, status, priority, color, assigned_to, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        finalProjectId,
-        projectNameForStorage,
-        title,
-        description,
-        start_date,
-        end_date,
-        type,
-        status,
-        priority,
-        color,
-        assigned_to,
-        req.user.id
-      ],
+    // 프로젝트 정보 조회해서 title 변환 (프로젝트명 앞2글자_고객명)
+    const processTitle = () => {
+      if (finalProjectId) {
+        // 프로젝트 ID가 있으면 DB에서 정보 조회
+        db.get('SELECT name, client FROM projects WHERE id = ?', [finalProjectId], (err, project) => {
+          if (err || !project) {
+            // 조회 실패 시 원본 title 사용
+            insertSchedule(title);
+            return;
+          }
+
+          // 프로젝트명 앞 2글자 추출
+          const projectPrefix = project.name.substring(0, 2);
+          const clientName = project.client || '';
+
+          // title이 "[프로젝트명]"으로 시작하면 변환
+          if (title.startsWith('[') && title.includes(']')) {
+            // [프로젝트명] 부분을 추출하고 나머지 내용 유지
+            const titleContent = title.substring(title.indexOf(']') + 1).trim();
+            const newTitle = clientName ? `[${projectPrefix}_${clientName}] ${titleContent}` : `[${projectPrefix}] ${titleContent}`;
+            insertSchedule(newTitle);
+          } else {
+            insertSchedule(title);
+          }
+        });
+      } else {
+        // 프로젝트 ID가 없으면 원본 title 사용
+        insertSchedule(title);
+      }
+    };
+
+    function insertSchedule(finalTitle) {
+      db.run(
+        `INSERT INTO schedules
+         (project_id, project_name, title, description, start_date, end_date, type, status, priority, color, assigned_to, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          finalProjectId,
+          projectNameForStorage,
+          finalTitle,
+          description,
+          start_date,
+          end_date,
+          type,
+          status,
+          priority,
+          color,
+          assigned_to,
+          req.user.id
+        ],
     function(err) {
       if (err) {
         console.error('[POST /api/schedules] Database error:', err);
@@ -364,6 +396,10 @@ router.post('/', authenticateToken, (req, res) => {
       );
     }
     );
+    }
+
+    // title 처리 및 일정 생성 시작
+    processTitle();
   }
 });
 
