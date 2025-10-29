@@ -202,21 +202,22 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
   }, [event?.id]); // Only re-run when event.id changes, NOT on slotInfo changes
 
   // 프로젝트 선택 시 자동으로 해당 프로젝트의 팀원을 담당자로 설정
-  useEffect(() => {
-    // 새 일정 추가 모드이고, 사용자가 아직 담당자를 수동으로 변경하지 않았을 때만 작동
-    if (!event?.id && !userModifiedMembers && selectedProjectId && selectedProjectId !== '') {
-      const selectedProject = projects.find(p =>
-        p.id === selectedProjectId ||
-        p.id === parseInt(selectedProjectId) ||
-        p.id.toString() === selectedProjectId.toString()
-      );
+  // 이 기능은 비활성화되었습니다 - 사용자가 직접 담당자를 선택하도록 함
+  // useEffect(() => {
+  //   // 새 일정 추가 모드이고, 사용자가 아직 담당자를 수동으로 변경하지 않았을 때만 작동
+  //   if (!event?.id && !userModifiedMembers && selectedProjectId && selectedProjectId !== '') {
+  //     const selectedProject = projects.find(p =>
+  //       p.id === selectedProjectId ||
+  //       p.id === parseInt(selectedProjectId) ||
+  //       p.id.toString() === selectedProjectId.toString()
+  //     );
 
-      if (selectedProject && selectedProject.team && selectedProject.team.length > 0) {
-        console.log('🔵 Auto-setting team members from project:', selectedProject.name, selectedProject.team);
-        setSelectedMembers(selectedProject.team);
-      }
-    }
-  }, [selectedProjectId, projects, event?.id, userModifiedMembers]);
+  //     if (selectedProject && selectedProject.team && selectedProject.team.length > 0) {
+  //       console.log('🔵 Auto-setting team members from project:', selectedProject.name, selectedProject.team);
+  //       setSelectedMembers(selectedProject.team);
+  //     }
+  //   }
+  // }, [selectedProjectId, projects, event?.id, userModifiedMembers]);
 
   const toggleMember = (member: string) => {
     setUserModifiedMembers(true);
