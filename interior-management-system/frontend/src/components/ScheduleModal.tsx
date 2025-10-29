@@ -218,11 +218,14 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
   // }, [selectedProjectId, projects, event?.id, userModifiedMembers]);
 
   const toggleMember = (member: string) => {
-    setSelectedMembers(prev =>
-      prev.includes(member)
+    console.log('🔵 toggleMember called with:', member);
+    setSelectedMembers(prev => {
+      const newMembers = prev.includes(member)
         ? prev.filter(m => m !== member)
-        : [...prev, member]
-    );
+        : [...prev, member];
+      console.log('🔵 Updated members:', newMembers);
+      return newMembers;
+    });
   };
 
   // HV LAB 토글 함수 (단일 담당자로 처리)
