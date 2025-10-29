@@ -66,6 +66,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
   const [timeHour, setTimeHour] = useState<number>(9);
   const [timeMinute, setTimeMinute] = useState<number>(0);
   const [customProjectName, setCustomProjectName] = useState('');
+  const [userModifiedMembers, setUserModifiedMembers] = useState<boolean>(false);
 
   const selectedProjectId = watch('projectId');
 
@@ -75,6 +76,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
     setSelectedMembers([]);
     setCustomProjectName('');
     setCustomMember('');
+    setUserModifiedMembers(false);
   }, []); // Empty dependency array - only run once on mount
 
   // 모달이 열릴 때 초기 설정
@@ -201,8 +203,8 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   // 프로젝트 선택 시 자동으로 해당 프로젝트의 팀원을 담당자로 설정
   useEffect(() => {
-    // 새 일정 추가 모드일 때만 작동 (기존 일정 수정 시에는 작동하지 않음)
-    if (!event?.id && selectedProjectId && selectedProjectId !== '') {
+    // 새 일정 추가 모드이고, 사용자가 아직 담당자를 수동으로 변경하지 않았을 때만 작동
+    if (!event?.id && !userModifiedMembers && selectedProjectId && selectedProjectId !== '') {
       const selectedProject = projects.find(p =>
         p.id === selectedProjectId ||
         p.id === parseInt(selectedProjectId) ||
@@ -214,9 +216,10 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
         setSelectedMembers(selectedProject.team);
       }
     }
-  }, [selectedProjectId, projects, event?.id]);
+  }, [selectedProjectId, projects, event?.id, userModifiedMembers]);
 
   const toggleMember = (member: string) => {
+    setUserModifiedMembers(true);
     setSelectedMembers(prev =>
       prev.includes(member)
         ? prev.filter(m => m !== member)
@@ -226,6 +229,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   // HV LAB 토글 함수 (단일 담당자로 처리)
   const toggleHVLab = () => {
+    setUserModifiedMembers(true);
     const hvLabMember = 'HV LAB';
     if (selectedMembers.includes(hvLabMember)) {
       setSelectedMembers(prev => prev.filter(m => m !== hvLabMember));
@@ -236,6 +240,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   // 현장팀 토글 함수 (단일 멤버)
   const toggleFieldTeam = () => {
+    setUserModifiedMembers(true);
     const fieldTeamMember = '현장팀';
     if (selectedMembers.includes(fieldTeamMember)) {
       setSelectedMembers(prev => prev.filter(m => m !== fieldTeamMember));
@@ -246,6 +251,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   // 디자인팀 토글 함수 (단일 담당자로 처리)
   const toggleDesignTeam = () => {
+    setUserModifiedMembers(true);
     const designTeamMember = '디자인팀';
     if (selectedMembers.includes(designTeamMember)) {
       setSelectedMembers(prev => prev.filter(m => m !== designTeamMember));
@@ -256,12 +262,14 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   const addCustomMember = () => {
     if (customMember.trim() && !selectedMembers.includes(customMember.trim())) {
+      setUserModifiedMembers(true);
       setSelectedMembers(prev => [...prev, customMember.trim()]);
       setCustomMember('');
     }
   };
 
   const removeMember = (member: string) => {
+    setUserModifiedMembers(true);
     setSelectedMembers(prev => prev.filter(m => m !== member));
   };
 
