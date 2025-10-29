@@ -550,6 +550,7 @@ async function sendPaymentNotification(data) {
     };
 
     console.log('[CoolSMS] 문자 발송 데이터:', notificationData);
+    console.log('[DEBUG] request_type 원본값:', data.request_type);
 
     // CoolSMS로 문자 발송
     try {

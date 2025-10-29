@@ -61,7 +61,8 @@ class CoolSMSService {
                 message: {
                     to: to.replace(/-/g, ''),
                     from: this.from.replace(/-/g, ''),
-                    text: text
+                    text: text,
+                    type: 'LMS'  // 강제로 LMS 타입 설정 (긴 메시지)
                 }
             };
 
@@ -132,17 +133,21 @@ class CoolSMSService {
      * @param {Object} data - 결제 요청 데이터
      */
     createPaymentMessage(data) {
-        let message = '';
+        // 빈 공백으로 시작하여 제목 중복 방지
+        let message = ' \n';
         message += `[${data.projectName || '프로젝트'}]\n`;
 
         // 공정(카테고리)을 한글로 변환
-        let categoryKorean = '자재비';
+        let categoryKorean = '';
         if (data.category === 'labor') {
             categoryKorean = '인건비';
         } else if (data.category === 'material') {
             categoryKorean = '자재비';
         } else if (data.category === 'other') {
             categoryKorean = '기타';
+        } else {
+            // category가 이미 한글이거나 다른 값인 경우 그대로 사용
+            categoryKorean = data.category || '자재비';
         }
 
         const content = data.itemName || data.purpose || '결제요청';
