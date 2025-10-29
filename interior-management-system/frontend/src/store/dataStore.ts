@@ -614,7 +614,8 @@ export const useDataStore = create<DataStore>()(
         spent: p.actualCost || p.spent || 0,
         // Backend returns 'manager' field with manager name(s)
         manager: p.manager || '미지정',
-        team: p.fieldManagers?.map(fm => typeof fm === 'object' ? fm.name : fm) || [],
+        // team: p.fieldManagers?.map(fm => typeof fm === 'object' ? fm.name : fm) || [],
+        team: [], // 팀 정보를 항상 빈 배열로 설정하여 자동 할당 방지
         description: p.description || '',
         meetingNotes: (p.meetingNotes as unknown[])?.map((note: { id: string; content: string; date: string }) => ({
           id: note.id,

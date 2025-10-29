@@ -69,6 +69,20 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   const selectedProjectId = watch('projectId');
 
+  // 선택된 프로젝트의 팀 정보 디버깅
+  useEffect(() => {
+    if (selectedProjectId) {
+      const selectedProject = projects.find(p =>
+        p.id === selectedProjectId ||
+        p.id === parseInt(selectedProjectId) ||
+        p.id.toString() === selectedProjectId.toString()
+      );
+      console.log('🔴 Selected project:', selectedProject?.name);
+      console.log('🔴 Project team:', selectedProject?.team);
+      console.log('🔴 Current selectedMembers:', selectedMembers);
+    }
+  }, [selectedProjectId, projects, selectedMembers]);
+
   // 모달이 처음 마운트될 때 한 번만 초기화 (시간 상태는 제외)
   useEffect(() => {
     // 초기 상태 설정 (시간 관련 상태는 사용자가 설정할 때까지 유지)
