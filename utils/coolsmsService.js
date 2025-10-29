@@ -133,8 +133,9 @@ class CoolSMSService {
      * @param {Object} data - 결제 요청 데이터
      */
     createPaymentMessage(data) {
-        // 메시지 바로 시작 (첫 줄 제거)
-        let message = `[${data.projectName || '프로젝트'}]\n`;
+        // 첫 줄을 점으로 시작하여 제목 중복 방지
+        let message = '.\n';
+        message += `[${data.projectName || '프로젝트'}]\n`;
 
         // 공정 정보 표시 (description에 공정명이 들어옴: 목공, 가구, 마루 등)
         const process = data.purpose || data.description || '';  // 공정명
