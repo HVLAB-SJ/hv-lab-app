@@ -90,19 +90,14 @@ router.get('/', authenticateToken, (req, res) => {
         projectData = '';
       }
 
-      // Combine assignees from schedule_assignees table and assigned_to column
-      // This handles both individual users and team names (HV LAB, 현장팀, 디자인팀)
+      // Get assignee names from schedule_assignees table
       let allAssigneeNames = assignees.map(u => u.name || u.username);
 
-      // If assigned_to column has additional names (like team names), add them
-      if (schedule.assigned_to) {
+      // Only use assigned_to column if no assignees were found in schedule_assignees table
+      // This prevents auto-adding team names when specific users are selected
+      if (allAssigneeNames.length === 0 && schedule.assigned_to) {
         const assignedToNames = schedule.assigned_to.split(',').map(name => name.trim()).filter(name => name);
-        // Add names from assigned_to that aren't already in the list
-        assignedToNames.forEach(name => {
-          if (!allAssigneeNames.includes(name)) {
-            allAssigneeNames.push(name);
-          }
-        });
+        allAssigneeNames = assignedToNames;
       }
 
       return {
@@ -246,7 +241,9 @@ router.post('/', authenticateToken, (req, res) => {
       const scheduleId = this.lastID;
 
       // 담당자 할당 (assignee_ids가 배열일 경우)
+      console.log('[POST /api/schedules] assignee_ids:', assignee_ids);
       if (assignee_ids && Array.isArray(assignee_ids) && assignee_ids.length > 0) {
+        console.log('[POST /api/schedules] Processing assignees:', assignee_ids);
         // assignee_ids가 숫자 배열인지 확인하고, 문자열이면 user id로 변환
         const userPromises = assignee_ids.map(assignee => {
           // 숫자면 그대로 사용
@@ -303,6 +300,7 @@ router.post('/', authenticateToken, (req, res) => {
                WHERE sa.schedule_id = ?`,
               [scheduleId],
               (err, users) => {
+                console.log('[POST /api/schedules] Retrieved assignees from DB:', users);
                 if (err) resolve([]);
                 else resolve(users || []);
               }
@@ -326,19 +324,14 @@ router.post('/', authenticateToken, (req, res) => {
             projectData = '';
           }
 
-          // Combine assignees from schedule_assignees table and assigned_to column
-          // This handles both individual users and team names (HV LAB, 현장팀, 디자인팀)
+          // Get assignee names from schedule_assignees table
           let allAssigneeNames = assignees.map(u => u.name || u.username);
 
-          // If assigned_to column has additional names (like team names), add them
-          if (schedule.assigned_to) {
+          // Only use assigned_to column if no assignees were found in schedule_assignees table
+          // This prevents auto-adding team names when specific users are selected
+          if (allAssigneeNames.length === 0 && schedule.assigned_to) {
             const assignedToNames = schedule.assigned_to.split(',').map(name => name.trim()).filter(name => name);
-            // Add names from assigned_to that aren't already in the list
-            assignedToNames.forEach(name => {
-              if (!allAssigneeNames.includes(name)) {
-                allAssigneeNames.push(name);
-              }
-            });
+            allAssigneeNames = assignedToNames;
           }
 
           // Convert to MongoDB format for frontend
@@ -510,19 +503,14 @@ router.put('/:id', authenticateToken, (req, res) => {
             projectData = '';
           }
 
-          // Combine assignees from schedule_assignees table and assigned_to column
-          // This handles both individual users and team names (HV LAB, 현장팀, 디자인팀)
+          // Get assignee names from schedule_assignees table
           let allAssigneeNames = assignees.map(u => u.name || u.username);
 
-          // If assigned_to column has additional names (like team names), add them
-          if (schedule.assigned_to) {
+          // Only use assigned_to column if no assignees were found in schedule_assignees table
+          // This prevents auto-adding team names when specific users are selected
+          if (allAssigneeNames.length === 0 && schedule.assigned_to) {
             const assignedToNames = schedule.assigned_to.split(',').map(name => name.trim()).filter(name => name);
-            // Add names from assigned_to that aren't already in the list
-            assignedToNames.forEach(name => {
-              if (!allAssigneeNames.includes(name)) {
-                allAssigneeNames.push(name);
-              }
-            });
+            allAssigneeNames = assignedToNames;
           }
 
           // Convert to MongoDB format for frontend
