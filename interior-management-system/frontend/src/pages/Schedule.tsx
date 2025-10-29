@@ -841,16 +841,17 @@ const Schedule = () => {
         hasHVLab || hasFieldTeam || hasDesignTeam
       );
 
-      // 사용자 일정은 시작 시간에서 1초를 빼서 먼저 표시되도록 함
-      // 이렇게 하면 react-big-calendar의 내부 정렬에서도 사용자 일정이 먼저 나옴
+      // 사용자 일정은 시작 시간을 크게 앞당겨서 먼저 표시되도록 함
+      // react-big-calendar의 내부 정렬에서도 사용자 일정이 먼저 나오도록 6시간(21600초) 앞당김
       if (hasUser) {
-        const adjustedStart = new Date(event.start.getTime() - 1000); // 1초 빼기
+        const adjustedStart = new Date(event.start.getTime() - 21600000); // 6시간 빼기
+        console.log(`📌 User event adjusted: ${event.title}, original: ${event.start}, adjusted: ${adjustedStart}, hasUser: ${hasUser}, assignedTo:`, event.assignedTo);
         return { ...event, start: adjustedStart };
       }
       return event;
     })
     .sort((a, b) => {
-      // 날짜와 조정된 시간으로 정렬 (사용자 일정은 이미 시간이 1초 빨라짐)
+      // 날짜와 조정된 시간으로 정렬 (사용자 일정은 이미 시간이 6시간 빨라짐)
       return a.start.getTime() - b.start.getTime();
     });
 
