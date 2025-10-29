@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../config/database');
 const { authenticateToken, isManager } = require('../middleware/auth');
-const solapiService = require('../../utils/solapiService'); // SOLAPI 서비스
-const coolsmsService = require('../../utils/coolsmsService'); // CoolSMS 서비스 (백업)
+const coolsmsService = require('../../utils/coolsmsService'); // CoolSMS 서비스
 const { sanitizeDatesArray, sanitizeDates } = require('../utils/dateUtils');
 
 // 결제 요청 목록 조회
@@ -511,7 +510,7 @@ router.get('/stats/summary', authenticateToken, (req, res) => {
   );
 });
 
-// 알림 전송 함수들 - SOLAPI 알림톡 연동
+// 알림 전송 함수들 - CoolSMS 문자 발송
 async function sendPaymentNotification(data) {
   console.log(`새 결제 요청: ${data.requester}님이 ${data.amount.toLocaleString()}원 요청`);
 
@@ -524,8 +523,8 @@ async function sendPaymentNotification(data) {
       });
     });
 
-    console.log('[SOLAPI] 프로젝트 조회 결과:', project);
-    console.log('[SOLAPI] 결제 요청 데이터:', {
+    console.log('[CoolSMS] 프로젝트 조회 결과:', project);
+    console.log('[CoolSMS] 결제 요청 데이터:', {
       project_id: data.project_id,
       amount: data.amount,
       account_holder: data.account_holder,
@@ -533,7 +532,7 @@ async function sendPaymentNotification(data) {
       account_number: data.account_number
     });
 
-    // SOLAPI 알림톡 발송
+    // CoolSMS 문자 발송 데이터
     const notificationData = {
       projectName: project?.name || '프로젝트',
       amount: data.amount,
@@ -546,29 +545,14 @@ async function sendPaymentNotification(data) {
       category: data.request_type || '자재비'
     };
 
-    console.log('[SOLAPI] 알림톡 발송 데이터:', notificationData);
+    console.log('[CoolSMS] 문자 발송 데이터:', notificationData);
 
-    // SOLAPI로 알림톡 발송 시도
+    // CoolSMS로 문자 발송
     try {
-      const results = await solapiService.sendPaymentNotification(notificationData);
-      console.log('✅ SOLAPI 알림 발송 결과:', results);
-
-      // SOLAPI가 제대로 초기화되지 않았거나 실패한 경우 CoolSMS로 대체
-      if (!results || results.success === false) {
-        console.log('⚠️ SOLAPI 실패, CoolSMS로 대체 발송 시도...');
-        const coolsmsResults = await coolsmsService.sendPaymentNotification(notificationData);
-        console.log('✅ CoolSMS 발송 결과:', coolsmsResults);
-      }
-    } catch (solapiError) {
-      console.error('❌ SOLAPI 알림 발송 실패:', solapiError.message);
-      // SOLAPI 실패 시 CoolSMS로 대체
-      try {
-        console.log('📱 CoolSMS로 대체 발송 시도...');
-        const coolsmsResults = await coolsmsService.sendPaymentNotification(notificationData);
-        console.log('✅ CoolSMS 발송 결과:', coolsmsResults);
-      } catch (coolsmsError) {
-        console.error('❌ CoolSMS도 실패:', coolsmsError.message);
-      }
+      const results = await coolsmsService.sendPaymentNotification(notificationData);
+      console.log('✅ CoolSMS 발송 결과:', results);
+    } catch (coolsmsError) {
+      console.error('❌ CoolSMS 문자 발송 실패:', coolsmsError.message);
     }
   } catch (error) {
     console.error('❌ 결제 알림 발송 실패:', error);
