@@ -406,7 +406,7 @@ const Schedule = () => {
   // 프로젝트별 색상 매핑
   const getProjectColor = (projectName: string) => {
     const index = projects.findIndex(p => p.name === projectName);
-    return index >= 0 ? projectColors[index % projectColors.length] : '#6B7280';
+    return index >= 0 ? projectColors[index % projectColors.length] : '#e2dae5';
   };
 
   // Format time to Korean format (14:30 -> 오후 2시 30분)
