@@ -133,6 +133,8 @@ class CoolSMSService {
      * @param {Object} data - 결제 요청 데이터
      */
     createPaymentMessage(data) {
+        console.log('[createPaymentMessage] 받은 데이터:', JSON.stringify(data, null, 2));
+
         // 프로젝트명에서 앞 2글자 추출 (예: "대림아크로텔_엄상진님" -> "대림")
         const projectName = data.projectName || '프로젝트';
         const projectPrefix = projectName.substring(0, 2);
@@ -140,6 +142,9 @@ class CoolSMSService {
         // 공정명과 항목명
         const process = data.purpose || '';  // 공정명 (목공, 타일, 가구 등) - purpose 필드 사용
         const itemName = data.itemName ? data.itemName.replace(/\s+/g, '') : '';  // 항목명 (공백 제거)
+
+        console.log('[createPaymentMessage] process:', process);
+        console.log('[createPaymentMessage] itemName:', itemName);
 
         // 계좌 정보와 금액 부분 (고정)
         const bankInfo = `${data.bankName || ''} ${data.accountNumber || ''} ${data.accountHolder || ''}`;
