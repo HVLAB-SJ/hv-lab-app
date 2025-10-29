@@ -132,7 +132,7 @@ class CoolSMSService {
      * @param {Object} data - 결제 요청 데이터
      */
     createPaymentMessage(data) {
-        let message = '[HV LAB 결제요청]\n';
+        let message = '';
         message += `[${data.projectName || '프로젝트'}]\n`;
 
         // 공정과 내용 (itemName이나 purpose를 사용)
