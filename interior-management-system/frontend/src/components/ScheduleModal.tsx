@@ -66,7 +66,6 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
   const [timeHour, setTimeHour] = useState<number>(9);
   const [timeMinute, setTimeMinute] = useState<number>(0);
   const [customProjectName, setCustomProjectName] = useState('');
-  const [userModifiedMembers, setUserModifiedMembers] = useState<boolean>(false);
 
   const selectedProjectId = watch('projectId');
 
@@ -76,7 +75,6 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
     setSelectedMembers([]);
     setCustomProjectName('');
     setCustomMember('');
-    setUserModifiedMembers(false);
   }, []); // Empty dependency array - only run once on mount
 
   // 모달이 열릴 때 초기 설정
@@ -220,7 +218,6 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
   // }, [selectedProjectId, projects, event?.id, userModifiedMembers]);
 
   const toggleMember = (member: string) => {
-    setUserModifiedMembers(true);
     setSelectedMembers(prev =>
       prev.includes(member)
         ? prev.filter(m => m !== member)
@@ -230,7 +227,6 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   // HV LAB 토글 함수 (단일 담당자로 처리)
   const toggleHVLab = () => {
-    setUserModifiedMembers(true);
     const hvLabMember = 'HV LAB';
     if (selectedMembers.includes(hvLabMember)) {
       setSelectedMembers(prev => prev.filter(m => m !== hvLabMember));
@@ -241,7 +237,6 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   // 현장팀 토글 함수 (단일 멤버)
   const toggleFieldTeam = () => {
-    setUserModifiedMembers(true);
     const fieldTeamMember = '현장팀';
     if (selectedMembers.includes(fieldTeamMember)) {
       setSelectedMembers(prev => prev.filter(m => m !== fieldTeamMember));
@@ -252,7 +247,6 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   // 디자인팀 토글 함수 (단일 담당자로 처리)
   const toggleDesignTeam = () => {
-    setUserModifiedMembers(true);
     const designTeamMember = '디자인팀';
     if (selectedMembers.includes(designTeamMember)) {
       setSelectedMembers(prev => prev.filter(m => m !== designTeamMember));
@@ -263,14 +257,12 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
 
   const addCustomMember = () => {
     if (customMember.trim() && !selectedMembers.includes(customMember.trim())) {
-      setUserModifiedMembers(true);
       setSelectedMembers(prev => [...prev, customMember.trim()]);
       setCustomMember('');
     }
   };
 
   const removeMember = (member: string) => {
-    setUserModifiedMembers(true);
     setSelectedMembers(prev => prev.filter(m => m !== member));
   };
 
