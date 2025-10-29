@@ -137,13 +137,13 @@ class CoolSMSService {
         let message = `[${data.projectName || '프로젝트'}]\n`;
 
         // 공정 및 항목
-        const process = data.purpose || data.description || '';  // 공정명
+        const process = data.purpose || data.description || '';  // 공정명 (목공, 타일, 가구 등)
         const itemName = data.itemName || '';  // 항목명 (선택사항)
 
-        // 공정과 항목명 조합
+        // 공정과 항목명 조합 - 공정명을 명확히 표시하고 항목명을 우측에 배치
         let contentLine = '';
         if (process && itemName) {
-            contentLine = `${process} ${itemName}`;
+            contentLine = `${process} - ${itemName}`;  // 구분자로 ' - ' 사용
         } else if (process) {
             contentLine = process;
         } else if (itemName) {
