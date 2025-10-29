@@ -305,6 +305,24 @@ router.post('/', authenticateToken, (req, res) => {
             const userIds = await Promise.all(userPromises);
             const validUserIds = userIds.filter(id => id !== null);
             if (validUserIds.length > 0) {
+              // 기존 담당자 먼저 삭제 (중복 방지)
+              await new Promise((resolve, reject) => {
+                db.run(
+                  `DELETE FROM schedule_assignees WHERE schedule_id = ?`,
+                  [scheduleId],
+                  (err) => {
+                    if (err) {
+                      console.error('기존 담당자 삭제 실패:', err);
+                      reject(err);
+                    } else {
+                      console.log('[POST /api/schedules] Existing assignees deleted');
+                      resolve();
+                    }
+                  }
+                );
+              });
+
+              // 새로운 담당자 추가
               const assigneeValues = validUserIds.map(userId => `(${scheduleId}, ${userId})`).join(',');
               await new Promise((resolve, reject) => {
                 db.run(
