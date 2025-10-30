@@ -544,6 +544,10 @@ const Payments = () => {
 
   // 폼 저장
   const handleSave = async () => {
+    console.log('💰 handleSave called');
+    console.log('💰 Current user:', user);
+    console.log('💰 Form data:', formData);
+
     if (!formData.project) {
       toast.error('프로젝트를 선택해주세요');
       return;
@@ -562,102 +566,109 @@ const Payments = () => {
       return;
     }
 
-    // 3.3% 세금공제 시 각 금액에 0.967 적용
-    const finalMaterialCost = includeTaxDeduction ? Math.round(materialCost * 0.967) : materialCost;
-    const finalLaborCost = includeTaxDeduction ? Math.round(laborCost * 0.967) : laborCost;
-    const totalAmount = finalMaterialCost + finalLaborCost;
+    try {
+      // 3.3% 세금공제 시 각 금액에 0.967 적용
+      const finalMaterialCost = includeTaxDeduction ? Math.round(materialCost * 0.967) : materialCost;
+      const finalLaborCost = includeTaxDeduction ? Math.round(laborCost * 0.967) : laborCost;
+      const totalAmount = finalMaterialCost + finalLaborCost;
 
-    const now = new Date();
+      const now = new Date();
 
-    // 수정 모드인 경우
-    if (editingPaymentId) {
-      const updatedPayment: Partial<PaymentRequest> = {
-        project: formData.project,
-        requestDate: new Date(formData.date),
-        purpose: formData.itemName,
-        amount: totalAmount,
-        category: 'material' as const,
-        urgency: 'normal' as const,
-        process: formData.process,
-        itemName: formData.itemName,
-        includesVAT: includeVat,
-        applyTaxDeduction: includeTaxDeduction,
-        materialAmount: finalMaterialCost,
-        laborAmount: finalLaborCost,
-        originalLaborAmount: laborCost,
-        accountHolder: formData.accountHolder,
-        bank: formData.bankName,
-        accountNumber: formData.accountNumber,
-        bankInfo: formData.accountHolder || formData.bankName || formData.accountNumber ? {
+      // 수정 모드인 경우
+      if (editingPaymentId) {
+        const updatedPayment: Partial<PaymentRequest> = {
+          project: formData.project,
+          requestDate: new Date(formData.date),
+          purpose: formData.itemName,
+          amount: totalAmount,
+          category: 'material' as const,
+          urgency: 'normal' as const,
+          process: formData.process,
+          itemName: formData.itemName,
+          includesVAT: includeVat,
+          applyTaxDeduction: includeTaxDeduction,
+          materialAmount: finalMaterialCost,
+          laborAmount: finalLaborCost,
+          originalLaborAmount: laborCost,
           accountHolder: formData.accountHolder,
-          bankName: formData.bankName,
-          accountNumber: formData.accountNumber
-        } : undefined,
-        updatedAt: now
-      };
+          bank: formData.bankName,
+          accountNumber: formData.accountNumber,
+          bankInfo: formData.accountHolder || formData.bankName || formData.accountNumber ? {
+            accountHolder: formData.accountHolder,
+            bankName: formData.bankName,
+            accountNumber: formData.accountNumber
+          } : undefined,
+          updatedAt: now
+        };
 
-      await updatePaymentInAPI(editingPaymentId, updatedPayment);
-      toast.success('결제요청이 수정되었습니다');
+        console.log('💰 Updating payment:', updatedPayment);
+        await updatePaymentInAPI(editingPaymentId, updatedPayment);
+        toast.success('결제요청이 수정되었습니다');
 
-      // 수정 모드 해제
-      setEditingPaymentId(null);
-    } else {
-      // 새 결제요청 추가
-      const newPayment: PaymentRequest = {
-        id: `payment_${Date.now()}`,
-        project: formData.project,
-        requestDate: new Date(formData.date),
-        requestedBy: user?.name || '알 수 없음',
-        purpose: formData.itemName,
-        amount: totalAmount,
-        status: 'pending',
-        category: 'material' as const,
-        urgency: 'normal' as const,
-        process: formData.process,
-        itemName: formData.itemName,
-        includesVAT: includeVat,
-        applyTaxDeduction: includeTaxDeduction,
-        materialAmount: finalMaterialCost,
-        laborAmount: finalLaborCost,
-        originalLaborAmount: laborCost,
-        accountHolder: formData.accountHolder,
-        bank: formData.bankName,
-        accountNumber: formData.accountNumber,
-        bankInfo: formData.accountHolder || formData.bankName || formData.accountNumber ? {
+        // 수정 모드 해제
+        setEditingPaymentId(null);
+      } else {
+        // 새 결제요청 추가
+        const newPayment: PaymentRequest = {
+          id: `payment_${Date.now()}`,
+          project: formData.project,
+          requestDate: new Date(formData.date),
+          requestedBy: user?.name || '알 수 없음',
+          purpose: formData.itemName,
+          amount: totalAmount,
+          status: 'pending',
+          category: 'material' as const,
+          urgency: 'normal' as const,
+          process: formData.process,
+          itemName: formData.itemName,
+          includesVAT: includeVat,
+          applyTaxDeduction: includeTaxDeduction,
+          materialAmount: finalMaterialCost,
+          laborAmount: finalLaborCost,
+          originalLaborAmount: laborCost,
           accountHolder: formData.accountHolder,
-          bankName: formData.bankName,
-          accountNumber: formData.accountNumber
-        } : undefined,
-        attachments: [],
-        createdAt: now,
-        updatedAt: now
-      };
+          bank: formData.bankName,
+          accountNumber: formData.accountNumber,
+          bankInfo: formData.accountHolder || formData.bankName || formData.accountNumber ? {
+            accountHolder: formData.accountHolder,
+            bankName: formData.bankName,
+            accountNumber: formData.accountNumber
+          } : undefined,
+          attachments: [],
+          createdAt: now,
+          updatedAt: now
+        };
 
-      await addPaymentToAPI(newPayment);
-      toast.success('결제요청이 추가되었습니다');
-    }
+        console.log('💰 Creating payment:', newPayment);
+        await addPaymentToAPI(newPayment);
+        toast.success('결제요청이 추가되었습니다');
+      }
 
-    // 폼 초기화 (프로젝트는 유지)
-    setFormData(prev => ({
-      project: prev.project,
-      date: format(new Date(), 'yyyy-MM-dd'),
-      process: '',
-      itemName: '',
-      materialCost: '',
-      laborCost: '',
-      amount: '',
-      accountHolder: '',
-      bankName: '',
-      accountNumber: '',
-      images: []
-    }));
-    setIncludeVat(false);
-    setIncludeTaxDeduction(false);
-    setSelectedContractorId(null);
+      // 폼 초기화 (프로젝트는 유지)
+      setFormData(prev => ({
+        project: prev.project,
+        date: format(new Date(), 'yyyy-MM-dd'),
+        process: '',
+        itemName: '',
+        materialCost: '',
+        laborCost: '',
+        amount: '',
+        accountHolder: '',
+        bankName: '',
+        accountNumber: '',
+        images: []
+      }));
+      setIncludeVat(false);
+      setIncludeTaxDeduction(false);
+      setSelectedContractorId(null);
 
-    // 모바일에서는 리스트로 전환
-    if (isMobileDevice) {
-      setMobileView('list');
+      // 모바일에서는 리스트로 전환
+      if (isMobileDevice) {
+        setMobileView('list');
+      }
+    } catch (error) {
+      console.error('💰 Payment save error:', error);
+      toast.error('결제요청 저장에 실패했습니다: ' + (error as Error).message);
     }
   };
 
