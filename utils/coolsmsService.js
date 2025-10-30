@@ -15,8 +15,14 @@ class CoolSMSService {
         this.from = process.env.COOLSMS_FROM_NUMBER || '01074088864';
 
         // 관리자 전화번호 목록
-        this.adminPhones = process.env.ADMIN_PHONE_NUMBERS ?
+        const allPhones = process.env.ADMIN_PHONE_NUMBERS ?
             process.env.ADMIN_PHONE_NUMBERS.split(',').map(p => p.trim()) : ['01074088864'];
+
+        // 제외할 번호 목록
+        const excludedNumbers = ['01089423283'];
+
+        // 제외할 번호를 필터링
+        this.adminPhones = allPhones.filter(phone => !excludedNumbers.includes(phone.replace(/-/g, '')));
 
         if (this.apiKey && this.apiSecret) {
             console.log('✅ CoolSMS 서비스가 초기화되었습니다.');
