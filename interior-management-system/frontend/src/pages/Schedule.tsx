@@ -440,17 +440,32 @@ const Schedule = () => {
       // 시간이 있고 "-"가 아닌 경우에만 시간 텍스트 추가
       const timeText = (scheduleTime && scheduleTime !== '-') ? ` - ${formatTimeKorean(scheduleTime)}` : '';
 
+      // 사용자 일정 여부 확인 (여기서 직접 확인)
+      const attendees = schedule.attendees || [];
+      const isUserSchedule = attendees.includes('상준') ||  // 직접 "상준" 체크
+                             attendees.includes(user?.name || '') ||  // 전체 이름 체크
+                             (userNameWithoutSurname && attendees.includes(userNameWithoutSurname));  // 짧은 이름 체크
+
+      // 사용자 일정은 시작 시간을 6시간 앞당김
+      const adjustedStart = isUserSchedule
+        ? new Date(schedule.start.getTime() - 21600000)  // 6시간 빼기
+        : schedule.start;
+
+      if (isUserSchedule) {
+        console.log(`✅ User schedule found: ${schedule.title}, attendees:`, attendees);
+      }
+
       return {
         id: schedule.id,
         title: schedule.title + timeText,
         originalTitle: schedule.title,  // 원본 제목 저장
-        start: schedule.start,
+        start: adjustedStart,  // 조정된 시작 시간 사용
         end: schedule.end,
         projectId: project?.id || '',
         projectName: displayProjectName || '',
         type: (schedule.type as ScheduleEvent['type']) || 'other',
         phase: '',
-        assignedTo: schedule.attendees || [],
+        assignedTo: attendees,
         priority: 'medium',
         allDay: !scheduleTime || scheduleTime === '-',
         color: getProjectColor(schedule.project || ''),
@@ -771,32 +786,8 @@ const Schedule = () => {
       }
     });
 
-    // 사용자 일정의 시작 시간을 조정하여 먼저 표시되도록 함
-    console.log(`🔍 groupEventsByProjectAndDate: Processing ${finalEvents.length} events, user:`, user?.name, 'userShort:', userNameWithoutSurname);
-
-    return finalEvents.map(event => {
-      const hasHVLab = event.assignedTo && event.assignedTo.includes('HV LAB');
-      const hasFieldTeam = event.assignedTo && event.assignedTo.includes('현장팀') &&
-        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
-      const hasDesignTeam = event.assignedTo && event.assignedTo.includes('디자인팀') &&
-        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
-      const hasUser = event.assignedTo && (
-        event.assignedTo.includes(user?.name || '') ||
-        (userNameWithoutSurname && event.assignedTo.includes(userNameWithoutSurname)) ||
-        hasHVLab || hasFieldTeam || hasDesignTeam
-      );
-
-      console.log(`🔍 Event "${event.title}": assignedTo=`, event.assignedTo, `hasUser=${hasUser}, hasHVLab=${hasHVLab}`);
-
-      // 사용자 일정은 시작 시간을 6시간 앞당김
-      if (hasUser) {
-        const adjustedStart = new Date(event.start.getTime() - 21600000);
-        console.log(`📌 User event adjusted: ${event.title}, original: ${event.start}, adjusted: ${adjustedStart}`);
-        return { ...event, start: adjustedStart };
-      }
-      return event;
-    }).sort((a, b) => {
-      // 조정된 시간으로 정렬 (사용자 일정은 자동으로 먼저 나옴)
+    // 시간순 정렬 (사용자 일정은 이미 scheduleEvents에서 시간이 조정됨)
+    return finalEvents.sort((a, b) => {
       return a.start.getTime() - b.start.getTime();
     });
   };
