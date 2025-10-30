@@ -5,8 +5,8 @@ const { authenticateToken, isManager } = require('../middleware/auth');
 const { sanitizeDatesArray } = require('../utils/dateUtils');
 const emailService = require('../../utils/emailService');
 
-// 모든 견적문의 조회 (manager만 가능)
-router.get('/', authenticateToken, isManager, (req, res) => {
+// 모든 견적문의 조회 (로그인한 사용자 누구나 가능)
+router.get('/', authenticateToken, (req, res) => {
   db.all(
     `SELECT * FROM quote_inquiries ORDER BY created_at DESC`,
     [],
@@ -36,7 +36,7 @@ router.get('/', authenticateToken, isManager, (req, res) => {
 });
 
 // 견적문의 읽음 처리
-router.put('/:id/read', authenticateToken, isManager, (req, res) => {
+router.put('/:id/read', authenticateToken, (req, res) => {
   const { id } = req.params;
 
   db.run(
