@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { Mail, Phone, MapPin, Calendar, User, Building } from 'lucide-react';
+import api from '../services/api';
 
 interface QuoteInquiry {
   id: string;
@@ -28,18 +29,8 @@ const QuoteInquiry = () => {
   const loadInquiries = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/quote-inquiries', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('견적문의 조회 실패');
-      }
-
-      const data = await response.json();
-      setInquiries(data);
+      const response = await api.get('/quote-inquiries');
+      setInquiries(response.data);
     } catch (error) {
       console.error('Failed to load inquiries:', error);
       toast.error('견적문의를 불러오는데 실패했습니다');
@@ -50,18 +41,7 @@ const QuoteInquiry = () => {
 
   const markAsRead = async (id: string) => {
     try {
-      const response = await fetch(`/api/quote-inquiries/${id}/read`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('읽음 처리 실패');
-      }
-
+      await api.put(`/quote-inquiries/${id}/read`);
       setInquiries(prev =>
         prev.map(inq => inq.id === id ? { ...inq, isRead: true } : inq)
       );
