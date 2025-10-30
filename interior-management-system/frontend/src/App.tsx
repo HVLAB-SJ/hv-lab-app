@@ -14,7 +14,7 @@ import Contractors from './pages/Contractors';
 import WorkRequest from './pages/WorkRequest';
 import ExecutionHistory from './pages/ExecutionHistory';
 import Payments from './pages/Payments';
-// import QuoteInquiry from './pages/QuoteInquiry';
+import QuoteInquiry from './pages/QuoteInquiry';
 import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import { triggerUrgentNotification, requestNotificationPermission } from './utils/notificationSound';
@@ -83,7 +83,7 @@ function App() {
               <Route path="work-request" element={<WorkRequest />} />
               <Route path="execution-history" element={<ExecutionHistory />} />
               <Route path="payments" element={<Payments />} />
-              {/* <Route path="quote-inquiry" element={<QuoteInquiry />} /> */}
+              <Route path="quote-inquiry" element={<QuoteInquiry />} />
             </Route>
           </Routes>
           <Toaster
