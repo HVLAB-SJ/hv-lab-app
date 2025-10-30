@@ -576,6 +576,8 @@ const Payments = () => {
         requestDate: new Date(formData.date),
         purpose: formData.itemName,
         amount: totalAmount,
+        category: 'material' as const,
+        urgency: 'normal' as const,
         process: formData.process,
         itemName: formData.itemName,
         includesVAT: includeVat,
@@ -609,6 +611,8 @@ const Payments = () => {
         purpose: formData.itemName,
         amount: totalAmount,
         status: 'pending',
+        category: 'material' as const,
+        urgency: 'normal' as const,
         process: formData.process,
         itemName: formData.itemName,
         includesVAT: includeVat,
@@ -624,6 +628,7 @@ const Payments = () => {
           bankName: formData.bankName,
           accountNumber: formData.accountNumber
         } : undefined,
+        attachments: [],
         createdAt: now,
         updatedAt: now
       };
