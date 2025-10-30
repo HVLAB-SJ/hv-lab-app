@@ -395,6 +395,9 @@ const Schedule = () => {
   // 사용자 이름에서 성 제거 (마지막 2글자만 사용)
   const userNameWithoutSurname = user?.name ? user.name.slice(-2) : null;
 
+  // 디버깅: 사용자 정보 로그
+  console.log('👤 Current user:', user?.name, 'Short name:', userNameWithoutSurname);
+
   // Load schedules from API on mount
   useEffect(() => {
     loadSchedulesFromAPI().catch(error => {
