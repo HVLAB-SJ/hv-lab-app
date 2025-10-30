@@ -1064,7 +1064,28 @@ const ConstructionPayment = () => {
               </div>
             </div>
 
-            <div className="p-6 border-t flex justify-end">
+            <div className="p-6 border-t flex justify-between">
+              <button
+                onClick={async () => {
+                  if (!selectedRecord) return;
+
+                  if (!window.confirm('이 공사대금 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
+                    return;
+                  }
+
+                  try {
+                    await deleteConstructionPaymentFromAPI(selectedRecord.id);
+                    toast.success('공사대금이 삭제되었습니다');
+                    setSelectedRecord(null);
+                  } catch (error) {
+                    console.error('Failed to delete construction payment:', error);
+                    toast.error('삭제에 실패했습니다');
+                  }
+                }}
+                className="btn btn-outline text-red-600 hover:bg-red-50 hover:border-red-300"
+              >
+                삭제
+              </button>
               <button
                 onClick={() => setSelectedRecord(null)}
                 className="btn btn-outline"
