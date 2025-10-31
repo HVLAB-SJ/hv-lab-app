@@ -94,6 +94,40 @@ router.get('/', authenticateToken, (req, res) => {
       // Do NOT fall back to assigned_to column to prevent unwanted auto-assignment
       let allAssigneeNames = assignees.map(u => u.name || u.username);
 
+      // Convert individual user names back to team names if applicable
+      const compressToTeamNames = (names) => {
+        const nameSet = new Set(names);
+        const result = [];
+
+        // Check for HV LAB (all 6 members)
+        const hvLabMembers = ['상준', '신애', '재천', '민기', '재성', '재현'];
+        if (hvLabMembers.every(member => nameSet.has(member))) {
+          result.push('HV LAB');
+          hvLabMembers.forEach(member => nameSet.delete(member));
+        }
+
+        // Check for 디자인팀 (신애, 재성, 재현)
+        const designTeamMembers = ['신애', '재성', '재현'];
+        if (designTeamMembers.every(member => nameSet.has(member))) {
+          result.push('디자인팀');
+          designTeamMembers.forEach(member => nameSet.delete(member));
+        }
+
+        // Check for 현장팀 (재천, 민기)
+        const fieldTeamMembers = ['재천', '민기'];
+        if (fieldTeamMembers.every(member => nameSet.has(member))) {
+          result.push('현장팀');
+          fieldTeamMembers.forEach(member => nameSet.delete(member));
+        }
+
+        // Add remaining individual names
+        result.push(...Array.from(nameSet));
+
+        return result;
+      };
+
+      allAssigneeNames = compressToTeamNames(allAssigneeNames);
+
       return {
         _id: schedule.id.toString(),
         title: schedule.title,
