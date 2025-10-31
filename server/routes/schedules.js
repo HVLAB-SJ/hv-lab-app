@@ -321,8 +321,28 @@ router.post('/', authenticateToken, (req, res) => {
         if (assignee_ids && Array.isArray(assignee_ids) && assignee_ids.length > 0) {
           console.log('[POST /api/schedules] Processing assignees:', assignee_ids);
 
+          // 팀 이름을 개별 이름으로 확장
+          const expandTeamNames = (assignees) => {
+            const expanded = [];
+            assignees.forEach(assignee => {
+              if (assignee === 'HV LAB') {
+                expanded.push('상준', '신애', '재천', '민기', '재성', '재현');
+              } else if (assignee === '디자인팀') {
+                expanded.push('신애', '재성', '재현');
+              } else if (assignee === '현장팀') {
+                expanded.push('재천', '민기');
+              } else {
+                expanded.push(assignee);
+              }
+            });
+            return [...new Set(expanded)]; // 중복 제거
+          };
+
+          const expandedAssignees = expandTeamNames(assignee_ids);
+          console.log('[POST /api/schedules] Expanded assignees:', expandedAssignees);
+
           // assignee_ids가 숫자 배열인지 확인하고, 문자열이면 user id로 변환
-          const userPromises = assignee_ids.map(assignee => {
+          const userPromises = expandedAssignees.map(assignee => {
             // 숫자면 그대로 사용
             if (typeof assignee === 'number') {
               return Promise.resolve(assignee);
@@ -528,8 +548,28 @@ router.put('/:id', authenticateToken, (req, res) => {
       if (assignee_ids && Array.isArray(assignee_ids)) {
         db.run('DELETE FROM schedule_assignees WHERE schedule_id = ?', [id], (err) => {
           if (!err && assignee_ids.length > 0) {
+            // 팀 이름을 개별 이름으로 확장
+            const expandTeamNames = (assignees) => {
+              const expanded = [];
+              assignees.forEach(assignee => {
+                if (assignee === 'HV LAB') {
+                  expanded.push('상준', '신애', '재천', '민기', '재성', '재현');
+                } else if (assignee === '디자인팀') {
+                  expanded.push('신애', '재성', '재현');
+                } else if (assignee === '현장팀') {
+                  expanded.push('재천', '민기');
+                } else {
+                  expanded.push(assignee);
+                }
+              });
+              return [...new Set(expanded)]; // 중복 제거
+            };
+
+            const expandedAssignees = expandTeamNames(assignee_ids);
+            console.log('[PUT /api/schedules/:id] Expanded assignees:', expandedAssignees);
+
             // assignee_ids가 숫자 배열인지 확인하고, 문자열이면 user id로 변환
-            const userPromises = assignee_ids.map(assignee => {
+            const userPromises = expandedAssignees.map(assignee => {
               // 숫자면 그대로 사용
               if (typeof assignee === 'number') {
                 return Promise.resolve(assignee);
