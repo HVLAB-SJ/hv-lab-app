@@ -129,4 +129,68 @@ router.get('/database-status', checkAdminAuth, (req, res) => {
   });
 });
 
+// Download database endpoint
+router.get('/download-database', checkAdminAuth, (req, res) => {
+  try {
+    const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '../../database.db');
+
+    if (!fs.existsSync(dbPath)) {
+      return res.status(404).json({ error: 'Database file not found' });
+    }
+
+    console.log('📥 Downloading database from:', dbPath);
+
+    const dbData = fs.readFileSync(dbPath);
+    const base64Data = dbData.toString('base64');
+
+    res.json({
+      success: true,
+      database: base64Data,
+      size: dbData.length,
+      path: dbPath
+    });
+  } catch (error) {
+    console.error('❌ Error downloading database:', error);
+    res.status(500).json({
+      error: 'Failed to download database',
+      details: error.message
+    });
+  }
+});
+
+// List backup files
+router.get('/list-backups', checkAdminAuth, (req, res) => {
+  try {
+    const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '../../database.db');
+    const dbDir = path.dirname(dbPath);
+
+    if (!fs.existsSync(dbDir)) {
+      return res.json({ backups: [] });
+    }
+
+    const files = fs.readdirSync(dbDir);
+    const backups = files
+      .filter(f => f.includes('.backup-'))
+      .map(f => {
+        const filePath = path.join(dbDir, f);
+        const stats = fs.statSync(filePath);
+        return {
+          name: f,
+          path: filePath,
+          size: stats.size,
+          modified: stats.mtime
+        };
+      })
+      .sort((a, b) => b.modified - a.modified);
+
+    res.json({ backups });
+  } catch (error) {
+    console.error('❌ Error listing backups:', error);
+    res.status(500).json({
+      error: 'Failed to list backups',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
