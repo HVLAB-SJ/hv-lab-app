@@ -38,8 +38,8 @@ app.use(cors({
   origin: CORS_ORIGIN,
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' })); // Increase limit for database upload
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
@@ -95,6 +95,7 @@ const contractorsRoutes = require('./server/routes/contractors');
 const bankingRoutes = require('./server/routes/banking');
 const testRoutes = require('./server/routes/test');
 const quoteInquiriesRoutes = require('./server/routes/quoteInquiries');
+const adminRoutes = require('./server/routes/admin');
 
 // API 라우트 설정
 app.use('/api/auth', authRoutes);
@@ -111,6 +112,7 @@ app.use('/api/contractors', contractorsRoutes);
 app.use('/api/banking', bankingRoutes);
 app.use('/api/test', testRoutes); // 테스트 라우트 추가
 app.use('/api/quote-inquiries', quoteInquiriesRoutes);
+app.use('/api/admin', adminRoutes); // 관리자 라우트 추가
 
 
 // 로그인 페이지 라우트
