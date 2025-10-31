@@ -109,24 +109,42 @@ router.put('/:id/read', authenticateToken, (req, res) => {
   );
 });
 
-// 견적문의 연락 완료 처리
+// 견적문의 연락 완료 토글
 router.put('/:id/contacted', authenticateToken, (req, res) => {
   const { id } = req.params;
 
-  db.run(
-    `UPDATE quote_inquiries SET is_contacted = 1 WHERE id = ?`,
+  // 먼저 현재 상태 조회
+  db.get(
+    `SELECT is_contacted FROM quote_inquiries WHERE id = ?`,
     [id],
-    function(err) {
+    (err, row) => {
       if (err) {
-        console.error('Error marking as contacted:', err);
-        return res.status(500).json({ error: '연락 처리 실패' });
+        console.error('Error fetching current status:', err);
+        return res.status(500).json({ error: '상태 조회 실패' });
       }
 
-      if (this.changes === 0) {
+      if (!row) {
         return res.status(404).json({ error: '견적문의를 찾을 수 없습니다.' });
       }
 
-      res.json({ message: '연락 처리되었습니다.' });
+      // 현재 상태의 반대로 토글
+      const newStatus = row.is_contacted === 1 ? 0 : 1;
+
+      db.run(
+        `UPDATE quote_inquiries SET is_contacted = ? WHERE id = ?`,
+        [newStatus, id],
+        function(err) {
+          if (err) {
+            console.error('Error updating contacted status:', err);
+            return res.status(500).json({ error: '연락 처리 실패' });
+          }
+
+          res.json({
+            message: newStatus === 1 ? '연락 처리되었습니다.' : '연락 대기 상태로 변경되었습니다.',
+            isContacted: newStatus === 1
+          });
+        }
+      );
     }
   );
 });
