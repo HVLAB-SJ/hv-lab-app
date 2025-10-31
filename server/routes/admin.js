@@ -193,4 +193,41 @@ router.get('/list-backups', checkAdminAuth, (req, res) => {
   }
 });
 
+// Download backup file
+router.get('/download-backup/:filename', checkAdminAuth, (req, res) => {
+  try {
+    const { filename } = req.params;
+    const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '../../database.db');
+    const dbDir = path.dirname(dbPath);
+    const backupPath = path.join(dbDir, filename);
+
+    // Security check - ensure filename is a backup file
+    if (!filename.includes('.backup-')) {
+      return res.status(400).json({ error: 'Invalid backup filename' });
+    }
+
+    if (!fs.existsSync(backupPath)) {
+      return res.status(404).json({ error: 'Backup file not found' });
+    }
+
+    console.log('📥 Downloading backup:', backupPath);
+
+    const backupData = fs.readFileSync(backupPath);
+    const base64Data = backupData.toString('base64');
+
+    res.json({
+      success: true,
+      database: base64Data,
+      size: backupData.length,
+      filename: filename
+    });
+  } catch (error) {
+    console.error('❌ Error downloading backup:', error);
+    res.status(500).json({
+      error: 'Failed to download backup',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
