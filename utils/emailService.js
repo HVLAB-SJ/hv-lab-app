@@ -161,6 +161,11 @@ class EmailService {
         projectType: '',
         budget: '',
         message: '',
+        sashWork: '',
+        extensionWork: '',
+        preferredDate: '',
+        areaSize: '',
+        attachments: [],
         rawEmail: text
       };
 
@@ -189,8 +194,36 @@ class EmailService {
       const budgetMatch = text.match(/(?:예산|비용)[:\s]*([^\n]+)/i);
       if (budgetMatch) inquiry.budget = budgetMatch[1].trim();
 
+      // 샷시 공사 여부 추출
+      const sashWorkMatch = text.match(/(?:샷시\s*공사|창호\s*공사)[:\s]*([^\n]+)/i);
+      if (sashWorkMatch) inquiry.sashWork = sashWorkMatch[1].trim();
+
+      // 확장 공사 여부 추출
+      const extensionWorkMatch = text.match(/(?:확장\s*공사|발코니\s*확장)[:\s]*([^\n]+)/i);
+      if (extensionWorkMatch) inquiry.extensionWork = extensionWorkMatch[1].trim();
+
+      // 시공 희망 시기 추출
+      const preferredDateMatch = text.match(/(?:시공\s*시기|희망\s*시기|공사\s*시기)[:\s]*([^\n]+)/i);
+      if (preferredDateMatch) inquiry.preferredDate = preferredDateMatch[1].trim();
+
+      // 평수 추출
+      const areaSizeMatch = text.match(/(?:평수|면적)[:\s]*([^\n]+)/i);
+      if (areaSizeMatch) inquiry.areaSize = areaSizeMatch[1].trim();
+
+      // 첨부파일 처리
+      if (parsed.attachments && parsed.attachments.length > 0) {
+        inquiry.attachments = parsed.attachments
+          .filter(att => att.contentType && att.contentType.startsWith('image/'))
+          .map(att => ({
+            filename: att.filename,
+            contentType: att.contentType,
+            size: att.size,
+            content: att.content ? att.content.toString('base64') : null
+          }));
+      }
+
       // 문의내용 추출
-      const messageMatch = text.match(/(?:문의\s*내용|내용)[:\s]*([^\n]+(?:\n(?!(?:이름|전화|이메일|주소|예산)).+)*)/i);
+      const messageMatch = text.match(/(?:문의\s*내용|내용)[:\s]*([^\n]+(?:\n(?!(?:이름|전화|이메일|주소|예산|샷시|확장|시공|평수)).+)*)/i);
       if (messageMatch) {
         inquiry.message = messageMatch[1].trim();
       } else {
@@ -239,11 +272,17 @@ class EmailService {
             return;
           }
 
+          // 첨부파일 JSON으로 변환
+          const attachmentsJson = inquiry.attachments && inquiry.attachments.length > 0
+            ? JSON.stringify(inquiry.attachments)
+            : null;
+
           // 새로운 견적문의 저장
           db.run(
             `INSERT INTO quote_inquiries
-             (name, phone, email, address, project_type, budget, message, is_read)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
+             (name, phone, email, address, project_type, budget, message, is_read,
+              sash_work, extension_work, preferred_date, area_size, attachments)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
             [
               inquiry.name,
               inquiry.phone,
@@ -252,6 +291,11 @@ class EmailService {
               inquiry.projectType || '',
               inquiry.budget || '',
               inquiry.message,
+              inquiry.sashWork || '',
+              inquiry.extensionWork || '',
+              inquiry.preferredDate || '',
+              inquiry.areaSize || '',
+              attachmentsJson
             ],
             function(err) {
               if (err) {

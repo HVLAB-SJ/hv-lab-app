@@ -16,21 +16,57 @@ router.get('/', authenticateToken, (req, res) => {
         return res.status(500).json({ error: '견적문의 조회 실패' });
       }
 
-      const inquiries = (rows || []).map(row => ({
-        id: row.id.toString(),
-        name: row.name,
-        phone: row.phone,
-        email: row.email,
-        address: row.address,
-        projectType: row.project_type,
-        budget: row.budget,
-        message: row.message,
-        isRead: row.is_read === 1,
-        createdAt: row.created_at
-      }));
+      const inquiries = (rows || []).map(row => {
+        let attachments = [];
+        if (row.attachments) {
+          try {
+            attachments = JSON.parse(row.attachments);
+          } catch (e) {
+            console.error('Failed to parse attachments:', e);
+          }
+        }
+
+        return {
+          id: row.id.toString(),
+          name: row.name,
+          phone: row.phone,
+          email: row.email,
+          address: row.address,
+          projectType: row.project_type,
+          budget: row.budget,
+          message: row.message,
+          sashWork: row.sash_work,
+          extensionWork: row.extension_work,
+          preferredDate: row.preferred_date,
+          areaSize: row.area_size,
+          isRead: row.is_read === 1,
+          createdAt: row.created_at,
+          attachments: attachments.map(att => ({
+            filename: att.filename,
+            contentType: att.contentType,
+            size: att.size
+            // content는 다운로드 시에만 제공
+          }))
+        };
+      });
 
       const sanitized = sanitizeDatesArray(inquiries, ['createdAt']);
       res.json(sanitized);
+    }
+  );
+});
+
+// 미읽음 견적문의 개수 조회
+router.get('/unread-count', authenticateToken, (req, res) => {
+  db.get(
+    `SELECT COUNT(*) as count FROM quote_inquiries WHERE is_read = 0`,
+    [],
+    (err, row) => {
+      if (err) {
+        console.error('Error fetching unread count:', err);
+        return res.status(500).json({ error: '미읽음 개수 조회 실패' });
+      }
+      res.json({ count: row.count });
     }
   );
 });
@@ -79,6 +115,48 @@ router.post('/submit', (req, res) => {
         id: this.lastID,
         message: '견적문의가 접수되었습니다.'
       });
+    }
+  );
+});
+
+// 첨부파일 다운로드
+router.get('/:id/attachment/:index', authenticateToken, (req, res) => {
+  const { id, index } = req.params;
+
+  db.get(
+    `SELECT attachments FROM quote_inquiries WHERE id = ?`,
+    [id],
+    (err, row) => {
+      if (err) {
+        console.error('Error fetching attachment:', err);
+        return res.status(500).json({ error: '첨부파일 조회 실패' });
+      }
+
+      if (!row) {
+        return res.status(404).json({ error: '견적문의를 찾을 수 없습니다.' });
+      }
+
+      if (!row.attachments) {
+        return res.status(404).json({ error: '첨부파일이 없습니다.' });
+      }
+
+      try {
+        const attachments = JSON.parse(row.attachments);
+        const attachment = attachments[parseInt(index)];
+
+        if (!attachment) {
+          return res.status(404).json({ error: '첨부파일을 찾을 수 없습니다.' });
+        }
+
+        // Base64 디코딩하여 이미지 반환
+        const buffer = Buffer.from(attachment.content, 'base64');
+        res.set('Content-Type', attachment.contentType);
+        res.set('Content-Disposition', `attachment; filename="${encodeURIComponent(attachment.filename)}"`);
+        res.send(buffer);
+      } catch (error) {
+        console.error('Error processing attachment:', error);
+        res.status(500).json({ error: '첨부파일 처리 실패' });
+      }
     }
   );
 });
