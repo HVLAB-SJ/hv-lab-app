@@ -13,6 +13,7 @@ export interface IASRequest extends Document {
   completionDate?: Date;
   notes?: string;
   status?: 'pending' | 'completed' | 'revisit'; // AS 상태
+  images?: string[];  // 이미지 (base64 형식)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,6 +67,10 @@ const asRequestSchema = new Schema<IASRequest>({
     type: String,
     enum: ['pending', 'completed', 'revisit'],
     default: 'pending'
+  },
+  images: {
+    type: [String],
+    default: []
   }
 }, {
   timestamps: true

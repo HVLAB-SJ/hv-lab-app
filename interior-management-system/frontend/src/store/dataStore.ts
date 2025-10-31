@@ -135,6 +135,7 @@ export interface ASRequest {
   completionDate?: Date;
   notes?: string;
   status?: 'pending' | 'completed' | 'revisit'; // AS 상태: 대기중, 완료, 재방문
+  images?: string[]; // 이미지 (base64 형식)
 }
 
 export interface ExecutionRecord {
