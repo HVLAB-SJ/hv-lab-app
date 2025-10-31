@@ -24,11 +24,13 @@ const createQuoteInquiriesTable = require('./server/migrations/create-quote-inqu
 const updateSchedulesProjectNullable = require('./server/migrations/update-schedules-project-nullable');
 const addQuoteInquiryFields = require('./server/migrations/add-quote-inquiry-fields');
 const addQuoteInquiryContacted = require('./server/migrations/add-quote-inquiry-contacted');
+const { addExpectedPaymentDates } = require('./server/migrations/add-expected-payment-dates');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
 addQuoteInquiryFields().catch(console.error);
 addQuoteInquiryContacted().catch(console.error);
+addExpectedPaymentDates().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
