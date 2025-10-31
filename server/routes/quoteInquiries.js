@@ -40,6 +40,7 @@ router.get('/', authenticateToken, (req, res) => {
           preferredDate: row.preferred_date,
           areaSize: row.area_size,
           isRead: row.is_read === 1,
+          isContacted: row.is_contacted === 1,
           createdAt: row.created_at,
           attachments: attachments.map(att => ({
             filename: att.filename,
@@ -71,6 +72,21 @@ router.get('/unread-count', authenticateToken, (req, res) => {
   );
 });
 
+// 미연락 견적문의 개수 조회
+router.get('/uncontacted-count', authenticateToken, (req, res) => {
+  db.get(
+    `SELECT COUNT(*) as count FROM quote_inquiries WHERE is_contacted = 0`,
+    [],
+    (err, row) => {
+      if (err) {
+        console.error('Error fetching uncontacted count:', err);
+        return res.status(500).json({ error: '미연락 개수 조회 실패' });
+      }
+      res.json({ count: row.count });
+    }
+  );
+});
+
 // 견적문의 읽음 처리
 router.put('/:id/read', authenticateToken, (req, res) => {
   const { id } = req.params;
@@ -89,6 +105,28 @@ router.put('/:id/read', authenticateToken, (req, res) => {
       }
 
       res.json({ message: '읽음 처리되었습니다.' });
+    }
+  );
+});
+
+// 견적문의 연락 완료 처리
+router.put('/:id/contacted', authenticateToken, (req, res) => {
+  const { id } = req.params;
+
+  db.run(
+    `UPDATE quote_inquiries SET is_contacted = 1 WHERE id = ?`,
+    [id],
+    function(err) {
+      if (err) {
+        console.error('Error marking as contacted:', err);
+        return res.status(500).json({ error: '연락 처리 실패' });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ error: '견적문의를 찾을 수 없습니다.' });
+      }
+
+      res.json({ message: '연락 처리되었습니다.' });
     }
   );
 });
