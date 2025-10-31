@@ -20,7 +20,7 @@
   "license": "ISC",
   "description": "인테리어 회사를 위한 공사일정 관리 시스템",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "axios": "^1.12.2",
