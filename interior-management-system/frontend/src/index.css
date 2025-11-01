@@ -433,28 +433,26 @@ div.rbc-popup {
   height: 100% !important;
 }
 
-/* 이벤트 래퍼 - 날짜 바로 아래 위치 */
-.rbc-events-container {
-  height: auto !important;
-  margin-top: 20px !important;
-  padding-top: 0px !important;
-  padding-bottom: 0px !important;
+/* 이벤트 컨테이너 - 날짜와 분리 */
+.rbc-row-content-scroll-container {
+  margin-top: 25px !important;
+  padding-top: 0 !important;
 }
 
-/* 더 구체적인 선택자로 이벤트 컨테이너 위치 조정 */
-.rbc-month-view .rbc-month-row .rbc-row-content .rbc-events-container {
-  margin-top: 20px !important;
+/* rbc-row 내부의 이벤트들 */
+.rbc-row-content-scroll-container .rbc-row {
   position: relative !important;
 }
 
-/* 날짜 헤더 직후 이벤트 위치 */
-.rbc-date-cell + .rbc-events-container {
-  margin-top: 20px !important;
+/* 이벤트 세그먼트 위치 */
+.rbc-row-segment {
+  margin-top: 0 !important;
 }
 
-/* 이벤트 자체의 간격도 최소화 */
+/* 개별 이벤트 스타일 */
 .rbc-event {
   margin-bottom: 1px !important;
+  margin-top: 0 !important;
 }
 
 /* 이전/다음 달 일요일 */
