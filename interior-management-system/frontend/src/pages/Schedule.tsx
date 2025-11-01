@@ -1114,7 +1114,7 @@ const Schedule = () => {
             <div className="flex items-center space-x-2 md:space-x-3">
               <button
                 onClick={() => onNavigate('PREV')}
-                className="px-2 md:px-3 py-1 md:py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                className="px-3 md:px-4 py-1.5 md:py-2 text-xl md:text-2xl text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-bold"
               >
                 ←
               </button>
@@ -1126,7 +1126,7 @@ const Schedule = () => {
               </div>
               <button
                 onClick={() => onNavigate('NEXT')}
-                className="px-2 md:px-3 py-1 md:py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                className="px-3 md:px-4 py-1.5 md:py-2 text-xl md:text-2xl text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-bold"
               >
                 →
               </button>
