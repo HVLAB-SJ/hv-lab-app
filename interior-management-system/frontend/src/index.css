@@ -434,9 +434,14 @@ div.rbc-popup {
 /* 이벤트 래퍼 - 날짜와 겹치지 않도록 상단 여백 */
 .rbc-events-container {
   height: auto !important;
-  margin-top: 0px !important;
-  padding-top: 28px !important;
+  margin-top: 24px !important;
+  padding-top: 0px !important;
   padding-bottom: 0px !important;
+}
+
+/* 더 구체적인 선택자로 이벤트 컨테이너 여백 보장 */
+.rbc-month-view .rbc-month-row .rbc-row-content .rbc-events-container {
+  margin-top: 24px !important;
 }
 
 /* 이벤트 자체의 간격도 최소화 */
