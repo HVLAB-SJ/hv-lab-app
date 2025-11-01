@@ -436,15 +436,20 @@ div.rbc-popup {
 /* 이벤트 래퍼 - 날짜 바로 아래 위치 */
 .rbc-events-container {
   height: auto !important;
-  margin-top: 2px !important;
+  margin-top: 20px !important;
   padding-top: 0px !important;
   padding-bottom: 0px !important;
 }
 
 /* 더 구체적인 선택자로 이벤트 컨테이너 위치 조정 */
 .rbc-month-view .rbc-month-row .rbc-row-content .rbc-events-container {
-  margin-top: 2px !important;
+  margin-top: 20px !important;
   position: relative !important;
+}
+
+/* 날짜 헤더 직후 이벤트 위치 */
+.rbc-date-cell + .rbc-events-container {
+  margin-top: 20px !important;
 }
 
 /* 이벤트 자체의 간격도 최소화 */
