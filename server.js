@@ -47,38 +47,11 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' })); // Increase limit for database upload
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// 정적 파일 제공
-// 특정 파일들만 루트에서 제공
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
-app.get('/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-app.get('/favicon.png', (req, res) => {
-  res.sendFile(path.join(__dirname, 'favicon.png'));
-});
-app.get('/manifest.json', (req, res) => {
-  res.sendFile(path.join(__dirname, 'manifest.json'));
-});
-app.get('/sw.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'sw.js'));
-});
-app.get('/registerSW.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'registerSW.js'));
-});
-app.get('/workbox-*.js', (req, res) => {
-  const fileName = req.path.substring(1);
-  res.sendFile(path.join(__dirname, fileName));
-});
-app.get('/*.svg', (req, res) => {
-  const fileName = req.path.substring(1);
-  res.sendFile(path.join(__dirname, fileName));
-});
-app.get('/*.png', (req, res) => {
-  const fileName = req.path.substring(1);
-  res.sendFile(path.join(__dirname, fileName));
-});
-
+// 정적 파일 제공 - PUBLIC 폴더에서만 제공
+// 모든 프론트엔드 빌드 파일은 public 폴더에 있어야 함
 app.use(express.static(path.join(__dirname, 'public')));
+
+// views 폴더 (필요시)
 app.use(express.static(path.join(__dirname, 'views')));
 
 // Socket.IO 연결 처리
@@ -173,17 +146,8 @@ app.use((req, res) => {
     return res.status(404).json({ error: '페이지를 찾을 수 없습니다.' });
   }
 
-  // HTML 요청인 경우 React app (index.html) 반환
-  // 먼저 루트의 index.html 확인, 없으면 public/index.html
-  const fs = require('fs');
-  const rootIndex = path.join(__dirname, 'index.html');
-  const publicIndex = path.join(__dirname, 'public', 'index.html');
-
-  if (fs.existsSync(rootIndex)) {
-    res.sendFile(rootIndex);
-  } else {
-    res.sendFile(publicIndex);
-  }
+  // HTML 요청인 경우 React app (public/index.html) 반환
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // 에러 처리 미들웨어
