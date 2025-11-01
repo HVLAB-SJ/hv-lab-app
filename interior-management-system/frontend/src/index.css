@@ -230,6 +230,12 @@
   padding-left: 9px !important;
 }
 
+/* 툴바와 헤더 사이 여백 제거 - 데스크톱 */
+.rbc-toolbar {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
 /* 공휴일 날짜 색상 - 일요일과 동일한 채도 낮은 붉은색 */
 .rbc-date-cell.holiday-date button,
 .rbc-date-cell.holiday-date .rbc-button-link,
@@ -393,7 +399,8 @@ div.rbc-popup {
 /* 이벤트 래퍼 - 날짜와 겹치지 않도록 상단 여백 */
 .rbc-events-container {
   height: auto !important;
-  margin-top: 25px !important;
+  margin-top: 0px !important;
+  padding-top: 28px !important;
   padding-bottom: 0px !important;
 }
 

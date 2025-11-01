@@ -1,0 +1,739 @@
+import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import clsx from 'clsx';
+import { Trash2, Smartphone, Zap } from 'lucide-react';
+import PaymentRequestModal from '../components/PaymentRequestModal';
+import toast from 'react-hot-toast';
+import { useDataStore, type Payment } from '../store/dataStore';
+// import { initKakao, sendPaymentNotification } from '../utils/kakao'; // SOLAPI로 대체됨
+import paymentService from '../services/paymentService';
+import { getBankCode } from '../utils/bankCodes';
+
+type TabStatus = 'pending' | 'completed' | 'all';
+type MobileView = 'form' | 'list';
+
+const Payments = () => {
+  const { payments, loadPaymentsFromAPI, updatePaymentInAPI, addPaymentToAPI, addExecutionRecord, updateExecutionRecord, deleteExecutionRecord, executionRecords } = useDataStore();
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<TabStatus>('pending');
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [mobileView, setMobileView] = useState<MobileView>('form');
+
+  // 결제 데이터 로드
+  useEffect(() => {
+    // initKakao(); // SOLAPI 사용으로 제거됨
+    loadPaymentsFromAPI().catch(error => {
+      console.error('Failed to load payments:', error);
+      toast.error('결제 요청 데이터를 불러오는데 실패했습니다');
+    });
+  }, [loadPaymentsFromAPI]);
+
+  // 헤더의 + 버튼 클릭 이벤트 수신 - 모바일에서 입력 탭으로 전환
+  useEffect(() => {
+    const handleHeaderAddButton = () => {
+      setMobileView('form');
+    };
+
+    window.addEventListener('headerAddButtonClick', handleHeaderAddButton);
+    return () => window.removeEventListener('headerAddButtonClick', handleHeaderAddButton);
+  }, []);
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      pending: { label: '대기중', color: 'bg-gray-100 text-gray-800 border-gray-300' },
+      reviewing: { label: '검토중', color: 'bg-gray-100 text-gray-700 border-gray-300' },
+      approved: { label: '승인됨', color: 'bg-gray-100 text-gray-800 border-gray-300' },
+      rejected: { label: '거절됨', color: 'bg-gray-100 text-gray-700 border-gray-300' },
+      completed: { label: '완료', color: 'bg-gray-700 text-gray-50 border-gray-700' }
+    };
+    const config = statusConfig[status as keyof typeof statusConfig];
+
+    return (
+      <span className={clsx('px-3 py-1 text-xs font-semibold border rounded-full', config.color)}>
+        {config.label}
+      </span>
+    );
+  };
+
+  const getUrgencyBadge = (urgency: string) => {
+    const urgencyConfig = {
+      normal: { label: '보통', color: 'bg-gray-50 text-gray-600 border-gray-200' },
+      urgent: { label: '긴급', color: 'bg-rose-100/60 text-rose-800 border-rose-200' },
+      emergency: { label: '매우긴급', color: 'bg-rose-100/60 text-rose-800 border-rose-200' }
+    };
+    const config = urgencyConfig[urgency as keyof typeof urgencyConfig];
+
+    return (
+      <span className={clsx('px-2 py-1 text-xs font-semibold border rounded', config.color)}>
+        {config.label}
+      </span>
+    );
+  };
+
+  const getCategoryLabel = (category: string) => {
+    const categories = {
+      material: '자재',
+      labor: '인건비',
+      equipment: '장비',
+      transport: '운송',
+      other: '기타'
+    };
+    return categories[category as keyof typeof categories];
+  };
+
+  const handleStatusChange = async (paymentId: string, newStatus: string) => {
+    try {
+      // 송금완료 처리 시 실행내역에 추가
+      if (newStatus === 'completed') {
+        const payment = payments.find(p => p.id === paymentId);
+        if (payment) {
+          // 이미 해당 paymentId로 실행내역이 생성되어 있는지 확인
+          const existingRecord = executionRecords.find(r => r.paymentId === paymentId);
+          if (existingRecord) {
+            console.log('실행내역이 이미 존재합니다:', paymentId);
+            // 이미 실행내역이 있으면 상태만 업데이트하고 종료
+            await paymentService.updatePaymentStatus(paymentId, newStatus);
+            await loadPaymentsFromAPI();
+            toast.info('이미 실행내역이 생성된 결제입니다');
+            return;
+          }
+
+          const now = new Date();
+          const materialCost = payment.materialAmount || 0;
+          const laborCost = payment.laborAmount || 0;
+          const totalAmount = payment.amount || 0;
+
+          // 하나의 실행내역에 자재비와 인건비를 모두 포함
+          if (totalAmount > 0) {
+            let totalVat = 0;
+            let materialSupplyAmount = materialCost;
+            let laborSupplyAmount = laborCost;
+
+            if (payment.includesVAT) {
+              // 부가세 포함인 경우: 각각 부가세 역산
+              if (materialCost > 0) {
+                materialSupplyAmount = Math.round(materialCost / 1.1);
+              }
+              if (laborCost > 0) {
+                laborSupplyAmount = Math.round(laborCost / 1.1);
+              }
+              // 전체 부가세 계산
+              totalVat = totalAmount - (materialSupplyAmount + laborSupplyAmount);
+            } else {
+              // 부가세 미포함인 경우: 부가세는 0
+              totalVat = 0;
+            }
+
+            const executionRecord = {
+              id: `exec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              project: payment.project,
+              author: payment.requestedBy || '시스템',
+              date: now,
+              process: payment.process,
+              itemName: payment.itemName || payment.purpose || '결제 항목',
+              materialCost: materialSupplyAmount,
+              laborCost: laborSupplyAmount,
+              vatAmount: totalVat,
+              totalAmount: totalAmount,
+              notes: `결제요청 #${paymentId}에서 자동 생성`,
+              paymentId: paymentId,
+              createdAt: now,
+              updatedAt: now
+            };
+            addExecutionRecord(executionRecord);
+          }
+
+          // 상태 업데이트
+          await paymentService.updatePaymentStatus(paymentId, newStatus);
+          await loadPaymentsFromAPI();
+          toast.success('송금완료 처리되고 실행내역에 추가되었습니다');
+        }
+      } else {
+        // 다른 상태 변경의 경우
+        await paymentService.updatePaymentStatus(paymentId, newStatus);
+        await loadPaymentsFromAPI();
+        toast.success('결제 요청 상태가 변경되었습니다');
+      }
+    } catch (error) {
+      console.error('Failed to update payment status:', error);
+      toast.error('상태 변경에 실패했습니다');
+    }
+  };
+
+  // 기존 실행내역의 자재비, 인건비, 부가세를 올바르게 수정
+  const fixExecutionRecords = async () => {
+    if (!window.confirm('기존 실행내역의 자재비, 인건비, 부가세를 올바른 값으로 수정하시겠습니까?\n\n이 작업은 연결된 결제요청 정보를 기반으로 실행내역을 수정합니다.')) {
+      return;
+    }
+
+    setIsMigrating(true);
+    let fixedCount = 0;
+    let createdCount = 0;
+    let skippedCount = 0;
+
+    try {
+      // 송금완료 상태인 모든 결제 찾기
+      const completedPayments = payments.filter(p => p.status === 'completed');
+
+      for (const payment of completedPayments) {
+        // 해당 결제요청과 연결된 실행내역 찾기
+        const linkedRecords = executionRecords.filter(r => r.paymentId === payment.id);
+
+        const materialCost = payment.materialAmount || 0;
+        const laborCost = payment.laborAmount || 0;
+        const now = new Date();
+
+        // 연결된 실행내역이 없으면 새로 생성
+        if (linkedRecords.length === 0 && payment.amount > 0) {
+          let totalVat = 0;
+          let materialSupplyAmount = materialCost;
+          let laborSupplyAmount = laborCost;
+          const totalAmount = payment.amount;
+
+          if (payment.includesVAT) {
+            // 부가세 포함인 경우: 각각 부가세 역산
+            if (materialCost > 0) {
+              materialSupplyAmount = Math.round(materialCost / 1.1);
+            }
+            if (laborCost > 0) {
+              laborSupplyAmount = Math.round(laborCost / 1.1);
+            }
+            // 전체 부가세 계산
+            totalVat = totalAmount - (materialSupplyAmount + laborSupplyAmount);
+          } else {
+            // 부가세 미포함인 경우: 부가세는 0
+            totalVat = 0;
+          }
+
+            // 자재비와 인건비가 모두 0이면서 총액만 있는 경우 - 기본적으로 자재비로 처리
+          if (materialCost === 0 && laborCost === 0) {
+            if (payment.includesVAT) {
+              materialSupplyAmount = Math.round(totalAmount / 1.1);
+              totalVat = totalAmount - materialSupplyAmount;
+            } else {
+              materialSupplyAmount = totalAmount;
+              totalVat = 0;
+            }
+          }
+
+          const executionRecord = {
+            id: `exec-fix-${payment.id}-${Date.now()}`,
+            project: payment.project,
+            author: payment.requestedBy || '시스템',
+            date: payment.requestDate || now,
+            process: payment.process,
+            itemName: payment.itemName || payment.purpose || '결제 항목',
+            materialCost: materialSupplyAmount,
+            laborCost: laborSupplyAmount,
+            vatAmount: totalVat,
+            totalAmount: totalAmount,
+            notes: `결제요청 #${payment.id}에서 수정 생성`,
+            paymentId: payment.id,
+            createdAt: now,
+            updatedAt: now
+          };
+          addExecutionRecord(executionRecord);
+          createdCount++;
+        }
+        // 기존 실행내역이 있는 경우 - 첫번째 기록을 업데이트하고 나머지는 삭제
+        else if (linkedRecords.length > 0) {
+          const firstRecord = linkedRecords[0];
+          let totalVat = 0;
+          let materialSupplyAmount = materialCost;
+          let laborSupplyAmount = laborCost;
+          const totalAmount = payment.amount;
+
+          // 중복 실행내역 삭제 (2개 이상일 경우)
+          if (linkedRecords.length > 1) {
+            console.log(`중복 실행내역 발견: ${linkedRecords.length}개 (Payment ID: ${payment.id})`);
+            // 첫 번째를 제외한 나머지 삭제
+            for (let i = 1; i < linkedRecords.length; i++) {
+              const duplicateRecord = linkedRecords[i];
+              console.log(`중복 실행내역 삭제: ${duplicateRecord.id}`);
+              deleteExecutionRecord(duplicateRecord.id);
+            }
+            toast.info(`${linkedRecords.length - 1}개의 중복 실행내역을 삭제했습니다`);
+          }
+
+          if (payment.includesVAT) {
+            // 부가세 포함인 경우: 각각 부가세 역산
+            if (materialCost > 0) {
+              materialSupplyAmount = Math.round(materialCost / 1.1);
+            }
+            if (laborCost > 0) {
+              laborSupplyAmount = Math.round(laborCost / 1.1);
+            }
+            // 전체 부가세 계산
+            totalVat = totalAmount - (materialSupplyAmount + laborSupplyAmount);
+          } else {
+            // 부가세 미포함인 경우: 부가세는 0
+            totalVat = 0;
+          }
+
+          // 자재비와 인건비가 모두 0인 경우
+          if (materialCost === 0 && laborCost === 0) {
+            if (payment.includesVAT) {
+              materialSupplyAmount = Math.round(totalAmount / 1.1);
+              totalVat = totalAmount - materialSupplyAmount;
+            } else {
+              materialSupplyAmount = totalAmount;
+              totalVat = 0;
+            }
+          }
+
+          // 첫번째 기록 업데이트
+          updateExecutionRecord(firstRecord.id, {
+            itemName: payment.itemName || payment.purpose || '결제 항목',
+            materialCost: materialSupplyAmount,
+            laborCost: laborSupplyAmount,
+            vatAmount: totalVat,
+            totalAmount: totalAmount,
+            notes: `결제요청 #${payment.id}에서 수정`,
+            updatedAt: now
+          });
+          fixedCount++;
+
+          // 나머지 중복 기록 삭제 (2개 이상일 경우)
+          // Note: removeExecutionRecord function would be needed in dataStore
+        } else {
+          skippedCount++;
+        }
+
+        // 진행 상황을 위한 짧은 대기
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+
+      toast.success(`수정 완료!\n수정: ${fixedCount}건\n생성: ${createdCount}건\n건너뜀: ${skippedCount}건`);
+    } catch (error) {
+      console.error('Fix execution records failed:', error);
+      toast.error('실행내역 수정 중 오류가 발생했습니다');
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
+  const handleDelete = async (paymentId: string, paymentPurpose: string) => {
+    if (!window.confirm(`"${paymentPurpose}" 결제 요청을 삭제하시겠습니까?\n\n삭제된 내역은 복구할 수 없습니다.`)) {
+      return;
+    }
+
+    try {
+      await paymentService.deletePayment(paymentId);
+      await loadPaymentsFromAPI();
+      toast.success('결제 요청이 삭제되었습니다');
+    } catch (error) {
+      console.error('Failed to delete payment:', error);
+      toast.error('삭제에 실패했습니다');
+    }
+  };
+
+  // 탭별 필터링
+  const getFilteredPayments = () => {
+    let filtered = payments;
+
+    // 탭 필터
+    if (activeTab !== 'all') {
+      filtered = filtered.filter(p => p.status === activeTab);
+    }
+
+    // 검색 필터
+    if (searchTerm) {
+      filtered = filtered.filter(payment =>
+        (payment.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+        (payment.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+        payment.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.requestedBy.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  const filteredPayments = getFilteredPayments();
+
+  // 통계 계산
+  const stats = {
+    pending: payments.filter(p => p.status === 'pending').length,
+    completed: payments.filter(p => p.status === 'completed').length,
+    pendingAmount: payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0),
+    completedAmount: payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0)
+  };
+
+  // 행 배경색
+  const getRowBg = (payment: Payment) => {
+    if (payment.status === 'pending' && payment.urgency === 'emergency') {
+      return 'bg-gray-50 hover:bg-gray-100/70 border-gray-900';
+    }
+    if (payment.status === 'pending' && payment.urgency === 'urgent') {
+      return 'bg-gray-50 hover:bg-gray-100/70 border-gray-200';
+    }
+    if (payment.status === 'completed') {
+      return 'bg-gray-50 hover:bg-gray-100/70 border-gray-200';
+    }
+    return 'bg-white hover:bg-gray-50 border-gray-200';
+  };
+
+  return (
+    <div className="space-y-4 md:space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between lg:justify-start">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">결제 요청 관리</h1>
+      </div>
+
+      {/* Mobile Tabs */}
+      <div className="lg:hidden border-b border-gray-200">
+        <nav className="flex space-x-4">
+          <button
+            onClick={() => setMobileView('form')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              mobileView === 'form'
+                ? 'border-gray-900 text-gray-900'
+                : 'border-transparent text-gray-500'
+            }`}
+          >
+            입력
+          </button>
+          <button
+            onClick={() => setMobileView('list')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              mobileView === 'list'
+                ? 'border-gray-900 text-gray-900'
+                : 'border-transparent text-gray-500'
+            }`}
+          >
+            내역
+          </button>
+        </nav>
+      </div>
+
+      {/* Desktop: Side by side / Mobile: Conditional based on tab */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+        {/* Left side: Payment Form (always on desktop, conditional on mobile) */}
+        <div className={mobileView === 'form' ? 'block lg:block' : 'hidden lg:block'}>
+          {/* Payment Form Wrapper */}
+          <PaymentRequestModal
+            payment={null}
+            onClose={() => {}}
+            onSave={async (data) => {
+              try {
+                const newPayment: Payment = {
+                  id: '',
+                  project: data.projectId,
+                  purpose: data.purpose,
+                  process: data.process,
+                  itemName: data.itemName,
+                  amount: Number(data.amount),
+                  materialAmount: data.materialAmount || 0,
+                  laborAmount: data.laborAmount || 0,
+                  originalMaterialAmount: data.originalMaterialAmount || 0,
+                  originalLaborAmount: data.originalLaborAmount || 0,
+                  applyTaxDeduction: data.applyTaxDeduction || false,
+                  includesVAT: data.includesVAT || false,
+                  category: data.category,
+                  status: 'pending',
+                  urgency: data.urgency || 'normal',
+                  requestedBy: data.requestedBy,
+                  requestDate: new Date(),
+                  bankInfo: {
+                    accountHolder: data.accountHolder,
+                    bankName: data.bankName,
+                    accountNumber: data.accountNumber
+                  },
+                  attachments: data.attachments?.map((f: File) => f.name) || [],
+                  notes: data.notes
+                };
+
+                await addPaymentToAPI(newPayment);
+
+                const urgencyMessage = data.urgency === 'urgent' ?
+                  '결제 요청이 등록되었습니다. 긴급 알림톡과 SMS가 발송됩니다.' :
+                  '결제 요청이 등록되었습니다. 알림톡이 발송됩니다.';
+                toast.success(urgencyMessage);
+
+                // Switch to list view on mobile
+                if (window.innerWidth < 1024) {
+                  setMobileView('list');
+                }
+              } catch (error) {
+                console.error('Payment request error:', error);
+                toast.error('결제 요청 중 오류가 발생했습니다');
+              }
+            }}
+          />
+        </div>
+
+        {/* Right side: Payment List (always on desktop, conditional on mobile) */}
+        <div className={mobileView === 'list' ? 'block lg:block' : 'hidden lg:block'}>
+          {/* Tabs for list filtering */}
+          <div className="border-b border-gray-200 mb-4">
+        <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">
+          {[
+            { id: 'pending' as TabStatus, label: '대기중', count: stats.pending, color: 'text-gray-700' },
+            { id: 'completed' as TabStatus, label: '송금완료', count: stats.completed, color: 'text-gray-700' },
+            { id: 'all' as TabStatus, label: '전체', count: payments.length, color: 'text-gray-600' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={clsx(
+                'py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap',
+                activeTab === tab.id
+                  ? `border-gray-700 ${tab.color}`
+                  : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+              )}
+            >
+              {tab.label}
+              <span className={clsx(
+                'ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold',
+                activeTab === tab.id ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+              )}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+        <input
+          type="text"
+          placeholder="검색..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
+        />
+      </div>
+
+      {/* Payments Grid */}
+      <div className="space-y-3 md:space-y-4">
+        {filteredPayments.length === 0 ? (
+          <div className="text-center py-8 md:py-12 bg-white border border-gray-200 rounded-lg">
+            <p className="text-gray-500 text-sm md:text-base">결제 요청이 없습니다</p>
+          </div>
+        ) : (
+          filteredPayments.map((payment) => (
+            <div
+              key={payment.id}
+              className={clsx(
+                'border rounded-lg p-4 md:p-6 transition-all',
+                getRowBg(payment)
+              )}
+            >
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    {getStatusBadge(payment.status)}
+                    {getUrgencyBadge(payment.urgency)}
+                  </div>
+
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3 break-words">
+                    {payment.itemName || payment.purpose || `${getCategoryLabel(payment.category)} 결제`}
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 text-xs md:text-sm mb-3 md:mb-4">
+                    <div>
+                      <p className="text-gray-500">프로젝트</p>
+                      <p className="font-medium text-gray-900 truncate">{payment.project}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">금액</p>
+                      <p className="font-bold text-base md:text-lg text-gray-900">
+                        ₩{payment.amount.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">요청자</p>
+                      <p className="font-medium text-gray-900">{payment.requestedBy}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">요청일시</p>
+                      <p className="font-medium text-gray-900">
+                        {format(payment.requestDate, 'yyyy.MM.dd (eee) HH:mm', { locale: ko })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {payment.bankInfo && (
+                    <div className="bg-white bg-opacity-70 border border-gray-200 rounded p-2 md:p-3 text-xs md:text-sm">
+                      <p className="text-gray-500 text-[10px] md:text-xs mb-1">계좌 정보</p>
+                      <p className="font-medium break-words">{payment.bankInfo.accountHolder} | {payment.bankInfo.bankName}</p>
+                      <p className="text-gray-700 break-all">{payment.bankInfo.accountNumber}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-row lg:flex-col gap-2 lg:ml-6 flex-wrap lg:flex-nowrap">
+                  <button
+                    onClick={() => {
+                      setSelectedPayment(payment);
+                      setShowModal(true);
+                    }}
+                    className="flex-1 lg:flex-none text-xs md:text-sm px-3 md:px-4 py-2 border border-gray-300 rounded hover:bg-white whitespace-nowrap"
+                  >
+                    상세보기
+                  </button>
+
+                  {payment.status === 'pending' && (
+                    <>
+                      {/* KB 자동 송금 버튼 (무료!) */}
+                      <button
+                        onClick={async () => {
+                          const { accountHolder, bankName, accountNumber } = payment.bankInfo || {};
+
+                          if (!accountHolder || !accountNumber || !bankName) {
+                            toast.error('계좌 정보가 없습니다');
+                            return;
+                          }
+
+                          const bankCode = getBankCode(bankName);
+                          if (!bankCode) {
+                            toast.error('지원하지 않는 은행입니다');
+                            return;
+                          }
+
+                          // 수수료 계산
+                          const fee = bankCode === '004' ? 0 : 500;
+                          const feeText = fee === 0 ? '(수수료 무료!)' : `(수수료 ${fee}원)`;
+
+                          if (!window.confirm(
+                            `KB은행 API로 즉시 송금하시겠습니까?\n\n` +
+                            `받는분: ${accountHolder}\n` +
+                            `은행: ${bankName}\n` +
+                            `계좌: ${accountNumber}\n` +
+                            `금액: ${payment.amount.toLocaleString()}원\n` +
+                            `${feeText}`
+                          )) {
+                            return;
+                          }
+
+                          try {
+                            const token = localStorage.getItem('token');
+                            const loadingToast = toast.loading('송금 처리 중...');
+
+                            const response = await fetch('/api/banking/kb-transfer', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                              },
+                              body: JSON.stringify({
+                                paymentId: payment.id,
+                                bankCode: bankCode,
+                                accountNumber: accountNumber,
+                                accountHolder: accountHolder,
+                                amount: payment.amount,
+                                purpose: payment.itemName || payment.purpose || `${payment.project} 결제`
+                              })
+                            });
+
+                            toast.dismiss(loadingToast);
+
+                            const result = await response.json();
+
+                            if (result.success) {
+                              // 수수료 정보 포함하여 성공 메시지
+                              const successMsg = result.data.fee === 0
+                                ? '송금이 완료되었습니다! (수수료 무료)'
+                                : `송금이 완료되었습니다 (수수료 ${result.data.fee}원)`;
+
+                              toast.success(successMsg);
+                              await loadPaymentsFromAPI();
+                            } else {
+                              toast.error(result.message || '송금에 실패했습니다');
+                            }
+                          } catch (error) {
+                            console.error('KB Transfer error:', error);
+                            toast.error('송금 처리 중 오류가 발생했습니다');
+                          }
+                        }}
+                        className="flex-1 lg:flex-none text-xs md:text-sm px-3 md:px-4 py-2 bg-slate-500 text-white rounded hover:bg-slate-600 font-medium whitespace-nowrap flex items-center justify-center gap-1"
+                        title="KB은행 자동 송금 (무료)"
+                      >
+                        <Zap className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                        즉시송금
+                      </button>
+
+                      {/* 계좌정보 복사 버튼 (백업) */}
+                      <button
+                        onClick={() => {
+                          const { accountHolder, bankName, accountNumber } = payment.bankInfo || {};
+
+                          if (!accountHolder || !accountNumber) {
+                            toast.error('계좌 정보가 없습니다');
+                            return;
+                          }
+
+                          const copyText = `${bankName}\n${accountNumber}\n${accountHolder}\n송금액: ${payment.amount.toLocaleString()}원`;
+
+                          if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(copyText).then(() => {
+                              toast.success('계좌정보가 복사되었습니다');
+                            }).catch(() => {
+                              fallbackCopyTextToClipboard(copyText);
+                            });
+                          } else {
+                            fallbackCopyTextToClipboard(copyText);
+                          }
+
+                          function fallbackCopyTextToClipboard(text: string) {
+                            const textArea = document.createElement('textarea');
+                            textArea.value = text;
+                            textArea.style.position = 'fixed';
+                            textArea.style.top = '0';
+                            textArea.style.left = '0';
+                            textArea.style.opacity = '0';
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+
+                            try {
+                              document.execCommand('copy');
+                              toast.success('계좌정보가 복사되었습니다');
+                            } catch {
+                              toast.error('계좌정보 복사 실패');
+                            }
+
+                            document.body.removeChild(textArea);
+                          }
+                        }}
+                        className="flex-1 lg:flex-none text-xs md:text-sm px-3 md:px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded hover:bg-gray-200 font-medium whitespace-nowrap flex items-center justify-center gap-1"
+                        title="계좌정보 복사"
+                      >
+                        <Smartphone className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                        복사
+                      </button>
+
+                      <button
+                        onClick={() => handleStatusChange(payment.id, 'completed')}
+                        className="flex-1 lg:flex-none text-xs md:text-sm px-3 md:px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 font-medium whitespace-nowrap"
+                      >
+                        송금완료
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    onClick={() => handleDelete(payment.id, payment.itemName || payment.purpose || getCategoryLabel(payment.category))}
+                    className="text-xs md:text-sm px-3 md:px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 font-medium flex items-center justify-center whitespace-nowrap"
+                    title="삭제"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Payments;
