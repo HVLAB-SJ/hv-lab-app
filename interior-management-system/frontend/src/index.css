@@ -236,6 +236,18 @@
   padding-bottom: 0 !important;
 }
 
+/* 월 헤더의 상단 여백 제거 */
+.rbc-month-header {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* 캘린더 전체 뷰와 월 뷰의 여백 제거 */
+.rbc-calendar > .rbc-month-view {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
 /* 공휴일 날짜 색상 - 일요일과 동일한 채도 낮은 붉은색 */
 .rbc-date-cell.holiday-date button,
 .rbc-date-cell.holiday-date .rbc-button-link,
