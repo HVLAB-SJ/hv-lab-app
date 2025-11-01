@@ -248,6 +248,29 @@
   padding-top: 0 !important;
 }
 
+/* 툴바 다음 요소의 여백 제거 */
+.rbc-toolbar + * {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* 캘린더 컨테이너 내부의 첫 번째 자식 여백 제거 */
+.calendar-container > div > div:first-child + div {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* RBC 캘린더 내부 구조의 여백 제거 */
+.rbc-calendar > div:first-child {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.rbc-calendar > div:nth-child(2) {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
 /* 공휴일 날짜 색상 - 일요일과 동일한 채도 낮은 붉은색 */
 .rbc-date-cell.holiday-date button,
 .rbc-date-cell.holiday-date .rbc-button-link,

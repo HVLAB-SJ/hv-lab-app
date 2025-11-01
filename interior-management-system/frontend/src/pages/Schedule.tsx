@@ -1108,7 +1108,7 @@ const Schedule = () => {
 
     return (
       <>
-        <div className={`flex flex-col gap-3 bg-white border-b border-gray-200 ${isMobile ? 'p-2' : 'p-3 md:p-5'}`}>
+        <div className={`flex flex-col bg-white border-b border-gray-200 ${isMobile ? 'px-2 py-2' : 'px-3 md:px-5 pt-3 md:pt-5 pb-0'}`}>
           {/* 첫 번째 행: 날짜 네비게이션과 프로젝트 필터 */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center space-x-2 md:space-x-3">
