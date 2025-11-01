@@ -270,12 +270,11 @@ class EmailService {
             ? JSON.stringify(inquiry.attachments)
             : null;
 
-          // 새로운 견적문의 저장
+          // 새로운 견적문의 저장 (기본 필드만 사용)
           db.run(
             `INSERT INTO quote_inquiries
-             (name, phone, email, address, project_type, budget, message, is_read,
-              sash_work, extension_work, preferred_date, area_size, attachments)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
+             (name, phone, email, address, project_type, budget, message, is_read)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
             [
               inquiry.name,
               inquiry.phone,
@@ -283,12 +282,7 @@ class EmailService {
               inquiry.address || '',
               inquiry.projectType || '',
               inquiry.budget || '',
-              inquiry.message,
-              inquiry.sashWork || '',
-              inquiry.extensionWork || '',
-              inquiry.preferredDate || '',
-              inquiry.areaSize || '',
-              attachmentsJson
+              inquiry.message
             ],
             function(err) {
               if (err) {
