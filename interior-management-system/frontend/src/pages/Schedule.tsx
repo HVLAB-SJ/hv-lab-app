@@ -1495,6 +1495,7 @@ const Schedule = () => {
               popup={false}
               doShowMoreDrillDown={false}
               onShowMore={() => {}}
+              showAllEvents={true}
               messages={{
                 today: '오늘',
                 previous: '이전',
