@@ -150,9 +150,6 @@ class EmailService {
       const text = parsed.text || '';
       const html = parsed.html || '';
 
-      // 이메일 본문에서 정보 추출
-      // 아입웹 폼 형식에 맞춰 파싱 (실제 이메일 형식에 따라 조정 필요)
-
       const inquiry = {
         name: '',
         phone: '',
@@ -179,35 +176,23 @@ class EmailService {
       if (phoneMatch) inquiry.phone = phoneMatch[1].trim();
 
       // 이메일 추출
-      const emailMatch = text.match(/(?:이메일|email)[:\s]*([^\s\n]+@[^\s\n]+)/i);
+      const emailMatch = text.match(/(?:이메일|E-mail)\s*주소[:\s]*([^\s\n]+@[^\s\n]+)/i);
       if (emailMatch) inquiry.email = emailMatch[1].trim();
 
-      // 주소 추출
-      const addressMatch = text.match(/(?:주소|위치)[:\s]*([^\n]+)/i);
+      // 주소 추출 - "면적 주소" 형식
+      const addressMatch = text.match(/면적\s*주소[:\s]*([^\n]+)/i);
       if (addressMatch) inquiry.address = addressMatch[1].trim();
 
-      // 공사 종류 추출
-      const projectTypeMatch = text.match(/(?:공사\s*종류|프로젝트\s*유형)[:\s]*([^\n]+)/i);
+      // 건물분류 추출
+      const projectTypeMatch = text.match(/건물분류\s*\(문화\)[:\s]*([^\n]+)/i);
       if (projectTypeMatch) inquiry.projectType = projectTypeMatch[1].trim();
 
-      // 예산 추출
-      const budgetMatch = text.match(/(?:예산|비용)[:\s]*([^\n]+)/i);
+      // 예산 추출 - "경사 제거" 항목에서 추출
+      const budgetMatch = text.match(/경사\s*제거[:\s]*([^\n]+)/i);
       if (budgetMatch) inquiry.budget = budgetMatch[1].trim();
 
-      // 샷시 공사 여부 추출
-      const sashWorkMatch = text.match(/(?:샷시\s*공사|창호\s*공사)[:\s]*([^\n]+)/i);
-      if (sashWorkMatch) inquiry.sashWork = sashWorkMatch[1].trim();
-
-      // 확장 공사 여부 추출
-      const extensionWorkMatch = text.match(/(?:확장\s*공사|발코니\s*확장)[:\s]*([^\n]+)/i);
-      if (extensionWorkMatch) inquiry.extensionWork = extensionWorkMatch[1].trim();
-
-      // 시공 희망 시기 추출
-      const preferredDateMatch = text.match(/(?:시공\s*시기|희망\s*시기|공사\s*시기)[:\s]*([^\n]+)/i);
-      if (preferredDateMatch) inquiry.preferredDate = preferredDateMatch[1].trim();
-
-      // 평수 추출
-      const areaSizeMatch = text.match(/(?:평수|면적)[:\s]*([^\n]+)/i);
+      // 평수 추출 - "면적 (평형 / 타입)"
+      const areaSizeMatch = text.match(/면적\s*\(평형\s*\/\s*타입\)[:\s]*([^\n]+)/i);
       if (areaSizeMatch) inquiry.areaSize = areaSizeMatch[1].trim();
 
       // 첨부파일 처리
@@ -222,13 +207,14 @@ class EmailService {
           }));
       }
 
-      // 문의내용 추출
-      const messageMatch = text.match(/(?:문의\s*내용|내용)[:\s]*([^\n]+(?:\n(?!(?:이름|전화|이메일|주소|예산|샷시|확장|시공|평수)).+)*)/i);
-      if (messageMatch) {
-        inquiry.message = messageMatch[1].trim();
+      // 메일 전체 내용을 message에 저장 (모든 정보 보존)
+      // "분야" 섹션 이후의 모든 내용을 추출
+      const mainContentMatch = text.match(/분야[\s\S]*/i);
+      if (mainContentMatch) {
+        inquiry.message = mainContentMatch[0].trim();
       } else {
-        // 문의내용 레이블이 없으면 전체 텍스트를 메시지로 사용
-        inquiry.message = text.slice(0, 500);
+        // 분야가 없으면 전체 텍스트 사용
+        inquiry.message = text.trim();
       }
 
       // 필수 정보 확인
@@ -238,8 +224,15 @@ class EmailService {
         inquiry.name = '이름 없음';
         inquiry.phone = '전화번호 없음';
         inquiry.email = parsed.from?.value?.[0]?.address || 'hv_lab@naver.com';
-        inquiry.message = text.slice(0, 500);
+        inquiry.message = text.trim();
       }
+
+      console.log('📋 파싱된 견적문의:', {
+        name: inquiry.name,
+        phone: inquiry.phone,
+        email: inquiry.email,
+        messageLength: inquiry.message.length
+      });
 
       return inquiry;
     } catch (error) {
