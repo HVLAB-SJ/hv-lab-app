@@ -4,6 +4,7 @@ const { db } = require('../config/database');
 const { authenticateToken, isManager } = require('../middleware/auth');
 const openBankingService = require('../services/openBankingService');
 const kbBankService = require('../services/kbBankService');
+const kbOAuthService = require('../services/kbOAuthService');
 
 /**
  * 오픈뱅킹 인증 시작
@@ -147,6 +148,321 @@ router.delete('/disconnect', authenticateToken, (req, res) => {
       });
     }
   );
+});
+
+/**
+ * KB OAuth 인증 시작
+ * GET /api/banking/kb-oauth/start
+ */
+router.get('/kb-oauth/start', authenticateToken, isManager, (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { type = 'personal' } = req.query; // personal or corporate
+
+    const authUrl = type === 'corporate'
+      ? kbOAuthService.getCorporateAuthorizationUrl(userId)
+      : kbOAuthService.getAuthorizationUrl(userId);
+
+    res.json({
+      success: true,
+      authUrl: authUrl,
+      message: 'KB 인증 페이지로 이동합니다'
+    });
+  } catch (error) {
+    console.error('[KB OAuth Start] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'KB 인증 URL 생성 중 오류가 발생했습니다'
+    });
+  }
+});
+
+/**
+ * KB OAuth 인증 콜백
+ * GET /api/banking/kb-oauth/callback
+ */
+router.get('/kb-oauth/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+
+  if (error) {
+    console.error('[KB OAuth Callback] Error:', error);
+    return res.redirect('/settings?kb_auth=error&message=' + encodeURIComponent(error));
+  }
+
+  try {
+    // State에서 사용자 ID 추출
+    const userId = state.split('_')[0];
+
+    // Access Token 발급
+    const tokenResult = await kbOAuthService.getAccessToken(code);
+
+    if (!tokenResult.success) {
+      console.error('[KB OAuth Callback] Token error:', tokenResult.error);
+      return res.redirect('/settings?kb_auth=error&message=token_failed');
+    }
+
+    const tokenData = tokenResult.data;
+
+    // 토큰 암호화
+    const encryptedAccessToken = kbOAuthService.encryptToken(tokenData.access_token);
+    const encryptedRefreshToken = kbOAuthService.encryptToken(tokenData.refresh_token);
+
+    // KB 토큰을 별도 테이블에 저장
+    db.run(
+      `INSERT OR REPLACE INTO kb_banking_tokens
+       (user_id, access_token, refresh_token, scope, token_type, expires_at, user_seq_no, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, datetime('now', '+' || ? || ' seconds'), ?, datetime('now'), datetime('now'))`,
+      [
+        userId,
+        encryptedAccessToken,
+        encryptedRefreshToken,
+        tokenData.scope,
+        tokenData.token_type,
+        tokenData.expires_in,
+        tokenData.user_seq_no,
+      ],
+      (err) => {
+        if (err) {
+          console.error('[KB OAuth Callback] DB error:', err);
+          return res.redirect('/settings?kb_auth=error&message=db_failed');
+        }
+
+        console.log('[KB OAuth Callback] Success for user:', userId);
+        res.redirect('/settings?kb_auth=success');
+      }
+    );
+  } catch (error) {
+    console.error('[KB OAuth Callback] Error:', error);
+    res.redirect('/settings?kb_auth=error&message=unknown');
+  }
+});
+
+/**
+ * KB 계좌 실명 확인 API
+ * POST /api/banking/kb-verify-account
+ */
+router.post('/kb-verify-account', authenticateToken, isManager, async (req, res) => {
+  const { bankCode, accountNumber } = req.body;
+
+  if (!bankCode || !accountNumber) {
+    return res.status(400).json({
+      success: false,
+      message: '은행코드와 계좌번호는 필수입니다'
+    });
+  }
+
+  try {
+    // KB 토큰 조회
+    const tokenRow = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT access_token, refresh_token, expires_at
+         FROM kb_banking_tokens
+         WHERE user_id = ?`,
+        [req.user.id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (!tokenRow) {
+      return res.status(400).json({
+        success: false,
+        message: 'KB 인증이 필요합니다',
+        requireAuth: true
+      });
+    }
+
+    const accessToken = kbOAuthService.decryptToken(tokenRow.access_token);
+    const result = await kbOAuthService.verifyAccount(accessToken, bankCode, accountNumber);
+
+    res.json(result);
+  } catch (error) {
+    console.error('[KB Verify Account] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: '계좌 확인 중 오류가 발생했습니다'
+    });
+  }
+});
+
+/**
+ * KB OAuth 즉시송금 실행
+ * POST /api/banking/kb-instant-transfer
+ */
+router.post('/kb-instant-transfer', authenticateToken, isManager, async (req, res) => {
+  const {
+    paymentId,
+    fromAccount,
+    toAccount,
+    toBankCode,
+    toAccountHolder,
+    amount,
+    memo
+  } = req.body;
+
+  // 필수 파라미터 검증
+  if (!paymentId || !fromAccount || !toAccount || !toBankCode || !toAccountHolder || !amount) {
+    return res.status(400).json({
+      success: false,
+      message: '필수 정보가 누락되었습니다'
+    });
+  }
+
+  try {
+    // KB 토큰 조회
+    const tokenRow = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT access_token, refresh_token, expires_at
+         FROM kb_banking_tokens
+         WHERE user_id = ?`,
+        [req.user.id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (!tokenRow) {
+      return res.status(400).json({
+        success: false,
+        message: 'KB 인증이 필요합니다',
+        requireAuth: true
+      });
+    }
+
+    // 토큰 만료 확인 및 갱신
+    const now = new Date();
+    const expiresAt = new Date(tokenRow.expires_at);
+    let accessToken = kbOAuthService.decryptToken(tokenRow.access_token);
+
+    if (now >= expiresAt) {
+      console.log('[KB Instant Transfer] Token expired, refreshing...');
+      const refreshToken = kbOAuthService.decryptToken(tokenRow.refresh_token);
+      const refreshResult = await kbOAuthService.refreshAccessToken(refreshToken);
+
+      if (!refreshResult.success) {
+        return res.status(400).json({
+          success: false,
+          message: 'KB 토큰 갱신에 실패했습니다. 다시 인증해주세요',
+          requireAuth: true
+        });
+      }
+
+      // 새 토큰 저장
+      accessToken = refreshResult.data.access_token;
+      const encryptedAccessToken = kbOAuthService.encryptToken(accessToken);
+      const encryptedRefreshToken = kbOAuthService.encryptToken(refreshResult.data.refresh_token);
+
+      await new Promise((resolve, reject) => {
+        db.run(
+          `UPDATE kb_banking_tokens
+           SET access_token = ?, refresh_token = ?, expires_at = datetime('now', '+' || ? || ' seconds'), updated_at = datetime('now')
+           WHERE user_id = ?`,
+          [encryptedAccessToken, encryptedRefreshToken, refreshResult.data.expires_in, req.user.id],
+          (err) => {
+            if (err) reject(err);
+            else resolve();
+          }
+        );
+      });
+    }
+
+    // 송금 실행
+    console.log('[KB Instant Transfer] Executing transfer:', {
+      paymentId,
+      from: fromAccount,
+      to: `${toBankCode}-${toAccount}`,
+      amount,
+      memo
+    });
+
+    const transferResult = await kbOAuthService.executeTransfer(accessToken, {
+      fromAccount,
+      toAccount,
+      toBankCode,
+      toAccountHolder,
+      amount,
+      memo: memo || `결제요청 #${paymentId}`
+    });
+
+    if (!transferResult.success) {
+      console.error('[KB Instant Transfer] Failed:', transferResult.error);
+      return res.status(400).json({
+        success: false,
+        message: transferResult.error.message || '송금에 실패했습니다',
+        code: transferResult.error.code
+      });
+    }
+
+    // 송금 성공 - 결제 요청 상태 업데이트
+    await new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE payment_requests
+         SET status = 'completed',
+             paid_at = datetime('now'),
+             updated_at = datetime('now'),
+             notes = CASE
+               WHEN notes IS NULL OR notes = '' THEN ?
+               ELSE notes || '\n' || ?
+             END
+         WHERE id = ?`,
+        [
+          `[KB즉시송금] ${transferResult.data.transactionId}`,
+          `[KB즉시송금] ${transferResult.data.transactionId}`,
+          paymentId
+        ],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    // 송금 기록 저장
+    await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO banking_transactions
+         (payment_id, user_id, transaction_id, bank_code, account_number, account_holder, amount, status, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'completed', datetime('now'))`,
+        [
+          paymentId,
+          req.user.id,
+          transferResult.data.transactionId,
+          toBankCode,
+          toAccount,
+          toAccountHolder,
+          amount
+        ],
+        (err) => {
+          if (err) {
+            console.error('[KB Instant Transfer] Transaction log error:', err);
+          }
+          resolve();
+        }
+      );
+    });
+
+    console.log('[KB Instant Transfer] Success:', transferResult.data);
+
+    res.json({
+      success: true,
+      message: transferResult.data.message,
+      data: {
+        transactionId: transferResult.data.transactionId,
+        amount: transferResult.data.amount,
+        timestamp: transferResult.data.tranDtime
+      }
+    });
+  } catch (error) {
+    console.error('[KB Instant Transfer] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: '송금 처리 중 오류가 발생했습니다'
+    });
+  }
 });
 
 /**

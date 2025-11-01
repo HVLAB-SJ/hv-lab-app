@@ -25,12 +25,14 @@ const updateSchedulesProjectNullable = require('./server/migrations/update-sched
 const addQuoteInquiryFields = require('./server/migrations/add-quote-inquiry-fields');
 const addQuoteInquiryContacted = require('./server/migrations/add-quote-inquiry-contacted');
 const { addExpectedPaymentDates } = require('./server/migrations/add-expected-payment-dates');
+const createKBBankingTokensTable = require('./server/migrations/create-kb-banking-tokens-table');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
 addQuoteInquiryFields().catch(console.error);
 addQuoteInquiryContacted().catch(console.error);
 addExpectedPaymentDates().catch(console.error);
+createKBBankingTokensTable().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
