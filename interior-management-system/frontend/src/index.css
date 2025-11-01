@@ -437,11 +437,21 @@ div.rbc-popup {
 .rbc-row-content-scroll-container {
   margin-top: 25px !important;
   padding-top: 0 !important;
+  position: relative !important;
+}
+
+/* 모든 가능한 이벤트 컨테이너 셀렉터 */
+.rbc-month-view .rbc-row-content-scroll-container,
+.rbc-calendar .rbc-row-content-scroll-container,
+.rbc-row-content-scroll-container {
+  margin-top: 25px !important;
+  padding-top: 0 !important;
 }
 
 /* rbc-row 내부의 이벤트들 */
 .rbc-row-content-scroll-container .rbc-row {
   position: relative !important;
+  margin-top: 0 !important;
 }
 
 /* 이벤트 세그먼트 위치 */
