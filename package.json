@@ -7,10 +7,14 @@
     "dev": "nodemon server.js",
     "migrate": "node migrate-workrequests.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "railway up",
+    "deploy": "git add . && git commit -m \"Deploy update\" && git push origin production-stable:main",
+    "deploy:quick": "git add . && git commit -m \"Quick update\" && git push origin production-stable:main",
+    "deploy:railway": "railway up",
+    "deploy:full": "npm run build && git add . && git commit -m \"Build and deploy\" && git push origin production-stable:main && railway up",
     "deploy:old": "deploy.bat",
     "build": "cd interior-management-system/frontend && npm install && npm run build && cd ../.. && cp -r interior-management-system/frontend/dist/* public/",
-    "railway:deploy": "git add . && git commit -m 'Deploy to Railway' && git push && railway up"
+    "build:frontend": "cd interior-management-system/frontend && npm run build",
+    "railway:deploy": "git add . && git commit -m \"Deploy to Railway\" && git push && railway up"
   },
   "keywords": [
     "interior",
