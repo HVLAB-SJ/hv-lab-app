@@ -503,7 +503,7 @@ const AfterService = () => {
                 <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
                   <button
                     onClick={() => handleStatusChange(request.id, 'completed')}
-                    className="flex-1 px-3 py-2 text-xs font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="flex-1 px-3 py-2 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
                   >
                     AS 완료
                   </button>
@@ -677,7 +677,7 @@ const AfterService = () => {
                       <>
                         <button
                           onClick={() => handleStatusChange(request.id, 'completed')}
-                          className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                          className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded transition-colors"
                         >
                           완료
                         </button>
