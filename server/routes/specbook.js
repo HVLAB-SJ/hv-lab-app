@@ -139,15 +139,8 @@ router.post('/base64', authenticateToken, isManager, (req, res) => {
     return res.status(400).json({ error: '이름과 카테고리는 필수입니다.' });
   }
 
-  let imageUrl = null;
-  if (imageData) {
-    try {
-      imageUrl = saveBase64Image(imageData);
-    } catch (error) {
-      console.error('이미지 저장 실패:', error);
-      return res.status(400).json({ error: '이미지 저장 실패' });
-    }
-  }
+  // imageData를 그대로 DB에 저장 (base64 형식)
+  const imageUrl = imageData || null;
 
   const is_library = isLibrary ? 1 : 0;
   const project_id = projectId || null;
@@ -217,10 +210,9 @@ router.post('/', authenticateToken, isManager, upload.single('image'), (req, res
 });
 
 // 스펙북 아이템 수정
-router.put('/:id', authenticateToken, isManager, upload.single('image'), (req, res) => {
+router.put('/:id', authenticateToken, isManager, (req, res) => {
   const { id } = req.params;
-  const { name, category, brand, price, description, projectId, isLibrary } = req.body;
-  const imageUrl = req.file ? `/uploads/specbook/${req.file.filename}` : null;
+  const { name, category, brand, price, description, projectId, isLibrary, imageData } = req.body;
 
   let query = 'UPDATE specbook_items SET name = ?, category = ?, brand = ?, price = ?, description = ?, updated_at = CURRENT_TIMESTAMP';
   let params = [name, category, brand || '', price || '', description || ''];
@@ -235,9 +227,10 @@ router.put('/:id', authenticateToken, isManager, upload.single('image'), (req, r
     params.push(isLibrary === 'true' || isLibrary === true ? 1 : 0);
   }
 
-  if (imageUrl) {
+  // imageData가 있으면 base64로 저장
+  if (imageData) {
     query += ', image_url = ?';
-    params.push(imageUrl);
+    params.push(imageData);
   }
 
   query += ' WHERE id = ?';
