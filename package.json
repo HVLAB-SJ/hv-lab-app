@@ -38,6 +38,7 @@
     "imap": "^0.8.19",
     "jsonwebtoken": "^9.0.2",
     "mailparser": "^3.7.5",
+    "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "sharp": "^0.34.4",
     "socket.io": "^4.8.1",

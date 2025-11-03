@@ -157,20 +157,49 @@ router.post('/submit', (req, res) => {
     return res.status(400).json({ error: '필수 정보를 입력해주세요.' });
   }
 
-  db.run(
-    `INSERT INTO quote_inquiries (name, phone, email, address, project_type, budget, message, is_read)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
-    [name, phone, email, address || '', projectType || '', budget || '', message],
-    function(err) {
+  // 중복 체크: 24시간 이내에 동일한 전화번호 또는 이메일로 제출된 견적문의가 있는지 확인
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  db.get(
+    `SELECT id, created_at FROM quote_inquiries
+     WHERE (phone = ? OR email = ?)
+     AND created_at > ?
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [phone, email, oneDayAgo],
+    (err, existingInquiry) => {
       if (err) {
-        console.error('Error creating quote inquiry:', err);
+        console.error('Error checking duplicate inquiry:', err);
         return res.status(500).json({ error: '견적문의 저장 실패' });
       }
 
-      res.status(201).json({
-        id: this.lastID,
-        message: '견적문의가 접수되었습니다.'
-      });
+      // 중복 견적문의가 있는 경우
+      if (existingInquiry) {
+        console.log('중복 견적문의 감지:', { phone, email, existingId: existingInquiry.id });
+        return res.status(429).json({
+          error: '이미 견적문의를 접수하셨습니다. 24시간 이내에는 중복 제출이 불가능합니다.',
+          existingInquiryDate: existingInquiry.created_at
+        });
+      }
+
+      // 중복이 아닌 경우 새로운 견적문의 저장
+      db.run(
+        `INSERT INTO quote_inquiries (name, phone, email, address, project_type, budget, message, is_read)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
+        [name, phone, email, address || '', projectType || '', budget || '', message],
+        function(err) {
+          if (err) {
+            console.error('Error creating quote inquiry:', err);
+            return res.status(500).json({ error: '견적문의 저장 실패' });
+          }
+
+          console.log('새로운 견적문의 접수:', { id: this.lastID, phone, email });
+          res.status(201).json({
+            id: this.lastID,
+            message: '견적문의가 접수되었습니다.'
+          });
+        }
+      );
     }
   );
 });

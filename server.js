@@ -26,6 +26,7 @@ const addQuoteInquiryFields = require('./server/migrations/add-quote-inquiry-fie
 const addQuoteInquiryContacted = require('./server/migrations/add-quote-inquiry-contacted');
 const { addExpectedPaymentDates } = require('./server/migrations/add-expected-payment-dates');
 const createKBBankingTokensTable = require('./server/migrations/create-kb-banking-tokens-table');
+const addKakaoPayFields = require('./server/migrations/add-kakaopay-fields');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
@@ -33,6 +34,7 @@ addQuoteInquiryFields().catch(console.error);
 addQuoteInquiryContacted().catch(console.error);
 addExpectedPaymentDates().catch(console.error);
 createKBBankingTokensTable().catch(console.error);
+addKakaoPayFields().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
@@ -55,6 +57,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // views 폴더 (필요시)
 app.use(express.static(path.join(__dirname, 'views')));
+
+// uploads 폴더 제공 (스펙북 이미지 등)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Socket.IO 연결 처리
 io.on('connection', (socket) => {
@@ -107,6 +112,7 @@ const bankingRoutes = require('./server/routes/banking');
 const testRoutes = require('./server/routes/test');
 const quoteInquiriesRoutes = require('./server/routes/quoteInquiries');
 const adminRoutes = require('./server/routes/admin');
+const specbookRoutes = require('./server/routes/specbook');
 
 // API 라우트 설정
 app.use('/api/auth', authRoutes);
@@ -124,6 +130,7 @@ app.use('/api/banking', bankingRoutes);
 app.use('/api/test', testRoutes); // 테스트 라우트 추가
 app.use('/api/quote-inquiries', quoteInquiriesRoutes);
 app.use('/api/admin', adminRoutes); // 관리자 라우트 추가
+app.use('/api/specbook', specbookRoutes); // 스펙북 라우트 추가
 
 
 // 로그인 페이지 라우트

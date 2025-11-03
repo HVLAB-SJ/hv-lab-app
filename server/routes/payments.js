@@ -591,4 +591,246 @@ async function notifyCompletion(requestId) {
   // 추후 필요시 SMS 또는 이메일 알림 추가 가능
 }
 
+// 토스페이먼츠 서비스
+const tossTransfer = require('../utils/toss-transfer');
+
+// 토스페이 송금 서비스
+const tosspayTransfer = require('../utils/tosspay-transfer');
+
+// 토스페이먼츠 즉시송금 요청
+router.post('/toss/instant-transfer', authenticateToken, isManager, async (req, res) => {
+  try {
+    const { paymentId, receiverName, receiverBank, receiverAccount, amount, description } = req.body;
+
+    console.log('[POST /api/payments/toss/instant-transfer] 송금 요청:', {
+      paymentId,
+      receiverName,
+      amount
+    });
+
+    // 필수 정보 확인
+    if (!receiverName || !receiverBank || !receiverAccount || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: '필수 정보가 누락되었습니다.'
+      });
+    }
+
+    // 은행 코드 변환
+    const bankCode = tossTransfer.getBankCode(receiverBank);
+    if (!bankCode) {
+      return res.status(400).json({
+        success: false,
+        error: `지원하지 않는 은행입니다: ${receiverBank}`
+      });
+    }
+
+    // 고유한 주문 ID 생성
+    const orderId = `PAYMENT_${paymentId}_${Date.now()}`;
+
+    // 토스페이먼츠 이체 API 호출
+    const result = await tossTransfer.requestTransfer({
+      orderId: orderId,
+      orderName: description || `결제요청 송금`,
+      amount: amount,
+      customerName: receiverName,
+      bankCode: bankCode,
+      accountNumber: receiverAccount,
+      successUrl: `${process.env.APP_URL || 'http://localhost:3000'}/api/payments/toss/success?paymentId=${paymentId}`,
+      failUrl: `${process.env.APP_URL || 'http://localhost:3000'}/api/payments/toss/fail?paymentId=${paymentId}`
+    });
+
+    if (result.success) {
+      // 이체 정보를 데이터베이스에 저장
+      db.run(
+        'UPDATE payment_requests SET toss_payment_key = ?, toss_order_id = ? WHERE id = ?',
+        [result.paymentKey, result.orderId, paymentId],
+        (err) => {
+          if (err) {
+            console.error('이체 정보 저장 실패:', err);
+          }
+        }
+      );
+
+      res.json({
+        success: true,
+        paymentKey: result.paymentKey,
+        orderId: result.orderId,
+        checkoutUrl: result.checkoutUrl,
+        message: '이체 요청이 생성되었습니다'
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: result.error,
+        errorCode: result.errorCode
+      });
+    }
+
+  } catch (error) {
+    console.error('[POST /api/payments/toss/instant-transfer] 오류:', error);
+    res.status(500).json({
+      success: false,
+      error: '송금 요청 처리 중 오류가 발생했습니다.'
+    });
+  }
+});
+
+// 토스페이먼츠 성공 콜백
+router.get('/toss/success', async (req, res) => {
+  try {
+    const { paymentKey, orderId, amount, paymentId } = req.query;
+
+    // 이체 승인
+    const result = await tossTransfer.confirmTransfer(paymentKey, orderId, parseInt(amount));
+
+    if (result.success) {
+      // 결제 요청 상태 업데이트
+      db.run(
+        'UPDATE payment_requests SET status = ?, paid_at = ? WHERE id = ?',
+        ['completed', new Date().toISOString(), paymentId],
+        (err) => {
+          if (err) {
+            console.error('결제 요청 상태 업데이트 실패:', err);
+          }
+        }
+      );
+
+      res.redirect('/payments?status=success&message=' + encodeURIComponent('송금이 완료되었습니다'));
+    } else {
+      res.redirect('/payments?status=error&message=' + encodeURIComponent(result.error));
+    }
+  } catch (error) {
+    console.error('토스페이먼츠 성공 콜백 오류:', error);
+    res.redirect('/payments?status=error&message=' + encodeURIComponent('송금 처리 중 오류가 발생했습니다'));
+  }
+});
+
+// 토스페이먼츠 실패 콜백
+router.get('/toss/fail', (req, res) => {
+  const { message } = req.query;
+  res.redirect('/payments?status=fail&message=' + encodeURIComponent(message || '송금이 취소되었습니다'));
+});
+
+// ==================== 토스페이 즉시송금 ====================
+
+// 토스페이 즉시송금 요청
+router.post('/tosspay/instant-transfer', authenticateToken, isManager, async (req, res) => {
+  try {
+    const { paymentId, receiverName, receiverBank, receiverAccount, amount, description } = req.body;
+
+    console.log('[POST /api/payments/tosspay/instant-transfer] 송금 요청:', {
+      paymentId,
+      receiverName,
+      receiverBank,
+      receiverAccount,
+      amount
+    });
+
+    // 필수 정보 확인
+    if (!receiverName || !receiverBank || !receiverAccount || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: '필수 정보가 누락되었습니다.'
+      });
+    }
+
+    // 토스페이 송금 API 호출
+    const result = await tosspayTransfer.sendMoney({
+      receiverName: receiverName,
+      receiverBank: receiverBank,
+      receiverAccount: receiverAccount,
+      amount: amount,
+      description: description || `결제요청 송금`
+    });
+
+    if (result.success) {
+      // 송금 정보를 데이터베이스에 저장
+      db.run(
+        `UPDATE payment_requests
+         SET status = ?,
+             paid_at = ?,
+             tosspay_transfer_id = ?
+         WHERE id = ?`,
+        ['completed', new Date().toISOString(), result.transferId, paymentId],
+        (err) => {
+          if (err) {
+            console.error('송금 정보 저장 실패:', err);
+          }
+        }
+      );
+
+      res.json({
+        success: true,
+        transferId: result.transferId,
+        message: '송금이 완료되었습니다'
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: result.error,
+        errorCode: result.errorCode
+      });
+    }
+
+  } catch (error) {
+    console.error('[POST /api/payments/tosspay/instant-transfer] 오류:', error);
+    res.status(500).json({
+      success: false,
+      error: '송금 요청 처리 중 오류가 발생했습니다.'
+    });
+  }
+});
+
+// 토스페이 송금 조회
+router.get('/tosspay/transfer/:transferId', authenticateToken, async (req, res) => {
+  try {
+    const { transferId } = req.params;
+
+    const result = await tosspayTransfer.getTransferStatus(transferId);
+
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(400).json({
+        success: false,
+        error: result.error
+      });
+    }
+  } catch (error) {
+    console.error('토스페이 송금 조회 오류:', error);
+    res.status(500).json({
+      success: false,
+      error: '송금 조회 중 오류가 발생했습니다.'
+    });
+  }
+});
+
+// 토스페이 송금 한도 조회
+router.get('/tosspay/limit', authenticateToken, isManager, async (req, res) => {
+  try {
+    const result = await tosspayTransfer.getTransferLimit();
+
+    if (result.success) {
+      res.json({
+        success: true,
+        dailyLimit: result.dailyLimit,
+        remainingLimit: result.remainingLimit,
+        usedAmount: result.usedAmount
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: result.error
+      });
+    }
+  } catch (error) {
+    console.error('토스페이 한도 조회 오류:', error);
+    res.status(500).json({
+      success: false,
+      error: '한도 조회 중 오류가 발생했습니다.'
+    });
+  }
+});
+
 module.exports = router;

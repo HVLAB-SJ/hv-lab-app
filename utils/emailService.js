@@ -246,13 +246,14 @@ class EmailService {
    */
   async saveQuoteInquiry(inquiry) {
     return new Promise((resolve, reject) => {
-      // 중복 체크 (같은 이름, 전화번호, 이메일이 최근 24시간 이내에 있는지)
+      // 중복 체크: 24시간 이내에 동일한 전화번호 또는 이메일로 제출된 견적문의가 있는지 확인
       db.get(
-        `SELECT id FROM quote_inquiries
-         WHERE name = ? AND phone = ? AND email = ?
+        `SELECT id, created_at FROM quote_inquiries
+         WHERE (phone = ? OR email = ?)
          AND created_at > datetime('now', '-1 day')
+         ORDER BY created_at DESC
          LIMIT 1`,
-        [inquiry.name, inquiry.phone, inquiry.email],
+        [inquiry.phone, inquiry.email],
         (err, existing) => {
           if (err) {
             reject(err);
@@ -260,7 +261,12 @@ class EmailService {
           }
 
           if (existing) {
-            console.log('⚠️ 중복된 견적문의 (24시간 이내):', inquiry.name);
+            console.log('⚠️ 중복된 견적문의 (24시간 이내):', {
+              name: inquiry.name,
+              phone: inquiry.phone,
+              email: inquiry.email,
+              existingId: existing.id
+            });
             resolve(existing.id);
             return;
           }
