@@ -3,11 +3,12 @@ import { useDataStore, type Payment } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 
 type PaymentRequest = Payment;
-import { Search, Trash2, ImageIcon, X, Upload } from 'lucide-react';
+import { Search, Trash2, ImageIcon, X, Upload, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import contractorService from '../services/contractorService';
+import CashReceiptModal from '../components/CashReceiptModal';
 
 // 협력업체 타입 정의
 interface Contractor {
@@ -100,6 +101,8 @@ const Payments = () => {
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailPayment, setDetailPayment] = useState<PaymentRequest | null>(null);
+  const [showCashReceiptModal, setShowCashReceiptModal] = useState(false);
+  const [cashReceiptProject, setCashReceiptProject] = useState<string>('');
 
   // 협력업체 관련 상태
   const [contractors, setContractors] = useState<Contractor[]>([]);
@@ -721,6 +724,110 @@ const Payments = () => {
     setShowDetailModal(true);
   };
 
+  // 즉시송금 - 토스페이 API 또는 계좌정보 복사
+  const handleInstantTransfer = async (payment: PaymentRequest) => {
+    try {
+      // 필수 정보 확인 - bankInfo 객체 또는 개별 필드 사용
+      const accountHolder = payment.bankInfo?.accountHolder || payment.accountHolder;
+      const bankName = payment.bankInfo?.bankName || payment.bank;
+      const accountNumber = payment.bankInfo?.accountNumber || payment.accountNumber;
+
+      if (!accountHolder || !bankName || !accountNumber) {
+        toast.error('계좌 정보가 없습니다. 결제 요청 정보를 확인해주세요.');
+        return;
+      }
+
+      // 토스페이 API 설정 확인
+      const hasTossPayAPI = process.env.TOSSPAY_API_KEY &&
+                            process.env.TOSSPAY_SECRET_KEY &&
+                            process.env.TOSSPAY_SENDER_ACCOUNT !== '1002-000-0000';
+
+      if (hasTossPayAPI) {
+        // 토스페이 API 사용
+        const confirmed = window.confirm(
+          `토스페이로 ${accountHolder}님에게 ${payment.amount.toLocaleString()}원을 송금하시겠습니까?\n\n` +
+          `은행: ${bankName}\n` +
+          `계좌: ${accountNumber}\n` +
+          `예금주: ${accountHolder}\n\n` +
+          `※ 송금이 즉시 실행됩니다.`
+        );
+
+        if (!confirmed) return;
+
+        const loadingToast = toast.loading('토스페이로 송금을 처리 중입니다...');
+
+        const response = await fetch('/api/payments/tosspay/instant-transfer', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            paymentId: payment.id,
+            receiverName: accountHolder,
+            receiverBank: bankName,
+            receiverAccount: accountNumber,
+            amount: payment.amount,
+            description: `${payment.project} - ${payment.itemName || payment.purpose}`
+          })
+        });
+
+        const result = await response.json();
+        toast.dismiss(loadingToast);
+
+        if (result.success) {
+          toast.success('송금이 완료되었습니다!');
+          await loadPaymentsFromAPI();
+        } else {
+          toast.error(result.error || '송금 요청에 실패했습니다');
+        }
+      } else {
+        // 계좌정보 복사 방식 (임시)
+        try {
+          await navigator.clipboard.writeText(accountNumber);
+
+          const confirmed = window.confirm(
+            `계좌번호가 복사되었습니다!\n\n` +
+            `받는분: ${accountHolder}\n` +
+            `은행: ${bankName}\n` +
+            `계좌번호: ${accountNumber}\n` +
+            `금액: ${payment.amount.toLocaleString()}원\n\n` +
+            `인터넷뱅킹/모바일뱅킹 앱으로 송금을 진행해주세요.\n` +
+            `송금 완료 후 "송금완료" 버튼을 눌러주세요.`
+          );
+
+          if (confirmed) {
+            // 모바일에서 은행 앱 열기 시도
+            const bankApps: Record<string, string> = {
+              'KB국민은행': 'kbbank://',
+              '신한은행': 'shinhan-sr://',
+              '우리은행': 'wooribank://',
+              '하나은행': 'hanabank://',
+              '카카오뱅크': 'kakaotalk://kakaopay',
+              '토스뱅크': 'toss://',
+            };
+
+            const appScheme = bankApps[bankName];
+            if (appScheme && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+              window.location.href = appScheme;
+            }
+          }
+        } catch (err) {
+          alert(
+            `받는분: ${accountHolder}\n` +
+            `은행: ${bankName}\n` +
+            `계좌번호: ${accountNumber}\n` +
+            `금액: ${payment.amount.toLocaleString()}원\n\n` +
+            `위 정보를 확인하여 송금을 진행해주세요.`
+          );
+        }
+      }
+    } catch (error) {
+      console.error('즉시송금 오류:', error);
+      toast.error('처리 중 오류가 발생했습니다');
+    }
+  };
+
   // 송금완료 처리
   const handleMarkAsCompleted = async (paymentId: string) => {
     try {
@@ -1298,8 +1405,144 @@ const Payments = () => {
 
           <div className="flex-1 overflow-auto p-4">
             {filteredRecords.length > 0 ? (
-              <div className="space-y-3">
-                {filteredRecords.map((record) => {
+              <div className="space-y-4">
+                {/* 송금완료 탭에서 프로젝트별 그룹화 */}
+                {statusFilter === 'completed' ? (
+                  (() => {
+                    // 프로젝트별로 그룹화
+                    const groupedByProject = filteredRecords.reduce((acc, record) => {
+                      const project = record.project || '미분류';
+                      if (!acc[project]) {
+                        acc[project] = [];
+                      }
+                      acc[project].push(record);
+                      return acc;
+                    }, {} as Record<string, PaymentRequest[]>);
+
+                    return Object.entries(groupedByProject).map(([project, records]) => {
+                      const projectTotal = records.reduce((sum, record) => sum + (record.amount || 0), 0);
+
+                      return (
+                        <div key={project} className="border rounded-lg overflow-hidden">
+                          {/* 프로젝트 헤더 */}
+                          <div className="bg-gray-50 px-3 py-2 border-b flex items-center justify-between">
+                            <div>
+                              <h3 className="font-semibold text-gray-900 text-sm">{project}</h3>
+                              <p className="text-xs text-gray-500">총 {records.length}건 · {projectTotal.toLocaleString()}원</p>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setCashReceiptProject(project);
+                                setShowCashReceiptModal(true);
+                              }}
+                              className="px-3 py-1.5 bg-gray-900 text-white rounded text-xs font-medium hover:bg-gray-800 flex items-center gap-1"
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                              현금수령증
+                            </button>
+                          </div>
+
+                          {/* 프로젝트 내 결제 목록 */}
+                          <div className="p-2 space-y-2">
+                            {records.map((record) => {
+                              const totalAmount = record.amount || 0;
+                              const accountHolder = record.bankInfo?.accountHolder || record.accountHolder || '';
+                              const bank = record.bankInfo?.bankName || record.bank || '';
+                              const accountNumber = record.bankInfo?.accountNumber || record.accountNumber || '';
+                              const accountInfo = accountHolder && bank && accountNumber
+                                ? `${accountHolder} | ${bank} ${accountNumber}`
+                                : '계좌정보 없음';
+
+                              return (
+                                <div
+                                  key={record.id}
+                                  onClick={() => setSelectedRecord(record.id)}
+                                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                                    selectedRecord === record.id
+                                      ? 'border-gray-900 bg-gray-50'
+                                      : 'border-gray-200 bg-white hover:border-gray-400'
+                                  }`}
+                                >
+                                  {/* 기존 카드 내용 */}
+                                  <div className="flex justify-between items-start mb-2.5">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-baseline gap-2">
+                                        {record.process && (
+                                          <span className="text-xs text-gray-500 shrink-0">[{record.process}]</span>
+                                        )}
+                                        <h3 className="font-semibold text-gray-900 text-sm truncate">
+                                          {record.purpose || record.itemName || '-'}
+                                        </h3>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-start gap-2 ml-3 shrink-0">
+                                      <div className="text-right">
+                                        <p className="text-base font-bold text-gray-900">
+                                          {totalAmount.toLocaleString()}원
+                                        </p>
+                                        <p className="text-[10px] text-gray-400">
+                                          {record.requestedBy || '-'} · {format(new Date(record.requestDate), 'MM/dd', { locale: ko })}
+                                        </p>
+                                      </div>
+                                      <button
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          if (window.confirm('이 결제요청을 삭제하시겠습니까?')) {
+                                            await deletePaymentFromAPI(record.id);
+                                            toast.success('삭제되었습니다');
+                                          }
+                                        }}
+                                        className="p-0.5 text-gray-300 hover:text-red-500 transition-colors"
+                                        title="삭제"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 mb-2.5 text-xs">
+                                    <span className="text-gray-400">자재비 {(record.materialAmount || 0).toLocaleString()}</span>
+                                    <span className="text-gray-300">·</span>
+                                    <span className="text-gray-400">인건비 {(record.laborAmount || 0).toLocaleString()}</span>
+                                    {record.includesVAT && (
+                                      <>
+                                        <span className="text-gray-300">·</span>
+                                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] rounded">VAT</span>
+                                      </>
+                                    )}
+                                    {record.applyTaxDeduction && (
+                                      <>
+                                        <span className="text-gray-300">·</span>
+                                        <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 text-[10px] rounded">3.3%</span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center justify-between">
+                                    <div className="text-xs text-gray-500 truncate flex-1">
+                                      {accountInfo}
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEdit(record);
+                                      }}
+                                      className="text-xs text-gray-600 hover:text-gray-900 ml-2 flex-shrink-0"
+                                    >
+                                      수정
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()
+                ) : (
+                  /* 대기중 탭 - 기존 방식 */
+                  filteredRecords.map((record) => {
                   const totalAmount = record.amount || 0;
                   // bankInfo 객체가 있으면 그것을 사용, 없으면 개별 필드 사용
                   const accountHolder = record.bankInfo?.accountHolder || record.accountHolder || '';
@@ -1398,7 +1641,7 @@ const Payments = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleMarkAsCompleted(record.id);
+                              handleInstantTransfer(record);
                             }}
                             className="flex-1 py-1.5 px-2 bg-gray-700 text-white rounded text-xs font-medium hover:bg-gray-800 transition-colors"
                           >
@@ -1420,7 +1663,8 @@ const Payments = () => {
                       )}
                     </div>
                   );
-                })}
+                  })
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
@@ -1667,6 +1911,14 @@ const Payments = () => {
             />
           </div>
         </div>
+      )}
+
+      {/* 현금수령증 모달 */}
+      {showCashReceiptModal && (
+        <CashReceiptModal
+          projectName={cashReceiptProject}
+          onClose={() => setShowCashReceiptModal(false)}
+        />
       )}
     </div>
   );
