@@ -27,6 +27,7 @@ const addQuoteInquiryContacted = require('./server/migrations/add-quote-inquiry-
 const { addExpectedPaymentDates } = require('./server/migrations/add-expected-payment-dates');
 const createKBBankingTokensTable = require('./server/migrations/create-kb-banking-tokens-table');
 const addKakaoPayFields = require('./server/migrations/add-kakaopay-fields');
+const createSpecbookTable = require('./server/migrations/create-specbook-table');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
@@ -35,6 +36,7 @@ addQuoteInquiryContacted().catch(console.error);
 addExpectedPaymentDates().catch(console.error);
 createKBBankingTokensTable().catch(console.error);
 addKakaoPayFields().catch(console.error);
+createSpecbookTable().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
