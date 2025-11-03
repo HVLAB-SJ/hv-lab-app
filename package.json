@@ -12,7 +12,7 @@
     "deploy:railway": "railway up",
     "deploy:full": "npm run build && git add . && git commit -m \"Build and deploy\" && git push origin production-stable:main && railway up",
     "deploy:old": "deploy.bat",
-    "build": "cd interior-management-system/frontend && npm install && npm run build && cd ../.. && cp -r interior-management-system/frontend/dist/* public/",
+    "build": "cd interior-management-system/frontend && rm -rf node_modules/.cache && npm ci && npm run build && cd ../.. && cp -r interior-management-system/frontend/dist/* public/",
     "build:frontend": "cd interior-management-system/frontend && npm run build",
     "railway:deploy": "git add . && git commit -m \"Deploy to Railway\" && git push && railway up"
   },
