@@ -119,7 +119,7 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
 // 모든 프로젝트 목록 조회 (스펙북용)
 router.get('/projects', authenticateToken, (req, res) => {
   db.all(
-    'SELECT id, title FROM projects ORDER BY created_at DESC',
+    'SELECT id, name as title FROM projects ORDER BY created_at DESC',
     [],
     (err, rows) => {
       if (err) {
