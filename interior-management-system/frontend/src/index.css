@@ -266,6 +266,14 @@
   min-height: 100px !important;
   height: 100px !important;
   border-bottom: 1px solid #f3f4f6 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* 모든 주 행의 상단 여백 강제 제거 */
+.rbc-month-view .rbc-month-row:first-of-type {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 .rbc-month-view .rbc-row-content {
@@ -303,6 +311,17 @@
 .rbc-calendar > .rbc-month-view {
   margin: 0 !important;
   padding: 0 !important;
+}
+
+.rbc-month-view {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* 월 뷰 내부의 모든 컨텐츠 */
+.rbc-month-view > * {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* 7. 요일 헤더와 첫 주 사이 큰 빈 공간 완전 제거 */
