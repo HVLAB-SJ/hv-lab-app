@@ -250,14 +250,15 @@
 .rbc-month-view .rbc-month-header {
   height: 25px !important;
   min-height: 25px !important;
-  margin: 0 !important;
+  margin: 0 0 0 0 !important;
   padding: 0 !important;
-  border-bottom: 1px solid #e5e7eb !important;
+  border-bottom: none !important;
 }
 
 .rbc-month-view .rbc-row.rbc-month-header {
   height: 25px !important;
   min-height: 25px !important;
+  margin-bottom: 0 !important;
 }
 
 /* 3. 날짜 셀 행 (주 단위) */
@@ -304,9 +305,14 @@
   padding: 0 !important;
 }
 
-/* 7. 요일 헤더와 첫 주 사이 간격 제거 및 겹침 방지 */
+/* 7. 요일 헤더와 첫 주 사이 큰 빈 공간 완전 제거 */
 .rbc-month-view .rbc-month-header + .rbc-month-row {
-  margin-top: -1px !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* 요일 헤더 바로 아래 날짜 셀의 상단 패딩 제거 */
+.rbc-month-view .rbc-month-header + .rbc-month-row .rbc-date-cell {
   padding-top: 0 !important;
 }
 
