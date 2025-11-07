@@ -224,7 +224,7 @@
 /* 1. 툴바 영역 (월/년 선택, 네비게이션) */
 .rbc-toolbar {
   margin: 0 !important;
-  padding: 12px 0 0 0 !important;
+  padding: 4px 0 0 0 !important;
 }
 
 /* 툴바 버튼 간격 축소 및 화살표 꼬리 제거 */
