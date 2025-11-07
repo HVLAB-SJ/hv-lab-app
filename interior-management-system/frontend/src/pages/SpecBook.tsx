@@ -248,7 +248,10 @@ const SpecBook = () => {
 
         <div className="flex gap-2">
           <button
-            onClick={() => setView('library')}
+            onClick={() => {
+              setView('library');
+              setSelectedProject(null);
+            }}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               view === 'library'
                 ? 'bg-gray-800 text-white'
@@ -258,29 +261,18 @@ const SpecBook = () => {
             스펙 라이브러리
           </button>
 
-          {view === 'project' && (
-            <select
-              value={selectedProject || ''}
-              onChange={(e) => setSelectedProject(Number(e.target.value))}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
-            >
-              {projects.map(project => (
-                <option key={project.id} value={project.id}>
-                  {project.title}
-                </option>
-              ))}
-            </select>
-          )}
-
           <select
             value={view === 'project' && selectedProject ? selectedProject : ''}
             onChange={(e) => {
               if (e.target.value) {
                 setView('project');
                 setSelectedProject(Number(e.target.value));
+              } else {
+                setView('library');
+                setSelectedProject(null);
               }
             }}
-            className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
+            className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-500"
           >
             <option value="">프로젝트 선택</option>
             {projects.map(project => (
