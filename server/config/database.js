@@ -360,6 +360,15 @@ const initDatabase = () => {
     }
   });
 
+  // Add images column to additional_works table (migration)
+  db.run(`ALTER TABLE additional_works ADD COLUMN images TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding images column to additional_works:', err);
+    } else if (!err) {
+      console.log('✓ images column added to additional_works table');
+    }
+  });
+
   // Clean quotes from all text fields in contractors table (one-time migration)
   db.run(`
     UPDATE contractors SET

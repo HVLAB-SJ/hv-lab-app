@@ -25,6 +25,7 @@ router.get('/', authenticateToken, (req, res) => {
         amount: row.amount || 0,
         date: row.work_date || new Date().toISOString(),
         notes: row.notes || '',
+        images: row.images ? JSON.parse(row.images) : [],
         createdAt: row.created_at || new Date().toISOString(),
         updatedAt: row.updated_at || new Date().toISOString()
       }));
@@ -43,6 +44,7 @@ router.post('/', authenticateToken, (req, res) => {
   const amount = req.body.amount || 0;
   const work_date = req.body.work_date || req.body.date || new Date().toISOString();
   const notes = req.body.notes || '';
+  const images = req.body.images ? JSON.stringify(req.body.images) : '[]';
 
   // If project is a name (string), look up the project_id
   if (!project_id && req.body.project) {
@@ -74,8 +76,8 @@ router.post('/', authenticateToken, (req, res) => {
 
   function insertAdditionalWork() {
     db.run(
-      'INSERT INTO additional_works (project_id, description, amount, work_date, notes, created_by) VALUES (?, ?, ?, ?, ?, ?)',
-      [project_id, description, amount, work_date, notes, req.user.id],
+      'INSERT INTO additional_works (project_id, description, amount, work_date, notes, images, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [project_id, description, amount, work_date, notes, images, req.user.id],
       function(err) {
         if (err) {
           console.error('[POST /api/additional-works] Database error:', err);
@@ -102,6 +104,7 @@ router.post('/', authenticateToken, (req, res) => {
               amount: row.amount || 0,
               date: row.work_date || new Date().toISOString(),
               notes: row.notes || '',
+              images: row.images ? JSON.parse(row.images) : [],
               createdAt: row.created_at || new Date().toISOString(),
               updatedAt: row.updated_at || new Date().toISOString()
             };
@@ -125,6 +128,7 @@ router.put('/:id', authenticateToken, (req, res) => {
   const amount = req.body.amount;
   const work_date = req.body.work_date || req.body.date;
   const notes = req.body.notes;
+  const images = req.body.images !== undefined ? JSON.stringify(req.body.images) : undefined;
 
   // If project is a name (string), look up the project_id
   if (!project_id && req.body.project) {
@@ -172,6 +176,10 @@ router.put('/:id', authenticateToken, (req, res) => {
       updates.push('notes = ?');
       values.push(notes);
     }
+    if (images !== undefined) {
+      updates.push('images = ?');
+      values.push(images);
+    }
 
     if (updates.length === 0) {
       return res.status(400).json({ error: '수정할 필드가 없습니다.' });
@@ -211,6 +219,7 @@ router.put('/:id', authenticateToken, (req, res) => {
               amount: row.amount || 0,
               date: row.work_date || new Date().toISOString(),
               notes: row.notes || '',
+              images: row.images ? JSON.parse(row.images) : [],
               createdAt: row.created_at || new Date().toISOString(),
               updatedAt: row.updated_at || new Date().toISOString()
             };
