@@ -237,19 +237,17 @@
   min-height: 30px !important;
 }
 
-/* 날짜 셀 영역 높이 축소 */
+/* 날짜 셀 영역 높이 - 자동으로 채우기 */
 .rbc-month-view .rbc-month-row {
-  min-height: 40px !important;
-  height: 40px !important;
+  flex: 1 !important;
 }
 
 .rbc-month-view .rbc-row-content {
-  min-height: 40px !important;
-  height: 40px !important;
+  height: 100% !important;
 }
 
-.rbc-month-view .rbc-row {
-  min-height: 40px !important;
+.rbc-month-view .rbc-row-bg {
+  height: 100% !important;
 }
 
 .rbc-month-view .rbc-date-cell {
@@ -257,6 +255,17 @@
   padding-left: 9px !important;
   padding-top: 5px !important;
   vertical-align: top !important;
+}
+
+/* 요일 헤더와 첫 번째 주 사이 간격 제거 */
+.rbc-month-view .rbc-month-header + .rbc-month-row {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.rbc-month-view .rbc-month-header {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 /* 툴바와 헤더 사이 여백 제거 - 데스크톱 */
