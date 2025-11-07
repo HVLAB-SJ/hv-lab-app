@@ -65,9 +65,7 @@ const SpecBook = () => {
     try {
       const response = await api.get('/specbook/projects');
       setProjects(response.data);
-      if (response.data.length > 0 && !selectedProject) {
-        setSelectedProject(response.data[0].id);
-      }
+      // 자동 선택 제거 - 사용자가 직접 선택하도록 함
     } catch (error) {
       console.error('프로젝트 로드 실패:', error);
     }
@@ -261,26 +259,35 @@ const SpecBook = () => {
             스펙 라이브러리
           </button>
 
-          <select
-            value={view === 'project' && selectedProject ? selectedProject : ''}
-            onChange={(e) => {
-              if (e.target.value) {
-                setView('project');
-                setSelectedProject(Number(e.target.value));
-              } else {
+          {view === 'project' && selectedProject ? (
+            <button
+              onClick={() => {
                 setView('library');
                 setSelectedProject(null);
-              }
-            }}
-            className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-500"
-          >
-            <option value="">프로젝트 선택</option>
-            {projects.map(project => (
-              <option key={project.id} value={project.id}>
-                {project.title}
-              </option>
-            ))}
-          </select>
+              }}
+              className="px-4 py-2 rounded-lg font-medium bg-gray-800 text-white transition-colors"
+            >
+              {projects.find(p => p.id === selectedProject)?.title}
+            </button>
+          ) : (
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  setView('project');
+                  setSelectedProject(Number(e.target.value));
+                }
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              <option value="">프로젝트 선택</option>
+              {projects.map(project => (
+                <option key={project.id} value={project.id}>
+                  {project.title}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
