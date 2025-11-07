@@ -259,6 +259,7 @@
   height: 18px !important;
   min-height: 18px !important;
   margin-bottom: 0 !important;
+  flex: 0 0 auto !important;
 }
 
 /* 3. 날짜 셀 행 (주 단위) */
