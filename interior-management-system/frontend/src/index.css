@@ -304,8 +304,14 @@
   padding: 0 !important;
 }
 
-/* 7. 요일 헤더와 첫 주 사이 간격 제거 */
+/* 7. 요일 헤더와 첫 주 사이 간격 제거 및 겹침 방지 */
 .rbc-month-view .rbc-month-header + .rbc-month-row {
+  margin-top: -1px !important;
+  padding-top: 0 !important;
+}
+
+/* 요일 헤더 바로 아래 빈 영역 제거 */
+.rbc-month-view .rbc-month-header + .rbc-month-row .rbc-row-bg {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
