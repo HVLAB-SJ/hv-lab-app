@@ -227,28 +227,37 @@
   padding: 12px 0 0 0 !important;
 }
 
-/* 2. 요일 헤더 (일~토) - 최소 높이 */
+/* 툴바 버튼 간격 축소 */
+.rbc-toolbar button {
+  margin: 0 2px !important;
+}
+
+.rbc-toolbar .rbc-toolbar-label {
+  margin: 0 8px !important;
+}
+
+/* 2. 요일 헤더 (일~토) - 크기 증가 */
 .rbc-month-view .rbc-header {
   text-align: left !important;
-  padding: 0 8px !important;
-  height: 16px !important;
-  min-height: 16px !important;
-  line-height: 16px !important;
-  font-size: 10px !important;
+  padding: 2px 8px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  line-height: 18px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
 }
 
 .rbc-month-view .rbc-month-header {
-  height: 16px !important;
-  min-height: 16px !important;
+  height: 22px !important;
+  min-height: 22px !important;
   margin: 0 !important;
   padding: 0 !important;
   border-bottom: 1px solid #e5e7eb !important;
 }
 
 .rbc-month-view .rbc-row.rbc-month-header {
-  height: 16px !important;
-  min-height: 16px !important;
+  height: 22px !important;
+  min-height: 22px !important;
 }
 
 /* 3. 날짜 셀 행 (주 단위) */
@@ -271,7 +280,7 @@
 /* 4. 날짜 셀 내부 */
 .rbc-month-view .rbc-date-cell {
   text-align: left !important;
-  padding: 2px 6px 4px 6px !important;
+  padding: 1px 6px 4px 6px !important;
   vertical-align: top !important;
 }
 
@@ -509,6 +518,22 @@ div.rbc-popup {
   border-radius: 2px !important;
   display: flex !important;
   align-items: center !important;
+}
+
+/* 화살표 꼬리 제거 - 연속 일정의 좌우 둥근 모서리 유지 */
+.rbc-event:before,
+.rbc-event:after {
+  display: none !important;
+}
+
+.rbc-event-continues-prior {
+  border-top-left-radius: 2px !important;
+  border-bottom-left-radius: 2px !important;
+}
+
+.rbc-event-continues-after {
+  border-top-right-radius: 2px !important;
+  border-bottom-right-radius: 2px !important;
 }
 
 .rbc-event-content {
