@@ -74,6 +74,17 @@ const projectColors = [
   '#F3F4F6', // 연한 회색
 ];
 
+// 프로젝트명 축약 함수 (언더스코어 앞부분만 두 글자로)
+const shortenProjectName = (projectName: string): string => {
+  if (!projectName) return projectName;
+  const parts = projectName.split('_');
+  if (parts.length > 1 && parts[0].length > 2) {
+    // 언더스코어가 있고 앞부분이 2글자보다 길면 축약
+    return parts[0].substring(0, 2) + '_' + parts.slice(1).join('_');
+  }
+  return projectName;
+};
+
 // 한국 공휴일 데이터
 const holidays: { [key: string]: string } = {
   '2025-01-01': '신정',
@@ -277,7 +288,7 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
               maxWidth: '60%',
               flexShrink: 0
             }}>
-              [{event.projectName}]
+              [{shortenProjectName(event.projectName)}]
             </span>
           )}
           {attendees.length > 0 && (
@@ -350,7 +361,7 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
         {/* AS 일정이 아닐 때만 프로젝트명 표시 */}
         {!event.isASVisit && event.projectName && (
           <span className="text-xs opacity-70 flex-shrink-0">
-            [{event.projectName}]
+            [{shortenProjectName(event.projectName)}]
           </span>
         )}
         <span className="font-medium truncate">{event.title}</span>
