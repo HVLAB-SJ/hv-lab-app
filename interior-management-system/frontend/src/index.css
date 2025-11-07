@@ -271,7 +271,7 @@
 /* 4. 날짜 셀 내부 */
 .rbc-month-view .rbc-date-cell {
   text-align: left !important;
-  padding: 4px 6px !important;
+  padding: 2px 6px 4px 6px !important;
   vertical-align: top !important;
 }
 
@@ -281,7 +281,7 @@
   font-size: 13px !important;
   font-weight: 500 !important;
   padding: 0 !important;
-  margin-bottom: 2px !important;
+  margin-bottom: 0 !important;
 }
 
 /* 6. 캘린더 전체 컨테이너 */
