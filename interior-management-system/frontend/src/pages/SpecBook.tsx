@@ -528,18 +528,19 @@ const SpecBook = () => {
               <div className="mb-3">
                 <h2 className="text-lg font-bold mb-2 text-gray-900">스펙 라이브러리</h2>
                 {/* 카테고리 필터 */}
-                <div className="grid grid-cols-6 gap-1 max-h-20 overflow-y-auto">
+                <div className="grid grid-cols-8 gap-1">
                   {categories.map(category => {
                     const count = allLibraryItems.filter(item => category === '전체' || item.category === category).length;
                     return (
                       <button
                         key={category}
                         onClick={() => setSelectedCategory(category)}
-                        className={`px-1 py-1 rounded text-xs font-medium transition-colors ${
+                        className={`px-1 py-0.5 rounded text-[10px] font-medium transition-colors truncate ${
                           selectedCategory === category
                             ? 'bg-gray-800 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
+                        title={`${category}${count > 0 ? ` (${count})` : ''}`}
                       >
                         {category}
                         {count > 0 && (
@@ -613,23 +614,24 @@ const SpecBook = () => {
                   {projects.find(p => p.id === selectedProject)?.title}
                 </h2>
                 {/* 프로젝트 카테고리 개수 */}
-                <div className="grid grid-cols-6 gap-1 max-h-20 overflow-y-auto">
+                <div className="grid grid-cols-8 gap-1">
                   {categories.map(category => {
                     const count = items.filter(item => category === '전체' || item.category === category).length;
                     return (
                       <button
                         key={category}
                         onClick={() => setSelectedCategory(category)}
-                        className={`px-1 py-1 rounded text-xs font-medium transition-colors ${
+                        className={`px-1 py-0.5 rounded text-[10px] font-medium transition-colors truncate ${
                           selectedCategory === category
-                            ? 'bg-amber-600 text-white'
-                            : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                            ? 'bg-gray-800 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
+                        title={`${category}${count > 0 ? ` (${count})` : ''}`}
                       >
                         {category}
                         {count > 0 && (
                           <span className={`ml-0.5 ${
-                            selectedCategory === category ? 'text-amber-100' : 'text-amber-400'
+                            selectedCategory === category ? 'text-gray-300' : 'text-gray-400'
                           }`}>
                             ({count})
                           </span>
@@ -640,7 +642,7 @@ const SpecBook = () => {
                 </div>
               </div>
               <div
-                className="flex-1 overflow-y-auto bg-amber-50 rounded-lg p-4 border-2 border-dashed border-amber-300"
+                className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 border-2 border-dashed border-gray-300"
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.dataTransfer.dropEffect = 'copy';
@@ -654,10 +656,10 @@ const SpecBook = () => {
                       const sourceItem = allLibraryItems.find(i => i.id === Number(itemId));
                       if (sourceItem) {
                         const { id, created_at, updated_at, ...itemData } = sourceItem;
-                        await api.post('/specbook/library', {
+                        await api.post('/specbook/base64', {
                           ...itemData,
-                          is_library: 0,
-                          project_id: selectedProject
+                          isLibrary: false,
+                          projectId: selectedProject
                         });
                         toast.success('아이템이 프로젝트에 추가되었습니다');
                         loadItems(); // 프로젝트 아이템 새로고침
@@ -674,7 +676,7 @@ const SpecBook = () => {
                     <div className="text-gray-500">로딩 중...</div>
                   </div>
                 ) : items.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-amber-600 text-sm">
+                  <div className="flex items-center justify-center h-full text-gray-600 text-sm">
                     좌측에서 아이템을 드래그하여 추가하세요
                   </div>
                 ) : (
