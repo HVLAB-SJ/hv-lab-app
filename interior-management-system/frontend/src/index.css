@@ -227,37 +227,44 @@
   padding: 12px 0 0 0 !important;
 }
 
-/* 툴바 버튼 간격 축소 */
+/* 툴바 버튼 간격 축소 및 화살표 꼬리 제거 */
 .rbc-toolbar button {
-  margin: 0 2px !important;
+  margin: 0 4px !important;
+  padding: 6px 10px !important;
+}
+
+/* 이전/다음 버튼 화살표만 표시 */
+.rbc-toolbar button:first-child::after,
+.rbc-toolbar button:nth-child(2)::after {
+  content: '' !important;
 }
 
 .rbc-toolbar .rbc-toolbar-label {
-  margin: 0 8px !important;
+  margin: 0 4px !important;
 }
 
-/* 2. 요일 헤더 (일~토) - 높이 축소 */
+/* 2. 요일 헤더 (일~토) - 높이 및 텍스트 크기 조정 */
 .rbc-month-view .rbc-header {
   text-align: left !important;
   padding: 0 8px !important;
-  height: 18px !important;
-  min-height: 18px !important;
-  line-height: 18px !important;
-  font-size: 13px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  line-height: 22px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
 }
 
 .rbc-month-view .rbc-month-header {
-  height: 18px !important;
-  min-height: 18px !important;
+  height: 22px !important;
+  min-height: 22px !important;
   margin: 0 0 0 0 !important;
   padding: 0 !important;
   border-bottom: none !important;
 }
 
 .rbc-month-view .rbc-row.rbc-month-header {
-  height: 18px !important;
-  min-height: 18px !important;
+  height: 22px !important;
+  min-height: 22px !important;
   margin-bottom: 0 !important;
   flex: 0 0 auto !important;
 }
@@ -542,10 +549,10 @@ div.rbc-popup {
 .rbc-event {
   margin: 0 0 1px 0 !important;
   padding: 1px 4px !important;
-  font-size: 12px !important;
-  line-height: 16px !important;
-  min-height: 16px !important;
-  height: 16px !important;
+  font-size: 13px !important;
+  line-height: 18px !important;
+  min-height: 18px !important;
+  height: 18px !important;
   overflow: hidden !important;
   border-radius: 2px !important;
   display: flex !important;
@@ -570,8 +577,8 @@ div.rbc-popup {
 
 .rbc-event-content {
   padding: 0 !important;
-  line-height: 16px !important;
-  font-size: 12px !important;
+  line-height: 18px !important;
+  font-size: 13px !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
