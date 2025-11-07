@@ -501,10 +501,10 @@ div.rbc-popup {
 .rbc-event {
   margin: 0 0 1px 0 !important;
   padding: 1px 4px !important;
-  font-size: 10px !important;
-  line-height: 14px !important;
-  min-height: 14px !important;
-  height: 14px !important;
+  font-size: 11px !important;
+  line-height: 15px !important;
+  min-height: 15px !important;
+  height: 15px !important;
   overflow: hidden !important;
   border-radius: 2px !important;
   display: flex !important;
@@ -513,8 +513,8 @@ div.rbc-popup {
 
 .rbc-event-content {
   padding: 0 !important;
-  line-height: 14px !important;
-  font-size: 10px !important;
+  line-height: 15px !important;
+  font-size: 11px !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
