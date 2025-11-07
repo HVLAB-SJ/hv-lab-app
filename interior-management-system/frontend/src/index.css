@@ -495,10 +495,20 @@ div.rbc-popup {
   margin-top: 0 !important;
 }
 
-/* 개별 이벤트 스타일 */
+/* 개별 이벤트 스타일 - 높이와 간격 축소 */
 .rbc-event {
-  margin-bottom: 1px !important;
+  margin-bottom: 0 !important;
   margin-top: 0 !important;
+  padding: 1px 3px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+
+.rbc-event-content {
+  padding: 0 !important;
+  line-height: 1.2 !important;
 }
 
 /* 이전/다음 달 일요일 */
