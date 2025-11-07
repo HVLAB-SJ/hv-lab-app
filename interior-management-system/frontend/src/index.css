@@ -224,7 +224,7 @@
 /* 1. 툴바 영역 (월/년 선택, 네비게이션) */
 .rbc-toolbar {
   margin: 0 !important;
-  padding: 12px 0 8px 0 !important;
+  padding: 12px 0 0 0 !important;
 }
 
 /* 2. 요일 헤더 (일~토) */
