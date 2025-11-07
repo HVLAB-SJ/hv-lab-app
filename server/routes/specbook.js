@@ -6,6 +6,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// 카테고리 파일 경로
+const CATEGORIES_FILE = path.join(__dirname, '..', 'data', 'categories.json');
+
 // uploads 디렉토리 생성
 const uploadsDir = path.join(__dirname, '..', '..', 'uploads', 'specbook');
 if (!fs.existsSync(uploadsDir)) {
@@ -55,8 +58,8 @@ const saveBase64Image = (base64Data) => {
   return `/uploads/specbook/${filename}`;
 };
 
-// 카테고리 목록
-const CATEGORIES = [
+// 기본 카테고리 목록
+const DEFAULT_CATEGORIES = [
   '전체', '변기', '세면대', '수전', '샤워수전', '욕조', '타일', '마루', '도어', '조명',
   '벽지', '페인트', '싱크볼', '가전', '세라믹', '인조대리석', '샤워슬라이드바', '싱크수전',
   '거울', '유리', '환풍기', '실링팬', '칸스톤', '월패널', '옷걸이(후크)', '수건걸이',
@@ -64,9 +67,68 @@ const CATEGORIES = [
   '줄눈', '방문손잡이', '필름', '가구손잡이', '기타'
 ];
 
+// 카테고리 파일에서 읽기
+const loadCategories = () => {
+  try {
+    // data 디렉토리가 없으면 생성
+    const dataDir = path.join(__dirname, '..', 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    if (fs.existsSync(CATEGORIES_FILE)) {
+      const data = fs.readFileSync(CATEGORIES_FILE, 'utf8');
+      return JSON.parse(data);
+    } else {
+      // 파일이 없으면 기본 카테고리로 초기화
+      fs.writeFileSync(CATEGORIES_FILE, JSON.stringify(DEFAULT_CATEGORIES, null, 2));
+      return DEFAULT_CATEGORIES;
+    }
+  } catch (error) {
+    console.error('카테고리 로드 실패:', error);
+    return DEFAULT_CATEGORIES;
+  }
+};
+
+// 카테고리 파일에 저장
+const saveCategories = (categories) => {
+  try {
+    const dataDir = path.join(__dirname, '..', 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    fs.writeFileSync(CATEGORIES_FILE, JSON.stringify(categories, null, 2));
+    return true;
+  } catch (error) {
+    console.error('카테고리 저장 실패:', error);
+    return false;
+  }
+};
+
 // 카테고리 목록 조회
 router.get('/categories', authenticateToken, (req, res) => {
-  res.json(CATEGORIES);
+  const categories = loadCategories();
+  res.json(categories);
+});
+
+// 카테고리 목록 업데이트
+router.put('/categories', authenticateToken, isManager, (req, res) => {
+  const { categories } = req.body;
+
+  if (!categories || !Array.isArray(categories)) {
+    return res.status(400).json({ error: '카테고리 배열이 필요합니다.' });
+  }
+
+  if (!categories.includes('전체')) {
+    return res.status(400).json({ error: '전체 카테고리는 필수입니다.' });
+  }
+
+  const success = saveCategories(categories);
+  if (success) {
+    res.json({ message: '카테고리가 저장되었습니다.', categories });
+  } else {
+    res.status(500).json({ error: '카테고리 저장에 실패했습니다.' });
+  }
 });
 
 // 스펙북 라이브러리 조회

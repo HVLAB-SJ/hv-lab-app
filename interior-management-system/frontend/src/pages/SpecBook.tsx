@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Pencil, Trash2, Upload } from 'lucide-react';
+import { Pencil, Trash2, Upload, Settings, X, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
@@ -40,6 +40,9 @@ const SpecBook = () => {
     imageData: null as string | null
   });
   const [isDragging, setIsDragging] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategories, setEditingCategories] = useState<string[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -237,6 +240,49 @@ const SpecBook = () => {
     setFormData({ name: '', category: selectedCategory !== '전체' ? selectedCategory : '', brand: '', price: '', imageData: null });
   };
 
+  const handleOpenCategoryModal = () => {
+    setEditingCategories([...categories]);
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleCloseCategoryModal = () => {
+    setIsCategoryModalOpen(false);
+    setNewCategoryName('');
+  };
+
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) {
+      toast.error('카테고리 이름을 입력하세요');
+      return;
+    }
+    if (editingCategories.includes(newCategoryName.trim())) {
+      toast.error('이미 존재하는 카테고리입니다');
+      return;
+    }
+    setEditingCategories([...editingCategories, newCategoryName.trim()]);
+    setNewCategoryName('');
+  };
+
+  const handleRemoveCategory = (category: string) => {
+    if (category === '전체') {
+      toast.error('전체 카테고리는 삭제할 수 없습니다');
+      return;
+    }
+    setEditingCategories(editingCategories.filter(c => c !== category));
+  };
+
+  const handleSaveCategories = async () => {
+    try {
+      await api.put('/specbook/categories', { categories: editingCategories });
+      setCategories(editingCategories);
+      toast.success('카테고리가 저장되었습니다');
+      handleCloseCategoryModal();
+    } catch (error) {
+      console.error('카테고리 저장 실패:', error);
+      toast.error('카테고리 저장에 실패했습니다');
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] bg-gray-50">
       {/* 버튼 영역 */}
@@ -405,7 +451,16 @@ const SpecBook = () => {
 
           {/* 카테고리 버튼들 (4열) */}
           <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-            <h3 className="text-sm font-semibold mb-3 text-gray-900">카테고리</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-900">카테고리</h3>
+              <button
+                onClick={handleOpenCategoryModal}
+                className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                title="카테고리 편집"
+              >
+                <Settings className="h-4 w-4" />
+              </button>
+            </div>
             <div className="grid grid-cols-4 gap-2">
               {categories.map(category => {
                 const count = getCategoryCount(category);
@@ -722,6 +777,95 @@ const SpecBook = () => {
           </>
         )}
       </div>
+
+      {/* 카테고리 편집 모달 */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h2 className="text-lg font-bold text-gray-900">카테고리 관리</h2>
+              <button
+                onClick={handleCloseCategoryModal}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4">
+              {/* 새 카테고리 추가 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  새 카테고리 추가
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddCategory();
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    placeholder="카테고리 이름 입력"
+                  />
+                  <button
+                    onClick={handleAddCategory}
+                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center gap-1"
+                  >
+                    <Plus className="h-4 w-4" />
+                    추가
+                  </button>
+                </div>
+              </div>
+
+              {/* 카테고리 목록 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  카테고리 목록
+                </label>
+                <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
+                  {editingCategories.map((category, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                    >
+                      <span className="text-sm text-gray-900">{category}</span>
+                      {category !== '전체' && (
+                        <button
+                          onClick={() => handleRemoveCategory(category)}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                          title="삭제"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 저장/취소 버튼 */}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveCategories}
+                  className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+                >
+                  저장
+                </button>
+                <button
+                  onClick={handleCloseCategoryModal}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
