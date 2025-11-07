@@ -236,28 +236,28 @@
   margin: 0 8px !important;
 }
 
-/* 2. 요일 헤더 (일~토) - 패딩 제거 */
+/* 2. 요일 헤더 (일~토) - 높이 축소 */
 .rbc-month-view .rbc-header {
   text-align: left !important;
   padding: 0 8px !important;
-  height: 25px !important;
-  min-height: 25px !important;
-  line-height: 25px !important;
-  font-size: 14px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  line-height: 18px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
 }
 
 .rbc-month-view .rbc-month-header {
-  height: 25px !important;
-  min-height: 25px !important;
+  height: 18px !important;
+  min-height: 18px !important;
   margin: 0 0 0 0 !important;
   padding: 0 !important;
   border-bottom: none !important;
 }
 
 .rbc-month-view .rbc-row.rbc-month-header {
-  height: 25px !important;
-  min-height: 25px !important;
+  height: 18px !important;
+  min-height: 18px !important;
   margin-bottom: 0 !important;
 }
 
