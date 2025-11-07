@@ -254,7 +254,7 @@ const Layout = () => {
         {/* Top header */}
         <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
           <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-            {/* Left side - Mobile: menu button + title, Desktop: empty spacer */}
+            {/* Left side - Mobile: menu button + title, Desktop: page title */}
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => setSidebarOpen(true)}
@@ -266,10 +266,8 @@ const Layout = () => {
                 </svg>
               </button>
               {currentPageTitle && (
-                <h1 className="text-lg font-bold text-gray-900 lg:hidden">{currentPageTitle}</h1>
+                <h1 className="text-lg font-bold text-gray-900">{currentPageTitle}</h1>
               )}
-              {/* Desktop: empty spacer to push right side icons to consistent position */}
-              <div className="hidden lg:block w-0"></div>
             </div>
 
             {/* Right side - Always aligned to the right */}
