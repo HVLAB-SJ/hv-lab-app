@@ -220,9 +220,21 @@
 /* 날짜와 요일 왼쪽 정렬 - 데스크톱 */
 .rbc-month-view .rbc-header {
   text-align: left !important;
-  padding: 2px 10px !important;
-  height: 20px !important;
-  min-height: 20px !important;
+  padding: 0px 10px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  line-height: 16px !important;
+}
+
+/* 요일 헤더 행 전체 높이 축소 */
+.rbc-month-view .rbc-month-header {
+  height: 16px !important;
+  min-height: 16px !important;
+}
+
+.rbc-month-view .rbc-row.rbc-month-header {
+  height: 16px !important;
+  min-height: 16px !important;
 }
 
 .rbc-month-view .rbc-date-cell {
