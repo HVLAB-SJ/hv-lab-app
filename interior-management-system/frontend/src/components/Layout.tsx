@@ -2,7 +2,7 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { Plus } from 'lucide-react';
+import { Plus, BookOpen } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
 import { useNotificationStore } from '../store/notificationStore';
 import workRequestService from '../services/workRequestService';
@@ -35,6 +35,7 @@ const Layout = () => {
     { name: '공사대금', href: '/construction-payment', roles: ['admin', 'manager'] },
     { name: '협력업체', href: '/contractors' },
     { name: '업무요청', href: '/work-request', ...(pendingWorkRequestCount > 0 && { badge: pendingWorkRequestCount }) },
+    { name: '스펙북', href: '/specbook' },
     { name: '실행내역', href: '/execution-history' },
     { name: '결제요청', href: '/payments', ...(pendingPaymentCount > 0 && { badge: pendingPaymentCount }) },
     { name: '견적문의', href: '/quote-inquiry', roles: ['admin', 'manager'] },
