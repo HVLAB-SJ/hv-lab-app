@@ -260,35 +260,30 @@ const SpecBook = () => {
             스펙 라이브러리
           </button>
 
-          {view === 'project' && selectedProject ? (
-            <button
-              onClick={() => {
+          <select
+            value={selectedProject || ''}
+            onChange={(e) => {
+              if (e.target.value) {
+                setView('project');
+                setSelectedProject(Number(e.target.value));
+              } else {
                 setView('library');
                 setSelectedProject(null);
-              }}
-              className="px-4 py-2 rounded-lg font-medium bg-gray-800 text-white transition-colors"
-            >
-              {projects.find(p => p.id === selectedProject)?.title}
-            </button>
-          ) : (
-            <select
-              onChange={(e) => {
-                if (e.target.value) {
-                  setView('project');
-                  setSelectedProject(Number(e.target.value));
-                }
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-500"
-              defaultValue=""
-            >
-              <option value="">프로젝트 선택</option>
-              {projects.map(project => (
-                <option key={project.id} value={project.id}>
-                  {project.title}
-                </option>
-              ))}
-            </select>
-          )}
+              }
+            }}
+            className={`px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+              view === 'project' && selectedProject
+                ? 'bg-gray-800 text-white'
+                : 'bg-white'
+            }`}
+          >
+            <option value="">프로젝트 선택</option>
+            {projects.map(project => (
+              <option key={project.id} value={project.id}>
+                {project.title}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
