@@ -361,7 +361,7 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
         {/* AS 일정이 아닐 때만 프로젝트명 표시 */}
         {!event.isASVisit && event.projectName && (
           <span className="text-xs opacity-70 flex-shrink-0">
-            [{shortenProjectName(event.projectName)}]
+            [{event.projectName}]
           </span>
         )}
         <span className="font-medium truncate">{event.title}</span>
