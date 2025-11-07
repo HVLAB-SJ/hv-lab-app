@@ -1328,6 +1328,93 @@ const Schedule = () => {
         ? document.querySelectorAll('.rbc-month-view td.rbc-date-cell')
         : document.querySelectorAll('.rbc-date-cell');
 
+      // 주별 최대 일정 개수 계산
+      const monthRows = document.querySelectorAll('.rbc-month-row');
+      const weekMaxEvents: number[] = [];
+
+      monthRows.forEach((row, weekIndex) => {
+        const cellsInWeek = row.querySelectorAll('.rbc-date-cell');
+        let maxEventsInWeek = 0;
+
+        cellsInWeek.forEach((cell) => {
+          const dateButton = cell.querySelector('button');
+          let dateText = dateButton?.textContent;
+          if (!dateText) {
+            const dateSpan = cell.querySelector('span');
+            dateText = dateSpan?.textContent;
+          }
+
+          if (dateText && !isNaN(parseInt(dateText))) {
+            const cellDate = moment(date).date(parseInt(dateText));
+            const eventsOnDate = filteredEvents.filter(event =>
+              moment(event.start).isSame(cellDate, 'day')
+            );
+            maxEventsInWeek = Math.max(maxEventsInWeek, eventsOnDate.length);
+          }
+        });
+
+        weekMaxEvents.push(maxEventsInWeek);
+      });
+
+      // 동적 높이 계산 및 적용
+      const baseHeight = 100; // 기본 높이
+      const eventHeight = 18; // 일정 하나당 높이
+      const dateHeaderHeight = 25; // 날짜 숫자 영역
+      const maxEventsPerRow = Math.floor((baseHeight - dateHeaderHeight) / eventHeight); // 약 4개
+
+      const totalWeeks = weekMaxEvents.length;
+      const totalAvailableHeight = baseHeight * totalWeeks;
+
+      // 각 주의 필요 높이 계산
+      const requiredHeights = weekMaxEvents.map(count => {
+        if (count <= maxEventsPerRow) {
+          return baseHeight;
+        }
+        return dateHeaderHeight + (count * eventHeight) + 10; // 여유 공간 10px
+      });
+
+      const totalRequiredHeight = requiredHeights.reduce((sum, h) => sum + h, 0);
+
+      // 전체 높이를 유지하면서 재분배
+      if (totalRequiredHeight > totalAvailableHeight) {
+        // 넘치는 주들의 필요 높이를 보장하고, 나머지 주들을 줄임
+        const overflowWeeks = requiredHeights.map((h, i) => ({ index: i, height: h, overflow: h > baseHeight }));
+        const overflowHeight = overflowWeeks.filter(w => w.overflow).reduce((sum, w) => sum + (w.height - baseHeight), 0);
+        const normalWeeks = overflowWeeks.filter(w => !w.overflow);
+
+        if (normalWeeks.length > 0) {
+          const remainingHeight = totalAvailableHeight - overflowHeight - (normalWeeks.length * baseHeight);
+          const adjustedBaseHeight = Math.max(50, baseHeight + (remainingHeight / normalWeeks.length));
+
+          monthRows.forEach((row, index) => {
+            const isOverflow = requiredHeights[index] > baseHeight;
+            const newHeight = isOverflow ? requiredHeights[index] : adjustedBaseHeight;
+            (row as HTMLElement).style.height = `${newHeight}px`;
+            (row as HTMLElement).style.minHeight = `${newHeight}px`;
+          });
+        } else {
+          // 모든 주가 넘치는 경우, 비율대로 재분배
+          const heightRatio = totalAvailableHeight / totalRequiredHeight;
+          monthRows.forEach((row, index) => {
+            const newHeight = Math.max(80, requiredHeights[index] * heightRatio);
+            (row as HTMLElement).style.height = `${newHeight}px`;
+            (row as HTMLElement).style.minHeight = `${newHeight}px`;
+          });
+        }
+      } else {
+        // 전체가 넘치지 않으면 필요한 높이만 할당하고 나머지 균등 분배
+        const usedHeight = requiredHeights.reduce((sum, h) => sum + (h > baseHeight ? h : 0), 0);
+        const normalWeeksCount = requiredHeights.filter(h => h <= baseHeight).length;
+        const remainingHeight = totalAvailableHeight - usedHeight;
+        const normalWeekHeight = normalWeeksCount > 0 ? remainingHeight / normalWeeksCount : baseHeight;
+
+        monthRows.forEach((row, index) => {
+          const newHeight = requiredHeights[index] > baseHeight ? requiredHeights[index] : normalWeekHeight;
+          (row as HTMLElement).style.height = `${newHeight}px`;
+          (row as HTMLElement).style.minHeight = `${newHeight}px`;
+        });
+      }
+
       dateCells.forEach((cell) => {
         // 날짜 버튼 찾기
         const dateButton = cell.querySelector('button');

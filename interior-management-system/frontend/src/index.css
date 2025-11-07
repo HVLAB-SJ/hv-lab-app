@@ -269,10 +269,10 @@
   flex: 0 0 auto !important;
 }
 
-/* 3. 날짜 셀 행 (주 단위) */
+/* 3. 날짜 셀 행 (주 단위) - 동적 높이 적용 */
 .rbc-month-view .rbc-month-row {
   min-height: 100px !important;
-  height: 100px !important;
+  height: auto !important;
   border-bottom: 1px solid #f3f4f6 !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
