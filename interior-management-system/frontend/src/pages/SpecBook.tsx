@@ -64,6 +64,7 @@ const SpecBook = () => {
   const loadProjects = async () => {
     try {
       const response = await api.get('/specbook/projects');
+      console.log('프로젝트 목록 로드됨:', response.data.length, '개', response.data);
       setProjects(response.data);
       // 자동 선택 제거 - 사용자가 직접 선택하도록 함
     } catch (error) {
