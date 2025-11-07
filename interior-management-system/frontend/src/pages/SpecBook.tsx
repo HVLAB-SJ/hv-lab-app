@@ -299,7 +299,7 @@ const SpecBook = () => {
             <form onSubmit={handleSubmit} className="space-y-3">
               {/* 수평 카드 형태: 이미지 + 입력 필드 */}
               <div className="flex gap-3">
-                {/* 좌측: 이미지 */}
+                {/* 좌측: 이미지 - 정사각형 유동 사이즈 */}
                 <div
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -307,7 +307,7 @@ const SpecBook = () => {
                   }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleImageDrop}
-                  className={`w-72 h-72 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
+                  className={`aspect-square w-full max-w-xs flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
                     isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
                   }`}
                   onClick={() => fileInputRef.current?.click()}
@@ -343,7 +343,7 @@ const SpecBook = () => {
                 </div>
 
                 {/* 우측: 입력 필드들 */}
-                <div className="flex-1 h-72 flex flex-col justify-between">
+                <div className="flex-1 flex flex-col justify-between">
                   <div className="space-y-2">
                     <select
                       value={formData.category}
@@ -409,7 +409,7 @@ const SpecBook = () => {
           </div>
 
           {/* 카테고리 버튼들 (4열) */}
-          <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 flex-1 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
             <h3 className="text-sm font-semibold mb-3 text-gray-900">카테고리</h3>
             <div className="grid grid-cols-4 gap-2">
               {categories.map(category => {
