@@ -257,9 +257,9 @@
   vertical-align: top !important;
 }
 
-/* 요일 헤더와 첫 번째 주 사이 간격 - 첫째 주를 위로 50px 올림 */
+/* 요일 헤더와 첫 번째 주 사이 간격 제거 */
 .rbc-month-view .rbc-month-header + .rbc-month-row {
-  margin-top: -50px !important;
+  margin-top: 0 !important;
   padding-top: 0 !important;
 }
 
