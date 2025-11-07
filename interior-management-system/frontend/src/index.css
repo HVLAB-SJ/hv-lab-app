@@ -217,96 +217,92 @@
   opacity: 0.3 !important;
 }
 
-/* 날짜와 요일 왼쪽 정렬 - 데스크톱 */
-.rbc-month-view .rbc-header {
-  text-align: left !important;
-  padding: 3px 10px !important;
-  height: 20px !important;
-  min-height: 20px !important;
-  line-height: 20px !important;
-  font-size: 11px !important;
+/* ============================================
+   캘린더 간격 최적화 - 전문가 재설계
+   ============================================ */
+
+/* 1. 툴바 영역 (월/년 선택, 네비게이션) */
+.rbc-toolbar {
+  margin: 0 !important;
+  padding: 12px 0 8px 0 !important;
 }
 
-/* 요일 헤더 행 전체 높이 */
+/* 2. 요일 헤더 (일~토) */
+.rbc-month-view .rbc-header {
+  text-align: left !important;
+  padding: 4px 8px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  line-height: 16px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
 .rbc-month-view .rbc-month-header {
-  height: 25px !important;
-  min-height: 25px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-bottom: 1px solid #e5e7eb !important;
 }
 
 .rbc-month-view .rbc-row.rbc-month-header {
-  height: 25px !important;
-  min-height: 25px !important;
+  height: 24px !important;
+  min-height: 24px !important;
 }
 
-/* 날짜 셀 영역 높이 - 고정 높이 설정 */
+/* 3. 날짜 셀 행 (주 단위) */
 .rbc-month-view .rbc-month-row {
-  min-height: 120px !important;
-  height: 120px !important;
+  min-height: 100px !important;
+  height: 100px !important;
+  border-bottom: 1px solid #f3f4f6 !important;
 }
 
 .rbc-month-view .rbc-row-content {
   height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .rbc-month-view .rbc-row-bg {
   height: 100% !important;
 }
 
+/* 4. 날짜 셀 내부 */
 .rbc-month-view .rbc-date-cell {
   text-align: left !important;
-  padding-left: 9px !important;
-  padding-top: 5px !important;
+  padding: 4px 6px !important;
   vertical-align: top !important;
 }
 
-/* 요일 헤더와 첫 번째 주 사이 간격 제거 */
+/* 5. 날짜 숫자 */
+.rbc-month-view .rbc-date-cell button,
+.rbc-month-view .rbc-date-cell .rbc-button-link {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 0 !important;
+  margin-bottom: 2px !important;
+}
+
+/* 6. 캘린더 전체 컨테이너 */
+.rbc-calendar {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.rbc-calendar > .rbc-month-view {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* 7. 요일 헤더와 첫 주 사이 간격 제거 */
 .rbc-month-view .rbc-month-header + .rbc-month-row {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
 
-.rbc-month-view .rbc-month-header {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-/* 툴바와 헤더 사이 여백 제거 - 데스크톱 */
-.rbc-toolbar {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-/* 월 헤더의 상단 여백 제거 */
-.rbc-month-header {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-/* 캘린더 전체 뷰와 월 뷰의 여백 제거 */
-.rbc-calendar > .rbc-month-view {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-/* 툴바 다음 요소의 여백 제거 */
+/* 8. 툴바와 헤더 연결 */
 .rbc-toolbar + * {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-/* 캘린더 컨테이너 내부의 첫 번째 자식 여백 제거 */
-.calendar-container > div > div:first-child + div {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-/* RBC 캘린더 내부 구조의 여백 제거 */
-.rbc-calendar > div:first-child {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-.rbc-calendar > div:nth-child(2) {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
@@ -497,25 +493,38 @@ div.rbc-popup {
   margin-top: 0 !important;
 }
 
-/* 개별 이벤트 스타일 - 패딩 제거, 고정 높이 12px */
+/* ============================================
+   일정 항목 최적화
+   ============================================ */
+
+/* 개별 일정 스타일 */
 .rbc-event {
-  margin-bottom: 0 !important;
-  margin-top: 0 !important;
-  padding: 0 2px !important;
+  margin: 0 0 1px 0 !important;
+  padding: 1px 4px !important;
   font-size: 10px !important;
-  line-height: 12px !important;
-  min-height: 12px !important;
-  height: 12px !important;
+  line-height: 14px !important;
+  min-height: 14px !important;
+  height: 14px !important;
   overflow: hidden !important;
+  border-radius: 2px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .rbc-event-content {
   padding: 0 !important;
-  line-height: 12px !important;
+  line-height: 14px !important;
   font-size: 10px !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
+  flex: 1 !important;
+}
+
+/* 일정 세그먼트 간격 */
+.rbc-row-segment {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* 이전/다음 달 일요일 */
