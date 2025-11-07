@@ -1518,7 +1518,7 @@ const Payments = () => {
                                     )}
                                   </div>
 
-                                  <div className="flex items-center justify-between">
+                                  <div className="flex items-center justify-between mb-2">
                                     <div className="text-xs text-gray-500 truncate flex-1">
                                       {accountInfo}
                                     </div>
@@ -1532,6 +1532,19 @@ const Payments = () => {
                                       수정
                                     </button>
                                   </div>
+
+                                  {/* 현금수령증 버튼 */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setCashReceiptProject(record.project);
+                                      setShowCashReceiptModal(true);
+                                    }}
+                                    className="w-full py-1.5 px-2 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
+                                  >
+                                    <FileText className="h-3 w-3" />
+                                    현금수령증
+                                  </button>
                                 </div>
                               );
                             })}
@@ -1635,32 +1648,48 @@ const Payments = () => {
                         </button>
                       </div>
 
-                      {/* 송금 버튼 (manager 이상만) */}
-                      {statusFilter === 'pending' && user?.role && ['manager', 'admin'].includes(user.role) && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleInstantTransfer(record);
-                            }}
-                            className="flex-1 py-1.5 px-2 bg-gray-700 text-white rounded text-xs font-medium hover:bg-gray-800 transition-colors"
-                          >
-                            즉시송금
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMarkAsCompleted(record.id);
-                            }}
-                            className="flex-1 py-1.5 px-2 text-white rounded text-xs font-medium transition-colors"
-                            style={{ backgroundColor: '#5f81a5' }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4a6b8a'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#5f81a5'}
-                          >
-                            송금완료
-                          </button>
-                        </div>
-                      )}
+                      {/* 버튼 그룹 */}
+                      <div className="flex items-center gap-2">
+                        {/* 현금수령증 버튼 - 모든 사용자에게 표시 */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCashReceiptProject(record.project);
+                            setShowCashReceiptModal(true);
+                          }}
+                          className="flex-1 py-1.5 px-2 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
+                        >
+                          <FileText className="h-3 w-3" />
+                          현금수령증
+                        </button>
+
+                        {/* 송금 버튼 (manager 이상만) */}
+                        {statusFilter === 'pending' && user?.role && ['manager', 'admin'].includes(user.role) && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleInstantTransfer(record);
+                              }}
+                              className="flex-1 py-1.5 px-2 bg-gray-700 text-white rounded text-xs font-medium hover:bg-gray-800 transition-colors"
+                            >
+                              즉시송금
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkAsCompleted(record.id);
+                              }}
+                              className="flex-1 py-1.5 px-2 text-white rounded text-xs font-medium transition-colors"
+                              style={{ backgroundColor: '#5f81a5' }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4a6b8a'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#5f81a5'}
+                            >
+                              송금완료
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   );
                   })
