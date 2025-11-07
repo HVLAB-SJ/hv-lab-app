@@ -227,28 +227,28 @@
   padding: 12px 0 0 0 !important;
 }
 
-/* 2. 요일 헤더 (일~토) - 텍스트 크기에 맞춤 */
+/* 2. 요일 헤더 (일~토) - 최소 높이 */
 .rbc-month-view .rbc-header {
   text-align: left !important;
-  padding: 2px 8px !important;
-  height: auto !important;
-  min-height: auto !important;
-  line-height: 1.2 !important;
-  font-size: 11px !important;
+  padding: 0 8px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  line-height: 16px !important;
+  font-size: 10px !important;
   font-weight: 600 !important;
 }
 
 .rbc-month-view .rbc-month-header {
-  height: auto !important;
-  min-height: auto !important;
+  height: 16px !important;
+  min-height: 16px !important;
   margin: 0 !important;
-  padding: 2px 0 !important;
+  padding: 0 !important;
   border-bottom: 1px solid #e5e7eb !important;
 }
 
 .rbc-month-view .rbc-row.rbc-month-header {
-  height: auto !important;
-  min-height: auto !important;
+  height: 16px !important;
+  min-height: 16px !important;
 }
 
 /* 3. 날짜 셀 행 (주 단위) */
