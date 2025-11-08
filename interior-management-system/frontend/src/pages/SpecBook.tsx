@@ -622,10 +622,10 @@ const SpecBook = () => {
               {items.map(item => (
                 <div
                   key={item.id}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col"
+                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group"
                 >
                   {/* 상단: 정사각형 이미지 */}
-                  <div className="w-full aspect-square bg-gray-100 flex-shrink-0">
+                  <div className="w-full aspect-square bg-gray-100 flex-shrink-0 relative">
                     {item.image_url ? (
                       <img
                         src={item.image_url}
@@ -637,6 +637,23 @@ const SpecBook = () => {
                         이미지 없음
                       </div>
                     )}
+                    {/* 수정/삭제 버튼 - 호버 시 이미지 우측 상단에 표시 */}
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="p-1.5 bg-white text-gray-700 hover:bg-gray-100 rounded-md shadow-md transition-colors"
+                        title="수정"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="p-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-md shadow-md transition-colors"
+                        title="삭제"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* 하단: 텍스트 정보 */}
@@ -645,22 +662,6 @@ const SpecBook = () => {
                       <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
                         {item.category}
                       </span>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className="p-0.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                          title="수정"
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="p-0.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                          title="삭제"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
                     </div>
                     <div className="flex items-baseline justify-between gap-1 mt-auto">
                       <div className="flex items-baseline gap-1 min-w-0">
@@ -845,9 +846,9 @@ const SpecBook = () => {
                       .map(item => (
                       <div
                         key={item.id}
-                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col"
+                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group"
                       >
-                        <div className="w-full aspect-square bg-gray-100">
+                        <div className="w-full aspect-square bg-gray-100 relative">
                           {item.image_url ? (
                             <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                           ) : (
@@ -855,19 +856,22 @@ const SpecBook = () => {
                               이미지 없음
                             </div>
                           )}
+                          {/* 삭제 버튼 - 호버 시 이미지 우측 상단에 표시 */}
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              className="p-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-md shadow-md transition-colors"
+                              title="제거"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                         <div className="p-2 flex flex-col flex-1">
                           <div className="flex items-start justify-between mb-1">
                             <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
                               {item.category}
                             </span>
-                            <button
-                              onClick={() => handleDelete(item.id)}
-                              className="p-0.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                              title="제거"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
                           </div>
                           <h3 className="font-semibold text-xs text-gray-900 line-clamp-2 mb-1">{item.name}</h3>
                           {item.price && (
