@@ -723,8 +723,8 @@ const SpecBook = () => {
 
           <div className="flex-1 flex overflow-hidden">
             {/* 좌측: 스펙 라이브러리 */}
-            <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4 border-r border-gray-300">
-              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
+            <div className="w-1/2 flex flex-col overflow-hidden pb-4 border-r border-gray-300">
+              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 ml-0">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-gray-500">로딩 중...</div>
@@ -798,7 +798,7 @@ const SpecBook = () => {
               </div>
             </div>
             {/* 우측: 빈 공간 */}
-            <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4">
+            <div className="w-1/2 flex flex-col overflow-hidden pl-4 pb-4">
               <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">
                   프로젝트를 선택하면 여기에 프로젝트 아이템이 표시됩니다
@@ -849,8 +849,8 @@ const SpecBook = () => {
 
             <div className="flex-1 flex overflow-hidden">
               {/* 좌측: 스펙 라이브러리 (드래그 소스) */}
-              <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4 border-r border-gray-300">
-                <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
+              <div className="w-1/2 flex flex-col overflow-hidden pb-4 border-r border-gray-300">
+                <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 ml-0">
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-gray-500">로딩 중...</div>
@@ -912,7 +912,7 @@ const SpecBook = () => {
             </div>
 
               {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
-              <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4">
+              <div className="w-1/2 flex flex-col overflow-hidden pl-4 pb-4">
                 <div
                   className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4"
                 onDragOver={(e) => {
@@ -994,16 +994,23 @@ const SpecBook = () => {
                             </button>
                           </div>
                         </div>
-                        <div className="p-2 flex flex-col flex-1">
+                        <div className="p-2 pt-1.5 flex flex-col flex-1">
                           <div className="flex items-start justify-between mb-1">
                             <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
                               {item.category}
                             </span>
                           </div>
-                          <h3 className="font-semibold text-xs text-gray-900 line-clamp-2 mb-1">{item.name}</h3>
-                          {item.price && (
-                            <p className="text-xs text-gray-900 font-medium mt-auto">{item.price}원</p>
-                          )}
+                          <div className="flex items-baseline justify-between gap-1 mt-auto">
+                            <div className="flex items-baseline gap-1 min-w-0">
+                              <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
+                              {item.brand && (
+                                <span className="text-xs text-gray-600 flex-shrink-0">{item.brand}</span>
+                              )}
+                            </div>
+                            {item.price && (
+                              <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
