@@ -254,39 +254,33 @@ const AdditionalWork = () => {
         )}
       </div>
 
-      {/* Desktop View - Grouped by Project */}
-      <div className="hidden md:block space-y-4">
+      {/* Desktop View - Grouped by Project (2 columns) */}
+      <div className="hidden md:grid md:grid-cols-2 gap-4">
         {projectGroups.map((group) => (
           <div key={group.projectName} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             {/* Project Header */}
             <button
               onClick={() => toggleProject(group.projectName)}
-              className="w-full px-6 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+              className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
             >
-              <div className="flex items-center space-x-4">
-                <h3 className="font-bold text-lg text-gray-900">{group.projectName}</h3>
-                <span className="text-sm text-gray-600">
-                  {group.works.length}건
-                </span>
+              <div className="flex-1 text-left">
+                <h3 className="font-bold text-base text-gray-900">{group.projectName}</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {group.works.length}건 · {group.totalAmount.toLocaleString()}원
+                </p>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">프로젝트 합계</p>
-                  <p className="text-lg font-bold text-gray-900">{group.totalAmount.toLocaleString()}원</p>
-                </div>
-                {expandedProjects.has(group.projectName) ? (
-                  <ChevronUp className="h-5 w-5 text-gray-600" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-600" />
-                )}
-              </div>
+              {expandedProjects.has(group.projectName) ? (
+                <ChevronUp className="h-5 w-5 text-gray-600" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-gray-600" />
+              )}
             </button>
 
-            {/* Project Works Cards */}
+            {/* Project Works List (1 column) */}
             {expandedProjects.has(group.projectName) && (
-              <div className="p-4 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="divide-y divide-gray-200">
                 {group.works.map((work) => (
-                  <div key={work.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div key={work.id} className="p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex items-start justify-between mb-3">
                       <p className="text-sm text-gray-600">{format(work.date, 'yyyy.MM.dd (eee)', { locale: ko })}</p>
                       <div className="flex items-center space-x-2">
@@ -305,7 +299,7 @@ const AdditionalWork = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2.5">
+                    <div className="space-y-2">
                       <div>
                         <p className="text-xs text-gray-500 mb-1">내용</p>
                         <p className="text-sm text-gray-900">{work.description}</p>
@@ -330,7 +324,7 @@ const AdditionalWork = () => {
           </div>
         ))}
         {projectGroups.length === 0 && (
-          <div className="text-center py-8 text-gray-500 bg-white border border-gray-200 rounded-lg">
+          <div className="col-span-2 text-center py-8 text-gray-500 bg-white border border-gray-200 rounded-lg">
             추가내역이 없습니다
           </div>
         )}
