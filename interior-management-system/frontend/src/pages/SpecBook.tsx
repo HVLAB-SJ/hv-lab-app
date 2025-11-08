@@ -68,11 +68,13 @@ const SortableCategoryItem = ({
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 bg-white cursor-grab active:cursor-grabbing"
+      className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 bg-white"
     >
-      <div className="flex items-center gap-2 flex-1">
+      <div
+        className="flex items-center gap-2 flex-1 cursor-grab active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
         <span className="text-sm text-gray-900">{category}</span>
       </div>
       {category !== '전체' && (
@@ -80,20 +82,24 @@ const SortableCategoryItem = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               onEdit(category);
             }}
-            className="text-gray-600 hover:text-gray-800 transition-colors"
+            className="text-gray-600 hover:text-gray-800 transition-colors p-1"
             title="수정"
+            type="button"
           >
             <Pencil className="h-4 w-4" />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               onRemove(category);
             }}
-            className="text-red-500 hover:text-red-700 transition-colors"
+            className="text-red-500 hover:text-red-700 transition-colors p-1"
             title="삭제"
+            type="button"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -686,7 +692,7 @@ const SpecBook = () => {
                   setView('library');
                   setSelectedProject(null);
                 }}
-                className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-800 text-white"
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
               >
                 스펙 라이브러리
               </button>
@@ -703,7 +709,7 @@ const SpecBook = () => {
                     setSelectedProject(null);
                   }
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white"
+                className={`px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${view === 'project' && selectedProject ? 'bg-gray-800 text-white' : 'bg-white'}`}
               >
                 <option value="">프로젝트 선택</option>
                 {projects.map(project => (
@@ -715,7 +721,10 @@ const SpecBook = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 flex overflow-hidden">
+            {/* 좌측: 스펙 라이브러리 */}
+            <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4 border-r border-gray-300">
+              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-gray-500">로딩 중...</div>
@@ -725,7 +734,7 @@ const SpecBook = () => {
               등록된 스펙북 아이템이 없습니다
             </div>
           ) : (
-            <div className="grid grid-cols-6 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               {items.map(item => (
                 <div
                   key={item.id}
@@ -785,9 +794,19 @@ const SpecBook = () => {
                 </div>
               ))}
             </div>
-          )}
+                )}
+              </div>
+            </div>
+            {/* 우측: 빈 공간 */}
+            <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4">
+              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                  프로젝트를 선택하면 여기에 프로젝트 아이템이 표시됩니다
+                </div>
+              </div>
+            </div>
           </div>
-          </div>
+        </div>
         ) : (
           /* 프로젝트 뷰: 좌우 분할 - 스펙 라이브러리 + 프로젝트 아이템 */
           <div className="flex-1 flex flex-col overflow-hidden pr-4">
