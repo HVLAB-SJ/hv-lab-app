@@ -57,10 +57,8 @@ const Projects = () => {
       });
     } else {
       const requests = project.customerRequests || [];
-      return requests.some(req => {
-        const reqTime = req.createdAt ? new Date(req.createdAt).getTime() : 0;
-        return reqTime > lastViewed;
-      });
+      // 미완료된 요청사항이 있으면 N을 표시
+      return requests.some(req => !req.completed);
     }
   };
 

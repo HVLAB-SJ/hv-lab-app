@@ -1257,7 +1257,7 @@ div.rbc-popup {
 
   /* 페이지 여백 및 크기 설정 */
   @page {
-    margin: 10mm 20mm; /* 상하 10mm, 좌우 20mm */
+    margin: 0; /* 여백 없음 */
     size: A4 portrait;
   }
 
