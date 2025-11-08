@@ -1252,7 +1252,7 @@ div.rbc-popup {
 @media print {
   /* 페이지 여백 및 크기 설정 */
   @page {
-    margin: 15mm; /* 15mm 여백 */
+    margin: 10mm 15mm; /* 상하 10mm, 좌우 15mm 여백 */
     size: A4 portrait;
   }
 
@@ -1262,6 +1262,8 @@ div.rbc-popup {
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   html, body {
@@ -1307,6 +1309,21 @@ div.rbc-popup {
     background: white !important;
     box-shadow: none !important;
     border-radius: 0 !important;
+  }
+
+  /* 현금수령증 내부 padding 재적용 */
+  .fixed.inset-0 .p-6,
+  .fixed.inset-0 .p-8,
+  .fixed.inset-0 .p-4 {
+    padding: 1rem !important;
+  }
+
+  .fixed.inset-0 .py-3,
+  .fixed.inset-0 .px-4 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
 
   /* 현금수령증 내용 */
