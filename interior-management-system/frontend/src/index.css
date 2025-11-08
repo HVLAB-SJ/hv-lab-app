@@ -1252,7 +1252,7 @@ div.rbc-popup {
 @media print {
   /* 페이지 여백 및 크기 설정 */
   @page {
-    margin: 15mm; /* 15mm 여백 */
+    margin: 10mm 15mm 15mm 15mm; /* 상단 10mm, 나머지 15mm */
     size: A4 portrait;
   }
 
@@ -1285,11 +1285,40 @@ div.rbc-popup {
     padding: 0 !important;
   }
 
-  /* 현금수령증 컨테이너 배경 제거 */
+  /* 현금수령증 컨테이너 배경 제거 및 크기 조정 */
   .fixed.inset-0 > div {
     background: transparent !important;
     box-shadow: none !important;
     margin: 0 !important;
+    font-size: 90% !important; /* 전체 폰트 크기 90%로 축소 */
+  }
+
+  /* 현금수령증 출력 영역 폰트 크기 조정 */
+  .print\\:block {
+    font-size: 90% !important;
+  }
+
+  /* 제목 크기 조정 */
+  .print\\:block h1 {
+    font-size: 2.7rem !important; /* 원래 3rem의 90% */
+  }
+
+  /* 텍스트 크기 조정 */
+  .print\\:block .text-lg {
+    font-size: 1.035rem !important; /* 원래 1.15rem의 90% */
+  }
+
+  .print\\:block .text-xl {
+    font-size: 1.125rem !important; /* 원래 1.25rem의 90% */
+  }
+
+  /* 패딩 조정 (90% 비율 적용) */
+  .print\\:block {
+    padding: 2.7rem !important; /* 원래 3rem(12)의 90% */
+  }
+
+  .print\\:block > div {
+    padding: 1.8rem !important; /* 원래 2rem(8)의 90% */
   }
 
   /* 텍스트 선명도 개선 */
