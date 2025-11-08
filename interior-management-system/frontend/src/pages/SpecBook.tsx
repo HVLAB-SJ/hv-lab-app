@@ -681,41 +681,45 @@ const SpecBook = () => {
           )}
           </div>
         ) : (
-          /* 프로젝트 뷰: 좌우 분할 */
-          <>
-            {/* 좌측: 스펙 라이브러리 (드래그 소스) */}
-            <div className="w-1/2 flex flex-col overflow-hidden p-4">
-              <div className="mb-3">
-                <h2 className="text-lg font-bold mb-2 text-gray-900">스펙 라이브러리</h2>
-                {/* 카테고리 필터 */}
-                <div className="grid grid-cols-8 gap-1">
-                  {categories.map(category => {
-                    const count = allLibraryItems.filter(item => category === '전체' || item.category === category).length;
-                    return (
-                      <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category)}
-                        className={`px-1 py-0.5 rounded text-[10px] font-medium transition-colors truncate ${
-                          selectedCategory === category
-                            ? 'bg-gray-800 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                        title={`${category}${count > 0 ? ` (${count})` : ''}`}
-                      >
-                        {category}
-                        {count > 0 && (
-                          <span className={`ml-0.5 ${
-                            selectedCategory === category ? 'text-gray-300' : 'text-gray-400'
-                          }`}>
-                            ({count})
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+          /* 프로젝트 뷰: 상단 카테고리, 좌우 분할 */
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* 상단: 카테고리 필터 */}
+            <div className="px-4 pt-4 pb-3">
+              <div className="grid grid-cols-8 gap-1">
+                {categories.map(category => {
+                  const libraryCount = allLibraryItems.filter(item => category === '전체' || item.category === category).length;
+                  const projectCount = items.filter(item => category === '전체' || item.category === category).length;
+                  return (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`px-1 py-0.5 rounded text-[10px] font-medium transition-colors truncate ${
+                        selectedCategory === category
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      title={`${category} (라이브러리: ${libraryCount}, 프로젝트: ${projectCount})`}
+                    >
+                      {category}
+                      {(libraryCount > 0 || projectCount > 0) && (
+                        <span className={`ml-0.5 ${
+                          selectedCategory === category ? 'text-gray-300' : 'text-gray-400'
+                        }`}>
+                          ({libraryCount}/{projectCount})
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
+            </div>
+
+            {/* 좌우 분할 영역 */}
+            <div className="flex-1 flex overflow-hidden">
+              {/* 좌측: 스펙 라이브러리 (드래그 소스) */}
+              <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4">
+                <h2 className="text-lg font-bold mb-3 text-gray-900">스펙 라이브러리</h2>
+                <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-gray-500">로딩 중...</div>
@@ -767,42 +771,13 @@ const SpecBook = () => {
               </div>
             </div>
 
-            {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
-            <div className="w-1/2 flex flex-col overflow-hidden p-4">
-              <div className="mb-3">
-                <h2 className="text-lg font-bold mb-2 text-gray-900">
+              {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
+              <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4">
+                <h2 className="text-lg font-bold mb-3 text-gray-900">
                   {projects.find(p => p.id === selectedProject)?.title}
                 </h2>
-                {/* 프로젝트 카테고리 개수 */}
-                <div className="grid grid-cols-8 gap-1">
-                  {categories.map(category => {
-                    const count = items.filter(item => category === '전체' || item.category === category).length;
-                    return (
-                      <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category)}
-                        className={`px-1 py-0.5 rounded text-[10px] font-medium transition-colors truncate ${
-                          selectedCategory === category
-                            ? 'bg-gray-800 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                        title={`${category}${count > 0 ? ` (${count})` : ''}`}
-                      >
-                        {category}
-                        {count > 0 && (
-                          <span className={`ml-0.5 ${
-                            selectedCategory === category ? 'text-gray-300' : 'text-gray-400'
-                          }`}>
-                            ({count})
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div
-                className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 border-2 border-dashed border-gray-300"
+                <div
+                  className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 border-2 border-dashed border-gray-300"
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.dataTransfer.dropEffect = 'copy';
@@ -884,7 +859,8 @@ const SpecBook = () => {
                 )}
               </div>
             </div>
-          </>
+            </div>
+          </div>
         )}
       </div>
 
