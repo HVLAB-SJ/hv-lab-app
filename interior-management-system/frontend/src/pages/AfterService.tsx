@@ -345,8 +345,8 @@ const AfterService = () => {
         id="as-image-file-input"
       />
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
+      {/* Tabs and Add Button */}
+      <div className="border-b border-gray-200 flex items-center justify-between">
         <nav className="flex space-x-4 md:space-x-8">
           <button
             onClick={() => setActiveTab('active')}
@@ -379,6 +379,12 @@ const AfterService = () => {
             </span>
           </button>
         </nav>
+        <button
+          onClick={handleAddRequest}
+          className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition-colors"
+        >
+          +AS 요청
+        </button>
       </div>
 
       {/* Search */}

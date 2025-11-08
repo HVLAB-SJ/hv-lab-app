@@ -605,8 +605,8 @@ const WorkRequest = () => {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
+      {/* Tabs and Add Button */}
+      <div className="border-b border-gray-200 flex items-center justify-between">
         <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">
           {[
             { id: 'pending' as TabStatus, label: '대기', count: stats.pending, color: 'text-gray-700' },
@@ -636,6 +636,15 @@ const WorkRequest = () => {
             </button>
           ))}
         </nav>
+        <button
+          onClick={() => {
+            setEditingRequest(null);
+            setShowModal(true);
+          }}
+          className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition-colors whitespace-nowrap"
+        >
+          +새 업무요청
+        </button>
       </div>
 
       {/* Filters - Desktop only */}

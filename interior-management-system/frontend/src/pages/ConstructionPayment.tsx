@@ -530,8 +530,8 @@ const ConstructionPayment = () => {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
+      {/* Tabs and Add Button */}
+      <div className="border-b border-gray-200 flex items-center justify-between">
         <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">
           {[
             { id: 'remaining' as const, label: '미수금', count: records.filter(r => calculateRemaining(r) > 0).length },
@@ -556,6 +556,12 @@ const ConstructionPayment = () => {
             </button>
           ))}
         </nav>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition-colors whitespace-nowrap"
+        >
+          +프로젝트
+        </button>
       </div>
 
       {/* Search */}
