@@ -1252,26 +1252,16 @@ div.rbc-popup {
 @media print {
   /* 페이지 여백 및 크기 설정 */
   @page {
-    margin: 10mm 15mm; /* 상하 10mm, 좌우 15mm 여백 */
+    margin: 15mm; /* 15mm 여백 */
     size: A4 portrait;
   }
 
   /* 모든 요소 숨기기 */
-  * {
+  body * {
     visibility: hidden !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
   }
 
   html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    overflow: visible !important;
     background: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -1279,82 +1269,38 @@ div.rbc-popup {
 
   /* 현금수령증 모달과 그 자식 요소만 표시 */
   .fixed.inset-0,
-  .fixed.inset-0 *,
-  .fixed.inset-0 *::before,
-  .fixed.inset-0 *::after {
+  .fixed.inset-0 * {
     visibility: visible !important;
   }
 
   /* 모달 배경 제거 및 위치 조정 */
   .fixed.inset-0 {
     position: static !important;
-    inset: 0 !important;
-    transform: none !important;
-    width: 100% !important;
-    height: auto !important;
-    max-width: none !important;
-    max-height: none !important;
-    overflow: visible !important;
-    background: white !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    background: transparent !important;
   }
 
-  /* 현금수령증 컨테이너 */
+  /* 현금수령증 컨테이너 배경 제거 */
   .fixed.inset-0 > div {
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
+    background: transparent !important;
     box-shadow: none !important;
-    border-radius: 0 !important;
-  }
-
-  /* 현금수령증 내부 padding 재적용 */
-  .fixed.inset-0 .p-6,
-  .fixed.inset-0 .p-8,
-  .fixed.inset-0 .p-4 {
-    padding: 1rem !important;
-  }
-
-  .fixed.inset-0 .py-3,
-  .fixed.inset-0 .px-4 {
-    padding-top: 0.75rem !important;
-    padding-bottom: 0.75rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  /* 현금수령증 내용 */
-  .fixed.inset-0 .border-black {
-    border: 1px solid black !important;
   }
 
   /* 텍스트 선명도 개선 */
-  .fixed.inset-0 * {
+  * {
     -webkit-font-smoothing: antialiased !important;
     -moz-osx-font-smoothing: grayscale !important;
     text-rendering: optimizeLegibility !important;
   }
 
   /* 1페이지만 출력 */
-  .fixed.inset-0 {
+  * {
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
     page-break-before: avoid !important;
-    break-after: avoid !important;
-    break-inside: avoid !important;
-    break-before: avoid !important;
   }
 
   /* 인쇄하지 않을 요소들 */
-  .print\\:hidden,
-  button,
-  nav,
-  header,
-  footer,
-  aside {
+  .print\\:hidden {
     display: none !important;
   }
 }
