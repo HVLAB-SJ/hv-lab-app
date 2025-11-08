@@ -551,8 +551,8 @@ const ExecutionHistory = () => {
       {/* 메인 컨텐츠 - 3열 레이아웃 */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-        {/* 왼쪽: 입력 폼 (2열로 축소) */}
-        <div className={`lg:col-span-2 bg-white rounded-lg border p-4 overflow-y-auto ${
+        {/* 왼쪽: 입력 폼 */}
+        <div className={`lg:col-span-1 bg-white rounded-lg border p-4 overflow-y-auto ${
           mobileView !== 'form' ? 'hidden lg:block' : ''
         }`}>
           <div className="space-y-4">
@@ -968,7 +968,7 @@ const ExecutionHistory = () => {
 
         {/* 오른쪽: 이미지 업로드 및 뷰어 (3열) */}
         <div
-          className={`lg:col-span-3 bg-white rounded-lg border flex flex-col overflow-hidden ${
+          className={`lg:col-span-4 bg-white rounded-lg border flex flex-col overflow-hidden ${
             mobileView !== 'image' ? 'hidden lg:flex' : ''
           }`}
           onDragOver={handleDragOver}
