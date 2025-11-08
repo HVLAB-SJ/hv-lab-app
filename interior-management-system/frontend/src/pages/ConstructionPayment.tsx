@@ -631,7 +631,6 @@ const ConstructionPayment = () => {
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">{record.client}님</p>
               </div>
 
               {/* Total Amount */}
@@ -706,7 +705,7 @@ const ConstructionPayment = () => {
               {/* Latest Payment */}
               {record.payments.length > 0 && (
                 <div className="border-t pt-4">
-                  <p className="text-xs text-gray-500 mb-2">최근 입금</p>
+                  <p className="text-xs text-gray-500 mb-2">수령금액</p>
                   {record.payments.slice(-2).reverse().map((payment, idx) => (
                     <div key={idx} className="flex items-center justify-between text-sm mb-1">
                       <span className="text-gray-700">
@@ -730,10 +729,7 @@ const ConstructionPayment = () => {
           <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b">
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold">{selectedRecord.project}</h2>
-                  <p className="text-sm text-gray-600 mt-1">{selectedRecord.client}님</p>
-                </div>
+                <h2 className="text-xl font-semibold">{selectedRecord.project}</h2>
                 <button
                   onClick={() => setSelectedRecord(null)}
                   className="p-2 hover:bg-gray-100 rounded-lg"
