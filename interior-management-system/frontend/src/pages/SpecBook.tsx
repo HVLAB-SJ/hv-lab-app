@@ -41,6 +41,41 @@ interface Project {
   title: string;
 }
 
+// 등급 표시 형식을 변환하는 함수
+const formatGradeRange = (gradeString: string | undefined): string => {
+  if (!gradeString) return '';
+
+  const grades = gradeString.split(',').map(g => g.trim());
+  if (grades.length === 0) return '';
+  if (grades.length === 1) return grades[0] === '하이엔드' ? '하이' : grades[0];
+
+  // 등급 순서 정의
+  const gradeOrder = ['알뜰', '기본', '고급', '하이엔드'];
+  const sortedGrades = grades.sort((a, b) => gradeOrder.indexOf(a) - gradeOrder.indexOf(b));
+
+  // 첫 번째와 마지막 등급만 표시
+  const first = sortedGrades[0];
+  const last = sortedGrades[sortedGrades.length - 1];
+  const lastDisplay = last === '하이엔드' ? '하이' : last;
+
+  return `${first}-${lastDisplay}`;
+};
+
+// 등급에 따른 색상 반환 함수
+const getGradeColor = (gradeString: string | undefined): string => {
+  if (!gradeString) return '';
+
+  const grades = gradeString.split(',').map(g => g.trim());
+
+  // 여러 등급이 포함된 경우
+  if (grades.includes('하이엔드')) return 'bg-purple-100 text-purple-700';
+  if (grades.includes('고급')) return 'bg-blue-100 text-blue-700';
+  if (grades.includes('기본')) return 'bg-green-100 text-green-700';
+  if (grades.includes('알뜰')) return 'bg-yellow-100 text-yellow-700';
+
+  return 'bg-gray-100 text-gray-700';
+};
+
 // Sortable 스펙북 아이템 컴포넌트
 const SortableSpecBookItem = ({
   item,
@@ -123,12 +158,8 @@ const SortableSpecBookItem = ({
               {item.category}
             </span>
             {item.grade && (
-              <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${
-                item.grade === '하이엔드' ? 'bg-purple-100 text-purple-700' :
-                item.grade === '고급' ? 'bg-blue-100 text-blue-700' :
-                'bg-green-100 text-green-700'
-              }`}>
-                {item.grade}
+              <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${getGradeColor(item.grade)}`}>
+                {formatGradeRange(item.grade)}
               </span>
             )}
           </div>
@@ -1142,9 +1173,16 @@ const SpecBook = () => {
                         </div>
                         <div className="p-2 pt-1.5 flex flex-col flex-1">
                           <div className="flex items-start justify-between mb-1">
-                            <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
-                              {item.category}
-                            </span>
+                            <div className="flex gap-1">
+                              <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
+                                {item.category}
+                              </span>
+                              {item.grade && (
+                                <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${getGradeColor(item.grade)}`}>
+                                  {formatGradeRange(item.grade)}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-baseline justify-between gap-1 mt-auto">
                             <div className="flex items-baseline gap-1 min-w-0">
