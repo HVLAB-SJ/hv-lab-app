@@ -605,10 +605,10 @@ const SpecBook = () => {
               {items.map(item => (
                 <div
                   key={item.id}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col h-56"
+                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col"
                 >
-                  {/* 상단: 이미지 */}
-                  <div className="w-full h-40 bg-gray-100 flex-shrink-0">
+                  {/* 상단: 정사각형 이미지 */}
+                  <div className="w-full aspect-square bg-gray-100 flex-shrink-0">
                     {item.image_url ? (
                       <img
                         src={item.image_url}
