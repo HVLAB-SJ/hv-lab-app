@@ -392,45 +392,63 @@ const SpecBook = () => {
       }}
     >
       {/* 버튼 영역 */}
-      <div className="flex gap-2 mb-4" style={{ maxWidth: '20%' }}>
-        <button
-          onClick={() => {
-            setView('library');
-            setSelectedProject(null);
-          }}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            view === 'library'
-              ? 'bg-gray-800 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-          }`}
-        >
-          스펙 라이브러리
-        </button>
+      <div className="flex items-center gap-2 mb-4">
+        <div style={{ width: '20%' }}>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setView('library');
+                setSelectedProject(null);
+              }}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                view === 'library'
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              스펙 라이브러리
+            </button>
 
-        <select
-          value={selectedProject || ''}
-          onChange={(e) => {
-            if (e.target.value) {
-              setView('project');
-              setSelectedProject(Number(e.target.value));
-            } else {
-              setView('library');
-              setSelectedProject(null);
-            }
-          }}
-          className={`flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
-            view === 'project' && selectedProject
-              ? 'bg-gray-800 text-white'
-              : 'bg-white'
-          }`}
-        >
-          <option value="">프로젝트 선택</option>
-          {projects.map(project => (
-            <option key={project.id} value={project.id}>
-              {project.title}
-            </option>
-          ))}
-        </select>
+            <select
+              value={selectedProject || ''}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setView('project');
+                  setSelectedProject(Number(e.target.value));
+                } else {
+                  setView('library');
+                  setSelectedProject(null);
+                }
+              }}
+              className={`flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+                view === 'project' && selectedProject
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-white'
+              }`}
+            >
+              <option value="">프로젝트 선택</option>
+              {projects.map(project => (
+                <option key={project.id} value={project.id}>
+                  {project.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 프로젝트 선택 시 제목 표시 */}
+        {view === 'project' && selectedProject && (
+          <div className="flex-1 flex gap-6 pl-6">
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-gray-900">스펙 라이브러리</h2>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-gray-900">
+                {projects.find(p => p.id === selectedProject)?.title}
+              </h2>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 메인 컨텐츠 */}
@@ -683,7 +701,6 @@ const SpecBook = () => {
           <div className="flex-1 flex overflow-hidden pr-4">
               {/* 좌측: 스펙 라이브러리 (드래그 소스) */}
               <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4">
-                <h2 className="text-lg font-bold mb-3 text-gray-900">스펙 라이브러리</h2>
                 <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
@@ -694,7 +711,7 @@ const SpecBook = () => {
                     라이브러리 아이템이 없습니다
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="flex flex-wrap gap-3 content-start">
                     {allLibraryItems
                       .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
                       .map(item => (
@@ -706,6 +723,7 @@ const SpecBook = () => {
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
                         className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-move flex flex-col"
+                        style={{ width: 'calc(33.333% - 8px)' }}
                       >
                         <div className="w-full aspect-square bg-gray-100">
                           {item.image_url ? (
@@ -738,9 +756,6 @@ const SpecBook = () => {
 
               {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
               <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4">
-                <h2 className="text-lg font-bold mb-3 text-gray-900">
-                  {projects.find(p => p.id === selectedProject)?.title}
-                </h2>
                 <div
                   className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 border-2 border-dashed border-gray-300"
                 onDragOver={(e) => {
@@ -780,13 +795,14 @@ const SpecBook = () => {
                     좌측에서 아이템을 드래그하여 추가하세요
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="flex flex-wrap gap-3 content-start">
                     {items
                       .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
                       .map(item => (
                       <div
                         key={item.id}
                         className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group"
+                        style={{ width: 'calc(33.333% - 8px)' }}
                       >
                         <div className="w-full aspect-square bg-gray-100 relative">
                           {item.image_url ? (
