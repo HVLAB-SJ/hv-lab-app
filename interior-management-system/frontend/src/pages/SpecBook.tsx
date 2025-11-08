@@ -850,10 +850,10 @@ const SpecBook = () => {
                     />
                     <span className={`font-medium ${
                       formData.grades.includes(grade)
-                        ? grade === '하이엔드' ? 'text-purple-600' :
-                          grade === '고급' ? 'text-blue-600' :
-                          grade === '기본' ? 'text-green-600' :
-                          'text-yellow-600'
+                        ? grade === '하이엔드' ? 'text-violet-500' :
+                          grade === '고급' ? 'text-sky-500' :
+                          grade === '기본' ? 'text-emerald-500' :
+                          'text-amber-500'
                         : 'text-gray-700'
                     }`}>
                       {grade}
@@ -866,38 +866,40 @@ const SpecBook = () => {
 
           {/* 등급 필터 */}
           <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">등급 필터</h3>
-            <div className="flex gap-2 flex-wrap">
-              {['알뜰', '기본', '고급', '하이엔드'].map(grade => (
-                <button
-                  key={grade}
-                  onClick={() => {
-                    if (selectedGrades.includes(grade)) {
-                      setSelectedGrades(selectedGrades.filter(g => g !== grade));
-                    } else {
-                      setSelectedGrades([...selectedGrades, grade]);
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                    selectedGrades.includes(grade)
-                      ? grade === '하이엔드' ? 'bg-purple-600 text-white' :
-                        grade === '고급' ? 'bg-blue-600 text-white' :
-                        grade === '기본' ? 'bg-green-600 text-white' :
-                        'bg-yellow-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {grade}
-                </button>
-              ))}
-              {selectedGrades.length > 0 && (
-                <button
-                  onClick={() => setSelectedGrades([])}
-                  className="px-3 py-1.5 rounded text-xs font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
-                >
-                  초기화
-                </button>
-              )}
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-semibold text-gray-900">등급 필터</h3>
+              <div className="flex gap-2 flex-1">
+                {['알뜰', '기본', '고급', '하이엔드'].map(grade => (
+                  <button
+                    key={grade}
+                    onClick={() => {
+                      if (selectedGrades.includes(grade)) {
+                        setSelectedGrades(selectedGrades.filter(g => g !== grade));
+                      } else {
+                        setSelectedGrades([...selectedGrades, grade]);
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                      selectedGrades.includes(grade)
+                        ? grade === '하이엔드' ? 'bg-violet-500 text-white' :
+                          grade === '고급' ? 'bg-sky-500 text-white' :
+                          grade === '기본' ? 'bg-emerald-500 text-white' :
+                          'bg-amber-400 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {grade}
+                  </button>
+                ))}
+                {selectedGrades.length > 0 && (
+                  <button
+                    onClick={() => setSelectedGrades([])}
+                    className="px-3 py-1.5 rounded text-xs font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                  >
+                    초기화
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
