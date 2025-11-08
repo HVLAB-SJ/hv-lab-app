@@ -66,21 +66,20 @@ const SortableCategoryItem = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 bg-white"
+      {...attributes}
+      {...listeners}
+      className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 bg-white cursor-grab active:cursor-grabbing"
     >
       <div className="flex items-center gap-2 flex-1">
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
+        <GripVertical className="h-4 w-4 text-gray-400" />
         <span className="text-sm text-gray-900">{category}</span>
       </div>
       {category !== '전체' && (
         <button
-          onClick={() => onRemove(category)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(category);
+          }}
           className="text-red-500 hover:text-red-700 transition-colors"
           title="삭제"
         >
@@ -881,9 +880,6 @@ const SpecBook = () => {
             <div className="p-4">
               {/* 새 카테고리 추가 */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  새 카테고리 추가
-                </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
