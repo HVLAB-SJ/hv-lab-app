@@ -31,6 +31,11 @@
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* 스펙북 이미지가 제대로 표시되도록 img의 height: auto 오버라이드 */
+  img.object-cover {
+    height: 100%;
+  }
 }
 
 @layer components {
