@@ -592,19 +592,6 @@ const WorkRequest = () => {
 
   return (
     <div className="space-y-3 md:space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-end">
-        <button
-          onClick={() => {
-            setSelectedRequest(null);
-            setShowModal(true);
-          }}
-          className="hidden lg:inline-flex btn btn-primary px-4 py-2 ml-auto"
-        >
-          + 새 업무요청
-        </button>
-      </div>
-
       {/* Tabs and Add Button */}
       <div className="border-b border-gray-200 flex items-center justify-between">
         <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">

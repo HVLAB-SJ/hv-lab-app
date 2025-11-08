@@ -321,20 +321,6 @@ const AfterService = () => {
 
   return (
     <div className="space-y-3 md:space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {selectedRequestForImage && (
-            <span className="text-sm text-gray-600">
-              이미지 첨부 중: {requests.find(r => r.id === selectedRequestForImage)?.project || ''}
-            </span>
-          )}
-        </div>
-        <button onClick={handleAddRequest} className="hidden lg:inline-flex btn btn-primary px-4 py-2">
-          + AS 요청
-        </button>
-      </div>
-
       {/* 파일 선택을 위한 숨겨진 input */}
       <input
         type="file"
@@ -344,6 +330,13 @@ const AfterService = () => {
         className="hidden"
         id="as-image-file-input"
       />
+
+      {/* 이미지 첨부 중 표시 */}
+      {selectedRequestForImage && (
+        <div className="text-sm text-gray-600">
+          이미지 첨부 중: {requests.find(r => r.id === selectedRequestForImage)?.project || ''}
+        </div>
+      )}
 
       {/* Tabs and Add Button */}
       <div className="border-b border-gray-200 flex items-center justify-between">

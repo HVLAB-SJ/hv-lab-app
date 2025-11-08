@@ -532,13 +532,6 @@ const ConstructionPayment = () => {
 
   return (
     <div className="space-y-3 md:space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-end">
-        <button onClick={handleAddProject} className="hidden lg:inline-flex btn btn-primary px-4 py-2">
-          + 프로젝트
-        </button>
-      </div>
-
       {/* Tabs and Add Button */}
       <div className="border-b border-gray-200 flex items-center justify-between">
         <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">
@@ -566,7 +559,7 @@ const ConstructionPayment = () => {
           ))}
         </nav>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleAddProject}
           className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition-colors whitespace-nowrap"
         >
           +프로젝트
