@@ -1,7 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { Pencil, Trash2, Upload, Settings, X, Plus } from 'lucide-react';
+import { Pencil, Trash2, Upload, Settings, X, Plus, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface SpecBookItem {
   id: number;
@@ -21,6 +38,58 @@ interface Project {
   id: number;
   title: string;
 }
+
+// Sortable 카테고리 아이템 컴포넌트
+const SortableCategoryItem = ({
+  category,
+  onRemove
+}: {
+  category: string;
+  onRemove: (category: string) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 bg-white"
+    >
+      <div className="flex items-center gap-2 flex-1">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <span className="text-sm text-gray-900">{category}</span>
+      </div>
+      {category !== '전체' && (
+        <button
+          onClick={() => onRemove(category)}
+          className="text-red-500 hover:text-red-700 transition-colors"
+          title="삭제"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+};
 
 const SpecBook = () => {
   const [view, setView] = useState<'library' | 'project'>('library');
@@ -44,6 +113,14 @@ const SpecBook = () => {
   const [editingCategories, setEditingCategories] = useState<string[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // DnD 센서 설정
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     loadCategories();
@@ -283,6 +360,19 @@ const SpecBook = () => {
     }
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setEditingCategories((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] bg-gray-50">
       {/* 버튼 영역 */}
@@ -331,16 +421,18 @@ const SpecBook = () => {
       <div className="flex-1 flex gap-6 overflow-hidden">
         {/* 좌측: 입력 폼 + 카테고리 (프로젝트 선택 시 숨김) */}
         {view === 'library' && (
-          <div className="w-1/4 flex flex-col gap-4 p-4">
+          <div className="w-1/4 flex flex-col gap-4">
           {/* 새 아이템 추가 폼 */}
-          <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-            <h2 className="text-base font-semibold mb-3 text-gray-900">
-              {editingItem ? '아이템 수정' : '새 아이템 추가'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+            <div className="p-4">
+              <h2 className="text-base font-semibold mb-3 text-gray-900">
+                {editingItem ? '아이템 수정' : '새 아이템 추가'}
+              </h2>
+            </div>
+            <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
               {/* 수평 카드 형태: 이미지 + 입력 필드 */}
-              <div className="flex gap-3">
-                {/* 좌측: 이미지 - 정사각형 유동 사이즈 */}
+              <div className="flex gap-3 px-4 flex-1">
+                {/* 좌측: 이미지 - 정사각형 */}
                 <div
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -348,9 +440,10 @@ const SpecBook = () => {
                   }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleImageDrop}
-                  className={`aspect-square w-full max-w-xs flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
+                  className={`aspect-square flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
                     isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
                   }`}
+                  style={{ width: 'calc(50% - 0.375rem)' }}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {formData.imageData || editingItem?.image_url ? (
@@ -426,24 +519,27 @@ const SpecBook = () => {
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">원</span>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  <div className="flex gap-2">
+              {/* 하단: 버튼 영역 */}
+              <div className="p-4 pt-0">
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+                  >
+                    {editingItem ? '수정' : '추가'}
+                  </button>
+                  {editingItem && (
                     <button
-                      type="submit"
-                      className="flex-1 px-4 py-2 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+                      type="button"
+                      onClick={handleCancel}
+                      className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                     >
-                      {editingItem ? '수정' : '추가'}
+                      취소
                     </button>
-                    {editingItem && (
-                      <button
-                        type="button"
-                        onClick={handleCancel}
-                        className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                      >
-                        취소
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </form>
@@ -496,7 +592,7 @@ const SpecBook = () => {
         {/* 아이템 그리드 영역 */}
         {view === 'library' ? (
           /* 라이브러리 뷰: 전체 폭 */
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto pr-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-gray-500">로딩 중...</div>
@@ -528,30 +624,30 @@ const SpecBook = () => {
                   </div>
 
                   {/* 하단: 텍스트 정보 */}
-                  <div className="p-3 flex flex-col flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <span className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
+                  <div className="p-2 flex flex-col flex-1">
+                    <div className="flex items-start justify-between mb-1">
+                      <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
                         {item.category}
                       </span>
                       <div className="flex gap-1">
                         <button
                           onClick={() => handleEdit(item)}
-                          className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                          className="p-0.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                           title="수정"
                         >
                           <Pencil className="w-3 h-3" />
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                          className="p-0.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                           title="삭제"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
                       </div>
                     </div>
-                    <h3 className="font-semibold text-sm text-gray-900 mb-2 line-clamp-2">{item.name}</h3>
-                    <div className="mt-auto space-y-1">
+                    <h3 className="font-semibold text-xs text-gray-900 mb-1 line-clamp-2">{item.name}</h3>
+                    <div className="mt-auto space-y-0.5">
                       {item.brand && (
                         <p className="text-xs text-gray-600">브랜드: {item.brand}</p>
                       )}
@@ -812,26 +908,27 @@ const SpecBook = () => {
               {/* 카테고리 목록 */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  카테고리 목록
+                  카테고리 목록 (드래그하여 순서 변경)
                 </label>
                 <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
-                  {editingCategories.map((category, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={editingCategories}
+                      strategy={verticalListSortingStrategy}
                     >
-                      <span className="text-sm text-gray-900">{category}</span>
-                      {category !== '전체' && (
-                        <button
-                          onClick={() => handleRemoveCategory(category)}
-                          className="text-red-500 hover:text-red-700 transition-colors"
-                          title="삭제"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                      {editingCategories.map((category) => (
+                        <SortableCategoryItem
+                          key={category}
+                          category={category}
+                          onRemove={handleRemoveCategory}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
                 </div>
               </div>
 
