@@ -631,14 +631,6 @@ const SpecBook = () => {
                         src={item.image_url}
                         alt={item.name}
                         className="w-full h-full object-cover block"
-                        onError={(e) => {
-                          console.error('이미지 로드 실패:', item.image_url);
-                          e.currentTarget.style.display = 'none';
-                          const parent = e.currentTarget.parentElement;
-                          if (parent) {
-                            parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">이미지 로드 실패</div>';
-                          }
-                        }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
@@ -751,14 +743,6 @@ const SpecBook = () => {
                               src={item.image_url}
                               alt={item.name}
                               className="w-full h-full object-cover"
-                              onError={(e) => {
-                                console.error('이미지 로드 실패 (라이브러리):', item.image_url);
-                                e.currentTarget.style.display = 'none';
-                                const parent = e.currentTarget.parentElement;
-                                if (parent) {
-                                  parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">이미지 로드 실패</div>';
-                                }
-                              }}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
