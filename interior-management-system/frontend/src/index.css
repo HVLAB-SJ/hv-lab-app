@@ -33,8 +33,9 @@
   }
 
   /* 스펙북 이미지가 제대로 표시되도록 img의 height: auto 오버라이드 */
-  img.object-cover {
-    height: 100%;
+  .aspect-square img.object-cover {
+    height: 100% !important;
+    max-height: none !important;
   }
 }
 
