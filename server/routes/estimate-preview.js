@@ -62,9 +62,11 @@ router.post('/create', authenticateToken, async (req, res) => {
     wallMaterial,
     bathroomWorkType,
     ceilingWorkType,
-    switchType,
-    switchPremium,
+    switchPublic,
+    switchRoom,
     lightingType,
+    indirectLightingPublic,
+    indirectLightingRoom,
     bathroomCeiling,
     bathroomFaucet,
     bathroomTile,
@@ -158,9 +160,9 @@ router.post('/create', authenticateToken, async (req, res) => {
         base_construction_cost, fixture_cost, sash_cost, heating_cost, aircon_cost,
         total_min_cost, total_max_cost, detail_breakdown, created_by,
         floor_material, wall_material, bathroom_work_type, ceiling_work_type,
-        switch_type, switch_premium, lighting_type, bathroom_ceiling,
-        bathroom_faucet, bathroom_tile, molding_type
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        switch_public, switch_room, lighting_type, indirect_lighting_public, indirect_lighting_room,
+        bathroom_ceiling, bathroom_faucet, bathroom_tile, molding_type
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.run(query, [
@@ -169,8 +171,8 @@ router.post('/create', authenticateToken, async (req, res) => {
       baseConstructionCost, fixtureCost, sashCost, heatingCost, airconCost,
       totalMinCost, totalMaxCost, detailBreakdown, req.user.userId,
       floorMaterial, wallMaterial, bathroomWorkType, ceilingWorkType,
-      switchType, switchPremium, lightingType, bathroomCeiling,
-      bathroomFaucet, bathroomTile, moldingType
+      switchPublic, switchRoom, lightingType, indirectLightingPublic, indirectLightingRoom,
+      bathroomCeiling, bathroomFaucet, bathroomTile, moldingType
     ], function(err) {
       if (err) {
         console.error('가견적서 저장 실패:', err);
@@ -195,9 +197,11 @@ router.post('/create', authenticateToken, async (req, res) => {
         wallMaterial,
         bathroomWorkType,
         ceilingWorkType,
-        switchType,
-        switchPremium,
+        switchPublic,
+        switchRoom,
         lightingType,
+        indirectLightingPublic,
+        indirectLightingRoom,
         bathroomCeiling,
         bathroomFaucet,
         bathroomTile,

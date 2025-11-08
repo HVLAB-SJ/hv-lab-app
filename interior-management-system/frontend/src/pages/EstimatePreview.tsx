@@ -19,9 +19,11 @@ interface EstimateForm {
   wallMaterial: string[];
   bathroomWorkType: string[];
   ceilingWorkType: string[];
-  switchType: string[];
-  switchPremium: string[];
+  switchPublic: string[];
+  switchRoom: string[];
   lightingType: string[];
+  indirectLightingPublic: string[];
+  indirectLightingRoom: string[];
   bathroomCeiling: string[];
   bathroomFaucet: string[];
   bathroomTile: string[];
@@ -63,9 +65,11 @@ const EstimatePreview: React.FC = () => {
     wallMaterial: [],
     bathroomWorkType: [],
     ceilingWorkType: [],
-    switchType: [],
-    switchPremium: [],
+    switchPublic: [],
+    switchRoom: [],
     lightingType: [],
+    indirectLightingPublic: [],
+    indirectLightingRoom: [],
     bathroomCeiling: [],
     bathroomFaucet: [],
     bathroomTile: [],
@@ -137,9 +141,11 @@ const EstimatePreview: React.FC = () => {
         wallMaterial: JSON.stringify(form.wallMaterial),
         bathroomWorkType: JSON.stringify(form.bathroomWorkType),
         ceilingWorkType: JSON.stringify(form.ceilingWorkType),
-        switchType: JSON.stringify(form.switchType),
-        switchPremium: JSON.stringify(form.switchPremium),
+        switchPublic: JSON.stringify(form.switchPublic),
+        switchRoom: JSON.stringify(form.switchRoom),
         lightingType: JSON.stringify(form.lightingType),
+        indirectLightingPublic: JSON.stringify(form.indirectLightingPublic),
+        indirectLightingRoom: JSON.stringify(form.indirectLightingRoom),
         bathroomCeiling: JSON.stringify(form.bathroomCeiling),
         bathroomFaucet: JSON.stringify(form.bathroomFaucet),
         bathroomTile: JSON.stringify(form.bathroomTile),
@@ -179,9 +185,11 @@ const EstimatePreview: React.FC = () => {
         wallMaterial: data.wall_material ? JSON.parse(data.wall_material) : [],
         bathroomWorkType: data.bathroom_work_type ? JSON.parse(data.bathroom_work_type) : [],
         ceilingWorkType: data.ceiling_work_type ? JSON.parse(data.ceiling_work_type) : [],
-        switchType: data.switch_type ? JSON.parse(data.switch_type) : [],
-        switchPremium: data.switch_premium ? JSON.parse(data.switch_premium) : [],
+        switchPublic: data.switch_public ? JSON.parse(data.switch_public) : [],
+        switchRoom: data.switch_room ? JSON.parse(data.switch_room) : [],
         lightingType: data.lighting_type ? JSON.parse(data.lighting_type) : [],
+        indirectLightingPublic: data.indirect_lighting_public ? JSON.parse(data.indirect_lighting_public) : [],
+        indirectLightingRoom: data.indirect_lighting_room ? JSON.parse(data.indirect_lighting_room) : [],
         bathroomCeiling: data.bathroom_ceiling ? JSON.parse(data.bathroom_ceiling) : [],
         bathroomFaucet: data.bathroom_faucet ? JSON.parse(data.bathroom_faucet) : [],
         bathroomTile: data.bathroom_tile ? JSON.parse(data.bathroom_tile) : [],
@@ -246,9 +254,11 @@ const EstimatePreview: React.FC = () => {
       wallMaterial: [],
       bathroomWorkType: [],
       ceilingWorkType: [],
-      switchType: [],
-      switchPremium: [],
+      switchPublic: [],
+      switchRoom: [],
       lightingType: [],
+      indirectLightingPublic: [],
+      indirectLightingRoom: [],
       bathroomCeiling: [],
       bathroomFaucet: [],
       bathroomTile: [],
@@ -513,15 +523,15 @@ const EstimatePreview: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
-                    스위치/콘센트
+                    스위치/콘센트 (공용부)
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {['유지', '다산 일반형', '다산 하이브리드', '르그랑 엑설런트', '르그랑 말리부'].map(item => (
+                    {['융스위치(스텐)', '융스위치(일반)', '르그랑(일반)'].map(item => (
                       <label key={item} className="flex items-center text-sm">
                         <input
                           type="checkbox"
-                          checked={form.switchType.includes(item)}
-                          onChange={() => handleMaterialCheckbox('switchType', item)}
+                          checked={form.switchPublic.includes(item)}
+                          onChange={() => handleMaterialCheckbox('switchPublic', item)}
                           className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                         />
                         <span className="text-gray-700">{item}</span>
@@ -532,15 +542,15 @@ const EstimatePreview: React.FC = () => {
 
                 <div>
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
-                    스위치 프리미엄
+                    스위치/콘센트 (방)
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {['HDC 아이콘트롤스', '코콤', '베스틴'].map(item => (
+                    {['융스위치(스텐)', '융스위치(일반)', '르그랑(일반)'].map(item => (
                       <label key={item} className="flex items-center text-sm">
                         <input
                           type="checkbox"
-                          checked={form.switchPremium.includes(item)}
-                          onChange={() => handleMaterialCheckbox('switchPremium', item)}
+                          checked={form.switchRoom.includes(item)}
+                          onChange={() => handleMaterialCheckbox('switchRoom', item)}
                           className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                         />
                         <span className="text-gray-700">{item}</span>
@@ -556,12 +566,50 @@ const EstimatePreview: React.FC = () => {
                     조명
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {['유지', 'LED교체(일부)', 'LED교체(전체)', '매입등추가', '레일등추가'].map(item => (
+                    {['마그네틱조명', '라인조명', '매입조명(하이엔드)', '매입조명(고급)', '매입조명(일반)'].map(item => (
                       <label key={item} className="flex items-center text-sm">
                         <input
                           type="checkbox"
                           checked={form.lightingType.includes(item)}
                           onChange={() => handleMaterialCheckbox('lightingType', item)}
+                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">{item}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                    간접조명 (공용부)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['LED', 'T3 조명', '안함'].map(item => (
+                      <label key={item} className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          checked={form.indirectLightingPublic.includes(item)}
+                          onChange={() => handleMaterialCheckbox('indirectLightingPublic', item)}
+                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">{item}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                    간접조명 (방)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['LED', 'T3 조명', '안함'].map(item => (
+                      <label key={item} className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          checked={form.indirectLightingRoom.includes(item)}
+                          onChange={() => handleMaterialCheckbox('indirectLightingRoom', item)}
                           className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                         />
                         <span className="text-gray-700">{item}</span>
