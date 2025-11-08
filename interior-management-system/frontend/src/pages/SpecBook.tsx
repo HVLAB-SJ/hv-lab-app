@@ -584,7 +584,14 @@ const SpecBook = () => {
           {/* 카테고리 버튼들 (3열) */}
           <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">카테고리</h3>
+              <h3 className="text-sm font-semibold text-gray-900">
+                카테고리
+                {view === 'project' && selectedProject && (
+                  <span className="ml-1 text-gray-600">
+                    ({projects.find(p => p.id === selectedProject)?.title})
+                  </span>
+                )}
+              </h3>
               <button
                 onClick={handleOpenCategoryModal}
                 className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
