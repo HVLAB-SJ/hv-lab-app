@@ -570,15 +570,17 @@ const ConstructionPayment = () => {
       </div>
 
       {/* Records List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredRecords.map((record) => {
-          const received = calculateReceived(record);
-          const remaining = calculateRemaining(record);
-          const totalContractAmount = calculateTotalContractAmount(record);
-          const percentage = (received / totalContractAmount) * 100;
+      <div className="flex justify-start">
+        <div className="w-full lg:w-1/2">
+          <div className="space-y-6">
+            {filteredRecords.map((record) => {
+              const received = calculateReceived(record);
+              const remaining = calculateRemaining(record);
+              const totalContractAmount = calculateTotalContractAmount(record);
+              const percentage = (received / totalContractAmount) * 100;
 
-          return (
-            <div key={record.id} className="card hover:border-gray-400 transition-colors">
+              return (
+                <div key={record.id} className="card hover:border-gray-400 transition-colors">
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-bold text-lg text-gray-900">{record.project}</h3>
@@ -671,8 +673,10 @@ const ConstructionPayment = () => {
                 </div>
               )}
             </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Detail Modal */}
