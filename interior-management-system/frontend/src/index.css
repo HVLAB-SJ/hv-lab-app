@@ -1257,15 +1257,23 @@ div.rbc-popup {
 
   /* 페이지 여백 및 크기 설정 */
   @page {
-    margin: 10mm;
+    margin: 10mm 20mm; /* 상하 10mm, 좌우 20mm */
     size: A4;
   }
 
   html, body {
-    margin: 0;
-    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
     height: auto;
     overflow: visible;
+  }
+
+  /* 브라우저 기본 헤더/푸터 제거 */
+  @page {
+    margin-top: 10mm;
+    margin-bottom: 10mm;
+    margin-left: 20mm;
+    margin-right: 20mm;
   }
 
   /* 모달 배경 위치 및 크기 조정 */
