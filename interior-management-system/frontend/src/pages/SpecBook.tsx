@@ -440,10 +440,9 @@ const SpecBook = () => {
                   }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleImageDrop}
-                  className={`aspect-square flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
+                  className={`w-40 h-40 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
                     isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
                   }`}
-                  style={{ width: 'calc(50% - 0.375rem)' }}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {formData.imageData || editingItem?.image_url ? (
