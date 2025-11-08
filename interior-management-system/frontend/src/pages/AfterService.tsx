@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Trash2, Calendar, Edit, ImageIcon, X, Upload } from 'lucide-react';
+import { Trash2, Calendar, Edit, X } from 'lucide-react';
 import ASRequestModal from '../components/ASRequestModal';
 import { useDataStore, type ASRequest } from '../store/dataStore';
 import toast from 'react-hot-toast';
@@ -135,11 +135,6 @@ const AfterService = () => {
 
   // 클립보드 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
-    if (!selectedRequestForImage) {
-      toast.error('먼저 AS 요청을 선택해주세요');
-      return;
-    }
-
     const items = e.clipboardData?.items;
     if (!items) return;
 
@@ -151,11 +146,17 @@ const AfterService = () => {
           const reader = new FileReader();
           reader.onload = (event) => {
             const base64 = event.target?.result as string;
-            const request = requests.find(r => r.id === selectedRequestForImage);
-            if (request) {
-              const updatedImages = [...(request.images || []), base64];
-              updateASRequestInAPI(selectedRequestForImage, { images: updatedImages });
-              toast.success('이미지가 추가되었습니다');
+            // 현재 호버된 카드나 선택된 요청에 이미지 추가
+            const targetId = selectedRequestForImage || (e.target as HTMLElement).closest('[data-request-id]')?.getAttribute('data-request-id');
+            if (targetId) {
+              const request = requests.find(r => r.id === targetId);
+              if (request) {
+                const updatedImages = [...(request.images || []), base64];
+                updateASRequestInAPI(targetId, { images: updatedImages });
+                toast.success('이미지가 추가되었습니다');
+              }
+            } else {
+              toast.error('AS 요청 카드 위에서 붙여넣기 해주세요');
             }
           };
           reader.readAsDataURL(blob);
@@ -169,49 +170,6 @@ const AfterService = () => {
     return () => document.removeEventListener('paste', handlePaste);
   }, [handlePaste]);
 
-  // 파일 선택 처리
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!selectedRequestForImage) {
-      toast.error('먼저 AS 요청을 선택해주세요');
-      return;
-    }
-
-    const files = Array.from(e.target?.files || []);
-    const newImages: string[] = [];
-    const imageFiles = files.filter(f => f.type.startsWith('image/'));
-
-    if (imageFiles.length === 0) return;
-
-    imageFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        newImages.push(base64);
-
-        if (newImages.length === imageFiles.length) {
-          const request = requests.find(r => r.id === selectedRequestForImage);
-          if (request) {
-            const updatedImages = [...(request.images || []), ...newImages];
-            updateASRequestInAPI(selectedRequestForImage, { images: updatedImages });
-            toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  // 이미지 삭제
-  const removeImage = (index: number) => {
-    if (!selectedRequestForImage) return;
-
-    const request = requests.find(r => r.id === selectedRequestForImage);
-    if (request) {
-      const updatedImages = request.images?.filter((_, i) => i !== index) || [];
-      updateASRequestInAPI(selectedRequestForImage, { images: updatedImages });
-    }
-  };
-
   // 이미지 클릭 시 모달 열기
   const handleImageClick = (imageUrl: string) => {
     setModalImage(imageUrl);
@@ -219,30 +177,33 @@ const AfterService = () => {
   };
 
   // 드래그 앤 드롭 처리
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, requestId?: string) => {
     e.preventDefault();
-    setIsDragging(true);
+    e.stopPropagation();
+    if (requestId) {
+      setIsDragging(true);
+    }
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent, requestId: string) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(false);
-
-    if (!selectedRequestForImage) {
-      toast.error('먼저 AS 요청을 선택해주세요');
-      return;
-    }
 
     const files = Array.from(e.dataTransfer.files);
     const newImages: string[] = [];
     const imageFiles = files.filter(f => f.type.startsWith('image/'));
 
-    if (imageFiles.length === 0) return;
+    if (imageFiles.length === 0) {
+      toast.error('이미지 파일만 업로드 가능합니다');
+      return;
+    }
 
     imageFiles.forEach(file => {
       const reader = new FileReader();
@@ -251,10 +212,10 @@ const AfterService = () => {
         newImages.push(base64);
 
         if (newImages.length === imageFiles.length) {
-          const request = requests.find(r => r.id === selectedRequestForImage);
+          const request = requests.find(r => r.id === requestId);
           if (request) {
             const updatedImages = [...(request.images || []), ...newImages];
-            updateASRequestInAPI(selectedRequestForImage, { images: updatedImages });
+            updateASRequestInAPI(requestId, { images: updatedImages });
             toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
           }
         }
@@ -321,23 +282,6 @@ const AfterService = () => {
 
   return (
     <div className="space-y-3 md:space-y-4">
-      {/* 파일 선택을 위한 숨겨진 input */}
-      <input
-        type="file"
-        multiple
-        accept="image/*"
-        onChange={handleFileSelect}
-        className="hidden"
-        id="as-image-file-input"
-      />
-
-      {/* 이미지 첨부 중 표시 */}
-      {selectedRequestForImage && (
-        <div className="text-sm text-gray-600">
-          이미지 첨부 중: {requests.find(r => r.id === selectedRequestForImage)?.project || ''}
-        </div>
-      )}
-
       {/* Tabs and Add Button */}
       <div className="border-b border-gray-200 flex items-center justify-between">
         <nav className="flex space-x-4 md:space-x-8">
@@ -394,7 +338,14 @@ const AfterService = () => {
       {/* Mobile & Tablet Card View */}
       <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-3">
         {filteredRequests.map((request) => (
-          <div key={request.id} className="card p-3 md:p-4 hover:border-gray-400 transition-colors">
+          <div
+            key={request.id}
+            data-request-id={request.id}
+            className="card p-3 md:p-4 hover:border-gray-400 transition-colors"
+            onDragOver={(e) => handleDragOver(e, request.id)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, request.id)}
+          >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
@@ -404,13 +355,6 @@ const AfterService = () => {
                 <p className="text-sm text-gray-600 mt-0.5">{request.client}님</p>
               </div>
               <div className="flex items-center space-x-1">
-                <button
-                  onClick={() => setSelectedRequestForImage(selectedRequestForImage === request.id ? null : request.id)}
-                  className={`p-1 -mt-1 ${selectedRequestForImage === request.id ? 'text-blue-600' : 'text-gray-600 hover:text-gray-700'}`}
-                  title="이미지 첨부"
-                >
-                  <ImageIcon className="h-4 w-4" />
-                </button>
                 <button
                   onClick={() => handleEdit(request)}
                   className="text-gray-600 hover:text-gray-700 p-1 -mt-1"
@@ -569,7 +513,14 @@ const AfterService = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredRequests.map((request) => (
-              <tr key={request.id} className="hover:bg-gray-50">
+              <tr
+                key={request.id}
+                data-request-id={request.id}
+                className="hover:bg-gray-50"
+                onDragOver={(e) => handleDragOver(e, request.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, request.id)}
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   {getStatusBadge(request.status)}
                 </td>
@@ -657,16 +608,7 @@ const AfterService = () => {
                         )}
                       </div>
                     ) : (
-                      <button
-                        onClick={() => {
-                          setSelectedRequestForImage(request.id);
-                          document.getElementById('as-image-file-input')?.click();
-                        }}
-                        className="text-gray-400 hover:text-gray-600"
-                        title="이미지 추가"
-                      >
-                        <ImageIcon className="h-4 w-4" />
-                      </button>
+                      <span className="text-xs text-gray-400">드래그 또는 붙여넣기</span>
                     )}
                   </div>
                 </td>
@@ -696,13 +638,6 @@ const AfterService = () => {
                       </button>
                     )}
                     <button
-                      onClick={() => setSelectedRequestForImage(selectedRequestForImage === request.id ? null : request.id)}
-                      className={`p-1.5 rounded transition-colors ${selectedRequestForImage === request.id ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-gray-700 hover:bg-gray-50'}`}
-                      title="이미지 첨부"
-                    >
-                      <ImageIcon className="h-4 w-4" />
-                    </button>
-                    <button
                       onClick={() => handleEdit(request)}
                       className="p-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded transition-colors"
                       title="수정"
@@ -731,77 +666,6 @@ const AfterService = () => {
           onClose={() => setIsModalOpen(false)}
           onSave={handleSaveRequest}
         />
-      )}
-
-      {/* 이미지 업로드 영역 - 선택된 요청이 있을 때만 표시 */}
-      {selectedRequestForImage && (
-        <div
-          className="fixed bottom-4 right-4 bg-white rounded-lg shadow-xl border-2 border-gray-300 p-4 w-80 z-40"
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-900">이미지 첨부</h3>
-            <button
-              onClick={() => setSelectedRequestForImage(null)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          {(() => {
-            const request = requests.find(r => r.id === selectedRequestForImage);
-            const images = request?.images || [];
-
-            return images.length > 0 ? (
-              <div className="space-y-2">
-                <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                  {images.map((img, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={img}
-                        alt={`이미지 ${index + 1}`}
-                        className="w-full h-20 object-cover rounded cursor-pointer hover:opacity-75"
-                        onClick={() => handleImageClick(img)}
-                      />
-                      <button
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={() => document.getElementById('as-image-file-input')?.click()}
-                  className="w-full py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-                >
-                  + 이미지 추가
-                </button>
-              </div>
-            ) : (
-              <label
-                htmlFor="as-image-file-input"
-                className="block cursor-pointer"
-              >
-                <div
-                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                    isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm font-medium text-gray-700">클릭하여 선택</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    드래그 또는 Ctrl+V로 붙여넣기
-                  </p>
-                </div>
-              </label>
-            );
-          })()}
-        </div>
       )}
 
       {/* 이미지 팝업 모달 */}
