@@ -42,20 +42,20 @@ const upload = multer({
   }
 });
 
-// Base64 이미지 저장 함수
-const saveBase64Image = (base64Data) => {
+// Base64 이미지 검증 함수
+const validateBase64Image = (base64Data) => {
   const matches = base64Data.match(/^data:image\/([a-zA-Z]*);base64,(.+)$/);
   if (!matches || matches.length !== 3) {
     throw new Error('Invalid base64 image data');
   }
+  return base64Data; // 유효한 base64 데이터를 그대로 반환
+};
 
-  const imageType = matches[1];
-  const imageBuffer = Buffer.from(matches[2], 'base64');
-  const filename = Date.now() + '-' + Math.round(Math.random() * 1E9) + '.' + imageType;
-  const filepath = path.join(uploadsDir, filename);
-
-  fs.writeFileSync(filepath, imageBuffer);
-  return `/uploads/specbook/${filename}`;
+// 파일을 Base64로 변환하는 함수
+const fileToBase64 = (filePath, mimeType) => {
+  const fileBuffer = fs.readFileSync(filePath);
+  const base64Data = fileBuffer.toString('base64');
+  return `data:${mimeType};base64,${base64Data}`;
 };
 
 // 기본 카테고리 목록
@@ -203,13 +203,13 @@ router.post('/base64', authenticateToken, isManager, (req, res) => {
 
   let imageUrl = image_url || null; // 기존 image_url을 먼저 사용
 
-  // imageData가 있으면 새로운 이미지로 저장
+  // imageData가 있으면 검증 후 저장
   if (imageData) {
     try {
-      imageUrl = saveBase64Image(imageData);
+      imageUrl = validateBase64Image(imageData); // base64 데이터를 그대로 저장
     } catch (error) {
-      console.error('이미지 저장 실패:', error);
-      return res.status(400).json({ error: '이미지 저장 실패' });
+      console.error('이미지 검증 실패:', error);
+      return res.status(400).json({ error: '이미지 검증 실패' });
     }
   }
 
@@ -245,10 +245,23 @@ router.post('/base64', authenticateToken, isManager, (req, res) => {
 // 파일 업로드로 스펙북 아이템 생성
 router.post('/', authenticateToken, isManager, upload.single('image'), (req, res) => {
   const { name, category, brand, price, description, projectId, isLibrary } = req.body;
-  const imageUrl = req.file ? `/uploads/specbook/${req.file.filename}` : null;
 
   if (!name || !category) {
     return res.status(400).json({ error: '이름과 카테고리는 필수입니다.' });
+  }
+
+  // 업로드된 파일을 base64로 변환
+  let imageUrl = null;
+  if (req.file) {
+    try {
+      const filePath = path.join(uploadsDir, req.file.filename);
+      imageUrl = fileToBase64(filePath, req.file.mimetype);
+      // 임시 파일 삭제
+      fs.unlinkSync(filePath);
+    } catch (error) {
+      console.error('이미지 변환 실패:', error);
+      return res.status(500).json({ error: '이미지 변환 실패' });
+    }
   }
 
   const is_library = isLibrary === 'true' || isLibrary === true ? 1 : 0;
@@ -288,10 +301,10 @@ router.put('/base64/:id', authenticateToken, isManager, (req, res) => {
   let imageUrl = null;
   if (imageData) {
     try {
-      imageUrl = saveBase64Image(imageData);
+      imageUrl = validateBase64Image(imageData); // base64 데이터를 그대로 저장
     } catch (error) {
-      console.error('이미지 저장 실패:', error);
-      return res.status(400).json({ error: '이미지 저장 실패' });
+      console.error('이미지 검증 실패:', error);
+      return res.status(400).json({ error: '이미지 검증 실패' });
     }
   }
 
@@ -334,7 +347,20 @@ router.put('/base64/:id', authenticateToken, isManager, (req, res) => {
 router.put('/:id', authenticateToken, isManager, upload.single('image'), (req, res) => {
   const { id } = req.params;
   const { name, category, brand, price, description, projectId, isLibrary } = req.body;
-  const imageUrl = req.file ? `/uploads/specbook/${req.file.filename}` : null;
+
+  // 업로드된 파일을 base64로 변환
+  let imageUrl = null;
+  if (req.file) {
+    try {
+      const filePath = path.join(uploadsDir, req.file.filename);
+      imageUrl = fileToBase64(filePath, req.file.mimetype);
+      // 임시 파일 삭제
+      fs.unlinkSync(filePath);
+    } catch (error) {
+      console.error('이미지 변환 실패:', error);
+      return res.status(500).json({ error: '이미지 변환 실패' });
+    }
+  }
 
   let query = 'UPDATE specbook_items SET name = ?, category = ?, brand = ?, price = ?, description = ?, updated_at = CURRENT_TIMESTAMP';
   let params = [name, category, brand || '', price || '', description || ''];
@@ -375,34 +401,18 @@ router.put('/:id', authenticateToken, isManager, upload.single('image'), (req, r
 router.delete('/:id', authenticateToken, isManager, (req, res) => {
   const { id } = req.params;
 
-  // 먼저 이미지 경로 조회
-  db.get('SELECT image_url FROM specbook_items WHERE id = ?', [id], (err, row) => {
+  // 아이템 삭제 (base64 데이터는 DB에서만 삭제하면 됨)
+  db.run('DELETE FROM specbook_items WHERE id = ?', [id], function(err) {
     if (err) {
-      console.error('스펙북 아이템 조회 실패:', err);
-      return res.status(500).json({ error: '스펙북 아이템 조회 실패' });
+      console.error('스펙북 아이템 삭제 실패:', err);
+      return res.status(500).json({ error: '스펙북 아이템 삭제 실패' });
     }
 
-    // 아이템 삭제
-    db.run('DELETE FROM specbook_items WHERE id = ?', [id], function(err) {
-      if (err) {
-        console.error('스펙북 아이템 삭제 실패:', err);
-        return res.status(500).json({ error: '스펙북 아이템 삭제 실패' });
-      }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: '스펙북 아이템을 찾을 수 없습니다.' });
+    }
 
-      if (this.changes === 0) {
-        return res.status(404).json({ error: '스펙북 아이템을 찾을 수 없습니다.' });
-      }
-
-      // 이미지 파일 삭제
-      if (row && row.image_url) {
-        const imagePath = path.join(__dirname, '..', '..', row.image_url);
-        if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath);
-        }
-      }
-
-      res.json({ message: '스펙북 아이템이 삭제되었습니다.' });
-    });
+    res.json({ message: '스펙북 아이템이 삭제되었습니다.' });
   });
 });
 
