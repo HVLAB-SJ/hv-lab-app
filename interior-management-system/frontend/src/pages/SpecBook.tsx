@@ -261,7 +261,7 @@ const SpecBook = () => {
       };
 
       if (editingItem) {
-        await api.put(`/specbook/${editingItem.id}`, submitData);
+        await api.put(`/specbook/base64/${editingItem.id}`, submitData);
         toast.success('스펙북 아이템이 수정되었습니다');
       } else {
         await api.post('/specbook/base64', submitData);

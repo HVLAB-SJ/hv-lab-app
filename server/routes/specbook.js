@@ -278,7 +278,57 @@ router.post('/', authenticateToken, isManager, upload.single('image'), (req, res
   );
 });
 
-// 스펙북 아이템 수정
+// Base64 이미지로 스펙북 아이템 수정
+router.put('/base64/:id', authenticateToken, isManager, (req, res) => {
+  const { id } = req.params;
+  const { name, category, brand, price, description, imageData, projectId, isLibrary } = req.body;
+
+  let imageUrl = null;
+  if (imageData) {
+    try {
+      imageUrl = saveBase64Image(imageData);
+    } catch (error) {
+      console.error('이미지 저장 실패:', error);
+      return res.status(400).json({ error: '이미지 저장 실패' });
+    }
+  }
+
+  let query = 'UPDATE specbook_items SET name = ?, category = ?, brand = ?, price = ?, description = ?, updated_at = CURRENT_TIMESTAMP';
+  let params = [name, category, brand || '', price || '', description || ''];
+
+  if (projectId !== undefined) {
+    query += ', project_id = ?';
+    params.push(projectId || null);
+  }
+
+  if (isLibrary !== undefined) {
+    query += ', is_library = ?';
+    params.push(isLibrary === true || isLibrary === 1 ? 1 : 0);
+  }
+
+  if (imageUrl) {
+    query += ', image_url = ?';
+    params.push(imageUrl);
+  }
+
+  query += ' WHERE id = ?';
+  params.push(id);
+
+  db.run(query, params, function(err) {
+    if (err) {
+      console.error('스펙북 아이템 수정 실패:', err);
+      return res.status(500).json({ error: '스펙북 아이템 수정 실패' });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ error: '스펙북 아이템을 찾을 수 없습니다.' });
+    }
+
+    res.json({ message: '스펙북 아이템이 수정되었습니다.' });
+  });
+});
+
+// 스펙북 아이템 수정 (파일 업로드)
 router.put('/:id', authenticateToken, isManager, upload.single('image'), (req, res) => {
   const { id } = req.params;
   const { name, category, brand, price, description, projectId, isLibrary } = req.body;
