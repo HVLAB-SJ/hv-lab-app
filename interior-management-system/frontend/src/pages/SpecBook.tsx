@@ -440,7 +440,7 @@ const SpecBook = () => {
                   }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleImageDrop}
-                  className={`w-48 h-48 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
+                  className={`w-56 h-56 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
                     isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
                   }`}
                   onClick={() => fileInputRef.current?.click()}
@@ -476,7 +476,7 @@ const SpecBook = () => {
                 </div>
 
                 {/* 우측: 입력 필드들 */}
-                <div className="flex-1 flex flex-col justify-between h-48">
+                <div className="flex-1 flex flex-col justify-between h-56">
                   <div className="space-y-1.5">
                     <select
                       value={formData.category}
