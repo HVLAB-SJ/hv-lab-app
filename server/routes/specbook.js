@@ -143,7 +143,7 @@ router.get('/library', authenticateToken, (req, res) => {
     params.push(category);
   }
 
-  query += ' ORDER BY created_at DESC';
+  query += ' ORDER BY display_order ASC, created_at DESC';
 
   db.all(query, params, (err, rows) => {
     if (err) {
@@ -167,7 +167,7 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
     params.push(category);
   }
 
-  query += ' ORDER BY created_at DESC';
+  query += ' ORDER BY display_order ASC, created_at DESC';
 
   db.all(query, params, (err, rows) => {
     if (err) {
@@ -413,6 +413,56 @@ router.delete('/:id', authenticateToken, isManager, (req, res) => {
     }
 
     res.json({ message: '스펙북 아이템이 삭제되었습니다.' });
+  });
+});
+
+// 스펙북 아이템 순서 업데이트
+router.put('/reorder', authenticateToken, isManager, (req, res) => {
+  const { items } = req.body;
+
+  if (!items || !Array.isArray(items)) {
+    return res.status(400).json({ error: '아이템 배열이 필요합니다.' });
+  }
+
+  // 트랜잭션을 위한 serialize 사용
+  db.serialize(() => {
+    db.run('BEGIN TRANSACTION');
+
+    let success = true;
+    let completedCount = 0;
+
+    items.forEach((item, index) => {
+      db.run(
+        'UPDATE specbook_items SET display_order = ? WHERE id = ?',
+        [index, item.id],
+        function(err) {
+          if (err) {
+            console.error('아이템 순서 업데이트 실패:', err);
+            success = false;
+          }
+
+          completedCount++;
+
+          // 모든 업데이트가 완료되면 커밋 또는 롤백
+          if (completedCount === items.length) {
+            if (success) {
+              db.run('COMMIT', (err) => {
+                if (err) {
+                  console.error('커밋 실패:', err);
+                  res.status(500).json({ error: '순서 업데이트 실패' });
+                } else {
+                  res.json({ message: '아이템 순서가 업데이트되었습니다.' });
+                }
+              });
+            } else {
+              db.run('ROLLBACK', () => {
+                res.status(500).json({ error: '순서 업데이트 실패' });
+              });
+            }
+          }
+        }
+      );
+    });
   });
 });
 

@@ -547,6 +547,19 @@ const initDatabase = () => {
     }
   });
 
+  // Add display_order column to specbook_items table if it doesn't exist
+  db.run(`ALTER TABLE specbook_items ADD COLUMN display_order INTEGER DEFAULT 0`, (err) => {
+    if (err) {
+      if (err.message.includes('duplicate column name')) {
+        console.log('✓ display_order column already exists in specbook_items');
+      } else {
+        console.error('❌ Error adding display_order column to specbook_items:', err);
+      }
+    } else {
+      console.log('✓ display_order column added successfully to specbook_items');
+    }
+  });
+
   // 기본 계정 생성 (테이블 생성 후 즉시 실행)
   // Use serialize to ensure tables are created before inserting users
   db.serialize(() => {

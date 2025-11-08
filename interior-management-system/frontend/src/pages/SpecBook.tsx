@@ -30,6 +30,7 @@ interface SpecBookItem {
   description: string;
   project_id: number | null;
   is_library: number;
+  display_order?: number;
   created_at: string;
   updated_at: string;
 }
@@ -38,6 +39,111 @@ interface Project {
   id: number;
   title: string;
 }
+
+// Sortable 스펙북 아이템 컴포넌트
+const SortableSpecBookItem = ({
+  item,
+  onEdit,
+  onDelete
+}: {
+  item: SpecBookItem;
+  onEdit: (item: SpecBookItem) => void;
+  onDelete: (id: number) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group relative"
+    >
+      {/* 드래그 핸들 - 호버 시 표시 */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-2 left-2 p-1 bg-white/90 rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 20 20"
+          className="text-gray-500"
+        >
+          <path
+            fill="currentColor"
+            d="M7 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM13 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM13 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM13 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"
+          />
+        </svg>
+      </div>
+
+      {/* 상단: 정사각형 이미지 */}
+      <div className="w-full aspect-square bg-gray-100 flex-shrink-0 relative">
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className="w-full h-full object-contain block"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+            이미지 없음
+          </div>
+        )}
+        {/* 수정/삭제 버튼 - 호버 시 이미지 우측 상단에 표시 */}
+        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => onEdit(item)}
+            className="p-1.5 bg-white text-gray-700 hover:bg-gray-100 rounded-md shadow-md transition-colors"
+            title="수정"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onDelete(item.id)}
+            className="p-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-md shadow-md transition-colors"
+            title="삭제"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* 하단: 텍스트 정보 */}
+      <div className="p-2 pt-1.5 flex flex-col flex-1">
+        <div className="flex items-start justify-between mb-1">
+          <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
+            {item.category}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-1 mt-auto">
+          <div className="flex items-baseline gap-1 min-w-0">
+            <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
+            {item.brand && (
+              <span className="text-xs text-gray-600 flex-shrink-0">{item.brand}</span>
+            )}
+          </div>
+          {item.price && (
+            <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Sortable 카테고리 아이템 컴포넌트
 const SortableCategoryItem = ({
@@ -406,6 +512,36 @@ const SpecBook = () => {
     setFormData({ name: '', category: selectedCategory !== '전체' ? selectedCategory : '', brand: '', price: '', imageData: null });
   };
 
+  // 아이템 순서 변경 처리
+  const handleItemDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = items.findIndex(item => item.id === active.id);
+    const newIndex = items.findIndex(item => item.id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const newItems = arrayMove(items, oldIndex, newIndex);
+      setItems(newItems); // 즉시 UI 업데이트
+
+      try {
+        // 백엔드에 새로운 순서 저장
+        await api.put('/specbook/reorder', {
+          items: newItems.map((item, index) => ({
+            id: item.id,
+            display_order: index
+          }))
+        });
+        toast.success('아이템 순서가 업데이트되었습니다');
+      } catch (error) {
+        console.error('순서 업데이트 실패:', error);
+        toast.error('순서 업데이트 실패');
+        loadItems(); // 실패 시 원래 데이터로 복구
+      }
+    }
+  };
+
   const handleOpenCategoryModal = () => {
     setEditingCategories([...categories]);
     setIsCategoryModalOpen(true);
@@ -734,71 +870,32 @@ const SpecBook = () => {
               등록된 스펙북 아이템이 없습니다
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-4">
-              {items.map(item => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group"
-                >
-                  {/* 상단: 정사각형 이미지 */}
-                  <div className="w-full aspect-square bg-gray-100 flex-shrink-0 relative">
-                    {item.image_url ? (
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-full h-full object-contain block"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                        이미지 없음
-                      </div>
-                    )}
-                    {/* 수정/삭제 버튼 - 호버 시 이미지 우측 상단에 표시 */}
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="p-1.5 bg-white text-gray-700 hover:bg-gray-100 rounded-md shadow-md transition-colors"
-                        title="수정"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-md shadow-md transition-colors"
-                        title="삭제"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 하단: 텍스트 정보 */}
-                  <div className="p-2 pt-1.5 flex flex-col flex-1">
-                    <div className="flex items-start justify-between mb-1">
-                      <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
-                        {item.category}
-                      </span>
-                    </div>
-                    <div className="flex items-baseline justify-between gap-1 mt-auto">
-                      <div className="flex items-baseline gap-1 min-w-0">
-                        <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
-                        {item.brand && (
-                          <span className="text-xs text-gray-600 flex-shrink-0">{item.brand}</span>
-                        )}
-                      </div>
-                      {item.price && (
-                        <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
-                      )}
-                    </div>
-                  </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleItemDragEnd}
+            >
+              <SortableContext
+                items={items.map(item => item.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="grid grid-cols-3 gap-4">
+                  {items.map(item => (
+                    <SortableSpecBookItem
+                      key={item.id}
+                      item={item}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
                 )}
               </div>
             </div>
             {/* 우측: 빈 공간 */}
-            <div className="w-1/2 flex flex-col overflow-hidden pl-4 pb-4">
+            <div className="w-1/2 flex flex-col overflow-hidden pl-6 pb-4">
               <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">
                   프로젝트를 선택하면 여기에 프로젝트 아이템이 표시됩니다
@@ -912,7 +1009,7 @@ const SpecBook = () => {
             </div>
 
               {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
-              <div className="w-1/2 flex flex-col overflow-hidden pl-4 pb-4">
+              <div className="w-1/2 flex flex-col overflow-hidden pl-6 pb-4">
                 <div
                   className="flex-1 overflow-y-auto bg-gray-50 rounded-lg pr-4 pb-4 pt-4"
                 onDragOver={(e) => {
@@ -953,68 +1050,31 @@ const SpecBook = () => {
                     좌측에서 아이템을 드래그하여 추가하세요
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-4">
-                    {items
-                      .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
-                      .map(item => (
-                      <div
-                        key={item.id}
-                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group"
-                      >
-                        <div className="w-full aspect-square bg-gray-100 relative">
-                          {item.image_url ? (
-                            <img
-                              src={item.image_url}
-                              alt={item.name}
-                              className="w-full h-full object-contain"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                const parent = e.currentTarget.parentElement;
-                                if (parent) {
-                                  const errorDiv = document.createElement('div');
-                                  errorDiv.className = 'w-full h-full flex items-center justify-center text-gray-400 text-xs';
-                                  errorDiv.textContent = '이미지 로드 실패';
-                                  parent.appendChild(errorDiv);
-                                }
-                              }}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleItemDragEnd}
+                  >
+                    <SortableContext
+                      items={items
+                        .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
+                        .map(item => item.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="grid grid-cols-3 gap-4">
+                        {items
+                          .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
+                          .map(item => (
+                            <SortableSpecBookItem
+                              key={item.id}
+                              item={item}
+                              onEdit={handleEdit}
+                              onDelete={handleDelete}
                             />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                              이미지 없음
-                            </div>
-                          )}
-                          {/* 삭제 버튼 - 호버 시 이미지 우측 상단에 표시 */}
-                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleDelete(item.id)}
-                              className="p-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-md shadow-md transition-colors"
-                              title="제거"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="p-2 pt-1.5 flex flex-col flex-1">
-                          <div className="flex items-start justify-between mb-1">
-                            <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
-                              {item.category}
-                            </span>
-                          </div>
-                          <div className="flex items-baseline justify-between gap-1 mt-auto">
-                            <div className="flex items-baseline gap-1 min-w-0">
-                              <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
-                              {item.brand && (
-                                <span className="text-xs text-gray-600 flex-shrink-0">{item.brand}</span>
-                              )}
-                            </div>
-                            {item.price && (
-                              <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
-                            )}
-                          </div>
-                        </div>
+                          ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
               </div>
             </div>
