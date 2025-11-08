@@ -447,7 +447,7 @@ const ConstructionPayment = () => {
     }
   };
 
-  // 총 계약금액 계산 (공사금액 + 부가세) - 추가내역 제외
+  // 총 합계 계산 (공사금액 + 부가세) - 추가내역 제외
   const calculateTotalContractAmount = (record: PaymentRecord) => {
     const baseAmount = record.totalAmount;  // 추가내역 제외
 
@@ -481,7 +481,7 @@ const ConstructionPayment = () => {
     }
   };
 
-  // 퍼센트에 따라 금액 자동 계산 (총 계약금액 기준)
+  // 퍼센트에 따라 금액 자동 계산 (총 합계 기준)
   const calculateAmountFromPercentage = (percentage: number) => {
     if (!selectedRecord) return 0;
     const totalContractAmount = calculateTotalContractAmount(selectedRecord);
@@ -643,7 +643,7 @@ const ConstructionPayment = () => {
                     </div>
                     <div className="ml-4 text-right">
                       <p className="text-xs text-gray-500 mb-1">
-                        총 계약금액
+                        총 합계
                       </p>
                       <p className="text-sm font-semibold text-gray-700">
                         ₩{totalContractAmount.toLocaleString()}
@@ -872,7 +872,7 @@ const ConstructionPayment = () => {
                   </div>
                   <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                     <p className="text-xs text-gray-700 mb-1">
-                      총 계약금액 (부가세 {selectedRecord.vatType === 'percentage' ? `${selectedRecord.vatPercentage ?? 100}%` : `₩${(selectedRecord.vatAmount || 0).toLocaleString()}`} 포함)
+                      총 합계 (부가세 {selectedRecord.vatType === 'percentage' ? `${selectedRecord.vatPercentage ?? 100}%` : `₩${(selectedRecord.vatAmount || 0).toLocaleString()}`} 포함)
                     </p>
                     <p className="text-xl font-bold text-gray-900">
                       ₩{calculateTotalContractAmount(selectedRecord).toLocaleString()}
@@ -1267,7 +1267,7 @@ const ConstructionPayment = () => {
                 {/* 계산 미리보기 */}
                 {newProject.totalAmount > 0 && (
                   <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    <p className="text-xs text-gray-700 mb-1">총 계약금액 (부가세 포함)</p>
+                    <p className="text-xs text-gray-700 mb-1">총 합계 (부가세 포함)</p>
                     <p className="text-xl font-bold text-gray-900">
                       ₩{(newProject.totalAmount + (newProject.vatType === 'percentage'
                         ? (newProject.totalAmount * ((newProject.vatPercentage ?? 100) / 100) * 0.1)
@@ -1440,7 +1440,7 @@ const ConstructionPayment = () => {
                   <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                     <p className="text-xs text-gray-700 mb-1">계산 방식</p>
                     <p className="text-xs text-gray-900">
-                      총 계약금액(부가세 {selectedRecord.vatPercentage}% 포함) ₩{calculateTotalContractAmount(selectedRecord).toLocaleString()} × {newPayment.percentage}%
+                      총 합계(부가세 {selectedRecord.vatPercentage}% 포함) ₩{calculateTotalContractAmount(selectedRecord).toLocaleString()} × {newPayment.percentage}%
                     </p>
                     <p className="text-sm font-bold text-gray-900 mt-1">
                       = ₩{calculateAmountFromPercentage(newPayment.percentage).toLocaleString()}
