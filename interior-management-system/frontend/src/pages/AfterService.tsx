@@ -374,7 +374,7 @@ const AfterService = () => {
         </nav>
         <button
           onClick={handleAddRequest}
-          className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition-colors"
+          className="btn btn-primary px-4 py-2"
         >
           +AS 요청
         </button>

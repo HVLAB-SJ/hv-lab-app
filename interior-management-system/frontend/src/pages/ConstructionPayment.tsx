@@ -564,7 +564,7 @@ const ConstructionPayment = () => {
         </nav>
         <button
           onClick={handleAddProject}
-          className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition-colors whitespace-nowrap"
+          className="btn btn-primary px-4 py-2 whitespace-nowrap"
         >
           +프로젝트
         </button>
