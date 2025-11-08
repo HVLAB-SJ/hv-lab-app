@@ -634,30 +634,32 @@ const ConstructionPayment = () => {
               </div>
 
               {/* Received, Execution Total, Additional Work & Remaining */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-xs text-gray-700 mb-1">수령금액</p>
-                  <p className="text-base font-bold text-gray-800">
-                    ₩{received.toLocaleString()}
-                  </p>
-                </div>
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-xs text-gray-700 mb-1">실행내역 합계</p>
-                  <p className="text-base font-bold text-gray-800">
-                    ₩{calculateExecutionTotal(record.project).toLocaleString()}
-                  </p>
-                </div>
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-xs text-gray-700 mb-1">추가내역 합계</p>
-                  <p className="text-base font-bold text-gray-800">
-                    ₩{calculateAdditionalWorkTotal(record.project).toLocaleString()}
-                  </p>
-                </div>
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-xs text-gray-700 mb-1">미수금</p>
-                  <p className="text-base font-bold text-gray-800">
-                    ₩{remaining.toLocaleString()}
-                  </p>
+              <div className="mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-[50%]">
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-xs text-gray-700 mb-1">수령금액</p>
+                    <p className="text-base font-bold text-gray-800">
+                      ₩{received.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-xs text-gray-700 mb-1">실행내역 합계</p>
+                    <p className="text-base font-bold text-gray-800">
+                      ₩{calculateExecutionTotal(record.project).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-xs text-gray-700 mb-1">추가내역 합계</p>
+                    <p className="text-base font-bold text-gray-800">
+                      ₩{calculateAdditionalWorkTotal(record.project).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-xs text-gray-700 mb-1">미수금</p>
+                    <p className="text-base font-bold text-gray-800">
+                      ₩{remaining.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
               </div>
 
