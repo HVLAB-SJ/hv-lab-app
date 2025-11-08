@@ -195,13 +195,15 @@ router.get('/projects', authenticateToken, (req, res) => {
 
 // Base64 이미지로 스펙북 아이템 생성
 router.post('/base64', authenticateToken, isManager, (req, res) => {
-  const { name, category, brand, price, description, imageData, projectId, isLibrary } = req.body;
+  const { name, category, brand, price, description, imageData, image_url, projectId, isLibrary } = req.body;
 
   if (!name || !category) {
     return res.status(400).json({ error: '이름과 카테고리는 필수입니다.' });
   }
 
-  let imageUrl = null;
+  let imageUrl = image_url || null; // 기존 image_url을 먼저 사용
+
+  // imageData가 있으면 새로운 이미지로 저장
   if (imageData) {
     try {
       imageUrl = saveBase64Image(imageData);
