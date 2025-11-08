@@ -734,7 +734,7 @@ const ExecutionHistory = () => {
             </div>
 
             {/* 총계 표시 - 데스크톱에서만 표시 */}
-            <div className="hidden lg:block bg-gray-50 rounded-lg p-4 space-y-2 mt-auto">
+            <div className="hidden lg:block bg-gray-50 rounded-lg p-4 space-y-2" style={{ marginTop: '98.67px' }}>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">자재비 총합:</span>
                 <span className="text-sm font-medium text-gray-900">{projectTotals.material.toLocaleString()}원</span>
