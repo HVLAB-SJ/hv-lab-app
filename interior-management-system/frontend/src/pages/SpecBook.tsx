@@ -921,38 +921,42 @@ const SpecBook = () => {
           {/* 버튼 영역 */}
           <div className="mb-4 flex">
             <div className="w-1/2 pr-3">
-              <button
-                onClick={() => {
-                  setView('library');
-                  setSelectedProject(null);
-                }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
-              >
-                스펙 라이브러리
-              </button>
+              <div className="pl-4">
+                <button
+                  onClick={() => {
+                    setView('library');
+                    setSelectedProject(null);
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
+                >
+                  스펙 라이브러리
+                </button>
+              </div>
             </div>
             <div className="w-px bg-transparent"></div>
             <div className="w-1/2 pl-3">
-              <select
-                value={selectedProject || ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    setView('project');
-                    setSelectedProject(Number(e.target.value));
-                  } else {
-                    setView('library');
-                    setSelectedProject(null);
-                  }
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
-              >
-                <option value="">프로젝트 선택</option>
-                {projects.map(project => (
-                  <option key={project.id} value={project.id}>
-                    {project.title}
-                  </option>
-                ))}
-              </select>
+              <div className="pl-4">
+                <select
+                  value={selectedProject || ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setView('project');
+                      setSelectedProject(Number(e.target.value));
+                    } else {
+                      setView('library');
+                      setSelectedProject(null);
+                    }
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
+                >
+                  <option value="">프로젝트 선택</option>
+                  {projects.map(project => (
+                    <option key={project.id} value={project.id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -1011,38 +1015,42 @@ const SpecBook = () => {
             {/* 버튼 영역 */}
             <div className="mb-4 flex">
               <div className="w-1/2 pr-3">
-                <button
-                  onClick={() => {
-                    setView('library');
-                    setSelectedProject(null);
-                  }}
-                  className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-800 text-white"
-                >
-                  스펙 라이브러리
-                </button>
+                <div className="pl-4">
+                  <button
+                    onClick={() => {
+                      setView('library');
+                      setSelectedProject(null);
+                    }}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-800 text-white"
+                  >
+                    스펙 라이브러리
+                  </button>
+                </div>
               </div>
               <div className="w-px bg-transparent"></div>
               <div className="w-1/2 pl-3">
-                <select
-                  value={selectedProject || ''}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setView('project');
-                      setSelectedProject(Number(e.target.value));
-                    } else {
-                      setView('library');
-                      setSelectedProject(null);
-                    }
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
-                >
-                  <option value="">프로젝트 선택</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.title}
-                    </option>
-                  ))}
-                </select>
+                <div className="pl-4">
+                  <select
+                    value={selectedProject || ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setView('project');
+                        setSelectedProject(Number(e.target.value));
+                      } else {
+                        setView('library');
+                        setSelectedProject(null);
+                      }
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
+                  >
+                    <option value="">프로젝트 선택</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
