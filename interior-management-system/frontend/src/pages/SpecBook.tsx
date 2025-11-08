@@ -587,7 +587,7 @@ const SpecBook = () => {
     setNewCategoryName('');
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
       toast.error('카테고리 이름을 입력하세요');
       return;
@@ -596,8 +596,22 @@ const SpecBook = () => {
       toast.error('이미 존재하는 카테고리입니다');
       return;
     }
-    setEditingCategories([...editingCategories, newCategoryName.trim()]);
+
+    const updatedCategories = [...editingCategories, newCategoryName.trim()];
+    setEditingCategories(updatedCategories);
     setNewCategoryName('');
+
+    // 서버에 즉시 저장
+    try {
+      await api.put('/specbook/categories', { categories: updatedCategories });
+      setCategories(updatedCategories);
+      toast.success('카테고리가 추가되었습니다');
+    } catch (error) {
+      console.error('카테고리 추가 저장 실패:', error);
+      toast.error('카테고리 추가 저장에 실패했습니다');
+      // 실패 시 원래대로 복구
+      setEditingCategories(categories);
+    }
   };
 
   const handleEditCategory = async (category: string) => {
