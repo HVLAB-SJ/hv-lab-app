@@ -281,9 +281,11 @@ const AdditionalWork = () => {
               <div className="divide-y divide-gray-200">
                 {group.works.map((work) => (
                   <div key={work.id} className="p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm text-gray-600">{format(work.date, 'MM.dd (eee)', { locale: ko })}</p>
-                      <div className="flex items-center space-x-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm text-gray-600 flex-shrink-0">{format(work.date, 'MM.dd (eee)', { locale: ko })}</p>
+                      <p className="text-base text-gray-900 font-medium flex-1 truncate">{work.description}</p>
+                      <p className="text-base font-semibold text-gray-900 flex-shrink-0">{work.amount.toLocaleString()}원</p>
+                      <div className="flex items-center space-x-1 flex-shrink-0">
                         <button
                           onClick={() => handleEditWork(work)}
                           className="text-gray-600 hover:text-gray-700 transition-colors p-1"
@@ -297,11 +299,6 @@ const AdditionalWork = () => {
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <p className="text-base text-gray-900 font-medium flex-1 mr-3">{work.description}</p>
-                      <p className="text-base font-semibold text-gray-900 flex-shrink-0">{work.amount.toLocaleString()}원</p>
                     </div>
 
                     {work.notes && (
