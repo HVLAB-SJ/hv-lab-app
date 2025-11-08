@@ -217,10 +217,6 @@ const CashReceiptModal = ({ projectName, onClose }: CashReceiptModalProps) => {
           .print\\:hidden {
             display: none !important;
           }
-          @page {
-            size: A4;
-            margin: 2cm;
-          }
         }
       `}</style>
     </>

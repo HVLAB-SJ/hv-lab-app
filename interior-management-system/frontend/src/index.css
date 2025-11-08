@@ -1267,8 +1267,15 @@ div.rbc-popup {
     background: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    height: auto !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
     overflow: hidden !important;
+  }
+
+  /* 페이지 넘김 방지 */
+  html {
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
   }
 
   /* 현금수령증 모달과 그 자식 요소만 표시 */
