@@ -254,67 +254,56 @@ const AdditionalWork = () => {
         )}
       </div>
 
-      {/* Desktop View - Grouped by Project (2 columns) */}
-      <div className="hidden md:grid md:grid-cols-2 gap-4">
+      {/* Desktop View - Grouped by Project (3 columns) */}
+      <div className="hidden md:grid md:grid-cols-3 gap-4">
         {projectGroups.map((group) => (
           <div key={group.projectName} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             {/* Project Header */}
             <button
               onClick={() => toggleProject(group.projectName)}
-              className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+              className="w-full px-3 py-2.5 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
             >
-              <div className="flex-1 text-left">
-                <h3 className="font-bold text-base text-gray-900">{group.projectName}</h3>
-                <p className="text-sm text-gray-600 mt-1">
+              <div className="flex-1 text-left min-w-0">
+                <h3 className="font-bold text-sm text-gray-900 truncate">{group.projectName}</h3>
+                <p className="text-xs text-gray-600 mt-0.5">
                   {group.works.length}건 · {group.totalAmount.toLocaleString()}원
                 </p>
               </div>
               {expandedProjects.has(group.projectName) ? (
-                <ChevronUp className="h-5 w-5 text-gray-600" />
+                <ChevronUp className="h-4 w-4 text-gray-600 flex-shrink-0 ml-2" />
               ) : (
-                <ChevronDown className="h-5 w-5 text-gray-600" />
+                <ChevronDown className="h-4 w-4 text-gray-600 flex-shrink-0 ml-2" />
               )}
             </button>
 
-            {/* Project Works List (1 column) */}
+            {/* Project Works List (compact) */}
             {expandedProjects.has(group.projectName) && (
               <div className="divide-y divide-gray-200">
                 {group.works.map((work) => (
-                  <div key={work.id} className="p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start justify-between mb-3">
-                      <p className="text-sm text-gray-600">{format(work.date, 'yyyy.MM.dd (eee)', { locale: ko })}</p>
-                      <div className="flex items-center space-x-2">
+                  <div key={work.id} className="p-3 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <p className="text-xs text-gray-600">{format(work.date, 'MM.dd (eee)', { locale: ko })}</p>
+                      <div className="flex items-center space-x-1">
                         <button
                           onClick={() => handleEditWork(work)}
-                          className="text-gray-600 hover:text-gray-700 transition-colors p-1"
+                          className="text-gray-600 hover:text-gray-700 transition-colors p-0.5"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteWork(work.id, work.project)}
-                          className="text-rose-600 hover:text-rose-700 transition-colors p-1"
+                          className="text-rose-600 hover:text-rose-700 transition-colors p-0.5"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">내용</p>
-                        <p className="text-sm text-gray-900">{work.description}</p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">금액</p>
-                        <p className="text-base font-semibold text-gray-900">{work.amount.toLocaleString()}원</p>
-                      </div>
-
+                    <div className="space-y-1.5">
+                      <p className="text-sm text-gray-900 line-clamp-2">{work.description}</p>
+                      <p className="text-sm font-semibold text-gray-900">{work.amount.toLocaleString()}원</p>
                       {work.notes && (
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">비고</p>
-                          <p className="text-sm text-gray-900">{work.notes}</p>
-                        </div>
+                        <p className="text-xs text-gray-600 line-clamp-1">{work.notes}</p>
                       )}
                     </div>
                   </div>
@@ -324,7 +313,7 @@ const AdditionalWork = () => {
           </div>
         ))}
         {projectGroups.length === 0 && (
-          <div className="col-span-2 text-center py-8 text-gray-500 bg-white border border-gray-200 rounded-lg">
+          <div className="col-span-3 text-center py-8 text-gray-500 bg-white border border-gray-200 rounded-lg">
             추가내역이 없습니다
           </div>
         )}
