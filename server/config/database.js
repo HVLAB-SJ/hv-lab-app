@@ -471,9 +471,25 @@ const initDatabase = () => {
       budget TEXT,
       message TEXT NOT NULL,
       is_read INTEGER DEFAULT 0,
+      is_contacted INTEGER DEFAULT 0,
+      email_message_id TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add is_contacted column if it doesn't exist (migration)
+  db.run(`ALTER TABLE quote_inquiries ADD COLUMN is_contacted INTEGER DEFAULT 0`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding is_contacted column:', err);
+    }
+  });
+
+  // Add email_message_id column if it doesn't exist (migration)
+  db.run(`ALTER TABLE quote_inquiries ADD COLUMN email_message_id TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding email_message_id column:', err);
+    }
+  });
 
   // Add missing columns to contractors table (migration)
   db.run(`ALTER TABLE contractors ADD COLUMN bank_name TEXT`, (err) => {
