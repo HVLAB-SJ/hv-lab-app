@@ -32,9 +32,9 @@ const BASE_CONSTRUCTION = {
 
 // 층고별 추가 비용 (%)
 const CEILING_HEIGHT_MULTIPLIER = {
-  '표준': 1.0,
-  '높음': 1.1,
-  '매우높음': 1.2
+  '2400이하': 1.0,
+  '2400~2600': 1.1,
+  '2600이상': 1.2
 };
 
 // 평형대 판별 함수
@@ -78,10 +78,10 @@ router.post('/create', authenticateToken, async (req, res) => {
     let baseConstructionCost = Math.floor(BASE_CONSTRUCTION[grade] * areaSize);
 
     // 층고에 따른 추가 비용
-    baseConstructionCost = Math.floor(baseConstructionCost * CEILING_HEIGHT_MULTIPLIER[ceilingHeight || '표준']);
+    baseConstructionCost = Math.floor(baseConstructionCost * CEILING_HEIGHT_MULTIPLIER[ceilingHeight || '2400~2600']);
 
     // 화장실 개수에 따른 추가 비용 (추가 화장실당 300만원)
-    const additionalBathroomCost = (bathroomCount - 1) * 3000000;
+    const additionalBathroomCost = bathroomCount > 1 ? (bathroomCount - 1) * 3000000 : 0;
     baseConstructionCost += additionalBathroomCost;
 
     // 스펙북에서 해당 등급 아이템들의 가격 조회

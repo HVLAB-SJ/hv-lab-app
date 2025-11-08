@@ -11,7 +11,7 @@ interface EstimateForm {
   grade: '알뜰' | '기본' | '고급' | '하이엔드' | '';
   finishType: string;
   bathroomCount: number;
-  ceilingHeight: '표준' | '높음' | '매우높음';
+  ceilingHeight: '2400이하' | '2400~2600' | '2600이상';
   includeSash: boolean;
   includeFloorHeating: boolean;
   includeAircon: boolean;
@@ -55,7 +55,7 @@ const EstimatePreview: React.FC = () => {
     grade: '',
     finishType: '',
     bathroomCount: 1,
-    ceilingHeight: '표준',
+    ceilingHeight: '2400~2600',
     includeSash: false,
     includeFloorHeating: false,
     includeAircon: false,
@@ -238,7 +238,7 @@ const EstimatePreview: React.FC = () => {
       grade: '',
       finishType: '',
       bathroomCount: 1,
-      ceilingHeight: '표준',
+      ceilingHeight: '2400~2600',
       includeSash: false,
       includeFloorHeating: false,
       includeAircon: false,
@@ -410,8 +410,18 @@ const EstimatePreview: React.FC = () => {
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                     벽재
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {['지정벽지', '합지', '실크벽지', '도장', '타일(부분)', '타일(전체)', '대리석', '우드패널'].map(item => (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {[
+                      '합지도배',
+                      '실크도배(일반-로하스 등)',
+                      '실크도배(고급-디아망 포티스 등)',
+                      '도장(수입-전체)',
+                      '도장(수입-공용부)+실크도배(방)',
+                      '필름',
+                      '대형타일',
+                      '박판타일',
+                      '무늬목'
+                    ].map(item => (
                       <label key={item} className="flex items-center text-sm">
                         <input
                           type="checkbox"
@@ -419,7 +429,7 @@ const EstimatePreview: React.FC = () => {
                           onChange={() => handleMaterialCheckbox('wallMaterial', item)}
                           className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                         />
-                        <span className="text-gray-700">{item}</span>
+                        <span className="text-gray-700 text-xs">{item}</span>
                       </label>
                     ))}
                   </div>
@@ -431,14 +441,18 @@ const EstimatePreview: React.FC = () => {
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                     화장실 개수
                   </label>
-                  <input
-                    type="number"
+                  <select
                     name="bathroomCount"
                     value={form.bathroomCount}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                    min="1"
-                  />
+                  >
+                    <option value={0}>0</option>
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                    <option value={3}>3</option>
+                    <option value={4}>4</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
@@ -471,9 +485,9 @@ const EstimatePreview: React.FC = () => {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                   >
-                    <option value="표준">표준</option>
-                    <option value="높음">높음 (+10%)</option>
-                    <option value="매우높음">매우높음 (+20%)</option>
+                    <option value="2400이하">2400이하</option>
+                    <option value="2400~2600">2400~2600</option>
+                    <option value="2600이상">2600이상</option>
                   </select>
                 </div>
                 <div>
