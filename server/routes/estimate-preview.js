@@ -123,10 +123,10 @@ router.post('/create', authenticateToken, async (req, res) => {
       airconCost = Math.floor((cost.min + cost.max) / 2);
     }
 
-    // 총 비용 계산 (±10% 범위)
+    // 총 비용 계산 (±15% 범위)
     const totalCost = baseConstructionCost + fixtureCost + sashCost + heatingCost + airconCost;
-    const totalMinCost = Math.floor(totalCost * 0.9);
-    const totalMaxCost = Math.floor(totalCost * 1.1);
+    const totalMinCost = Math.floor(totalCost * 0.85);
+    const totalMaxCost = Math.floor(totalCost * 1.15);
 
     // 상세 내역 JSON 생성
     const detailBreakdown = JSON.stringify({
