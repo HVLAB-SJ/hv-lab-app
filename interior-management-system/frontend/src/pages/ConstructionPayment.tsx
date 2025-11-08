@@ -1592,20 +1592,24 @@ const ConstructionPayment = () => {
                 <div className="border border-black p-8 bg-white print:border print:p-12">
                   {/* 제목 */}
                   <div className="border border-black p-3 mb-8">
-                    <h3 className="text-center text-2xl font-bold">현금수령 확인증</h3>
+                    <h3 className="text-center text-2xl font-bold">현금수령증</h3>
                   </div>
 
                   {/* 테이블 형식의 정보 */}
                   <table className="w-full mb-8 border-collapse">
+                    <colgroup>
+                      <col style={{ width: '30%' }} />
+                      <col style={{ width: '70%' }} />
+                    </colgroup>
                     <tbody>
                       <tr className="border border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">프로젝트명</td>
-                        <td className="py-3 px-4 print:py-3">
+                        <td className="py-3 px-4 print:py-3 text-center">
                           <span className="print:hidden">{cashReceiptData.project}</span>
                           <input
                             type="text"
                             value={cashReceiptData.project}
-                            className="hidden print:block w-full bg-transparent border-none outline-none p-0"
+                            className="hidden print:block w-full bg-transparent border-none outline-none p-0 text-center"
                             readOnly
                           />
                         </td>
@@ -1648,7 +1652,9 @@ const ConstructionPayment = () => {
                         </td>
                       </tr>
                       <tr className="border border-t-0 border-black">
-                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">잔여금액(추가금액 제외)</td>
+                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">
+                          잔여금액<span className="text-xs">(추가금액 제외)</span>
+                        </td>
                         <td className="py-3 px-4 text-right pr-4">
                           {(() => {
                             const todayAmount = cashReceiptData.amount ? parseInt(cashReceiptData.amount.replace(/,/g, '')) : 0;
