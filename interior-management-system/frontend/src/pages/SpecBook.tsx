@@ -376,45 +376,47 @@ const SpecBook = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] bg-gray-50">
       {/* 버튼 영역 */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => {
-            setView('library');
-            setSelectedProject(null);
-          }}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            view === 'library'
-              ? 'bg-gray-800 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-          }`}
-        >
-          스펙 라이브러리
-        </button>
-
-        <select
-          value={selectedProject || ''}
-          onChange={(e) => {
-            if (e.target.value) {
-              setView('project');
-              setSelectedProject(Number(e.target.value));
-            } else {
+      <div className="mb-4">
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
               setView('library');
               setSelectedProject(null);
-            }
-          }}
-          className={`px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
-            view === 'project' && selectedProject
-              ? 'bg-gray-800 text-white'
-              : 'bg-white'
-          }`}
-        >
-          <option value="">프로젝트 선택</option>
-          {projects.map(project => (
-            <option key={project.id} value={project.id}>
-              {project.title}
-            </option>
-          ))}
-        </select>
+            }}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              view === 'library'
+                ? 'bg-gray-800 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+            }`}
+          >
+            스펙 라이브러리
+          </button>
+
+          <select
+            value={selectedProject || ''}
+            onChange={(e) => {
+              if (e.target.value) {
+                setView('project');
+                setSelectedProject(Number(e.target.value));
+              } else {
+                setView('library');
+                setSelectedProject(null);
+              }
+            }}
+            className={`px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+              view === 'project' && selectedProject
+                ? 'bg-gray-800 text-white'
+                : 'bg-white'
+            }`}
+          >
+            <option value="">프로젝트 선택</option>
+            {projects.map(project => (
+              <option key={project.id} value={project.id}>
+                {project.title}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* 메인 컨텐츠 */}
