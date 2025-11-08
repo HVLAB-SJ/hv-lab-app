@@ -635,7 +635,7 @@ const ConstructionPayment = () => {
 
               {/* Received, Execution Total, Additional Work & Remaining */}
               <div className="mb-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-[50%]">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
                     <p className="text-xs text-gray-700 mb-1">수령금액</p>
                     <p className="text-base font-bold text-gray-800">
