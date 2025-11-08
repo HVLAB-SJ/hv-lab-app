@@ -483,6 +483,42 @@ const initDatabase = () => {
     }
   });
 
+  // 스펙북 카테고리 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS specbook_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      order_index INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('❌ 스펙북 카테고리 테이블 생성 실패:', err);
+    } else {
+      console.log('✓ 스펙북 카테고리 테이블 생성 완료');
+
+      // 기본 카테고리 삽입 (테이블이 비어있을 경우에만)
+      db.get('SELECT COUNT(*) as count FROM specbook_categories', (err, row) => {
+        if (!err && row.count === 0) {
+          const defaultCategories = [
+            '전체', '변기', '세면대', '수전', '샤워수전', '욕조', '타일', '마루', '도어', '조명',
+            '벽지', '페인트', '싱크볼', '가전', '세라믹', '인조대리석', '샤워슬라이드바', '싱크수전',
+            '거울', '유리', '환풍기', '실링팬', '칸스톤', '월패널', '옷걸이(후크)', '수건걸이',
+            '육가(배수구)', '트렌치(배수구)', '휴지걸이', '주방후드', '스위치', '콘센트', '가구자재',
+            '줄눈', '방문손잡이', '필름', '가구손잡이', '기타'
+          ];
+
+          const stmt = db.prepare('INSERT INTO specbook_categories (name, order_index) VALUES (?, ?)');
+          defaultCategories.forEach((category, index) => {
+            stmt.run(category, index);
+          });
+          stmt.finalize();
+          console.log('✓ 기본 카테고리 데이터 삽입 완료');
+        }
+      });
+    }
+  });
+
   // 견적문의 테이블
   db.run(`
     CREATE TABLE IF NOT EXISTS quote_inquiries (

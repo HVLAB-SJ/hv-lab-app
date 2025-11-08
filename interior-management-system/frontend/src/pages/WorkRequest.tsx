@@ -625,7 +625,7 @@ const WorkRequest = () => {
         </nav>
         <button
           onClick={() => {
-            setEditingRequest(null);
+            setSelectedRequest(null);
             setShowModal(true);
           }}
           className="btn btn-primary px-4 py-2 whitespace-nowrap"

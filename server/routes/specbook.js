@@ -67,52 +67,83 @@ const DEFAULT_CATEGORIES = [
   '줄눈', '방문손잡이', '필름', '가구손잡이', '기타'
 ];
 
-// 카테고리 파일에서 읽기
+// 카테고리를 데이터베이스에서 읽기
 const loadCategories = () => {
-  try {
-    // data 디렉토리가 없으면 생성
-    const dataDir = path.join(__dirname, '..', 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    if (fs.existsSync(CATEGORIES_FILE)) {
-      const data = fs.readFileSync(CATEGORIES_FILE, 'utf8');
-      return JSON.parse(data);
-    } else {
-      // 파일이 없으면 기본 카테고리로 초기화
-      fs.writeFileSync(CATEGORIES_FILE, JSON.stringify(DEFAULT_CATEGORIES, null, 2));
-      return DEFAULT_CATEGORIES;
-    }
-  } catch (error) {
-    console.error('카테고리 로드 실패:', error);
-    return DEFAULT_CATEGORIES;
-  }
+  return new Promise((resolve, reject) => {
+    db.all('SELECT name FROM specbook_categories ORDER BY order_index', (err, rows) => {
+      if (err) {
+        console.error('카테고리 로드 실패:', err);
+        resolve(DEFAULT_CATEGORIES);
+      } else {
+        const categories = rows.map(row => row.name);
+        resolve(categories.length > 0 ? categories : DEFAULT_CATEGORIES);
+      }
+    });
+  });
 };
 
-// 카테고리 파일에 저장
+// 카테고리를 데이터베이스에 저장
 const saveCategories = (categories) => {
-  try {
-    const dataDir = path.join(__dirname, '..', 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    fs.writeFileSync(CATEGORIES_FILE, JSON.stringify(categories, null, 2));
-    return true;
-  } catch (error) {
-    console.error('카테고리 저장 실패:', error);
-    return false;
-  }
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      // 트랜잭션 시작
+      db.run('BEGIN TRANSACTION');
+
+      // 기존 카테고리 모두 삭제
+      db.run('DELETE FROM specbook_categories', (err) => {
+        if (err) {
+          db.run('ROLLBACK');
+          console.error('카테고리 삭제 실패:', err);
+          resolve(false);
+          return;
+        }
+
+        // 새 카테고리 삽입
+        const stmt = db.prepare('INSERT INTO specbook_categories (name, order_index) VALUES (?, ?)');
+        let insertError = false;
+
+        categories.forEach((category, index) => {
+          stmt.run(category, index, (err) => {
+            if (err) {
+              insertError = true;
+              console.error('카테고리 삽입 실패:', err);
+            }
+          });
+        });
+
+        stmt.finalize(() => {
+          if (insertError) {
+            db.run('ROLLBACK');
+            resolve(false);
+          } else {
+            db.run('COMMIT', (err) => {
+              if (err) {
+                console.error('커밋 실패:', err);
+                resolve(false);
+              } else {
+                resolve(true);
+              }
+            });
+          }
+        });
+      });
+    });
+  });
 };
 
 // 카테고리 목록 조회
-router.get('/categories', authenticateToken, (req, res) => {
-  const categories = loadCategories();
-  res.json(categories);
+router.get('/categories', authenticateToken, async (req, res) => {
+  try {
+    const categories = await loadCategories();
+    res.json(categories);
+  } catch (error) {
+    console.error('카테고리 조회 오류:', error);
+    res.status(500).json({ error: '카테고리 조회에 실패했습니다.' });
+  }
 });
 
 // 카테고리 목록 업데이트
-router.put('/categories', authenticateToken, (req, res) => {
+router.put('/categories', authenticateToken, async (req, res) => {
   const { categories } = req.body;
 
   if (!categories || !Array.isArray(categories)) {
@@ -123,10 +154,15 @@ router.put('/categories', authenticateToken, (req, res) => {
     return res.status(400).json({ error: '전체 카테고리는 필수입니다.' });
   }
 
-  const success = saveCategories(categories);
-  if (success) {
-    res.json({ message: '카테고리가 저장되었습니다.', categories });
-  } else {
+  try {
+    const success = await saveCategories(categories);
+    if (success) {
+      res.json({ message: '카테고리가 저장되었습니다.', categories });
+    } else {
+      res.status(500).json({ error: '카테고리 저장에 실패했습니다.' });
+    }
+  } catch (error) {
+    console.error('카테고리 저장 오류:', error);
     res.status(500).json({ error: '카테고리 저장에 실패했습니다.' });
   }
 });
