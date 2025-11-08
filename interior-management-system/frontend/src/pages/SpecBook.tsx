@@ -373,7 +373,25 @@ const SpecBook = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] bg-gray-50">
+    <div
+      className="flex flex-col h-[calc(100vh-120px)] bg-gray-50"
+      onDragOver={(e) => {
+        e.preventDefault();
+        if (showModal) {
+          setIsDragging(true);
+        }
+      }}
+      onDragLeave={() => {
+        if (showModal) {
+          setIsDragging(false);
+        }
+      }}
+      onDrop={(e) => {
+        if (showModal) {
+          handleImageDrop(e);
+        }
+      }}
+    >
       {/* 버튼 영역 */}
       <div className="flex gap-2 mb-4" style={{ maxWidth: '20%' }}>
         <button
