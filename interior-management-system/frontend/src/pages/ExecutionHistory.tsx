@@ -549,13 +549,13 @@ const ExecutionHistory = () => {
       </div>
 
       {/* 메인 컨텐츠 - 3열 레이아웃 */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-[calc(100vh-12rem)]">
 
         {/* 왼쪽: 입력 폼 (2열) */}
-        <div className={`lg:col-span-2 bg-white rounded-lg border p-4 overflow-y-auto ${
-          mobileView !== 'form' ? 'hidden lg:block' : ''
+        <div className={`lg:col-span-2 bg-white rounded-lg border p-4 flex flex-col overflow-hidden ${
+          mobileView !== 'form' ? 'hidden lg:flex' : ''
         }`}>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-shrink-0">
             {/* 프로젝트 - 데스크톱에서만 표시 */}
             <div className="hidden lg:block">
               <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트 *</label>
@@ -723,7 +723,7 @@ const ExecutionHistory = () => {
               </div>
 
               {/* 내역추가 버튼 */}
-              <div className="my-6 lg:my-[100px]">
+              <div className="my-6">
                 <button
                   onClick={handleSave}
                   className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
@@ -732,6 +732,9 @@ const ExecutionHistory = () => {
                 </button>
               </div>
             </div>
+
+            {/* Spacer for alignment */}
+            <div className="hidden lg:block flex-1"></div>
 
             {/* 총계 표시 - 데스크톱에서만 표시 */}
             <div className="hidden lg:block bg-gray-50 rounded-lg p-4 space-y-2">
