@@ -582,12 +582,23 @@ const ConstructionPayment = () => {
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-bold text-lg text-gray-900">{record.project}</h3>
-                  <button
-                    onClick={() => setSelectedRecord(record)}
-                    className="text-sm text-gray-600 hover:text-gray-800"
-                  >
-                    상세보기
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedRecord(record);
+                        setIsPaymentModalOpen(true);
+                      }}
+                      className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+                    >
+                      입금추가
+                    </button>
+                    <button
+                      onClick={() => setSelectedRecord(record)}
+                      className="text-sm text-gray-600 hover:text-gray-800"
+                    >
+                      상세보기
+                    </button>
+                  </div>
                 </div>
                 <p className="text-sm text-gray-600">{record.client}님</p>
               </div>
@@ -597,7 +608,7 @@ const ConstructionPayment = () => {
                 <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-xs text-gray-600 mb-1">순수 공사금액</p>
+                      <p className="text-xs text-gray-600 mb-1">계약금액</p>
                       <p className="text-2xl font-bold text-gray-900">
                         ₩{record.totalAmount.toLocaleString()}
                       </p>
