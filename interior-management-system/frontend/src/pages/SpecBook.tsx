@@ -421,17 +421,17 @@ const SpecBook = () => {
       <div className="flex-1 flex gap-6 overflow-hidden -ml-0">
         {/* 좌측: 입력 폼 + 카테고리 (프로젝트 선택 시 숨김) */}
         {view === 'library' && (
-          <div className="w-1/4 flex flex-col gap-4 h-full">
+          <div className="w-1/4 flex flex-col gap-4">
           {/* 새 아이템 추가 폼 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1">
-            <div className="p-4">
-              <h2 className="text-base font-semibold mb-3 text-gray-900">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+            <div className="p-3">
+              <h2 className="text-sm font-semibold mb-2 text-gray-900">
                 {editingItem ? '아이템 수정' : '새 아이템 추가'}
               </h2>
             </div>
-            <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
+            <form onSubmit={handleSubmit} className="flex flex-col">
               {/* 수평 카드 형태: 이미지 + 입력 필드 */}
-              <div className="flex gap-3 px-4 flex-1">
+              <div className="flex gap-3 px-3">
                 {/* 좌측: 이미지 - 정사각형 */}
                 <div
                   onDragOver={(e) => {
@@ -440,7 +440,7 @@ const SpecBook = () => {
                   }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleImageDrop}
-                  className={`w-40 h-40 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
+                  className={`w-48 h-48 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
                     isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
                   }`}
                   onClick={() => fileInputRef.current?.click()}
@@ -477,11 +477,11 @@ const SpecBook = () => {
 
                 {/* 우측: 입력 필드들 */}
                 <div className="flex-1 flex flex-col">
-                  <div className="space-y-2 flex-1">
+                  <div className="space-y-1.5">
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
+                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
                       required
                     >
                       <option value="">카테고리</option>
@@ -494,7 +494,7 @@ const SpecBook = () => {
                       type="text"
                       value={formData.brand}
                       onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
+                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
                       placeholder="브랜드"
                     />
 
@@ -502,7 +502,7 @@ const SpecBook = () => {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
+                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
                       placeholder="제품명"
                       required
                     />
@@ -512,18 +512,18 @@ const SpecBook = () => {
                         type="text"
                         value={formData.price}
                         onChange={handlePriceChange}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 pr-10"
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 pr-8"
                         placeholder="가격"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">원</span>
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500">원</span>
                     </div>
                   </div>
 
                   {/* 버튼 영역을 가격 아래로 이동 */}
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex gap-1.5 mt-1.5">
                     <button
                       type="submit"
-                      className="flex-1 px-4 py-2 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+                      className="flex-1 px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
                     >
                       {editingItem ? '수정' : '추가'}
                     </button>
@@ -531,7 +531,7 @@ const SpecBook = () => {
                       <button
                         type="button"
                         onClick={handleCancel}
-                        className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                       >
                         취소
                       </button>
@@ -541,7 +541,7 @@ const SpecBook = () => {
               </div>
 
               {/* 하단 패딩 */}
-              <div className="p-4 pt-0"></div>
+              <div className="p-3 pt-0"></div>
             </form>
           </div>
 
