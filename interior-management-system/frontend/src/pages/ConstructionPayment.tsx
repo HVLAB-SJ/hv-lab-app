@@ -1599,7 +1599,7 @@ const ConstructionPayment = () => {
                   <table className="w-full mb-8 border-collapse">
                     <tbody>
                       <tr className="border border-black">
-                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">공사명</td>
+                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">프로젝트명</td>
                         <td className="py-3 px-4 print:py-3">
                           <span className="print:hidden">{cashReceiptData.project}</span>
                           <input
@@ -1648,7 +1648,7 @@ const ConstructionPayment = () => {
                         </td>
                       </tr>
                       <tr className="border border-t-0 border-black">
-                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">최종잔여금액</td>
+                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">잔여금액(추가금액 제외)</td>
                         <td className="py-3 px-4 text-right pr-4">
                           {(() => {
                             const todayAmount = cashReceiptData.amount ? parseInt(cashReceiptData.amount.replace(/,/g, '')) : 0;
