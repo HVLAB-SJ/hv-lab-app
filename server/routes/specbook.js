@@ -133,7 +133,7 @@ router.put('/categories', authenticateToken, (req, res) => {
 
 // 스펙북 라이브러리 조회
 router.get('/library', authenticateToken, (req, res) => {
-  const { category } = req.query;
+  const { category, grades } = req.query;
 
   let query = 'SELECT * FROM specbook_items WHERE is_library = 1';
   let params = [];
@@ -143,7 +143,16 @@ router.get('/library', authenticateToken, (req, res) => {
     params.push(category);
   }
 
-  query += ' ORDER BY display_order ASC, created_at DESC';
+  // grades는 쉼표로 구분된 문자열로 전달됨 (예: "기본,고급")
+  if (grades) {
+    const gradeList = grades.split(',').filter(g => g);
+    if (gradeList.length > 0) {
+      query += ` AND grade IN (${gradeList.map(() => '?').join(',')})`;
+      params.push(...gradeList);
+    }
+  }
+
+  query += ' ORDER BY category ASC, display_order ASC, created_at DESC';
 
   db.all(query, params, (err, rows) => {
     if (err) {
@@ -157,7 +166,7 @@ router.get('/library', authenticateToken, (req, res) => {
 // 프로젝트별 스펙 조회
 router.get('/project/:projectId', authenticateToken, (req, res) => {
   const { projectId } = req.params;
-  const { category } = req.query;
+  const { category, grades } = req.query;
 
   let query = 'SELECT * FROM specbook_items WHERE project_id = ?';
   let params = [projectId];
@@ -167,7 +176,16 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
     params.push(category);
   }
 
-  query += ' ORDER BY display_order ASC, created_at DESC';
+  // grades는 쉼표로 구분된 문자열로 전달됨
+  if (grades) {
+    const gradeList = grades.split(',').filter(g => g);
+    if (gradeList.length > 0) {
+      query += ` AND grade IN (${gradeList.map(() => '?').join(',')})`;
+      params.push(...gradeList);
+    }
+  }
+
+  query += ' ORDER BY category ASC, display_order ASC, created_at DESC';
 
   db.all(query, params, (err, rows) => {
     if (err) {
@@ -195,7 +213,7 @@ router.get('/projects', authenticateToken, (req, res) => {
 
 // Base64 이미지로 스펙북 아이템 생성
 router.post('/base64', authenticateToken, isManager, (req, res) => {
-  const { name, category, brand, price, description, imageData, image_url, projectId, isLibrary } = req.body;
+  const { name, category, brand, price, description, imageData, image_url, projectId, isLibrary, grade } = req.body;
 
   if (!name || !category) {
     return res.status(400).json({ error: '이름과 카테고리는 필수입니다.' });
@@ -215,11 +233,12 @@ router.post('/base64', authenticateToken, isManager, (req, res) => {
 
   const is_library = isLibrary ? 1 : 0;
   const project_id = projectId || null;
+  const item_grade = grade || '기본'; // 기본값 설정
 
   db.run(
-    `INSERT INTO specbook_items (name, category, brand, price, description, image_url, project_id, is_library)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name, category, brand || '', price || '', description || '', imageUrl, project_id, is_library],
+    `INSERT INTO specbook_items (name, category, brand, price, description, image_url, project_id, is_library, grade)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [name, category, brand || '', price || '', description || '', imageUrl, project_id, is_library, item_grade],
     function(err) {
       if (err) {
         console.error('스펙북 아이템 생성 실패:', err);
@@ -236,6 +255,7 @@ router.post('/base64', authenticateToken, isManager, (req, res) => {
         image_url: imageUrl,
         project_id,
         is_library,
+        grade: item_grade,
         message: '스펙북 아이템이 생성되었습니다.'
       });
     }
@@ -296,7 +316,7 @@ router.post('/', authenticateToken, isManager, upload.single('image'), (req, res
 // Base64 이미지로 스펙북 아이템 수정
 router.put('/base64/:id', authenticateToken, isManager, (req, res) => {
   const { id } = req.params;
-  const { name, category, brand, price, description, imageData, projectId, isLibrary } = req.body;
+  const { name, category, brand, price, description, imageData, projectId, isLibrary, grade } = req.body;
 
   let imageUrl = null;
   if (imageData) {
@@ -319,6 +339,11 @@ router.put('/base64/:id', authenticateToken, isManager, (req, res) => {
   if (isLibrary !== undefined) {
     query += ', is_library = ?';
     params.push(isLibrary === true || isLibrary === 1 ? 1 : 0);
+  }
+
+  if (grade !== undefined) {
+    query += ', grade = ?';
+    params.push(grade);
   }
 
   if (imageUrl) {

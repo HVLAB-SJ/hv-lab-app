@@ -31,6 +31,7 @@ interface SpecBookItem {
   project_id: number | null;
   is_library: number;
   display_order?: number;
+  grade?: string;
   created_at: string;
   updated_at: string;
 }
@@ -117,9 +118,20 @@ const SortableSpecBookItem = ({
       {/* 하단: 텍스트 정보 */}
       <div className="p-2 pt-1.5 flex flex-col flex-1">
         <div className="flex items-start justify-between mb-1">
-          <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
-            {item.category}
-          </span>
+          <div className="flex gap-1">
+            <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
+              {item.category}
+            </span>
+            {item.grade && (
+              <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${
+                item.grade === '하이엔드' ? 'bg-purple-100 text-purple-700' :
+                item.grade === '고급' ? 'bg-blue-100 text-blue-700' :
+                'bg-green-100 text-green-700'
+              }`}>
+                {item.grade}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-baseline justify-between gap-1 mt-auto">
           <div className="flex items-baseline gap-1 min-w-0">
@@ -223,8 +235,10 @@ const SpecBook = () => {
     category: '',
     brand: '',
     price: '',
+    grade: '기본',
     imageData: null as string | null
   });
+  const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategories, setEditingCategories] = useState<string[]>([]);
@@ -247,7 +261,7 @@ const SpecBook = () => {
 
   useEffect(() => {
     loadItems();
-  }, [view, selectedCategory, selectedProject]);
+  }, [view, selectedCategory, selectedProject, selectedGrades]);
 
   // 프로젝트가 선택될 때 전체 프로젝트 아이템 로드
   useEffect(() => {
@@ -298,7 +312,13 @@ const SpecBook = () => {
   const loadItems = async () => {
     try {
       setLoading(true);
-      const params = selectedCategory !== '전체' ? { category: selectedCategory } : {};
+      const params: any = {};
+      if (selectedCategory !== '전체') {
+        params.category = selectedCategory;
+      }
+      if (selectedGrades.length > 0) {
+        params.grades = selectedGrades.join(',');
+      }
 
       let response;
       if (view === 'library') {
@@ -398,6 +418,7 @@ const SpecBook = () => {
           category: formData.category,
           brand: formData.brand,
           price: formData.price,
+          grade: formData.grade,
           description: '',
           imageData: formData.imageData,
           projectId: view === 'project' ? selectedProject : null,
@@ -415,6 +436,7 @@ const SpecBook = () => {
             category: formData.category,
             brand: formData.brand,
             price: formData.price,
+            grade: formData.grade,
             description: '',
             imageData: formData.imageData,
             projectId: null,
@@ -428,6 +450,7 @@ const SpecBook = () => {
             category: formData.category,
             brand: formData.brand,
             price: formData.price,
+            grade: formData.grade,
             description: '',
             imageData: formData.imageData,
             projectId: selectedProject,
@@ -442,6 +465,7 @@ const SpecBook = () => {
             category: formData.category,
             brand: formData.brand,
             price: formData.price,
+            grade: formData.grade,
             description: '',
             imageData: formData.imageData,
             projectId: null,
@@ -475,6 +499,7 @@ const SpecBook = () => {
       category: item.category,
       brand: item.brand,
       price: item.price,
+      grade: item.grade || '기본',
       imageData: null
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -501,7 +526,14 @@ const SpecBook = () => {
 
   const handleCancel = () => {
     setEditingItem(null);
-    setFormData({ name: '', category: selectedCategory !== '전체' ? selectedCategory : '', brand: '', price: '', imageData: null });
+    setFormData({
+      name: '',
+      category: selectedCategory !== '전체' ? selectedCategory : '',
+      brand: '',
+      price: '',
+      grade: '기본',
+      imageData: null
+    });
   };
 
   // 아이템 순서 변경 처리
@@ -557,7 +589,7 @@ const SpecBook = () => {
     setNewCategoryName('');
   };
 
-  const handleEditCategory = (category: string) => {
+  const handleEditCategory = async (category: string) => {
     if (category === '전체') {
       toast.error('전체 카테고리는 수정할 수 없습니다');
       return;
@@ -573,40 +605,67 @@ const SpecBook = () => {
       toast.error('이미 존재하는 카테고리입니다');
       return;
     }
-    setEditingCategories(editingCategories.map(c => c === category ? newName.trim() : c));
-    toast.success('카테고리 이름이 변경되었습니다');
+
+    const updatedCategories = editingCategories.map(c => c === category ? newName.trim() : c);
+    setEditingCategories(updatedCategories);
+
+    // 서버에 즉시 저장
+    try {
+      await api.put('/specbook/categories', { categories: updatedCategories });
+      setCategories(updatedCategories);
+      toast.success('카테고리 이름이 변경되었습니다');
+    } catch (error) {
+      console.error('카테고리 수정 저장 실패:', error);
+      toast.error('카테고리 수정 저장에 실패했습니다');
+      // 실패 시 원래대로 복구
+      setEditingCategories(categories);
+    }
   };
 
-  const handleRemoveCategory = (category: string) => {
+  const handleRemoveCategory = async (category: string) => {
     if (category === '전체') {
       toast.error('전체 카테고리는 삭제할 수 없습니다');
       return;
     }
-    setEditingCategories(editingCategories.filter(c => c !== category));
-  };
 
-  const handleSaveCategories = async () => {
+    const updatedCategories = editingCategories.filter(c => c !== category);
+    setEditingCategories(updatedCategories);
+
+    // 서버에 즉시 저장
     try {
-      await api.put('/specbook/categories', { categories: editingCategories });
-      setCategories(editingCategories);
-      toast.success('카테고리가 저장되었습니다');
-      handleCloseCategoryModal();
+      await api.put('/specbook/categories', { categories: updatedCategories });
+      setCategories(updatedCategories);
+      toast.success('카테고리가 삭제되었습니다');
     } catch (error) {
-      console.error('카테고리 저장 실패:', error);
-      toast.error('카테고리 저장에 실패했습니다');
+      console.error('카테고리 삭제 저장 실패:', error);
+      toast.error('카테고리 삭제 저장에 실패했습니다');
+      // 실패 시 원래대로 복구
+      setEditingCategories(categories);
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      setEditingCategories((items) => {
-        const oldIndex = items.indexOf(active.id as string);
-        const newIndex = items.indexOf(over.id as string);
+      const oldIndex = editingCategories.indexOf(active.id as string);
+      const newIndex = editingCategories.indexOf(over.id as string);
+      const updatedCategories = arrayMove(editingCategories, oldIndex, newIndex);
 
-        return arrayMove(items, oldIndex, newIndex);
-      });
+      setEditingCategories(updatedCategories);
+
+      // 서버에 즉시 저장
+      try {
+        await api.put('/specbook/categories', { categories: updatedCategories });
+        setCategories(updatedCategories);
+        toast.success('카테고리 순서가 변경되었습니다');
+      } catch (error) {
+        console.error('카테고리 순서 저장 실패:', error);
+        toast.error('카테고리 순서 저장에 실패했습니다');
+        // 실패 시 원래대로 복구
+        setEditingCategories(categories);
+      }
     }
   };
 
@@ -703,6 +762,17 @@ const SpecBook = () => {
                       ))}
                     </select>
 
+                    <select
+                      value={formData.grade}
+                      onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
+                      required
+                    >
+                      <option value="기본">기본</option>
+                      <option value="고급">고급</option>
+                      <option value="하이엔드">하이엔드</option>
+                    </select>
+
                     <input
                       type="text"
                       value={formData.brand}
@@ -756,6 +826,42 @@ const SpecBook = () => {
               {/* 하단 패딩 */}
               <div className="p-3 pt-0"></div>
             </form>
+          </div>
+
+          {/* 등급 필터 */}
+          <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">등급 필터</h3>
+            <div className="flex gap-2">
+              {['기본', '고급', '하이엔드'].map(grade => (
+                <button
+                  key={grade}
+                  onClick={() => {
+                    if (selectedGrades.includes(grade)) {
+                      setSelectedGrades(selectedGrades.filter(g => g !== grade));
+                    } else {
+                      setSelectedGrades([...selectedGrades, grade]);
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                    selectedGrades.includes(grade)
+                      ? grade === '하이엔드' ? 'bg-purple-600 text-white' :
+                        grade === '고급' ? 'bg-blue-600 text-white' :
+                        'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {grade}
+                </button>
+              ))}
+              {selectedGrades.length > 0 && (
+                <button
+                  onClick={() => setSelectedGrades([])}
+                  className="px-3 py-1.5 rounded text-xs font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                >
+                  초기화
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 카테고리 버튼들 (3열) */}
@@ -853,7 +959,7 @@ const SpecBook = () => {
           <div className="flex-1 flex overflow-hidden">
             {/* 좌측: 스펙 라이브러리 */}
             <div className="w-1/2 flex flex-col overflow-hidden pb-4 pr-3">
-              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg pr-4 pb-4 pt-4">
+              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-gray-500">로딩 중...</div>
@@ -943,7 +1049,7 @@ const SpecBook = () => {
             <div className="flex-1 flex overflow-hidden">
               {/* 좌측: 스펙 라이브러리 (드래그 소스) */}
               <div className="w-1/2 flex flex-col overflow-hidden pb-4 pr-3">
-                <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg pr-4 pb-4 pt-4">
+                <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-gray-500">로딩 중...</div>
@@ -1008,7 +1114,7 @@ const SpecBook = () => {
             {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
             <div className="w-1/2 flex flex-col overflow-hidden pl-3 pb-4">
                 <div
-                  className="flex-1 overflow-y-auto bg-gray-50 rounded-lg pr-4 pb-4 pt-4"
+                  className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4"
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.dataTransfer.dropEffect = 'copy';
@@ -1148,19 +1254,13 @@ const SpecBook = () => {
                 </div>
               </div>
 
-              {/* 저장/취소 버튼 */}
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSaveCategories}
-                  className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
-                >
-                  저장
-                </button>
+              {/* 닫기 버튼 */}
+              <div className="flex justify-center">
                 <button
                   onClick={handleCloseCategoryModal}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
                 >
-                  취소
+                  닫기
                 </button>
               </div>
             </div>

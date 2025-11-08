@@ -560,6 +560,19 @@ const initDatabase = () => {
     }
   });
 
+  // Add grade column to specbook_items table if it doesn't exist
+  db.run(`ALTER TABLE specbook_items ADD COLUMN grade TEXT DEFAULT '기본'`, (err) => {
+    if (err) {
+      if (err.message.includes('duplicate column name')) {
+        console.log('✓ grade column already exists in specbook_items');
+      } else {
+        console.error('❌ Error adding grade column to specbook_items:', err);
+      }
+    } else {
+      console.log('✓ grade column added successfully to specbook_items');
+    }
+  });
+
   // 기본 계정 생성 (테이블 생성 후 즉시 실행)
   // Use serialize to ensure tables are created before inserting users
   db.serialize(() => {
