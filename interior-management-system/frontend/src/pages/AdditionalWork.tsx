@@ -261,51 +261,52 @@ const AdditionalWork = () => {
             {/* Project Header */}
             <button
               onClick={() => toggleProject(group.projectName)}
-              className="w-full px-3 py-2.5 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+              className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
             >
-              <div className="flex-1 text-left min-w-0">
-                <h3 className="font-bold text-sm text-gray-900 truncate">{group.projectName}</h3>
-                <p className="text-xs text-gray-600 mt-0.5">
-                  {group.works.length}건 · {group.totalAmount.toLocaleString()}원
+              <h3 className="font-bold text-base text-gray-900 truncate flex-1 text-left mr-3">{group.projectName}</h3>
+              <div className="flex items-center space-x-2 flex-shrink-0">
+                <p className="text-sm text-gray-600">
+                  {group.works.length}건 {group.totalAmount.toLocaleString()}원
                 </p>
+                {expandedProjects.has(group.projectName) ? (
+                  <ChevronUp className="h-5 w-5 text-gray-600" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-600" />
+                )}
               </div>
-              {expandedProjects.has(group.projectName) ? (
-                <ChevronUp className="h-4 w-4 text-gray-600 flex-shrink-0 ml-2" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-gray-600 flex-shrink-0 ml-2" />
-              )}
             </button>
 
             {/* Project Works List (compact) */}
             {expandedProjects.has(group.projectName) && (
               <div className="divide-y divide-gray-200">
                 {group.works.map((work) => (
-                  <div key={work.id} className="p-3 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="text-xs text-gray-600">{format(work.date, 'MM.dd (eee)', { locale: ko })}</p>
+                  <div key={work.id} className="p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm text-gray-600">{format(work.date, 'MM.dd (eee)', { locale: ko })}</p>
                       <div className="flex items-center space-x-1">
                         <button
                           onClick={() => handleEditWork(work)}
-                          className="text-gray-600 hover:text-gray-700 transition-colors p-0.5"
+                          className="text-gray-600 hover:text-gray-700 transition-colors p-1"
                         >
-                          <Edit className="h-3.5 w-3.5" />
+                          <Edit className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteWork(work.id, work.project)}
-                          className="text-rose-600 hover:text-rose-700 transition-colors p-0.5"
+                          className="text-rose-600 hover:text-rose-700 transition-colors p-1"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <p className="text-sm text-gray-900 line-clamp-2">{work.description}</p>
-                      <p className="text-sm font-semibold text-gray-900">{work.amount.toLocaleString()}원</p>
-                      {work.notes && (
-                        <p className="text-xs text-gray-600 line-clamp-1">{work.notes}</p>
-                      )}
+                    <div className="flex items-center justify-between">
+                      <p className="text-base text-gray-900 font-medium flex-1 mr-3">{work.description}</p>
+                      <p className="text-base font-semibold text-gray-900 flex-shrink-0">{work.amount.toLocaleString()}원</p>
                     </div>
+
+                    {work.notes && (
+                      <p className="text-sm text-gray-600 mt-2">{work.notes}</p>
+                    )}
                   </div>
                 ))}
               </div>
