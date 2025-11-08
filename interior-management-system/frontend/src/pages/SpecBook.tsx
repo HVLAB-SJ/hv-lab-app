@@ -649,7 +649,7 @@ const SpecBook = () => {
                     <h3 className="font-semibold text-xs text-gray-900 mb-1 line-clamp-2">{item.name}</h3>
                     <div className="mt-auto space-y-0.5">
                       {item.brand && (
-                        <p className="text-xs text-gray-600">브랜드: {item.brand}</p>
+                        <p className="text-xs text-gray-600">{item.brand}</p>
                       )}
                       {item.price && (
                         <p className="text-xs text-gray-900 font-medium">{item.price}원</p>
