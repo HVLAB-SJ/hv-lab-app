@@ -723,7 +723,7 @@ const ExecutionHistory = () => {
               </div>
 
               {/* 내역추가 버튼 */}
-              <div className="my-6 lg:my-[50px]">
+              <div className="my-6 lg:my-[100px]">
                 <button
                   onClick={handleSave}
                   className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
@@ -767,45 +767,45 @@ const ExecutionHistory = () => {
                 <table className="hidden lg:table w-full">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr className="text-left text-xs text-gray-700 border-b">
-                    <th className="px-3 py-3 font-medium w-[12%]">작성자</th>
-                    <th className="px-3 py-3 font-medium w-[15%]">날짜</th>
-                    <th className="px-3 py-3 font-medium w-[10%]">공정</th>
-                    <th className="px-3 py-3 font-medium w-[23%]">항목명</th>
-                    <th className="px-3 py-3 font-medium text-right w-[10%]">자재비</th>
-                    <th className="px-3 py-3 font-medium text-right w-[10%]">인건비</th>
-                    <th className="px-3 py-3 font-medium text-right w-[10%]">부가세</th>
-                    <th className="px-3 py-3 font-medium text-right w-[10%]">총액</th>
+                    <th className="px-2 py-2 font-medium w-[10%]">작성자</th>
+                    <th className="px-2 py-2 font-medium w-[13%]">날짜</th>
+                    <th className="px-2 py-2 font-medium w-[9%]">공정</th>
+                    <th className="px-2 py-2 font-medium w-[20%]">항목명</th>
+                    <th className="px-2 py-2 font-medium text-right w-[12%]">자재비</th>
+                    <th className="px-2 py-2 font-medium text-right w-[12%]">인건비</th>
+                    <th className="px-2 py-2 font-medium text-right w-[12%]">부가세</th>
+                    <th className="px-2 py-2 font-medium text-right w-[12%]">총액</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredRecords.map((record) => (
                     <tr
                       key={record.id}
-                      className={`hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === record.id ? 'bg-blue-50' : ''}`}
+                      className={`hover:bg-gray-50 cursor-pointer text-xs ${selectedRecord === record.id ? 'bg-blue-50' : ''}`}
                       onClick={() => setSelectedRecord(record.id)}
                     >
-                      <td className="px-3 py-3 text-gray-600">
+                      <td className="px-2 py-2 text-gray-600 truncate">
                         {record.author || '-'}
                       </td>
-                      <td className="px-3 py-3 text-gray-600">
+                      <td className="px-2 py-2 text-gray-600 whitespace-nowrap">
                         {format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}
                       </td>
-                      <td className="px-3 py-3 text-gray-600">
+                      <td className="px-2 py-2 text-gray-600 truncate">
                         {record.process || '-'}
                       </td>
-                      <td className="px-3 py-3 font-medium">
+                      <td className="px-2 py-2 font-medium truncate">
                         {record.itemName}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-2 py-2 text-right whitespace-nowrap">
                         {(record.materialCost || 0).toLocaleString()}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-2 py-2 text-right whitespace-nowrap">
                         {(record.laborCost || 0).toLocaleString()}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-2 py-2 text-right whitespace-nowrap">
                         {(record.vatAmount || 0).toLocaleString()}
                       </td>
-                      <td className="px-3 py-3 text-right font-semibold">
+                      <td className="px-2 py-2 text-right font-semibold whitespace-nowrap">
                         {(record.totalAmount || 0).toLocaleString()}원
                       </td>
                     </tr>
