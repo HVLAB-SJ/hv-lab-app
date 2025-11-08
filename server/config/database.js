@@ -533,6 +533,17 @@ const initDatabase = () => {
       include_sash INTEGER DEFAULT 0,
       include_floor_heating INTEGER DEFAULT 0,
       include_aircon INTEGER DEFAULT 0,
+      floor_material TEXT,
+      wall_material TEXT,
+      bathroom_work_type TEXT,
+      ceiling_work_type TEXT,
+      switch_type TEXT,
+      switch_premium TEXT,
+      lighting_type TEXT,
+      bathroom_ceiling TEXT,
+      bathroom_faucet TEXT,
+      bathroom_tile TEXT,
+      molding_type TEXT,
       base_construction_cost INTEGER,
       fixture_cost INTEGER,
       sash_cost INTEGER,
@@ -551,6 +562,30 @@ const initDatabase = () => {
       console.error('❌ 가견적서 테이블 생성 실패:', err);
     } else {
       console.log('✓ 가견적서 테이블 생성 완료');
+
+      // 기존 테이블에 새 컬럼들 추가 (마이그레이션)
+      const newColumns = [
+        'floor_material TEXT',
+        'wall_material TEXT',
+        'bathroom_work_type TEXT',
+        'ceiling_work_type TEXT',
+        'switch_type TEXT',
+        'switch_premium TEXT',
+        'lighting_type TEXT',
+        'bathroom_ceiling TEXT',
+        'bathroom_faucet TEXT',
+        'bathroom_tile TEXT',
+        'molding_type TEXT'
+      ];
+
+      newColumns.forEach(column => {
+        const [name, type] = column.split(' ');
+        db.run(`ALTER TABLE estimate_previews ADD COLUMN ${column}`, (err) => {
+          if (err && !err.message.includes('duplicate column')) {
+            console.error(`❌ Failed to add ${name}:`, err.message);
+          }
+        });
+      });
     }
   });
 

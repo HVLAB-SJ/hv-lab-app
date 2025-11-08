@@ -15,6 +15,17 @@ interface EstimateForm {
   includeSash: boolean;
   includeFloorHeating: boolean;
   includeAircon: boolean;
+  floorMaterial: string;
+  wallMaterial: string;
+  bathroomWorkType: string;
+  ceilingWorkType: string;
+  switchType: string;
+  switchPremium: string;
+  lightingType: string;
+  bathroomCeiling: string;
+  bathroomFaucet: string;
+  bathroomTile: string;
+  moldingType: string;
 }
 
 interface EstimateResult {
@@ -47,7 +58,18 @@ const EstimatePreview: React.FC = () => {
     ceilingHeight: '표준',
     includeSash: false,
     includeFloorHeating: false,
-    includeAircon: false
+    includeAircon: false,
+    floorMaterial: '',
+    wallMaterial: '',
+    bathroomWorkType: '',
+    ceilingWorkType: '',
+    switchType: '',
+    switchPremium: '',
+    lightingType: '',
+    bathroomCeiling: '',
+    bathroomFaucet: '',
+    bathroomTile: '',
+    moldingType: ''
   });
 
   const [result, setResult] = useState<EstimateResult | null>(null);
@@ -126,7 +148,18 @@ const EstimatePreview: React.FC = () => {
         ceilingHeight: data.ceiling_height,
         includeSash: data.include_sash === 1,
         includeFloorHeating: data.include_floor_heating === 1,
-        includeAircon: data.include_aircon === 1
+        includeAircon: data.include_aircon === 1,
+        floorMaterial: data.floor_material || '',
+        wallMaterial: data.wall_material || '',
+        bathroomWorkType: data.bathroom_work_type || '',
+        ceilingWorkType: data.ceiling_work_type || '',
+        switchType: data.switch_type || '',
+        switchPremium: data.switch_premium || '',
+        lightingType: data.lighting_type || '',
+        bathroomCeiling: data.bathroom_ceiling || '',
+        bathroomFaucet: data.bathroom_faucet || '',
+        bathroomTile: data.bathroom_tile || '',
+        moldingType: data.molding_type || ''
       });
 
       // 결과 데이터 설정
@@ -182,7 +215,18 @@ const EstimatePreview: React.FC = () => {
       ceilingHeight: '표준',
       includeSash: false,
       includeFloorHeating: false,
-      includeAircon: false
+      includeAircon: false,
+      floorMaterial: '',
+      wallMaterial: '',
+      bathroomWorkType: '',
+      ceilingWorkType: '',
+      switchType: '',
+      switchPremium: '',
+      lightingType: '',
+      bathroomCeiling: '',
+      bathroomFaucet: '',
+      bathroomTile: '',
+      moldingType: ''
     });
     setResult(null);
     setSelectedEstimate(null);
@@ -319,17 +363,48 @@ const EstimatePreview: React.FC = () => {
               <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div>
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-                    마감재 종류
+                    바닥재
                   </label>
-                  <input
-                    type="text"
-                    name="finishType"
-                    value={form.finishType}
+                  <select
+                    name="floorMaterial"
+                    value={form.floorMaterial}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                    placeholder="예: 타일, 마루"
-                  />
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="장판">장판</option>
+                    <option value="데코타일">데코타일</option>
+                    <option value="600각 타일">600각 타일</option>
+                    <option value="800-900각 타일">800-900각 타일</option>
+                    <option value="1200각 타일">1200각 타일</option>
+                    <option value="강마루">강마루</option>
+                    <option value="원목마루">원목마루</option>
+                  </select>
                 </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    벽재
+                  </label>
+                  <select
+                    name="wallMaterial"
+                    value={form.wallMaterial}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="지정벽지">지정벽지</option>
+                    <option value="합지">합지</option>
+                    <option value="실크벽지">실크벽지</option>
+                    <option value="도장">도장</option>
+                    <option value="타일-부분">타일(부분)</option>
+                    <option value="타일-전체">타일(전체)</option>
+                    <option value="대리석">대리석</option>
+                    <option value="우드패널">우드패널</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div>
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                     화장실 개수
@@ -343,22 +418,190 @@ const EstimatePreview: React.FC = () => {
                     min="1"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    화장실 공사
+                  </label>
+                  <select
+                    name="bathroomWorkType"
+                    value={form.bathroomWorkType}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="유지">유지</option>
+                    <option value="도기교체">도기교체</option>
+                    <option value="도기교체+수전교체">도기교체+수전교체</option>
+                    <option value="전체 교체">전체 교체</option>
+                  </select>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-                  층고
-                </label>
-                <select
-                  name="ceilingHeight"
-                  value={form.ceilingHeight}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                >
-                  <option value="표준">표준</option>
-                  <option value="높음">높음 (+10%)</option>
-                  <option value="매우높음">매우높음 (+20%)</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    층고
+                  </label>
+                  <select
+                    name="ceilingHeight"
+                    value={form.ceilingHeight}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="표준">표준</option>
+                    <option value="높음">높음 (+10%)</option>
+                    <option value="매우높음">매우높음 (+20%)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    천장 공사
+                  </label>
+                  <select
+                    name="ceilingWorkType"
+                    value={form.ceilingWorkType}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="유지">유지</option>
+                    <option value="도장">도장</option>
+                    <option value="도배">도배</option>
+                    <option value="간접등설치-부분">간접등설치(부분)</option>
+                    <option value="간접등설치-전체">간접등설치(전체)</option>
+                    <option value="우물천장">우물천장</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    스위치/콘센트
+                  </label>
+                  <select
+                    name="switchType"
+                    value={form.switchType}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="유지">유지</option>
+                    <option value="다산 일반형">다산 일반형</option>
+                    <option value="다산 하이브리드">다산 하이브리드</option>
+                    <option value="르그랑 엑설런트">르그랑 엑설런트</option>
+                    <option value="르그랑 말리부">르그랑 말리부</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    스위치 프리미엄
+                  </label>
+                  <select
+                    name="switchPremium"
+                    value={form.switchPremium}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="HDC 아이콘트롤스">HDC 아이콘트롤스</option>
+                    <option value="코콤">코콤</option>
+                    <option value="베스틴">베스틴</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    조명
+                  </label>
+                  <select
+                    name="lightingType"
+                    value={form.lightingType}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="유지">유지</option>
+                    <option value="LED교체-일부">LED교체(일부)</option>
+                    <option value="LED교체-전체">LED교체(전체)</option>
+                    <option value="매입등추가">매입등추가</option>
+                    <option value="레일등추가">레일등추가</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    몰딩
+                  </label>
+                  <select
+                    name="moldingType"
+                    value={form.moldingType}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="없음">없음</option>
+                    <option value="걸레받이">걸레받이</option>
+                    <option value="걸레받이+천장몰딩">걸레받이+천장몰딩</option>
+                    <option value="걸레받이+천장몰딩+문선몰딩">걸레받이+천장몰딩+문선몰딩</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 md:gap-4">
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    화장실 천장
+                  </label>
+                  <select
+                    name="bathroomCeiling"
+                    value={form.bathroomCeiling}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="유지">유지</option>
+                    <option value="SMC">SMC</option>
+                    <option value="ABS 판넬">ABS 판넬</option>
+                    <option value="도장">도장</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    화장실 수전
+                  </label>
+                  <select
+                    name="bathroomFaucet"
+                    value={form.bathroomFaucet}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="유지">유지</option>
+                    <option value="대림바스 일반형">대림바스 일반형</option>
+                    <option value="대림바스 프리미엄">대림바스 프리미엄</option>
+                    <option value="한샘 일반">한샘 일반</option>
+                    <option value="한샘 프리미엄">한샘 프리미엄</option>
+                    <option value="그로헤 프리미엄">그로헤 프리미엄</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    화장실 타일
+                  </label>
+                  <select
+                    name="bathroomTile"
+                    value={form.bathroomTile}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="유지">유지</option>
+                    <option value="부분교체">부분교체</option>
+                    <option value="전체교체">전체교체</option>
+                  </select>
+                </div>
               </div>
 
               <div className="border-t pt-4">

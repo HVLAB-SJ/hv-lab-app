@@ -57,7 +57,18 @@ router.post('/create', authenticateToken, async (req, res) => {
     ceilingHeight,
     includeSash,
     includeFloorHeating,
-    includeAircon
+    includeAircon,
+    floorMaterial,
+    wallMaterial,
+    bathroomWorkType,
+    ceilingWorkType,
+    switchType,
+    switchPremium,
+    lightingType,
+    bathroomCeiling,
+    bathroomFaucet,
+    bathroomTile,
+    moldingType
   } = req.body;
 
   try {
@@ -145,15 +156,21 @@ router.post('/create', authenticateToken, async (req, res) => {
         project_name, client_name, area_size, grade, finish_type,
         bathroom_count, ceiling_height, include_sash, include_floor_heating, include_aircon,
         base_construction_cost, fixture_cost, sash_cost, heating_cost, aircon_cost,
-        total_min_cost, total_max_cost, detail_breakdown, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        total_min_cost, total_max_cost, detail_breakdown, created_by,
+        floor_material, wall_material, bathroom_work_type, ceiling_work_type,
+        switch_type, switch_premium, lighting_type, bathroom_ceiling,
+        bathroom_faucet, bathroom_tile, molding_type
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.run(query, [
       projectName, clientName, areaSize, grade, finishType,
       bathroomCount, ceilingHeight, includeSash ? 1 : 0, includeFloorHeating ? 1 : 0, includeAircon ? 1 : 0,
       baseConstructionCost, fixtureCost, sashCost, heatingCost, airconCost,
-      totalMinCost, totalMaxCost, detailBreakdown, req.user.userId
+      totalMinCost, totalMaxCost, detailBreakdown, req.user.userId,
+      floorMaterial, wallMaterial, bathroomWorkType, ceilingWorkType,
+      switchType, switchPremium, lightingType, bathroomCeiling,
+      bathroomFaucet, bathroomTile, moldingType
     ], function(err) {
       if (err) {
         console.error('가견적서 저장 실패:', err);
@@ -173,7 +190,18 @@ router.post('/create', authenticateToken, async (req, res) => {
         airconCost,
         totalMinCost,
         totalMaxCost,
-        detailBreakdown: JSON.parse(detailBreakdown)
+        detailBreakdown: JSON.parse(detailBreakdown),
+        floorMaterial,
+        wallMaterial,
+        bathroomWorkType,
+        ceilingWorkType,
+        switchType,
+        switchPremium,
+        lightingType,
+        bathroomCeiling,
+        bathroomFaucet,
+        bathroomTile,
+        moldingType
       });
     });
 
