@@ -42,10 +42,12 @@ interface Project {
 // Sortable 카테고리 아이템 컴포넌트
 const SortableCategoryItem = ({
   category,
-  onRemove
+  onRemove,
+  onEdit
 }: {
   category: string;
   onRemove: (category: string) => void;
+  onEdit: (category: string) => void;
 }) => {
   const {
     attributes,
@@ -74,16 +76,28 @@ const SortableCategoryItem = ({
         <span className="text-sm text-gray-900">{category}</span>
       </div>
       {category !== '전체' && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove(category);
-          }}
-          className="text-red-500 hover:text-red-700 transition-colors"
-          title="삭제"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(category);
+            }}
+            className="text-gray-600 hover:text-gray-800 transition-colors"
+            title="수정"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(category);
+            }}
+            className="text-red-500 hover:text-red-700 transition-colors"
+            title="삭제"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       )}
     </div>
   );
@@ -336,6 +350,26 @@ const SpecBook = () => {
     }
     setEditingCategories([...editingCategories, newCategoryName.trim()]);
     setNewCategoryName('');
+  };
+
+  const handleEditCategory = (category: string) => {
+    if (category === '전체') {
+      toast.error('전체 카테고리는 수정할 수 없습니다');
+      return;
+    }
+    const newName = window.prompt('새 카테고리 이름을 입력하세요', category);
+    if (!newName || !newName.trim()) {
+      return;
+    }
+    if (newName.trim() === category) {
+      return;
+    }
+    if (editingCategories.includes(newName.trim())) {
+      toast.error('이미 존재하는 카테고리입니다');
+      return;
+    }
+    setEditingCategories(editingCategories.map(c => c === category ? newName.trim() : c));
+    toast.success('카테고리 이름이 변경되었습니다');
   };
 
   const handleRemoveCategory = (category: string) => {
@@ -926,7 +960,7 @@ const SpecBook = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   카테고리 목록 (드래그하여 순서 변경)
                 </label>
-                <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
+                <div className="max-h-120 overflow-y-auto border border-gray-200 rounded-lg">
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
@@ -941,6 +975,7 @@ const SpecBook = () => {
                           key={category}
                           category={category}
                           onRemove={handleRemoveCategory}
+                          onEdit={handleEditCategory}
                         />
                       ))}
                     </SortableContext>
