@@ -506,62 +506,58 @@ const SpecBook = () => {
               등록된 스펙북 아이템이 없습니다
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               {items.map(item => (
                 <div
                   key={item.id}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden"
+                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col"
                 >
-                  <div className="flex h-32">
-                    {/* 좌측: 정사각형 이미지 */}
-                    <div className="w-32 h-32 flex-shrink-0 bg-gray-100">
-                      {item.image_url ? (
-                        <img
-                          src={item.image_url}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                          이미지 없음
-                        </div>
-                      )}
-                    </div>
+                  {/* 상단: 정사각형 이미지 */}
+                  <div className="w-full aspect-square bg-gray-100">
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                        이미지 없음
+                      </div>
+                    )}
+                  </div>
 
-                    {/* 우측: 텍스트 정보 */}
-                    <div className="flex-1 p-3 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-start justify-between mb-1">
-                          <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
-                            {item.category}
-                          </span>
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => handleEdit(item)}
-                              className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                              title="수정"
-                            >
-                              <Pencil className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(item.id)}
-                              className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                              title="삭제"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                        <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">{item.name}</h3>
+                  {/* 하단: 텍스트 정보 */}
+                  <div className="p-3 flex flex-col flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <span className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
+                        {item.category}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                          title="수정"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                          title="삭제"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </div>
-                      <div className="space-y-0.5">
-                        {item.brand && (
-                          <p className="text-xs text-gray-600">브랜드: {item.brand}</p>
-                        )}
-                        {item.price && (
-                          <p className="text-xs text-gray-900 font-medium">{item.price}원</p>
-                        )}
-                      </div>
+                    </div>
+                    <h3 className="font-semibold text-sm text-gray-900 mb-2 line-clamp-2">{item.name}</h3>
+                    <div className="mt-auto space-y-1">
+                      {item.brand && (
+                        <p className="text-xs text-gray-600">브랜드: {item.brand}</p>
+                      )}
+                      {item.price && (
+                        <p className="text-xs text-gray-900 font-medium">{item.price}원</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -614,7 +610,7 @@ const SpecBook = () => {
                     라이브러리 아이템이 없습니다
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {allLibraryItems
                       .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
                       .map(item => (
@@ -625,29 +621,25 @@ const SpecBook = () => {
                           e.dataTransfer.setData('itemId', item.id.toString());
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
-                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-move"
+                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-move flex flex-col"
                       >
-                        <div className="flex h-24">
-                          <div className="w-24 h-24 flex-shrink-0 bg-gray-100">
-                            {item.image_url ? (
-                              <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                이미지 없음
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 p-2 flex flex-col justify-between overflow-hidden">
-                            <div>
-                              <span className="inline-block px-1 py-0.5 text-xs bg-gray-100 text-gray-700 rounded mb-1">
-                                {item.category}
-                              </span>
-                              <h3 className="font-semibold text-xs text-gray-900 line-clamp-2">{item.name}</h3>
+                        <div className="w-full aspect-square bg-gray-100">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                              이미지 없음
                             </div>
-                            {item.price && (
-                              <p className="text-xs text-gray-900 font-medium">{item.price}원</p>
-                            )}
-                          </div>
+                          )}
+                        </div>
+                        <div className="p-2 flex flex-col flex-1">
+                          <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded mb-1 w-fit">
+                            {item.category}
+                          </span>
+                          <h3 className="font-semibold text-xs text-gray-900 line-clamp-2 mb-1">{item.name}</h3>
+                          {item.price && (
+                            <p className="text-xs text-gray-900 font-medium mt-auto">{item.price}원</p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -729,44 +721,40 @@ const SpecBook = () => {
                     좌측에서 아이템을 드래그하여 추가하세요
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {items
                       .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
                       .map(item => (
                       <div
                         key={item.id}
-                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden"
+                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col"
                       >
-                        <div className="flex h-24">
-                          <div className="w-24 h-24 flex-shrink-0 bg-gray-100">
-                            {item.image_url ? (
-                              <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                이미지 없음
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 p-2 flex flex-col justify-between">
-                            <div>
-                              <div className="flex items-start justify-between mb-1">
-                                <span className="inline-block px-1 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
-                                  {item.category}
-                                </span>
-                                <button
-                                  onClick={() => handleDelete(item.id)}
-                                  className="p-0.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                                  title="제거"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </div>
-                              <h3 className="font-semibold text-xs text-gray-900 line-clamp-2">{item.name}</h3>
+                        <div className="w-full aspect-square bg-gray-100">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                              이미지 없음
                             </div>
-                            {item.price && (
-                              <p className="text-xs text-gray-900 font-medium">{item.price}원</p>
-                            )}
+                          )}
+                        </div>
+                        <div className="p-2 flex flex-col flex-1">
+                          <div className="flex items-start justify-between mb-1">
+                            <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
+                              {item.category}
+                            </span>
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              className="p-0.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                              title="제거"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
                           </div>
+                          <h3 className="font-semibold text-xs text-gray-900 line-clamp-2 mb-1">{item.name}</h3>
+                          {item.price && (
+                            <p className="text-xs text-gray-900 font-medium mt-auto">{item.price}원</p>
+                          )}
                         </div>
                       </div>
                     ))}
