@@ -614,7 +614,7 @@ const SpecBook = () => {
                       <img
                         src={item.image_url}
                         alt={item.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover block"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
@@ -624,7 +624,7 @@ const SpecBook = () => {
                   </div>
 
                   {/* 하단: 텍스트 정보 */}
-                  <div className="p-2 flex flex-col flex-1">
+                  <div className="p-2 pt-1.5 flex flex-col flex-1">
                     <div className="flex items-start justify-between mb-1">
                       <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
                         {item.category}
