@@ -376,7 +376,7 @@ const SpecBook = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] bg-gray-50">
       {/* 버튼 영역 */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4" style={{ maxWidth: 'calc(20% + 24px)' }}>
         <button
           onClick={() => {
             setView('library');
@@ -402,7 +402,7 @@ const SpecBook = () => {
               setSelectedProject(null);
             }
           }}
-          className={`px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+          className={`flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
             view === 'project' && selectedProject
               ? 'bg-gray-800 text-white'
               : 'bg-white'
@@ -646,13 +646,15 @@ const SpecBook = () => {
                         </button>
                       </div>
                     </div>
-                    <h3 className="font-semibold text-xs text-gray-900 mb-1 line-clamp-2">{item.name}</h3>
-                    <div className="mt-auto space-y-0.5">
-                      {item.brand && (
-                        <p className="text-xs text-gray-600">{item.brand}</p>
-                      )}
+                    <div className="flex items-baseline justify-between gap-1 mt-auto">
+                      <div className="flex items-baseline gap-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
+                        {item.brand && (
+                          <span className="text-xs text-gray-600 flex-shrink-0">{item.brand}</span>
+                        )}
+                      </div>
                       {item.price && (
-                        <p className="text-xs text-gray-900 font-medium">{item.price}원</p>
+                        <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
                       )}
                     </div>
                   </div>
