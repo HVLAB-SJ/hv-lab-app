@@ -1122,12 +1122,12 @@ const Schedule = () => {
         <div className={`flex flex-col bg-white border-b border-gray-200 ${isMobile ? 'px-2 py-1' : 'px-3 md:px-5 py-2'}`}>
           {/* 첫 번째 행: 날짜 네비게이션과 프로젝트 필터 */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="flex items-center space-x-1">
               <button
                 onClick={() => onNavigate('PREV')}
-                className="px-3 md:px-4 py-1.5 md:py-2 text-xl md:text-2xl text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-bold"
+                className="px-2 py-1.5 text-2xl md:text-3xl text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-bold"
               >
-                ←
+                ‹
               </button>
               <div
                 className="text-base md:text-lg font-bold text-gray-900 hover:bg-gray-50 px-2 md:px-3 py-1 rounded-lg transition-colors cursor-pointer"
@@ -1137,9 +1137,9 @@ const Schedule = () => {
               </div>
               <button
                 onClick={() => onNavigate('NEXT')}
-                className="px-3 md:px-4 py-1.5 md:py-2 text-xl md:text-2xl text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-bold"
+                className="px-2 py-1.5 text-2xl md:text-3xl text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-bold"
               >
-                →
+                ›
               </button>
             </div>
 
