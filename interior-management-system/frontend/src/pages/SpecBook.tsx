@@ -376,7 +376,7 @@ const SpecBook = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] bg-gray-50">
       {/* 버튼 영역 */}
-      <div className="flex gap-2 mb-4" style={{ maxWidth: 'calc(20% + 24px)' }}>
+      <div className="flex gap-2 mb-4" style={{ maxWidth: '20%' }}>
         <button
           onClick={() => {
             setView('library');

@@ -861,10 +861,21 @@ div.rbc-popup {
   }
 }
 
-/* 캘린더 컨테이너 높이 설정 */
+/* 캘린더 컨테이너 높이 설정 및 하단 여백 제거 */
 .calendar-container {
   height: auto;
   min-height: auto;
+  padding-bottom: 0 !important;
+}
+
+.calendar-container .rbc-calendar {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.calendar-container .rbc-month-view {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 @media (min-width: 768px) {
