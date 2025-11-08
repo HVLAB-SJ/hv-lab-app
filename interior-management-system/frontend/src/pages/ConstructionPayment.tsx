@@ -1618,7 +1618,7 @@ const ConstructionPayment = () => {
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">공사기간</td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 text-center">
                           {cashReceiptData.startDate && cashReceiptData.endDate ? (
                             <span>{format(new Date(cashReceiptData.startDate), 'yyyy.MM.dd')} ~ {format(new Date(cashReceiptData.endDate), 'yyyy.MM.dd')}</span>
                           ) : (
@@ -1637,7 +1637,7 @@ const ConstructionPayment = () => {
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">당일수령금액</td>
                         <td className="py-3 px-4 text-right pr-4">
-                          <span className="print:hidden">
+                          <span className="print:hidden flex items-center justify-end gap-1">
                             <input
                               type="text"
                               value={cashReceiptData.amount}
@@ -1649,6 +1649,7 @@ const ConstructionPayment = () => {
                               placeholder="금액 입력"
                               className="w-full text-right border border-gray-300 rounded px-2 py-1"
                             />
+                            <span>원</span>
                           </span>
                           <span className="hidden print:inline">{cashReceiptData.amount}원</span>
                         </td>

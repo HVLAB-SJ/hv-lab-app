@@ -1241,3 +1241,34 @@ div.rbc-popup {
     background-color: transparent !important;
   }
 }
+
+/* 인쇄 시 현금수령증만 표시 */
+@media print {
+  /* 모든 요소 숨기기 */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* 현금수령증 모달과 그 자식 요소만 표시 */
+  .fixed.inset-0,
+  .fixed.inset-0 * {
+    visibility: visible !important;
+  }
+
+  /* 페이지 여백 제거 */
+  @page {
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 모달 배경 위치 조정 */
+  .fixed.inset-0 {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+  }
+}
