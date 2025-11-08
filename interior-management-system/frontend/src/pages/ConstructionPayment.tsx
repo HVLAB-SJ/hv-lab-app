@@ -602,6 +602,9 @@ const ConstructionPayment = () => {
                         // 추가내역을 제외한 잔여금액 계산
                         const remainingWithoutAdditional = totalContract - received;
 
+                        // 프로젝트 정보에서 기간 가져오기
+                        const projectInfo = projects.find(p => p.name === record.project);
+
                         setCashReceiptData({
                           project: record.project,
                           client: record.client,
@@ -611,8 +614,8 @@ const ConstructionPayment = () => {
                           totalContractAmount: totalContract,
                           previousAmount: received,
                           remainingAmount: remainingWithoutAdditional,
-                          startDate: record.start_date || '',
-                          endDate: record.end_date || ''
+                          startDate: projectInfo?.startDate ? format(new Date(projectInfo.startDate), 'yyyy-MM-dd') : '',
+                          endDate: projectInfo?.endDate ? format(new Date(projectInfo.endDate), 'yyyy-MM-dd') : ''
                         });
                         setShowCashReceiptModal(true);
                       }}
@@ -1577,8 +1580,7 @@ const ConstructionPayment = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 print:bg-white print:relative print:p-0">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto print:shadow-none print:max-w-none print:max-h-none">
             <div className="p-6 print:p-8">
-              <div className="flex items-center justify-between mb-6 print:hidden">
-                <h2 className="text-2xl font-bold text-gray-900">현금수령증</h2>
+              <div className="flex items-center justify-end mb-6 print:hidden">
                 <button
                   onClick={() => setShowCashReceiptModal(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1626,11 +1628,11 @@ const ConstructionPayment = () => {
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">총공사금액</td>
-                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.totalContractAmount.toLocaleString()}</td>
+                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.totalContractAmount.toLocaleString()}원</td>
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">이전수령금액</td>
-                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.previousAmount.toLocaleString()}</td>
+                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.previousAmount.toLocaleString()}원</td>
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">당일수령금액</td>
@@ -1648,19 +1650,19 @@ const ConstructionPayment = () => {
                               className="w-full text-right border border-gray-300 rounded px-2 py-1"
                             />
                           </span>
-                          <span className="hidden print:inline">{cashReceiptData.amount}</span>
+                          <span className="hidden print:inline">{cashReceiptData.amount}원</span>
                         </td>
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">
-                          잔여금액<span className="text-xs">(추가금액 제외)</span>
+                          잔여금액 <span className="text-xs">(추가금액 제외)</span>
                         </td>
                         <td className="py-3 px-4 text-right pr-4">
                           {(() => {
                             const todayAmount = cashReceiptData.amount ? parseInt(cashReceiptData.amount.replace(/,/g, '')) : 0;
                             const remaining = cashReceiptData.remainingAmount - todayAmount;
                             return remaining.toLocaleString();
-                          })()}
+                          })()}원
                         </td>
                       </tr>
                     </tbody>
