@@ -69,26 +69,10 @@ const SortableSpecBookItem = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group relative"
+      {...attributes}
+      {...listeners}
+      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group relative cursor-move"
     >
-      {/* 드래그 핸들 - 호버 시 표시 */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute top-2 left-2 p-1 bg-white/90 rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-md"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 20 20"
-          className="text-gray-500"
-        >
-          <path
-            fill="currentColor"
-            d="M7 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM13 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM13 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM13 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"
-          />
-        </svg>
-      </div>
 
       {/* 상단: 정사각형 이미지 */}
       <div className="w-full aspect-square bg-gray-100 flex-shrink-0 relative">
@@ -106,14 +90,22 @@ const SortableSpecBookItem = ({
         {/* 수정/삭제 버튼 - 호버 시 이미지 우측 상단에 표시 */}
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            onClick={() => onEdit(item)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(item);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
             className="p-1.5 bg-white text-gray-700 hover:bg-gray-100 rounded-md shadow-md transition-colors"
             title="수정"
           >
             <Pencil className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => onDelete(item.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(item.id);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
             className="p-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-md shadow-md transition-colors"
             title="삭제"
           >
@@ -845,7 +837,7 @@ const SpecBook = () => {
                     setSelectedProject(null);
                   }
                 }}
-                className={`px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${view === 'project' && selectedProject ? 'bg-gray-800 text-white' : 'bg-white'}`}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
               >
                 <option value="">프로젝트 선택</option>
                 {projects.map(project => (
@@ -932,7 +924,7 @@ const SpecBook = () => {
                       setSelectedProject(null);
                     }
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
                 >
                   <option value="">프로젝트 선택</option>
                   {projects.map(project => (
