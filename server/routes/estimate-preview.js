@@ -68,8 +68,7 @@ router.post('/create', authenticateToken, async (req, res) => {
     indirectLightingPublic,
     indirectLightingRoom,
     bathroomCeiling,
-    bathroomFaucetGeneral,
-    bathroomFaucetBuiltIn,
+    bathroomFaucet,
     bathroomTile,
     moldingType
   } = req.body;
@@ -166,8 +165,8 @@ router.post('/create', authenticateToken, async (req, res) => {
         total_min_cost, total_max_cost, detail_breakdown, created_by,
         floor_material, wall_material, bathroom_work_type, ceiling_work_type,
         switch_public, switch_room, lighting_type, indirect_lighting_public, indirect_lighting_room,
-        bathroom_ceiling, bathroom_faucet_general, bathroom_faucet_built_in, bathroom_tile, molding_type
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        bathroom_ceiling, bathroom_faucet, bathroom_tile, molding_type
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.run(query, [
@@ -177,7 +176,7 @@ router.post('/create', authenticateToken, async (req, res) => {
       totalMinCost, totalMaxCost, detailBreakdown, req.user.userId,
       floorMaterial, wallMaterial, bathroomWorkType, ceilingWorkType,
       switchPublic, switchRoom, lightingType, indirectLightingPublic, indirectLightingRoom,
-      bathroomCeiling, bathroomFaucetGeneral, bathroomFaucetBuiltIn, bathroomTile, moldingType
+      bathroomCeiling, bathroomFaucet, bathroomTile, moldingType
     ], function(err) {
       if (err) {
         console.error('가견적서 저장 실패:', err);
@@ -208,8 +207,7 @@ router.post('/create', authenticateToken, async (req, res) => {
         indirectLightingPublic,
         indirectLightingRoom,
         bathroomCeiling,
-        bathroomFaucetGeneral,
-        bathroomFaucetBuiltIn,
+        bathroomFaucet,
         bathroomTile,
         moldingType
       });
