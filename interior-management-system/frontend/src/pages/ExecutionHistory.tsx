@@ -549,7 +549,7 @@ const ExecutionHistory = () => {
       </div>
 
       {/* 메인 컨텐츠 - 3열 레이아웃 */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-[calc(100vh-12rem)]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
         {/* 왼쪽: 입력 폼 (2열) */}
         <div className={`lg:col-span-2 bg-white rounded-lg border p-4 flex flex-col overflow-hidden ${
@@ -733,11 +733,8 @@ const ExecutionHistory = () => {
               </div>
             </div>
 
-            {/* Spacer for alignment */}
-            <div className="hidden lg:block flex-1"></div>
-
             {/* 총계 표시 - 데스크톱에서만 표시 */}
-            <div className="hidden lg:block bg-gray-50 rounded-lg p-4 space-y-2">
+            <div className="hidden lg:block bg-gray-50 rounded-lg p-4 space-y-2 mt-auto">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">자재비 총합:</span>
                 <span className="text-sm font-medium text-gray-900">{projectTotals.material.toLocaleString()}원</span>
