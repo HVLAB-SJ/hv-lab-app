@@ -159,7 +159,7 @@ const CashReceiptModal = ({ projectName, onClose }: CashReceiptModalProps) => {
               <div className="space-y-6 text-lg">
                 <div className="flex items-baseline border-b border-gray-300 pb-2">
                   <span className="font-medium w-32">수령일자:</span>
-                  <span className="flex-1">{format(new Date(formData.receiptDate), 'yyyy년 MM월 dd일', { locale: ko })}</span>
+                  <span className="flex-1 text-[0.95rem]">{format(new Date(formData.receiptDate), 'yyyy년 MM월 dd일', { locale: ko })}</span>
                 </div>
 
                 <div className="flex items-baseline border-b border-gray-300 pb-2">
@@ -174,7 +174,7 @@ const CashReceiptModal = ({ projectName, onClose }: CashReceiptModalProps) => {
 
                 <div className="flex items-baseline border-b border-gray-300 pb-2">
                   <span className="font-medium w-32">금액:</span>
-                  <span className="flex-1 font-bold">
+                  <span className="flex-1 font-bold text-[1.3rem]">
                     ₩{Number(formData.amount).toLocaleString()}원
                   </span>
                 </div>
@@ -194,7 +194,7 @@ const CashReceiptModal = ({ projectName, onClose }: CashReceiptModalProps) => {
                 <p className="text-lg mb-8">위 금액을 정히 수령하였습니다.</p>
 
                 <div className="space-y-2">
-                  <p className="text-lg">{format(new Date(formData.receiptDate), 'yyyy년 MM월 dd일', { locale: ko })}</p>
+                  <p className="text-lg text-[0.95rem]">{format(new Date(formData.receiptDate), 'yyyy년 MM월 dd일', { locale: ko })}</p>
                   <p className="text-xl font-medium mt-8">
                     수령인: {formData.receivedBy} <span className="ml-4">(인)</span>
                   </p>
