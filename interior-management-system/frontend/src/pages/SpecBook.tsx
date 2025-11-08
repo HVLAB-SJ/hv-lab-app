@@ -828,7 +828,7 @@ const SpecBook = () => {
                             <img
                               src={item.image_url}
                               alt={item.name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
                                 const parent = e.currentTarget.parentElement;
