@@ -1689,13 +1689,13 @@ const ConstructionPayment = () => {
                   {/* 서명란 */}
                   <div className="space-y-8">
                     <div className="flex items-center justify-between border-b border-gray-300 pb-2">
-                      <span className="font-medium">[수령자]</span>
+                      <span className="font-medium">[수령인]</span>
                       <span>에이치브이랩 대표</span>
                       <span className="text-xl font-bold">김 상 준</span>
                       <span>(인)</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-gray-300 pb-2">
-                      <span className="font-medium">[지급자]</span>
+                      <span className="font-medium">[지급인]</span>
                       <span>{cashReceiptData.project.split('_')[0]}</span>
                       <span className="text-xl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                       <span>(인)</span>
