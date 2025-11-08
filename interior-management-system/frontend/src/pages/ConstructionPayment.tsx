@@ -1628,11 +1628,11 @@ const ConstructionPayment = () => {
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">총공사금액</td>
-                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.totalContractAmount.toLocaleString()}원</td>
+                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.totalContractAmount.toLocaleString()} 원</td>
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">이전수령금액</td>
-                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.previousAmount.toLocaleString()}원</td>
+                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.previousAmount.toLocaleString()} 원</td>
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">당일수령금액</td>
@@ -1651,7 +1651,7 @@ const ConstructionPayment = () => {
                             />
                             <span>원</span>
                           </span>
-                          <span className="hidden print:inline">{cashReceiptData.amount}원</span>
+                          <span className="hidden print:inline">{cashReceiptData.amount} 원</span>
                         </td>
                       </tr>
                       <tr className="border border-t-0 border-black">
@@ -1663,7 +1663,7 @@ const ConstructionPayment = () => {
                             const todayAmount = cashReceiptData.amount ? parseInt(cashReceiptData.amount.replace(/,/g, '')) : 0;
                             const remaining = cashReceiptData.remainingAmount - todayAmount;
                             return remaining.toLocaleString();
-                          })()}원
+                          })()} 원
                         </td>
                       </tr>
                     </tbody>
