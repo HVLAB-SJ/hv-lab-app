@@ -157,7 +157,7 @@ const SortableSpecBookItem = ({
             {item.category}
           </span>
           {item.grade && (
-            <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${getGradeColor(item.grade)}`}>
+            <span className={`inline-block px-1 py-0.5 text-[10px] rounded ${getGradeColor(item.grade)}`}>
               {formatGradeRange(item.grade)}
             </span>
           )}
