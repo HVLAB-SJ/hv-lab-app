@@ -1593,7 +1593,7 @@ const ConstructionPayment = () => {
                 {/* Receipt Content */}
                 <div className="border border-black p-8 bg-white print:border print:p-12">
                   {/* 제목 */}
-                  <div className="border border-black p-3 mb-8">
+                  <div className="p-3 mb-8">
                     <h3 className="text-center text-2xl font-bold">현금수령증</h3>
                   </div>
 
