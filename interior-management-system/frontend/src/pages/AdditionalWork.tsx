@@ -282,54 +282,50 @@ const AdditionalWork = () => {
               </div>
             </button>
 
-            {/* Project Works Table */}
+            {/* Project Works Cards */}
             {expandedProjects.has(group.projectName) && (
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">일자</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">내용</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">금액</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">비고</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">수정</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">삭제</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {group.works.map((work) => (
-                    <tr key={work.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <p className="text-sm text-gray-900">{format(work.date, 'yyyy.MM.dd (eee)', { locale: ko })}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm text-gray-900">{work.description}</p>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <p className="text-sm font-medium text-gray-900">{work.amount.toLocaleString()}원</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm text-gray-900">{work.notes || '-'}</p>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+              <div className="p-4 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {group.works.map((work) => (
+                  <div key={work.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-3">
+                      <p className="text-sm text-gray-600">{format(work.date, 'yyyy.MM.dd (eee)', { locale: ko })}</p>
+                      <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleEditWork(work)}
-                          className="text-gray-600 hover:text-gray-700 transition-colors"
+                          className="text-gray-600 hover:text-gray-700 transition-colors p-1"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <button
                           onClick={() => handleDeleteWork(work.id, work.project)}
-                          className="text-rose-600 hover:text-rose-700 transition-colors"
+                          className="text-rose-600 hover:text-rose-700 transition-colors p-1"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">내용</p>
+                        <p className="text-sm text-gray-900">{work.description}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">금액</p>
+                        <p className="text-base font-semibold text-gray-900">{work.amount.toLocaleString()}원</p>
+                      </div>
+
+                      {work.notes && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">비고</p>
+                          <p className="text-sm text-gray-900">{work.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         ))}
