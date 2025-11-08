@@ -1294,7 +1294,7 @@ div.rbc-popup {
     background: transparent !important;
     box-shadow: none !important;
     margin: 0 !important;
-    font-size: 90% !important; /* 전체 폰트 크기 90%로 축소 */
+    font-size: 81% !important; /* 전체 폰트 크기 81%로 축소 (90%의 90%) */
     height: auto !important;
     max-height: none !important;
     overflow: hidden !important;
@@ -1302,50 +1302,50 @@ div.rbc-popup {
 
   /* 현금수령증 출력 영역 폰트 크기 조정 */
   .print\\:block {
-    font-size: 90% !important;
+    font-size: 81% !important;
     overflow: hidden !important;
     max-height: 100vh !important;
   }
 
   /* 제목 크기 조정 */
   .print\\:block h1 {
-    font-size: 2.7rem !important; /* 원래 3rem의 90% */
-    margin-bottom: 1.8rem !important; /* 간격 축소 */
+    font-size: 2.43rem !important; /* 원래 3rem의 81% */
+    margin-bottom: 1.44rem !important; /* 간격 축소 */
   }
 
   /* 텍스트 크기 조정 */
   .print\\:block .text-lg {
-    font-size: 1.035rem !important; /* 원래 1.15rem의 90% */
+    font-size: 0.93rem !important; /* 원래 1.15rem의 81% */
   }
 
   .print\\:block .text-xl {
-    font-size: 1.125rem !important; /* 원래 1.25rem의 90% */
+    font-size: 1.01rem !important; /* 원래 1.25rem의 81% */
   }
 
-  /* 패딩 조정 (90% 비율 적용) */
+  /* 패딩 조정 (81% 비율 적용) */
   .print\\:block {
-    padding: 2.5rem !important; /* 약간 더 축소 */
+    padding: 2.0rem !important; /* 2.5rem의 81% */
   }
 
   .print\\:block > div {
-    padding: 1.6rem !important; /* 약간 더 축소 */
+    padding: 1.3rem !important; /* 1.6rem의 81% */
   }
 
   /* 간격 조정 */
   .print\\:block .space-y-6 > * + * {
-    margin-top: 1.2rem !important; /* 원래 1.5rem을 1.2rem으로 */
+    margin-top: 1.0rem !important; /* 원래 1.5rem의 67% */
   }
 
   .print\\:block .mt-12 {
-    margin-top: 2.4rem !important; /* 원래 3rem을 2.4rem으로 */
+    margin-top: 1.9rem !important; /* 원래 3rem의 63% */
   }
 
   .print\\:block .mt-8 {
-    margin-top: 1.6rem !important; /* 원래 2rem을 1.6rem으로 */
+    margin-top: 1.3rem !important; /* 원래 2rem의 65% */
   }
 
   .print\\:block .mb-8 {
-    margin-bottom: 1.6rem !important; /* 원래 2rem을 1.6rem으로 */
+    margin-bottom: 1.3rem !important; /* 원래 2rem의 65% */
   }
 
   /* 텍스트 선명도 개선 */
