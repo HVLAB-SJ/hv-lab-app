@@ -1262,6 +1262,8 @@ div.rbc-popup {
   }
 
   html, body {
+    margin: 0 !important;
+    padding: 0 !important;
     background: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -1275,14 +1277,19 @@ div.rbc-popup {
 
   /* 모달 배경 제거 및 위치 조정 */
   .fixed.inset-0 {
-    position: static !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
     background: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* 현금수령증 컨테이너 배경 제거 */
   .fixed.inset-0 > div {
     background: transparent !important;
     box-shadow: none !important;
+    margin: 0 !important;
   }
 
   /* 텍스트 선명도 개선 */
