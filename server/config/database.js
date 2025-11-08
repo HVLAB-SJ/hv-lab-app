@@ -519,6 +519,41 @@ const initDatabase = () => {
     }
   });
 
+  // 가견적서 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS estimate_previews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_name TEXT NOT NULL,
+      client_name TEXT NOT NULL,
+      area_size REAL NOT NULL,
+      grade TEXT NOT NULL,
+      finish_type TEXT,
+      bathroom_count INTEGER DEFAULT 1,
+      ceiling_height TEXT DEFAULT '표준',
+      include_sash INTEGER DEFAULT 0,
+      include_floor_heating INTEGER DEFAULT 0,
+      include_aircon INTEGER DEFAULT 0,
+      base_construction_cost INTEGER,
+      fixture_cost INTEGER,
+      sash_cost INTEGER,
+      heating_cost INTEGER,
+      aircon_cost INTEGER,
+      total_min_cost INTEGER,
+      total_max_cost INTEGER,
+      detail_breakdown TEXT,
+      created_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('❌ 가견적서 테이블 생성 실패:', err);
+    } else {
+      console.log('✓ 가견적서 테이블 생성 완료');
+    }
+  });
+
   // 견적문의 테이블
   db.run(`
     CREATE TABLE IF NOT EXISTS quote_inquiries (
