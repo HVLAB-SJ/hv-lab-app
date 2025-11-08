@@ -803,30 +803,33 @@ const SpecBook = () => {
                     </div>
 
                     {/* 등급 선택 버튼들 */}
-                    <div className="grid grid-cols-2 gap-1 my-2">
-                      {['알뜰', '기본', '고급', '하이엔드'].map(grade => (
-                        <button
-                          key={grade}
-                          type="button"
-                          onClick={() => {
-                            if (formData.grades.includes(grade)) {
-                              setFormData({ ...formData, grades: formData.grades.filter(g => g !== grade) });
-                            } else {
-                              setFormData({ ...formData, grades: [...formData.grades, grade] });
-                            }
-                          }}
-                          className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                            formData.grades.includes(grade)
-                              ? grade === '하이엔드' ? 'bg-violet-500 text-white' :
-                                grade === '고급' ? 'bg-sky-500 text-white' :
-                                grade === '기본' ? 'bg-emerald-500 text-white' :
-                                'bg-amber-400 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          {grade}
-                        </button>
-                      ))}
+                    <div className="flex gap-1 mt-2">
+                      {['알뜰', '기본', '고급', '하이'].map((grade, index) => {
+                        const fullGrade = index === 3 ? '하이엔드' : grade;
+                        return (
+                          <button
+                            key={fullGrade}
+                            type="button"
+                            onClick={() => {
+                              if (formData.grades.includes(fullGrade)) {
+                                setFormData({ ...formData, grades: formData.grades.filter(g => g !== fullGrade) });
+                              } else {
+                                setFormData({ ...formData, grades: [...formData.grades, fullGrade] });
+                              }
+                            }}
+                            className={`flex-1 px-1 py-1 text-xs font-medium rounded transition-colors ${
+                              formData.grades.includes(fullGrade)
+                                ? fullGrade === '하이엔드' ? 'bg-violet-500 text-white' :
+                                  fullGrade === '고급' ? 'bg-sky-500 text-white' :
+                                  fullGrade === '기본' ? 'bg-emerald-500 text-white' :
+                                  'bg-amber-400 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {grade}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {/* 버튼 영역 - 이미지 하단에 맞춤 */}
@@ -858,7 +861,7 @@ const SpecBook = () => {
           {/* 등급 필터 */}
           <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
             <div className="flex items-center gap-3">
-              <h3 className="text-sm font-semibold text-gray-900">등급 필터</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mr-3">등급 필터</h3>
               <div className="flex gap-2 flex-1">
                 {['알뜰', '기본', '고급', '하이엔드'].map(grade => (
                   <button
