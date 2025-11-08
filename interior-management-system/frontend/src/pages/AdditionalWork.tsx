@@ -130,6 +130,12 @@ const AdditionalWork = () => {
     group.works.sort((a, b) => b.date.getTime() - a.date.getTime());
   });
 
+  // 모든 프로젝트를 자동으로 펼침
+  useEffect(() => {
+    const allProjectNames = new Set(projectGroups.map(g => g.projectName));
+    setExpandedProjects(allProjectNames);
+  }, [filteredWorks.length]);
+
   const toggleProject = (projectName: string) => {
     const newExpanded = new Set(expandedProjects);
     if (newExpanded.has(projectName)) {
