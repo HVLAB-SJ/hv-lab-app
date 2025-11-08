@@ -1250,64 +1250,94 @@ div.rbc-popup {
 
 /* 인쇄 시 현금수령증만 표시 */
 @media print {
-  /* 모든 요소 숨기기 */
-  body * {
-    visibility: hidden !important;
-  }
-
-  /* 현금수령증 모달과 그 자식 요소만 표시 */
-  .fixed.inset-0,
-  .fixed.inset-0 * {
-    visibility: visible !important;
-  }
-
   /* 페이지 여백 및 크기 설정 */
   @page {
     margin: 15mm; /* 15mm 여백 */
     size: A4 portrait;
   }
 
+  /* 모든 요소 숨기기 */
+  * {
+    visibility: hidden !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
   html, body {
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
     height: auto !important;
     overflow: visible !important;
+    background: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* 모달 배경 위치 및 크기 조정 */
+  /* 현금수령증 모달과 그 자식 요소만 표시 */
+  .fixed.inset-0,
+  .fixed.inset-0 *,
+  .fixed.inset-0 *::before,
+  .fixed.inset-0 *::after {
+    visibility: visible !important;
+  }
+
+  /* 모달 배경 제거 및 위치 조정 */
   .fixed.inset-0 {
     position: static !important;
+    inset: 0 !important;
     transform: none !important;
     width: 100% !important;
     height: auto !important;
+    max-width: none !important;
     max-height: none !important;
     overflow: visible !important;
-    page-break-after: avoid !important;
-    page-break-inside: avoid !important;
-    background: transparent !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 현금수령증 컨테이너 */
+  .fixed.inset-0 > div {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* 현금수령증 내용 */
+  .fixed.inset-0 .border-black {
+    border: 1px solid black !important;
   }
 
   /* 텍스트 선명도 개선 */
-  * {
+  .fixed.inset-0 * {
     -webkit-font-smoothing: antialiased !important;
     -moz-osx-font-smoothing: grayscale !important;
     text-rendering: optimizeLegibility !important;
-    page-break-inside: avoid !important;
+  }
+
+  /* 1페이지만 출력 */
+  .fixed.inset-0 {
     page-break-after: avoid !important;
+    page-break-inside: avoid !important;
     page-break-before: avoid !important;
-    break-inside: avoid !important;
     break-after: avoid !important;
+    break-inside: avoid !important;
     break-before: avoid !important;
   }
 
-  /* 현금수령증 컨테이너 크기 조정 */
-  .fixed.inset-0 > div {
-    max-width: 100% !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
+  /* 인쇄하지 않을 요소들 */
+  .print\\:hidden,
+  button,
+  nav,
+  header,
+  footer,
+  aside {
+    display: none !important;
   }
 }
