@@ -395,7 +395,7 @@ const SpecBook = () => {
       {/* 메인 컨텐츠 */}
       <div className="flex-1 flex gap-6 overflow-hidden -ml-0">
         {/* 좌측: 입력 폼 + 카테고리 (항상 표시) */}
-        <div className="w-1/5 flex flex-col gap-4">
+        <div className="flex flex-col gap-4" style={{ width: '18%' }}>
           {/* 새 아이템 추가 폼 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
             <div className="p-3">
