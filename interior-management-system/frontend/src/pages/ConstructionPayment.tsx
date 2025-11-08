@@ -1681,24 +1681,18 @@ const ConstructionPayment = () => {
                   </div>
 
                   {/* 서명란 */}
-                  <div className="grid grid-cols-2 gap-16">
-                    <div className="text-center">
-                      <p className="mb-8">
-                        <span className="font-medium">[수령자]</span> 에이치브이랩 대표
-                      </p>
-                      <div className="flex justify-center items-center gap-16">
-                        <p className="text-xl font-bold">김 상 준</p>
-                        <p>(인)</p>
-                      </div>
+                  <div className="space-y-8">
+                    <div className="flex items-center justify-between border-b border-gray-300 pb-2">
+                      <span className="font-medium">[수령자]</span>
+                      <span>에이치브이랩 대표</span>
+                      <span className="text-xl font-bold">김 상 준</span>
+                      <span>(인)</span>
                     </div>
-                    <div className="text-center">
-                      <p className="mb-8">
-                        <span className="font-medium">[지급자]</span> {cashReceiptData.project.split('_')[0]}
-                      </p>
-                      <div className="flex justify-center items-center gap-16">
-                        <p className="text-xl">&nbsp;</p>
-                        <p>(인)</p>
-                      </div>
+                    <div className="flex items-center justify-between border-b border-gray-300 pb-2">
+                      <span className="font-medium">[지급자]</span>
+                      <span>{cashReceiptData.project.split('_')[0]}</span>
+                      <span className="text-xl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                      <span>(인)</span>
                     </div>
                   </div>
                 </div>
