@@ -704,11 +704,9 @@ const SpecBook = () => {
       {/* 메인 컨텐츠 */}
       <div className="flex-1 flex gap-6 overflow-hidden -ml-0">
         {/* 좌측: 입력 폼 + 카테고리 (항상 표시) */}
-        <div className="flex flex-col gap-4" style={{ width: '28%' }}>
-          {/* 새 아이템 추가와 등급 선택 영역 */}
-          <div className="flex gap-4">
-            {/* 새 아이템 추가 폼 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1">
+        <div className="flex flex-col gap-4" style={{ width: '20%' }}>
+          {/* 새 아이템 추가 폼 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
               <div className="p-3">
                 <h2 className="text-sm font-semibold mb-2 text-gray-900">
                   {editingItem ? '아이템 수정' : '새 아이템 추가'}
@@ -804,6 +802,33 @@ const SpecBook = () => {
                       </div>
                     </div>
 
+                    {/* 등급 선택 버튼들 */}
+                    <div className="grid grid-cols-2 gap-1 my-2">
+                      {['알뜰', '기본', '고급', '하이엔드'].map(grade => (
+                        <button
+                          key={grade}
+                          type="button"
+                          onClick={() => {
+                            if (formData.grades.includes(grade)) {
+                              setFormData({ ...formData, grades: formData.grades.filter(g => g !== grade) });
+                            } else {
+                              setFormData({ ...formData, grades: [...formData.grades, grade] });
+                            }
+                          }}
+                          className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                            formData.grades.includes(grade)
+                              ? grade === '하이엔드' ? 'bg-violet-500 text-white' :
+                                grade === '고급' ? 'bg-sky-500 text-white' :
+                                grade === '기본' ? 'bg-emerald-500 text-white' :
+                                'bg-amber-400 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {grade}
+                        </button>
+                      ))}
+                    </div>
+
                     {/* 버튼 영역 - 이미지 하단에 맞춤 */}
                     <div className="flex gap-1.5">
                       <button
@@ -828,40 +853,6 @@ const SpecBook = () => {
                 {/* 하단 패딩 */}
                 <div className="p-3 pt-0"></div>
               </form>
-            </div>
-
-            {/* 등급 선택 영역 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4" style={{ width: '150px' }}>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">등급 선택</h3>
-              <div className="space-y-2">
-                {['알뜰', '기본', '고급', '하이엔드'].map(grade => (
-                  <label key={grade} className="flex items-center text-xs cursor-pointer hover:bg-gray-50 p-2 rounded">
-                    <input
-                      type="checkbox"
-                      checked={formData.grades.includes(grade)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData({ ...formData, grades: [...formData.grades, grade] });
-                        } else {
-                          setFormData({ ...formData, grades: formData.grades.filter(g => g !== grade) });
-                        }
-                      }}
-                      className="mr-2"
-                    />
-                    <span className={`font-medium ${
-                      formData.grades.includes(grade)
-                        ? grade === '하이엔드' ? 'text-violet-500' :
-                          grade === '고급' ? 'text-sky-500' :
-                          grade === '기본' ? 'text-emerald-500' :
-                          'text-amber-500'
-                        : 'text-gray-700'
-                    }`}>
-                      {grade}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* 등급 필터 */}
