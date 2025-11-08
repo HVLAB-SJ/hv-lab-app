@@ -767,14 +767,14 @@ const ExecutionHistory = () => {
                 <table className="hidden lg:table w-full">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr className="text-left text-sm text-gray-700 border-b">
-                    <th className="px-3 py-3 font-medium w-[12%]">작성자</th>
-                    <th className="px-3 py-3 font-medium w-[15%]">날짜</th>
+                    <th className="px-3 py-3 font-medium w-[7%]">작성자</th>
+                    <th className="px-3 py-3 font-medium w-[13%]">날짜</th>
                     <th className="px-3 py-3 font-medium w-[10%]">공정</th>
-                    <th className="px-3 py-3 font-medium w-[23%]">항목명</th>
-                    <th className="px-3 py-3 font-medium text-right w-[10%]">자재비</th>
-                    <th className="px-3 py-3 font-medium text-right w-[10%]">인건비</th>
-                    <th className="px-3 py-3 font-medium text-right w-[10%]">부가세</th>
-                    <th className="px-3 py-3 font-medium text-right w-[10%]">총액</th>
+                    <th className="px-3 py-3 font-medium w-[20%]">항목명</th>
+                    <th className="px-3 py-3 font-medium text-right w-[12%]">자재비</th>
+                    <th className="px-3 py-3 font-medium text-right w-[12%]">인건비</th>
+                    <th className="px-3 py-3 font-medium text-right w-[12%]">부가세</th>
+                    <th className="px-3 py-3 font-medium text-right w-[14%]">총액</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
