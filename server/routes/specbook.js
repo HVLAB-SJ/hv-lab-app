@@ -144,11 +144,15 @@ router.get('/library', authenticateToken, (req, res) => {
   }
 
   // grades는 쉼표로 구분된 문자열로 전달됨 (예: "기본,고급")
+  // 각 아이템의 grade도 쉼표로 구분된 여러 값을 가질 수 있음
   if (grades) {
     const gradeList = grades.split(',').filter(g => g);
     if (gradeList.length > 0) {
-      query += ` AND grade IN (${gradeList.map(() => '?').join(',')})`;
-      params.push(...gradeList);
+      const gradeConditions = gradeList.map(() => `(grade LIKE ? OR grade LIKE ? OR grade LIKE ? OR grade = ?)`).join(' OR ');
+      query += ` AND (${gradeConditions})`;
+      gradeList.forEach(grade => {
+        params.push(`${grade},%`, `%,${grade},%`, `%,${grade}`, grade);
+      });
     }
   }
 
@@ -177,11 +181,15 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
   }
 
   // grades는 쉼표로 구분된 문자열로 전달됨
+  // 각 아이템의 grade도 쉼표로 구분된 여러 값을 가질 수 있음
   if (grades) {
     const gradeList = grades.split(',').filter(g => g);
     if (gradeList.length > 0) {
-      query += ` AND grade IN (${gradeList.map(() => '?').join(',')})`;
-      params.push(...gradeList);
+      const gradeConditions = gradeList.map(() => `(grade LIKE ? OR grade LIKE ? OR grade LIKE ? OR grade = ?)`).join(' OR ');
+      query += ` AND (${gradeConditions})`;
+      gradeList.forEach(grade => {
+        params.push(`${grade},%`, `%,${grade},%`, `%,${grade}`, grade);
+      });
     }
   }
 

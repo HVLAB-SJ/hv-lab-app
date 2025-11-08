@@ -235,7 +235,7 @@ const SpecBook = () => {
     category: '',
     brand: '',
     price: '',
-    grade: '기본',
+    grades: ['기본'] as string[],
     imageData: null as string | null
   });
   const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
@@ -410,7 +410,14 @@ const SpecBook = () => {
       return;
     }
 
+    if (formData.grades.length === 0) {
+      toast.error('최소 하나의 등급을 선택해주세요');
+      return;
+    }
+
     try {
+      const gradeString = formData.grades.join(',');
+
       if (editingItem) {
         // 수정 모드: 기존 로직 유지
         const submitData = {
@@ -418,7 +425,7 @@ const SpecBook = () => {
           category: formData.category,
           brand: formData.brand,
           price: formData.price,
-          grade: formData.grade,
+          grade: gradeString,
           description: '',
           imageData: formData.imageData,
           projectId: view === 'project' ? selectedProject : null,
@@ -436,7 +443,7 @@ const SpecBook = () => {
             category: formData.category,
             brand: formData.brand,
             price: formData.price,
-            grade: formData.grade,
+            grade: gradeString,
             description: '',
             imageData: formData.imageData,
             projectId: null,
@@ -450,7 +457,7 @@ const SpecBook = () => {
             category: formData.category,
             brand: formData.brand,
             price: formData.price,
-            grade: formData.grade,
+            grade: gradeString,
             description: '',
             imageData: formData.imageData,
             projectId: selectedProject,
@@ -465,7 +472,7 @@ const SpecBook = () => {
             category: formData.category,
             brand: formData.brand,
             price: formData.price,
-            grade: formData.grade,
+            grade: gradeString,
             description: '',
             imageData: formData.imageData,
             projectId: null,
@@ -477,7 +484,7 @@ const SpecBook = () => {
       }
 
       setEditingItem(null);
-      setFormData({ name: '', category: selectedCategory !== '전체' ? selectedCategory : '', brand: '', price: '', imageData: null });
+      setFormData({ name: '', category: selectedCategory !== '전체' ? selectedCategory : '', brand: '', price: '', grades: ['기본'], imageData: null });
       loadItems();
       // 전체 아이템 목록 업데이트
       if (view === 'library' || (view === 'project' && !editingItem)) {
@@ -494,12 +501,16 @@ const SpecBook = () => {
 
   const handleEdit = (item: SpecBookItem) => {
     setEditingItem(item);
+    // grade가 문자열이면 배열로 변환 (기존 데이터 호환성)
+    const grades = item.grade ?
+      (item.grade.includes(',') ? item.grade.split(',') : [item.grade]) :
+      ['기본'];
     setFormData({
       name: item.name,
       category: item.category,
       brand: item.brand,
       price: item.price,
-      grade: item.grade || '기본',
+      grades: grades,
       imageData: null
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -531,7 +542,7 @@ const SpecBook = () => {
       category: selectedCategory !== '전체' ? selectedCategory : '',
       brand: '',
       price: '',
-      grade: '기본',
+      grades: ['기본'],
       imageData: null
     });
   };
@@ -762,16 +773,28 @@ const SpecBook = () => {
                       ))}
                     </select>
 
-                    <select
-                      value={formData.grade}
-                      onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
-                      required
-                    >
-                      <option value="기본">기본</option>
-                      <option value="고급">고급</option>
-                      <option value="하이엔드">하이엔드</option>
-                    </select>
+                    <div className="border border-gray-300 rounded px-2 py-1.5">
+                      <div className="text-xs text-gray-700 mb-1">등급 선택</div>
+                      <div className="grid grid-cols-2 gap-1">
+                        {['알뜰', '기본', '고급', '하이엔드'].map(grade => (
+                          <label key={grade} className="flex items-center text-xs cursor-pointer hover:bg-gray-50 p-1 rounded">
+                            <input
+                              type="checkbox"
+                              checked={formData.grades.includes(grade)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setFormData({ ...formData, grades: [...formData.grades, grade] });
+                                } else {
+                                  setFormData({ ...formData, grades: formData.grades.filter(g => g !== grade) });
+                                }
+                              }}
+                              className="mr-1"
+                            />
+                            {grade}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
 
                     <input
                       type="text"
@@ -831,8 +854,8 @@ const SpecBook = () => {
           {/* 등급 필터 */}
           <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">등급 필터</h3>
-            <div className="flex gap-2">
-              {['기본', '고급', '하이엔드'].map(grade => (
+            <div className="flex gap-2 flex-wrap">
+              {['알뜰', '기본', '고급', '하이엔드'].map(grade => (
                 <button
                   key={grade}
                   onClick={() => {
@@ -846,7 +869,8 @@ const SpecBook = () => {
                     selectedGrades.includes(grade)
                       ? grade === '하이엔드' ? 'bg-purple-600 text-white' :
                         grade === '고급' ? 'bg-blue-600 text-white' :
-                        'bg-green-600 text-white'
+                        grade === '기본' ? 'bg-green-600 text-white' :
+                        'bg-yellow-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
