@@ -230,6 +230,27 @@ const SpecBook = () => {
     }
   };
 
+  // 프로젝트 합산 금액 계산
+  const getProjectTotalPrice = () => {
+    if (view !== 'project' || !selectedProject) return 0;
+
+    let totalPrice = 0;
+    const itemsToSum = selectedCategory === '전체'
+      ? allProjectItems
+      : allProjectItems.filter(item => item.category === selectedCategory);
+
+    itemsToSum.forEach(item => {
+      if (item.price) {
+        const priceNumber = parseInt(item.price.replace(/[^\d]/g, ''));
+        if (!isNaN(priceNumber)) {
+          totalPrice += priceNumber;
+        }
+      }
+    });
+
+    return totalPrice;
+  };
+
   const handleImageDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -942,6 +963,15 @@ const SpecBook = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+                {/* 프로젝트 합산 금액 표시 */}
+                {items.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex justify-end items-baseline">
+                      <span className="text-sm font-semibold text-gray-700 mr-2">합산 금액:</span>
+                      <span className="text-sm font-bold text-gray-900">{formatPrice(getProjectTotalPrice().toString())}원</span>
+                    </div>
                   </div>
                 )}
               </div>
