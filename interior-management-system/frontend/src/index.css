@@ -1329,6 +1329,16 @@ div.rbc-popup {
     font-size: 1.01rem !important; /* 원래 1.25rem의 81% */
   }
 
+  /* 날짜 텍스트 살짝 축소 (인쇄 시) */
+  .print\\:block .receipt-date {
+    font-size: 0.88rem !important; /* 0.93rem의 95% */
+  }
+
+  /* 금액 텍스트 확대 (인쇄 시) */
+  .print\\:block .receipt-amount {
+    font-size: 1.2rem !important; /* 0.93rem의 약 130% */
+  }
+
   /* 패딩 조정 (81% 비율 적용) */
   .print\\:block {
     padding: 2.0rem !important; /* 2.5rem의 81% */
