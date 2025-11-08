@@ -601,7 +601,7 @@ const SpecBook = () => {
               등록된 스펙북 아이템이 없습니다
             </div>
           ) : (
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-6 gap-4">
               {items.map(item => (
                 <div
                   key={item.id}

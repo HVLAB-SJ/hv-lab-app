@@ -1589,17 +1589,17 @@ const ConstructionPayment = () => {
 
               <div className="space-y-6 print:space-y-0">
                 {/* Receipt Content */}
-                <div className="border-2 border-black p-8 bg-white print:border-2 print:p-12">
+                <div className="border border-black p-8 bg-white print:border print:p-12">
                   {/* 제목 */}
-                  <div className="border-2 border-black p-3 mb-8">
+                  <div className="border border-black p-3 mb-8">
                     <h3 className="text-center text-2xl font-bold">현금수령 확인증</h3>
                   </div>
 
                   {/* 테이블 형식의 정보 */}
                   <table className="w-full mb-8 border-collapse">
                     <tbody>
-                      <tr className="border-2 border-black">
-                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium w-32">공사명</td>
+                      <tr className="border border-black">
+                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">공사명</td>
                         <td className="py-3 px-4 print:py-3">
                           <span className="print:hidden">{cashReceiptData.project}</span>
                           <input
@@ -1610,8 +1610,8 @@ const ConstructionPayment = () => {
                           />
                         </td>
                       </tr>
-                      <tr className="border-2 border-t-0 border-black">
-                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium">공사기간</td>
+                      <tr className="border border-t-0 border-black">
+                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">공사기간</td>
                         <td className="py-3 px-4">
                           {cashReceiptData.startDate && cashReceiptData.endDate ? (
                             <span>{format(new Date(cashReceiptData.startDate), 'yyyy.MM.dd')} ~ {format(new Date(cashReceiptData.endDate), 'yyyy.MM.dd')}</span>
@@ -1620,16 +1620,16 @@ const ConstructionPayment = () => {
                           )}
                         </td>
                       </tr>
-                      <tr className="border-2 border-t-0 border-black">
-                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium">총공사 금액</td>
+                      <tr className="border border-t-0 border-black">
+                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">총공사금액</td>
                         <td className="py-3 px-4 text-right pr-4">{cashReceiptData.totalContractAmount.toLocaleString()}</td>
                       </tr>
-                      <tr className="border-2 border-t-0 border-black">
-                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium">이전수령 금액</td>
+                      <tr className="border border-t-0 border-black">
+                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">이전수령금액</td>
                         <td className="py-3 px-4 text-right pr-4">{cashReceiptData.previousAmount.toLocaleString()}</td>
                       </tr>
-                      <tr className="border-2 border-t-0 border-black">
-                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium">당일수령 금액</td>
+                      <tr className="border border-t-0 border-black">
+                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">당일수령금액</td>
                         <td className="py-3 px-4 text-right pr-4">
                           <span className="print:hidden">
                             <input
@@ -1647,8 +1647,8 @@ const ConstructionPayment = () => {
                           <span className="hidden print:inline">{cashReceiptData.amount}</span>
                         </td>
                       </tr>
-                      <tr className="border-2 border-t-0 border-black">
-                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium">최종잔여 금액</td>
+                      <tr className="border border-t-0 border-black">
+                        <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">최종잔여금액</td>
                         <td className="py-3 px-4 text-right pr-4">
                           {(() => {
                             const todayAmount = cashReceiptData.amount ? parseInt(cashReceiptData.amount.replace(/,/g, '')) : 0;
@@ -1676,7 +1676,7 @@ const ConstructionPayment = () => {
                           className="border border-gray-300 rounded px-2 py-1"
                         />
                       </span>
-                      <span className="hidden print:inline">{format(new Date(cashReceiptData.date), 'yyyy년 M월 d일')}</span>
+                      <span className="hidden print:inline">{format(new Date(cashReceiptData.date), 'yyyy년 MM월 dd일')}</span>
                     </p>
                   </div>
 
@@ -1693,7 +1693,7 @@ const ConstructionPayment = () => {
                     </div>
                     <div className="text-center">
                       <p className="mb-8">
-                        <span className="font-medium">[지급자]</span> {cashReceiptData.project}
+                        <span className="font-medium">[지급자]</span> {cashReceiptData.project.split('_')[0]}
                       </p>
                       <div className="flex justify-center items-center gap-16">
                         <p className="text-xl">&nbsp;</p>
