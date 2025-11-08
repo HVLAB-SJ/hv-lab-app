@@ -551,8 +551,8 @@ const ExecutionHistory = () => {
       {/* 메인 컨텐츠 - 3열 레이아웃 */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-        {/* 왼쪽: 입력 폼 */}
-        <div className={`lg:col-span-1 bg-white rounded-lg border p-4 overflow-y-auto ${
+        {/* 왼쪽: 입력 폼 (2열) */}
+        <div className={`lg:col-span-2 bg-white rounded-lg border p-4 overflow-y-auto ${
           mobileView !== 'form' ? 'hidden lg:block' : ''
         }`}>
           <div className="space-y-4">
@@ -755,8 +755,8 @@ const ExecutionHistory = () => {
           </div>
         </div>
 
-        {/* 중앙: 실행내역 목록 - 테이블 형식 (7열로 확대) */}
-        <div className={`lg:col-span-7 bg-white rounded-lg border overflow-hidden flex flex-col ${
+        {/* 중앙: 실행내역 목록 - 테이블 형식 (5열) */}
+        <div className={`lg:col-span-5 bg-white rounded-lg border overflow-hidden flex flex-col ${
           mobileView !== 'list' ? 'hidden lg:flex' : ''
         }`}>
           {/* 모바일: 카드 형식, 데스크톱: 테이블 형식 */}
