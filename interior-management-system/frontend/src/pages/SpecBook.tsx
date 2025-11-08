@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Pencil, Trash2, Upload, Settings, X, Plus, GripVertical } from 'lucide-react';
+import { Pencil, Trash2, Upload, Settings, X, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import {
@@ -71,7 +71,6 @@ const SortableCategoryItem = ({
       className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 bg-white cursor-grab active:cursor-grabbing"
     >
       <div className="flex items-center gap-2 flex-1">
-        <GripVertical className="h-4 w-4 text-gray-400" />
         <span className="text-sm text-gray-900">{category}</span>
       </div>
       {category !== '전체' && (

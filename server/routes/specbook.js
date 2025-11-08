@@ -112,7 +112,7 @@ router.get('/categories', authenticateToken, (req, res) => {
 });
 
 // 카테고리 목록 업데이트
-router.put('/categories', authenticateToken, isManager, (req, res) => {
+router.put('/categories', authenticateToken, (req, res) => {
   const { categories } = req.body;
 
   if (!categories || !Array.isArray(categories)) {
