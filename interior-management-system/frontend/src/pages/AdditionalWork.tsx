@@ -263,9 +263,9 @@ const AdditionalWork = () => {
               onClick={() => toggleProject(group.projectName)}
               className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
             >
-              <h3 className="font-bold text-base text-gray-900 truncate flex-1 text-left mr-3">{group.projectName}</h3>
+              <h3 className="font-bold text-lg text-gray-900 truncate flex-1 text-left mr-3">{group.projectName}</h3>
               <div className="flex items-center space-x-2 flex-shrink-0">
-                <p className="text-sm text-gray-600">
+                <p className="text-base font-semibold text-gray-700">
                   {group.works.length}건 {group.totalAmount.toLocaleString()}원
                 </p>
                 {expandedProjects.has(group.projectName) ? (
@@ -281,10 +281,10 @@ const AdditionalWork = () => {
               <div className="divide-y divide-gray-200">
                 {group.works.map((work) => (
                   <div key={work.id} className="p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-4">
                       <p className="text-sm text-gray-600 flex-shrink-0">{format(work.date, 'MM.dd (eee)', { locale: ko })}</p>
                       <p className="text-base text-gray-900 font-medium flex-1 truncate">{work.description}</p>
-                      <p className="text-base font-semibold text-gray-900 flex-shrink-0">{work.amount.toLocaleString()}원</p>
+                      <p className="text-base font-semibold text-gray-900 flex-shrink-0 mr-2">{work.amount.toLocaleString()}원</p>
                       <div className="flex items-center space-x-1 flex-shrink-0">
                         <button
                           onClick={() => handleEditWork(work)}
