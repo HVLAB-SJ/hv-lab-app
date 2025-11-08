@@ -599,7 +599,8 @@ const ConstructionPayment = () => {
                       onClick={() => {
                         const received = calculateReceived(record);
                         const totalContract = calculateTotalContractAmount(record);
-                        const remaining = calculateRemaining(record);
+                        // 추가내역을 제외한 잔여금액 계산
+                        const remainingWithoutAdditional = totalContract - received;
 
                         setCashReceiptData({
                           project: record.project,
@@ -609,7 +610,7 @@ const ConstructionPayment = () => {
                           clientSignature: '',
                           totalContractAmount: totalContract,
                           previousAmount: received,
-                          remainingAmount: remaining,
+                          remainingAmount: remainingWithoutAdditional,
                           startDate: record.start_date || '',
                           endDate: record.end_date || ''
                         });
@@ -1664,7 +1665,7 @@ const ConstructionPayment = () => {
                         </div>
                       </div>
                       <div className="flex justify-between items-center border-t border-gray-300 pt-2">
-                        <span className="text-sm font-medium text-gray-700">잔여금액</span>
+                        <span className="text-sm font-medium text-gray-700">잔여금액 (추가내역 제외)</span>
                         <span className="text-sm font-semibold text-red-600">
                           {(() => {
                             const todayAmount = cashReceiptData.amount ? parseInt(cashReceiptData.amount.replace(/,/g, '')) : 0;
@@ -1684,29 +1685,21 @@ const ConstructionPayment = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm font-medium text-gray-700 mb-2">수령인 (발행자)</p>
-                          <div className="border-b border-gray-400 pb-2">
-                            <p className="text-sm">에이치브이랩 대표</p>
-                            <div className="flex items-center justify-between mt-1">
-                              <p className="text-sm font-medium">김상준</p>
+                          <div className="border-b border-gray-400 pb-2 min-h-[60px] flex flex-col items-center justify-center">
+                            <p className="text-xs text-gray-600 mb-1">에이치브이랩 대표</p>
+                            <div className="flex items-center justify-center gap-8 w-full">
+                              <p className="text-lg font-bold">김상준</p>
                               <span className="text-xs text-gray-500">(인)</span>
                             </div>
                           </div>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-700 mb-2">
-                            지급인 <span className="text-red-500">*</span>
-                          </p>
-                          <div className="border-b border-gray-400 pb-2">
-                            <input
-                              type="text"
-                              value={cashReceiptData.clientSignature}
-                              onChange={(e) => setCashReceiptData({...cashReceiptData, clientSignature: e.target.value})}
-                              placeholder="이름을 입력하세요"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-1"
-                            />
-                            <div className="flex justify-end">
-                              <span className="text-xs text-gray-500">(인)</span>
+                          <p className="text-sm font-medium text-gray-700 mb-2">지급인</p>
+                          <div className="border-b border-gray-400 pb-2 min-h-[60px] flex items-center justify-center gap-8">
+                            <div className="flex-1 text-center">
+                              <span className="text-gray-400 text-sm">(인쇄 후 작성)</span>
                             </div>
+                            <span className="text-xs text-gray-500">(인)</span>
                           </div>
                         </div>
                       </div>
@@ -1720,10 +1713,6 @@ const ConstructionPayment = () => {
                     onClick={() => {
                       if (!cashReceiptData.amount) {
                         toast.error('수령금액을 입력해주세요');
-                        return;
-                      }
-                      if (!cashReceiptData.clientSignature) {
-                        toast.error('지급인 이름을 입력해주세요');
                         return;
                       }
 
