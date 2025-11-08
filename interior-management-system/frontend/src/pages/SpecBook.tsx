@@ -704,151 +704,164 @@ const SpecBook = () => {
       {/* 메인 컨텐츠 */}
       <div className="flex-1 flex gap-6 overflow-hidden -ml-0">
         {/* 좌측: 입력 폼 + 카테고리 (항상 표시) */}
-        <div className="flex flex-col gap-4" style={{ width: '18%' }}>
-          {/* 새 아이템 추가 폼 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-            <div className="p-3">
-              <h2 className="text-sm font-semibold mb-2 text-gray-900">
-                {editingItem ? '아이템 수정' : '새 아이템 추가'}
-              </h2>
-            </div>
-            <form onSubmit={handleSubmit} className="flex flex-col">
-              {/* 수평 카드 형태: 이미지 + 입력 필드 */}
-              <div className="flex gap-3 px-3">
-                {/* 좌측: 이미지 - 정사각형 */}
-                <div
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setIsDragging(true);
-                  }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={handleImageDrop}
-                  className={`w-56 h-56 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
-                    isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {formData.imageData || editingItem?.image_url ? (
-                    <img
-                      src={formData.imageData || editingItem?.image_url || ''}
-                      alt="Preview"
-                      className="w-full h-full object-contain rounded-lg"
-                    />
-                  ) : (
-                    <div className="text-center">
-                      <Upload className="w-8 h-8 mx-auto mb-1 text-gray-400" />
-                      <p className="text-sm text-gray-500">이미지</p>
-                    </div>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                          setFormData({ ...formData, imageData: e.target?.result as string });
-                        };
-                        reader.readAsDataURL(file);
-                      }
+        <div className="flex flex-col gap-4" style={{ width: '28%' }}>
+          {/* 새 아이템 추가와 등급 선택 영역 */}
+          <div className="flex gap-4">
+            {/* 새 아이템 추가 폼 */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1">
+              <div className="p-3">
+                <h2 className="text-sm font-semibold mb-2 text-gray-900">
+                  {editingItem ? '아이템 수정' : '새 아이템 추가'}
+                </h2>
+              </div>
+              <form onSubmit={handleSubmit} className="flex flex-col">
+                {/* 수평 카드 형태: 이미지 + 입력 필드 */}
+                <div className="flex gap-3 px-3">
+                  {/* 좌측: 이미지 - 정사각형 */}
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragging(true);
                     }}
-                    className="hidden"
-                  />
-                </div>
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleImageDrop}
+                    className={`w-56 h-56 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
+                      isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {formData.imageData || editingItem?.image_url ? (
+                      <img
+                        src={formData.imageData || editingItem?.image_url || ''}
+                        alt="Preview"
+                        className="w-full h-full object-contain rounded-lg"
+                      />
+                    ) : (
+                      <div className="text-center">
+                        <Upload className="w-8 h-8 mx-auto mb-1 text-gray-400" />
+                        <p className="text-sm text-gray-500">이미지</p>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (e) => {
+                            setFormData({ ...formData, imageData: e.target?.result as string });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </div>
 
-                {/* 우측: 입력 필드들 */}
-                <div className="flex-1 flex flex-col justify-between h-56">
-                  <div className="space-y-1.5">
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
-                      required
-                    >
-                      <option value="">카테고리</option>
-                      {categories.filter(c => c !== '전체').map(category => (
-                        <option key={category} value={category}>{category}</option>
-                      ))}
-                    </select>
-
-                    <div className="border border-gray-300 rounded px-2 py-1.5">
-                      <div className="text-xs text-gray-700 mb-1">등급 선택</div>
-                      <div className="grid grid-cols-2 gap-1">
-                        {['알뜰', '기본', '고급', '하이엔드'].map(grade => (
-                          <label key={grade} className="flex items-center text-xs cursor-pointer hover:bg-gray-50 p-1 rounded">
-                            <input
-                              type="checkbox"
-                              checked={formData.grades.includes(grade)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setFormData({ ...formData, grades: [...formData.grades, grade] });
-                                } else {
-                                  setFormData({ ...formData, grades: formData.grades.filter(g => g !== grade) });
-                                }
-                              }}
-                              className="mr-1"
-                            />
-                            {grade}
-                          </label>
+                  {/* 우측: 입력 필드들 */}
+                  <div className="flex-1 flex flex-col justify-between h-56">
+                    <div className="space-y-1.5">
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
+                        required
+                      >
+                        <option value="">카테고리</option>
+                        {categories.filter(c => c !== '전체').map(category => (
+                          <option key={category} value={category}>{category}</option>
                         ))}
+                      </select>
+
+                      <input
+                        type="text"
+                        value={formData.brand}
+                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
+                        placeholder="브랜드"
+                      />
+
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
+                        placeholder="제품명"
+                        required
+                      />
+
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={formData.price}
+                          onChange={handlePriceChange}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 pr-8"
+                          placeholder="가격"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500">원</span>
                       </div>
                     </div>
 
-                    <input
-                      type="text"
-                      value={formData.brand}
-                      onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
-                      placeholder="브랜드"
-                    />
-
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500"
-                      placeholder="제품명"
-                      required
-                    />
-
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={formData.price}
-                        onChange={handlePriceChange}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 pr-8"
-                        placeholder="가격"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500">원</span>
+                    {/* 버튼 영역 - 이미지 하단에 맞춤 */}
+                    <div className="flex gap-1.5">
+                      <button
+                        type="submit"
+                        className="flex-1 px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+                      >
+                        {editingItem ? '수정' : '추가'}
+                      </button>
+                      {editingItem && (
+                        <button
+                          type="button"
+                          onClick={handleCancel}
+                          className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                          취소
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  {/* 버튼 영역 - 이미지 하단에 맞춤 */}
-                  <div className="flex gap-1.5">
-                    <button
-                      type="submit"
-                      className="flex-1 px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
-                    >
-                      {editingItem ? '수정' : '추가'}
-                    </button>
-                    {editingItem && (
-                      <button
-                        type="button"
-                        onClick={handleCancel}
-                        className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                      >
-                        취소
-                      </button>
-                    )}
-                  </div>
                 </div>
-              </div>
 
-              {/* 하단 패딩 */}
-              <div className="p-3 pt-0"></div>
-            </form>
+                {/* 하단 패딩 */}
+                <div className="p-3 pt-0"></div>
+              </form>
+            </div>
+
+            {/* 등급 선택 영역 */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4" style={{ width: '150px' }}>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">등급 선택</h3>
+              <div className="space-y-2">
+                {['알뜰', '기본', '고급', '하이엔드'].map(grade => (
+                  <label key={grade} className="flex items-center text-xs cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <input
+                      type="checkbox"
+                      checked={formData.grades.includes(grade)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, grades: [...formData.grades, grade] });
+                        } else {
+                          setFormData({ ...formData, grades: formData.grades.filter(g => g !== grade) });
+                        }
+                      }}
+                      className="mr-2"
+                    />
+                    <span className={`font-medium ${
+                      formData.grades.includes(grade)
+                        ? grade === '하이엔드' ? 'text-purple-600' :
+                          grade === '고급' ? 'text-blue-600' :
+                          grade === '기본' ? 'text-green-600' :
+                          'text-yellow-600'
+                        : 'text-gray-700'
+                    }`}>
+                      {grade}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* 등급 필터 */}
