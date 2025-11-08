@@ -36,6 +36,15 @@ const ConstructionPayment = () => {
   } = useDataStore();
   const [records, setRecords] = useState<PaymentRecord[]>(constructionPayments);
   const [additionalWorks, setAdditionalWorks] = useState<Array<{ _id: string; project: string; amount: number }>>([]);
+  const [showCashReceiptModal, setShowCashReceiptModal] = useState(false);
+  const [cashReceiptData, setCashReceiptData] = useState({
+    project: '',
+    client: '',
+    amount: '',
+    date: format(new Date(), 'yyyy-MM-dd'),
+    clientSignature: '',
+    notes: ''
+  });
 
   // Load construction payments from API on mount
   useEffect(() => {
@@ -591,12 +600,19 @@ const ConstructionPayment = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
-                        setSelectedRecord(record);
-                        setIsPaymentModalOpen(true);
+                        setCashReceiptData({
+                          project: record.project,
+                          client: record.client,
+                          amount: '',
+                          date: format(new Date(), 'yyyy-MM-dd'),
+                          clientSignature: '',
+                          notes: ''
+                        });
+                        setShowCashReceiptModal(true);
                       }}
                       className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
                     >
-                      입금추가
+                      현금수령증
                     </button>
                     <button
                       onClick={() => setSelectedRecord(record)}
@@ -1544,6 +1560,153 @@ const ConstructionPayment = () => {
                 >
                   {editingPaymentIndex !== null ? '수정' : '추가'}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cash Receipt Modal */}
+      {showCashReceiptModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">현금수령증</h2>
+                <button
+                  onClick={() => setShowCashReceiptModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Receipt Content */}
+                <div className="border-2 border-gray-300 rounded-lg p-6 bg-white">
+                  <h3 className="text-center text-xl font-bold mb-6 border-b-2 border-gray-800 pb-2">
+                    현금 수령증
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          프로젝트명
+                        </label>
+                        <input
+                          type="text"
+                          value={cashReceiptData.project}
+                          onChange={(e) => setCashReceiptData({...cashReceiptData, project: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          readOnly
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          수령일자
+                        </label>
+                        <input
+                          type="date"
+                          value={cashReceiptData.date}
+                          onChange={(e) => setCashReceiptData({...cashReceiptData, date: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        수령금액 <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={cashReceiptData.amount}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, '');
+                            const formatted = value ? parseInt(value).toLocaleString() : '';
+                            setCashReceiptData({...cashReceiptData, amount: formatted});
+                          }}
+                          placeholder="수령한 금액을 입력하세요"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-12"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">원</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <p className="text-sm text-gray-700 mb-3">
+                        상기 금액을 정히 수령하였음을 확인합니다.
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-2">수령인 (발행자)</p>
+                          <div className="border-b border-gray-400 pb-1">
+                            <p className="text-sm">에이치브이랩 대표 김상준</p>
+                            <p className="text-xs text-gray-500 mt-1">(인)</p>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-2">
+                            지급인 <span className="text-red-500">*</span>
+                          </p>
+                          <input
+                            type="text"
+                            value={cashReceiptData.clientSignature}
+                            onChange={(e) => setCashReceiptData({...cashReceiptData, clientSignature: e.target.value})}
+                            placeholder="이름을 입력하세요"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">(인)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        비고
+                      </label>
+                      <textarea
+                        value={cashReceiptData.notes}
+                        onChange={(e) => setCashReceiptData({...cashReceiptData, notes: e.target.value})}
+                        placeholder="추가 메모사항을 입력하세요"
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      if (!cashReceiptData.amount) {
+                        toast.error('수령금액을 입력해주세요');
+                        return;
+                      }
+                      if (!cashReceiptData.clientSignature) {
+                        toast.error('지급인 이름을 입력해주세요');
+                        return;
+                      }
+
+                      // 프린트 기능
+                      window.print();
+                      toast.success('현금수령증이 생성되었습니다');
+                    }}
+                    className="flex-1 px-4 py-3 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-900 transition-colors"
+                  >
+                    인쇄하기
+                  </button>
+                  <button
+                    onClick={() => setShowCashReceiptModal(false)}
+                    className="px-4 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    취소
+                  </button>
+                </div>
               </div>
             </div>
           </div>
