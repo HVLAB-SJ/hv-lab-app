@@ -107,6 +107,7 @@ const SpecBook = () => {
   const [view, setView] = useState<'library' | 'project'>('library');
   const [items, setItems] = useState<SpecBookItem[]>([]);
   const [allLibraryItems, setAllLibraryItems] = useState<SpecBookItem[]>([]); // 전체 라이브러리 아이템 (수량 계산용)
+  const [allProjectItems, setAllProjectItems] = useState<SpecBookItem[]>([]); // 전체 프로젝트 아이템 (수량 계산용)
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [projects, setProjects] = useState<Project[]>([]);
@@ -144,6 +145,13 @@ const SpecBook = () => {
     loadItems();
   }, [view, selectedCategory, selectedProject]);
 
+  // 프로젝트가 선택될 때 전체 프로젝트 아이템 로드
+  useEffect(() => {
+    if (view === 'project' && selectedProject) {
+      loadAllProjectItems();
+    }
+  }, [view, selectedProject]);
+
   const loadCategories = async () => {
     try {
       const response = await api.get('/specbook/categories');
@@ -173,6 +181,16 @@ const SpecBook = () => {
     }
   };
 
+  const loadAllProjectItems = async () => {
+    if (!selectedProject) return;
+    try {
+      const response = await api.get(`/specbook/project/${selectedProject}`);
+      setAllProjectItems(response.data);
+    } catch (error) {
+      console.error('전체 프로젝트 아이템 로드 실패:', error);
+    }
+  };
+
   const loadItems = async () => {
     try {
       setLoading(true);
@@ -199,11 +217,17 @@ const SpecBook = () => {
     }
   };
 
-  // 카테고리별 수량 계산 (스펙 라이브러리만)
+  // 카테고리별 수량 계산
   const getCategoryCount = (category: string) => {
-    if (view !== 'library') return 0;
-    if (category === '전체') return allLibraryItems.length;
-    return allLibraryItems.filter(item => item.category === category).length;
+    if (view === 'library') {
+      // 라이브러리 뷰: 전체 라이브러리 아이템에서 계산
+      if (category === '전체') return allLibraryItems.length;
+      return allLibraryItems.filter(item => item.category === category).length;
+    } else {
+      // 프로젝트 뷰: 전체 프로젝트 아이템에서 계산
+      if (category === '전체') return allProjectItems.length;
+      return allProjectItems.filter(item => item.category === category).length;
+    }
   };
 
   const handleImageDrop = (e: React.DragEvent) => {
@@ -288,6 +312,8 @@ const SpecBook = () => {
       // 스펙 라이브러리에 추가/수정한 경우 전체 라이브러리 아이템도 업데이트
       if (view === 'library') {
         loadAllLibraryItems();
+      } else if (view === 'project' && selectedProject) {
+        loadAllProjectItems();
       }
     } catch (error: any) {
       console.error('스펙북 아이템 저장 실패:', error);
@@ -317,6 +343,8 @@ const SpecBook = () => {
       // 스펙 라이브러리에서 삭제한 경우 전체 라이브러리 아이템도 업데이트
       if (view === 'library') {
         loadAllLibraryItems();
+      } else if (view === 'project' && selectedProject) {
+        loadAllProjectItems();
       }
     } catch (error) {
       console.error('삭제 실패:', error);
@@ -556,16 +584,7 @@ const SpecBook = () => {
           {/* 카테고리 버튼들 (3열) */}
           <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-gray-900">
-                  {view === 'project' && selectedProject
-                    ? `카테고리 (${projects.find(p => p.id === selectedProject)?.title || ''})`
-                    : '카테고리'}
-                </h3>
-                {view === 'project' && selectedProject && (
-                  <p className="text-xs text-gray-600 mt-1">{items.length}</p>
-                )}
-              </div>
+              <h3 className="text-sm font-semibold text-gray-900">카테고리</h3>
               <button
                 onClick={handleOpenCategoryModal}
                 className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
@@ -577,8 +596,8 @@ const SpecBook = () => {
             <div className="grid grid-cols-3 gap-2">
               {categories.map(category => {
                 const count = getCategoryCount(category);
-                // 스펙 라이브러리이고 수량이 0이 아닌 경우만 수량 표시
-                const showCount = view === 'library' && count > 0;
+                // 라이브러리 또는 프로젝트가 선택된 경우에 수량 표시
+                const showCount = (view === 'library' || (view === 'project' && selectedProject)) && count > 0;
 
                 return (
                   <button
@@ -844,6 +863,7 @@ const SpecBook = () => {
                         });
                         toast.success('아이템이 프로젝트에 추가되었습니다');
                         loadItems(); // 프로젝트 아이템 새로고침
+                        loadAllProjectItems(); // 전체 프로젝트 아이템도 새로고침
                       }
                     } catch (error) {
                       console.error('아이템 추가 실패:', error);
