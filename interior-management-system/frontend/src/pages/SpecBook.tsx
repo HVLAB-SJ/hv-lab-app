@@ -391,65 +391,6 @@ const SpecBook = () => {
         }
       }}
     >
-      {/* 버튼 영역 */}
-      <div className="flex items-center gap-2 mb-4">
-        <div style={{ width: '20%' }}>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                setView('library');
-                setSelectedProject(null);
-              }}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                view === 'library'
-                  ? 'bg-gray-800 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-              }`}
-            >
-              스펙 라이브러리
-            </button>
-
-            <select
-              value={selectedProject || ''}
-              onChange={(e) => {
-                if (e.target.value) {
-                  setView('project');
-                  setSelectedProject(Number(e.target.value));
-                } else {
-                  setView('library');
-                  setSelectedProject(null);
-                }
-              }}
-              className={`flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
-                view === 'project' && selectedProject
-                  ? 'bg-gray-800 text-white'
-                  : 'bg-white'
-              }`}
-            >
-              <option value="">프로젝트 선택</option>
-              {projects.map(project => (
-                <option key={project.id} value={project.id}>
-                  {project.title}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* 프로젝트 선택 시 제목 표시 */}
-        {view === 'project' && selectedProject && (
-          <div className="flex-1 flex gap-6 pl-6">
-            <div className="flex-1">
-              <h2 className="text-lg font-bold text-gray-900">스펙 라이브러리</h2>
-            </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-bold text-gray-900">
-                {projects.find(p => p.id === selectedProject)?.title}
-              </h2>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* 메인 컨텐츠 */}
       <div className="flex-1 flex gap-6 overflow-hidden -ml-0">
@@ -624,7 +565,42 @@ const SpecBook = () => {
         {/* 아이템 그리드 영역 */}
         {view === 'library' ? (
           /* 라이브러리 뷰: 전체 폭 */
-          <div className="flex-1 overflow-y-auto pr-4">
+          <div className="flex-1 flex flex-col overflow-hidden pr-4">
+          {/* 버튼 영역 */}
+          <div className="mb-4 flex gap-2">
+            <button
+              onClick={() => {
+                setView('library');
+                setSelectedProject(null);
+              }}
+              className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-800 text-white"
+            >
+              스펙 라이브러리
+            </button>
+
+            <select
+              value={selectedProject || ''}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setView('project');
+                  setSelectedProject(Number(e.target.value));
+                } else {
+                  setView('library');
+                  setSelectedProject(null);
+                }
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white"
+            >
+              <option value="">프로젝트 선택</option>
+              {projects.map(project => (
+                <option key={project.id} value={project.id}>
+                  {project.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-gray-500">로딩 중...</div>
@@ -696,9 +672,48 @@ const SpecBook = () => {
             </div>
           )}
           </div>
+          </div>
         ) : (
           /* 프로젝트 뷰: 좌우 분할 - 스펙 라이브러리 + 프로젝트 아이템 */
-          <div className="flex-1 flex overflow-hidden pr-4">
+          <div className="flex-1 flex flex-col overflow-hidden pr-4">
+            {/* 버튼 영역 */}
+            <div className="mb-4 flex gap-6">
+              <div className="flex-1">
+                <button
+                  onClick={() => {
+                    setView('library');
+                    setSelectedProject(null);
+                  }}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-800 text-white"
+                >
+                  스펙 라이브러리
+                </button>
+              </div>
+              <div className="flex-1">
+                <select
+                  value={selectedProject || ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setView('project');
+                      setSelectedProject(Number(e.target.value));
+                    } else {
+                      setView('library');
+                      setSelectedProject(null);
+                    }
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white"
+                >
+                  <option value="">프로젝트 선택</option>
+                  {projects.map(project => (
+                    <option key={project.id} value={project.id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex-1 flex overflow-hidden">
               {/* 좌측: 스펙 라이브러리 (드래그 소스) */}
               <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4">
                 <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
@@ -862,6 +877,7 @@ const SpecBook = () => {
                   </div>
                 )}
               </div>
+            </div>
             </div>
           </div>
         )}
