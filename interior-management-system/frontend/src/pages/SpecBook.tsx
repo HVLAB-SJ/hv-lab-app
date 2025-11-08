@@ -825,7 +825,21 @@ const SpecBook = () => {
                       >
                         <div className="w-full aspect-square bg-gray-100 relative">
                           {item.image_url ? (
-                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                            <img
+                              src={item.image_url}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const parent = e.currentTarget.parentElement;
+                                if (parent) {
+                                  const errorDiv = document.createElement('div');
+                                  errorDiv.className = 'w-full h-full flex items-center justify-center text-gray-400 text-xs';
+                                  errorDiv.textContent = '이미지 로드 실패';
+                                  parent.appendChild(errorDiv);
+                                }
+                              }}
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
                               이미지 없음
