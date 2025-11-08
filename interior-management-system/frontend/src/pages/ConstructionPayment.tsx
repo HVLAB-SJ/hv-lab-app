@@ -43,7 +43,11 @@ const ConstructionPayment = () => {
     amount: '',
     date: format(new Date(), 'yyyy-MM-dd'),
     clientSignature: '',
-    notes: ''
+    totalContractAmount: 0,
+    previousAmount: 0,
+    remainingAmount: 0,
+    startDate: '',
+    endDate: ''
   });
 
   // Load construction payments from API on mount
@@ -593,13 +597,21 @@ const ConstructionPayment = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
+                        const received = calculateReceived(record);
+                        const totalContract = calculateTotalContractAmount(record);
+                        const remaining = calculateRemaining(record);
+
                         setCashReceiptData({
                           project: record.project,
                           client: record.client,
                           amount: '',
                           date: format(new Date(), 'yyyy-MM-dd'),
                           clientSignature: '',
-                          notes: ''
+                          totalContractAmount: totalContract,
+                          previousAmount: received,
+                          remainingAmount: remaining,
+                          startDate: record.start_date || '',
+                          endDate: record.end_date || ''
                         });
                         setShowCashReceiptModal(true);
                       }}
@@ -1582,6 +1594,7 @@ const ConstructionPayment = () => {
                   </h3>
 
                   <div className="space-y-4">
+                    {/* 프로젝트 정보 */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1590,8 +1603,7 @@ const ConstructionPayment = () => {
                         <input
                           type="text"
                           value={cashReceiptData.project}
-                          onChange={(e) => setCashReceiptData({...cashReceiptData, project: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                           readOnly
                         />
                       </div>
@@ -1608,66 +1620,96 @@ const ConstructionPayment = () => {
                       </div>
                     </div>
 
+                    {/* 공사 기간 */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        수령금액 <span className="text-red-500">*</span>
+                        공사 기간
                       </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={cashReceiptData.amount}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9]/g, '');
-                            const formatted = value ? parseInt(value).toLocaleString() : '';
-                            setCashReceiptData({...cashReceiptData, amount: formatted});
-                          }}
-                          placeholder="수령한 금액을 입력하세요"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-12"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">원</span>
+                      <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                        {cashReceiptData.startDate && cashReceiptData.endDate ? (
+                          <span>{format(new Date(cashReceiptData.startDate), 'yyyy년 MM월 dd일')} ~ {format(new Date(cashReceiptData.endDate), 'yyyy년 MM월 dd일')}</span>
+                        ) : (
+                          <span className="text-gray-400">기간 정보 없음</span>
+                        )}
                       </div>
                     </div>
 
+                    {/* 금액 정보 */}
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-700">총 공사금액</span>
+                        <span className="text-sm font-semibold">{cashReceiptData.totalContractAmount.toLocaleString()}원</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-700">이전 수령금액</span>
+                        <span className="text-sm">{cashReceiptData.previousAmount.toLocaleString()}원</span>
+                      </div>
+                      <div className="border-t border-gray-300 pt-2 mt-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          당일 수령금액 <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={cashReceiptData.amount}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              const formatted = value ? parseInt(value).toLocaleString() : '';
+                              setCashReceiptData({...cashReceiptData, amount: formatted});
+                            }}
+                            placeholder="수령한 금액을 입력하세요"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-12"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">원</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center border-t border-gray-300 pt-2">
+                        <span className="text-sm font-medium text-gray-700">잔여금액</span>
+                        <span className="text-sm font-semibold text-red-600">
+                          {(() => {
+                            const todayAmount = cashReceiptData.amount ? parseInt(cashReceiptData.amount.replace(/,/g, '')) : 0;
+                            const remaining = cashReceiptData.remainingAmount - todayAmount;
+                            return remaining.toLocaleString() + '원';
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 서명 */}
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <p className="text-sm text-gray-700 mb-3">
+                      <p className="text-sm text-gray-700 mb-4">
                         상기 금액을 정히 수령하였음을 확인합니다.
                       </p>
 
-                      <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm font-medium text-gray-700 mb-2">수령인 (발행자)</p>
-                          <div className="border-b border-gray-400 pb-1">
-                            <p className="text-sm">에이치브이랩 대표 김상준</p>
-                            <p className="text-xs text-gray-500 mt-1">(인)</p>
+                          <div className="border-b border-gray-400 pb-2">
+                            <p className="text-sm">에이치브이랩 대표</p>
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-sm font-medium">김상준</p>
+                              <span className="text-xs text-gray-500">(인)</span>
+                            </div>
                           </div>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-700 mb-2">
                             지급인 <span className="text-red-500">*</span>
                           </p>
-                          <input
-                            type="text"
-                            value={cashReceiptData.clientSignature}
-                            onChange={(e) => setCashReceiptData({...cashReceiptData, clientSignature: e.target.value})}
-                            placeholder="이름을 입력하세요"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">(인)</p>
+                          <div className="border-b border-gray-400 pb-2">
+                            <input
+                              type="text"
+                              value={cashReceiptData.clientSignature}
+                              onChange={(e) => setCashReceiptData({...cashReceiptData, clientSignature: e.target.value})}
+                              placeholder="이름을 입력하세요"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-1"
+                            />
+                            <div className="flex justify-end">
+                              <span className="text-xs text-gray-500">(인)</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        비고
-                      </label>
-                      <textarea
-                        value={cashReceiptData.notes}
-                        onChange={(e) => setCashReceiptData({...cashReceiptData, notes: e.target.value})}
-                        placeholder="추가 메모사항을 입력하세요"
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      />
                     </div>
                   </div>
                 </div>
