@@ -343,7 +343,7 @@ const AfterService = () => {
         <nav className="flex space-x-4 md:space-x-8">
           <button
             onClick={() => setActiveTab('active')}
-            className={`py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
+            className={`py-2 md:py-3 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
               activeTab === 'active'
                 ? 'border-gray-700 text-gray-700'
                 : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
@@ -358,7 +358,7 @@ const AfterService = () => {
           </button>
           <button
             onClick={() => setActiveTab('completed')}
-            className={`py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
+            className={`py-2 md:py-3 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
               activeTab === 'completed'
                 ? 'border-gray-700 text-gray-700'
                 : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
