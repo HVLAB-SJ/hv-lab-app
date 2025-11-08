@@ -459,6 +459,30 @@ const initDatabase = () => {
     )
   `);
 
+  // 스펙북 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS specbook_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      brand TEXT,
+      price TEXT,
+      image_url TEXT,
+      project_id INTEGER,
+      is_library INTEGER DEFAULT 1,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    )
+  `, (err) => {
+    if (err) {
+      console.error('❌ 스펙북 테이블 생성 실패:', err);
+    } else {
+      console.log('✓ 스펙북 테이블 생성 완료');
+    }
+  });
+
   // 견적문의 테이블
   db.run(`
     CREATE TABLE IF NOT EXISTS quote_inquiries (
@@ -473,6 +497,7 @@ const initDatabase = () => {
       is_read INTEGER DEFAULT 0,
       is_contacted INTEGER DEFAULT 0,
       email_message_id TEXT,
+      content_hash TEXT UNIQUE,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -481,6 +506,15 @@ const initDatabase = () => {
   db.run(`ALTER TABLE quote_inquiries ADD COLUMN is_contacted INTEGER DEFAULT 0`, (err) => {
     if (err && !err.message.includes('duplicate column name')) {
       console.error('Error adding is_contacted column:', err);
+    }
+  });
+
+  // Add content_hash column if it doesn't exist (migration)
+  db.run(`ALTER TABLE quote_inquiries ADD COLUMN content_hash TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding content_hash column:', err);
+    } else if (!err) {
+      console.log('✓ content_hash column added successfully');
     }
   });
 

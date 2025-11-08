@@ -5,6 +5,7 @@
 const Imap = require('imap');
 const { simpleParser } = require('mailparser');
 const { db } = require('../server/config/database');
+const crypto = require('crypto');
 require('dotenv').config();
 
 class EmailService {
@@ -243,142 +244,96 @@ class EmailService {
   }
 
   /**
+   * 견적문의 콘텐츠 해시 생성
+   * 메일 전체 내용을 해시하여 동일한 메일 중복 방지
+   * (같은 사람의 다른 견적문의는 허용)
+   */
+  generateContentHash(inquiry) {
+    // 메시지 내용 전체를 해시 (공백 제거하여 정규화)
+    const normalizedMessage = inquiry.message.replace(/\s+/g, ' ').trim();
+    return crypto.createHash('sha256').update(normalizedMessage).digest('hex');
+  }
+
+  /**
    * 견적문의 데이터베이스 저장
    */
   async saveQuoteInquiry(inquiry) {
     return new Promise((resolve, reject) => {
-      // 1차 중복 체크: 동일한 email_message_id가 이미 있는지 확인
-      if (inquiry.emailMessageId) {
-        db.get(
-          `SELECT id FROM quote_inquiries WHERE email_message_id = ?`,
-          [inquiry.emailMessageId],
-          (err, existing) => {
-            if (err) {
-              reject(err);
-              return;
-            }
+      // 콘텐츠 해시 생성 (이름 + 전화번호 + 이메일)
+      const contentHash = this.generateContentHash(inquiry);
 
-            if (existing) {
-              console.log('⚠️ 중복된 견적문의 (동일한 메일 ID):', {
-                name: inquiry.name,
-                phone: inquiry.phone,
-                email: inquiry.email,
-                emailMessageId: inquiry.emailMessageId,
-                existingId: existing.id
-              });
-              resolve(existing.id);
-              return;
-            }
+      // 1차 중복 체크: 동일한 콘텐츠 해시가 있는지 확인 (영구적 중복 방지)
+      db.get(
+        `SELECT id, created_at FROM quote_inquiries WHERE content_hash = ?`,
+        [contentHash],
+        (err, existing) => {
+          if (err) {
+            reject(err);
+            return;
+          }
 
-            // 2차 중복 체크: 24시간 이내에 동일한 전화번호 또는 이메일로 제출된 견적문의가 있는지 확인
-            db.get(
-              `SELECT id, created_at FROM quote_inquiries
-               WHERE (phone = ? OR email = ?)
-               AND created_at > datetime('now', '-1 day')
-               ORDER BY created_at DESC
-               LIMIT 1`,
-              [inquiry.phone, inquiry.email],
-              (err, existing) => {
-                if (err) {
-                  reject(err);
-                  return;
-                }
+          if (existing) {
+            console.log('⚠️ 중복된 견적문의 (동일한 메일 내용):', {
+              name: inquiry.name,
+              phone: inquiry.phone,
+              email: inquiry.email,
+              existingId: existing.id,
+              firstSubmitted: existing.created_at,
+              note: '같은 메일이 반복해서 전송됨'
+            });
+            resolve(existing.id);
+            return;
+          }
 
-                if (existing) {
-                  console.log('⚠️ 중복된 견적문의 (24시간 이내):', {
+          // 중복이 아닌 경우 새로운 견적문의 저장
+          db.run(
+            `INSERT INTO quote_inquiries
+             (name, phone, email, address, project_type, budget, message, is_read, email_message_id, content_hash)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+            [
+              inquiry.name,
+              inquiry.phone,
+              inquiry.email,
+              inquiry.address || '',
+              inquiry.projectType || '',
+              inquiry.budget || '',
+              inquiry.message,
+              inquiry.emailMessageId,
+              contentHash
+            ],
+            function(err) {
+              if (err) {
+                // UNIQUE constraint 위반 시에도 중복으로 처리
+                if (err.message && err.message.includes('UNIQUE constraint failed')) {
+                  console.log('⚠️ 중복된 견적문의 (UNIQUE 제약):', {
                     name: inquiry.name,
                     phone: inquiry.phone,
                     email: inquiry.email,
-                    existingId: existing.id
+                    contentHash
                   });
-                  resolve(existing.id);
-                  return;
-                }
-
-                // 첨부파일 JSON으로 변환
-                const attachmentsJson = inquiry.attachments && inquiry.attachments.length > 0
-                  ? JSON.stringify(inquiry.attachments)
-                  : null;
-
-                // 새로운 견적문의 저장
-                db.run(
-                  `INSERT INTO quote_inquiries
-                   (name, phone, email, address, project_type, budget, message, is_read, email_message_id)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
-                  [
-                    inquiry.name,
-                    inquiry.phone,
-                    inquiry.email,
-                    inquiry.address || '',
-                    inquiry.projectType || '',
-                    inquiry.budget || '',
-                    inquiry.message,
-                    inquiry.emailMessageId
-                  ],
-                  function(err) {
-                    if (err) {
-                      reject(err);
-                    } else {
-                      resolve(this.lastID);
+                  // 기존 ID 조회
+                  db.get(
+                    `SELECT id FROM quote_inquiries WHERE content_hash = ?`,
+                    [contentHash],
+                    (err2, row) => {
+                      if (err2) {
+                        reject(err2);
+                      } else {
+                        resolve(row ? row.id : null);
+                      }
                     }
-                  }
-                );
-              }
-            );
-          }
-        );
-      } else {
-        // emailMessageId가 없는 경우 (이전 로직과 동일)
-        db.get(
-          `SELECT id, created_at FROM quote_inquiries
-           WHERE (phone = ? OR email = ?)
-           AND created_at > datetime('now', '-1 day')
-           ORDER BY created_at DESC
-           LIMIT 1`,
-          [inquiry.phone, inquiry.email],
-          (err, existing) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-
-            if (existing) {
-              console.log('⚠️ 중복된 견적문의 (24시간 이내):', {
-                name: inquiry.name,
-                phone: inquiry.phone,
-                email: inquiry.email,
-                existingId: existing.id
-              });
-              resolve(existing.id);
-              return;
-            }
-
-            // 새로운 견적문의 저장
-            db.run(
-              `INSERT INTO quote_inquiries
-               (name, phone, email, address, project_type, budget, message, is_read, email_message_id)
-               VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
-              [
-                inquiry.name,
-                inquiry.phone,
-                inquiry.email,
-                inquiry.address || '',
-                inquiry.projectType || '',
-                inquiry.budget || '',
-                inquiry.message,
-                inquiry.emailMessageId
-              ],
-              function(err) {
-                if (err) {
-                  reject(err);
+                  );
                 } else {
-                  resolve(this.lastID);
+                  reject(err);
                 }
+              } else {
+                console.log(`✅ 새로운 견적문의 저장: ${inquiry.name} (ID: ${this.lastID})`);
+                resolve(this.lastID);
               }
-            );
-          }
-        );
-      }
+            }
+          );
+        }
+      );
     });
   }
 
