@@ -726,7 +726,7 @@ const SpecBook = () => {
                     라이브러리 아이템이 없습니다
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-3 content-start">
+                  <div className="grid grid-cols-6 gap-4">
                     {allLibraryItems
                       .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
                       .map(item => (
@@ -738,7 +738,6 @@ const SpecBook = () => {
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
                         className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-move flex flex-col"
-                        style={{ width: 'calc(33.333% - 8px)' }}
                       >
                         <div className="w-full aspect-square bg-gray-100">
                           {item.image_url ? (
@@ -819,14 +818,13 @@ const SpecBook = () => {
                     좌측에서 아이템을 드래그하여 추가하세요
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-3 content-start">
+                  <div className="grid grid-cols-6 gap-4">
                     {items
                       .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
                       .map(item => (
                       <div
                         key={item.id}
                         className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group"
-                        style={{ width: 'calc(33.333% - 8px)' }}
                       >
                         <div className="w-full aspect-square bg-gray-100 relative">
                           {item.image_url ? (
