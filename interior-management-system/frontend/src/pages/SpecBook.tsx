@@ -476,7 +476,7 @@ const SpecBook = () => {
                 </div>
 
                 {/* 우측: 입력 필드들 */}
-                <div className="flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col justify-between h-48">
                   <div className="space-y-1.5">
                     <select
                       value={formData.category}
@@ -519,8 +519,8 @@ const SpecBook = () => {
                     </div>
                   </div>
 
-                  {/* 버튼 영역을 가격 아래로 이동 */}
-                  <div className="flex gap-1.5 mt-1.5">
+                  {/* 버튼 영역 - 이미지 하단에 맞춤 */}
+                  <div className="flex gap-1.5">
                     <button
                       type="submit"
                       className="flex-1 px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
