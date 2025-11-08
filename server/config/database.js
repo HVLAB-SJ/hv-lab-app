@@ -578,6 +578,8 @@ const initDatabase = () => {
         'indirect_lighting_room TEXT',
         'bathroom_ceiling TEXT',
         'bathroom_faucet TEXT',
+        'bathroom_faucet_general TEXT',
+        'bathroom_faucet_built_in TEXT',
         'bathroom_tile TEXT',
         'molding_type TEXT'
       ];

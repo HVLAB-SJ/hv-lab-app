@@ -10,8 +10,8 @@ interface EstimateForm {
   areaSize: number;
   grade: '알뜰' | '기본' | '고급' | '하이엔드' | '';
   finishType: string;
-  bathroomCount: number;
-  ceilingHeight: '2400이하' | '2400~2600' | '2600이상';
+  bathroomCount: string[];
+  ceilingHeight: string[];
   includeSash: boolean;
   includeFloorHeating: boolean;
   includeAircon: boolean;
@@ -25,7 +25,8 @@ interface EstimateForm {
   indirectLightingPublic: string[];
   indirectLightingRoom: string[];
   bathroomCeiling: string[];
-  bathroomFaucet: string[];
+  bathroomFaucetGeneral: string[];
+  bathroomFaucetBuiltIn: string[];
   bathroomTile: string[];
   moldingType: string[];
 }
@@ -56,8 +57,8 @@ const EstimatePreview: React.FC = () => {
     areaSize: 0,
     grade: '',
     finishType: '',
-    bathroomCount: 1,
-    ceilingHeight: '2400~2600',
+    bathroomCount: [],
+    ceilingHeight: [],
     includeSash: false,
     includeFloorHeating: false,
     includeAircon: false,
@@ -71,7 +72,8 @@ const EstimatePreview: React.FC = () => {
     indirectLightingPublic: [],
     indirectLightingRoom: [],
     bathroomCeiling: [],
-    bathroomFaucet: [],
+    bathroomFaucetGeneral: [],
+    bathroomFaucetBuiltIn: [],
     bathroomTile: [],
     moldingType: []
   });
@@ -137,6 +139,8 @@ const EstimatePreview: React.FC = () => {
       // 배열 필드들을 JSON 문자열로 변환
       const formData = {
         ...form,
+        bathroomCount: JSON.stringify(form.bathroomCount),
+        ceilingHeight: JSON.stringify(form.ceilingHeight),
         floorMaterial: JSON.stringify(form.floorMaterial),
         wallMaterial: JSON.stringify(form.wallMaterial),
         bathroomWorkType: JSON.stringify(form.bathroomWorkType),
@@ -147,7 +151,8 @@ const EstimatePreview: React.FC = () => {
         indirectLightingPublic: JSON.stringify(form.indirectLightingPublic),
         indirectLightingRoom: JSON.stringify(form.indirectLightingRoom),
         bathroomCeiling: JSON.stringify(form.bathroomCeiling),
-        bathroomFaucet: JSON.stringify(form.bathroomFaucet),
+        bathroomFaucetGeneral: JSON.stringify(form.bathroomFaucetGeneral),
+        bathroomFaucetBuiltIn: JSON.stringify(form.bathroomFaucetBuiltIn),
         bathroomTile: JSON.stringify(form.bathroomTile),
         moldingType: JSON.stringify(form.moldingType)
       };
@@ -176,8 +181,8 @@ const EstimatePreview: React.FC = () => {
         areaSize: data.area_size,
         grade: data.grade,
         finishType: data.finish_type || '',
-        bathroomCount: data.bathroom_count,
-        ceilingHeight: data.ceiling_height,
+        bathroomCount: data.bathroom_count ? JSON.parse(data.bathroom_count) : [],
+        ceilingHeight: data.ceiling_height ? JSON.parse(data.ceiling_height) : [],
         includeSash: data.include_sash === 1,
         includeFloorHeating: data.include_floor_heating === 1,
         includeAircon: data.include_aircon === 1,
@@ -191,7 +196,8 @@ const EstimatePreview: React.FC = () => {
         indirectLightingPublic: data.indirect_lighting_public ? JSON.parse(data.indirect_lighting_public) : [],
         indirectLightingRoom: data.indirect_lighting_room ? JSON.parse(data.indirect_lighting_room) : [],
         bathroomCeiling: data.bathroom_ceiling ? JSON.parse(data.bathroom_ceiling) : [],
-        bathroomFaucet: data.bathroom_faucet ? JSON.parse(data.bathroom_faucet) : [],
+        bathroomFaucetGeneral: data.bathroom_faucet_general ? JSON.parse(data.bathroom_faucet_general) : [],
+        bathroomFaucetBuiltIn: data.bathroom_faucet_built_in ? JSON.parse(data.bathroom_faucet_built_in) : [],
         bathroomTile: data.bathroom_tile ? JSON.parse(data.bathroom_tile) : [],
         moldingType: data.molding_type ? JSON.parse(data.molding_type) : []
       });
@@ -245,8 +251,8 @@ const EstimatePreview: React.FC = () => {
       areaSize: 0,
       grade: '',
       finishType: '',
-      bathroomCount: 1,
-      ceilingHeight: '2400~2600',
+      bathroomCount: [],
+      ceilingHeight: [],
       includeSash: false,
       includeFloorHeating: false,
       includeAircon: false,
@@ -260,7 +266,8 @@ const EstimatePreview: React.FC = () => {
       indirectLightingPublic: [],
       indirectLightingRoom: [],
       bathroomCeiling: [],
-      bathroomFaucet: [],
+      bathroomFaucetGeneral: [],
+      bathroomFaucetBuiltIn: [],
       bathroomTile: [],
       moldingType: []
     });
@@ -451,18 +458,19 @@ const EstimatePreview: React.FC = () => {
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                     화장실 개수
                   </label>
-                  <select
-                    name="bathroomCount"
-                    value={form.bathroomCount}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                  >
-                    <option value={0}>0</option>
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                  </select>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['0', '1', '2', '3', '4'].map(item => (
+                      <label key={item} className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          checked={form.bathroomCount.includes(item)}
+                          onChange={() => handleMaterialCheckbox('bathroomCount', item)}
+                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">{item}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
@@ -489,16 +497,19 @@ const EstimatePreview: React.FC = () => {
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                     층고
                   </label>
-                  <select
-                    name="ceilingHeight"
-                    value={form.ceilingHeight}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                  >
-                    <option value="2400이하">2400이하</option>
-                    <option value="2400~2600">2400~2600</option>
-                    <option value="2600이상">2600이상</option>
-                  </select>
+                  <div className="grid grid-cols-1 gap-2">
+                    {['2400이하', '2400~2600', '2600이상'].map(item => (
+                      <label key={item} className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          checked={form.ceilingHeight.includes(item)}
+                          onChange={() => handleMaterialCheckbox('ceilingHeight', item)}
+                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">{item}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
@@ -643,8 +654,8 @@ const EstimatePreview: React.FC = () => {
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                     화장실 천장
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {['유지', 'SMC', 'ABS 판넬', '도장'].map(item => (
+                  <div className="grid grid-cols-3 gap-2">
+                    {['SMC', '도장', '이노솔'].map(item => (
                       <label key={item} className="flex items-center text-sm">
                         <input
                           type="checkbox"
@@ -660,15 +671,34 @@ const EstimatePreview: React.FC = () => {
 
                 <div>
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
-                    화장실 수전
+                    화장실 수전 (일반)
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {['유지', '대림바스 일반형', '대림바스 프리미엄', '한샘 일반', '한샘 프리미엄', '그로헤 프리미엄'].map(item => (
+                    {['대림바스 일반', '대림바스 프리미엄', '한샘 일반', '한샘 프리미엄', '그로헤'].map(item => (
                       <label key={item} className="flex items-center text-sm">
                         <input
                           type="checkbox"
-                          checked={form.bathroomFaucet.includes(item)}
-                          onChange={() => handleMaterialCheckbox('bathroomFaucet', item)}
+                          checked={form.bathroomFaucetGeneral.includes(item)}
+                          onChange={() => handleMaterialCheckbox('bathroomFaucetGeneral', item)}
+                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">{item}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                    화장실 수전 (매립)
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {['대림바스 매립', '한샘 매립', '그로헤 매립'].map(item => (
+                      <label key={item} className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          checked={form.bathroomFaucetBuiltIn.includes(item)}
+                          onChange={() => handleMaterialCheckbox('bathroomFaucetBuiltIn', item)}
                           className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                         />
                         <span className="text-gray-700">{item}</span>
@@ -681,8 +711,15 @@ const EstimatePreview: React.FC = () => {
                   <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                     화장실 타일
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {['유지', '부분교체', '전체교체'].map(item => (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {[
+                      '300x600(벽)+300각(바닥) 바닥철거 덧방시공',
+                      '600각(덧방)',
+                      '600각(올철거)',
+                      '600x1200 or 800각(올철거)',
+                      '750x1500',
+                      '박판타일'
+                    ].map(item => (
                       <label key={item} className="flex items-center text-sm">
                         <input
                           type="checkbox"
@@ -690,7 +727,7 @@ const EstimatePreview: React.FC = () => {
                           onChange={() => handleMaterialCheckbox('bathroomTile', item)}
                           className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                         />
-                        <span className="text-gray-700">{item}</span>
+                        <span className="text-gray-700 text-xs">{item}</span>
                       </label>
                     ))}
                   </div>

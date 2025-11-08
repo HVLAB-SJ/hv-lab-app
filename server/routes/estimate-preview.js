@@ -68,7 +68,8 @@ router.post('/create', authenticateToken, async (req, res) => {
     indirectLightingPublic,
     indirectLightingRoom,
     bathroomCeiling,
-    bathroomFaucet,
+    bathroomFaucetGeneral,
+    bathroomFaucetBuiltIn,
     bathroomTile,
     moldingType
   } = req.body;
@@ -79,11 +80,15 @@ router.post('/create', authenticateToken, async (req, res) => {
     // 기본 공사비 계산
     let baseConstructionCost = Math.floor(BASE_CONSTRUCTION[grade] * areaSize);
 
-    // 층고에 따른 추가 비용
-    baseConstructionCost = Math.floor(baseConstructionCost * CEILING_HEIGHT_MULTIPLIER[ceilingHeight || '2400~2600']);
+    // 층고에 따른 추가 비용 (배열에서 첫 번째 값 사용)
+    const ceilingHeightArr = JSON.parse(ceilingHeight || '[]');
+    const selectedCeilingHeight = ceilingHeightArr[0] || '2400~2600';
+    baseConstructionCost = Math.floor(baseConstructionCost * CEILING_HEIGHT_MULTIPLIER[selectedCeilingHeight]);
 
-    // 화장실 개수에 따른 추가 비용 (추가 화장실당 300만원)
-    const additionalBathroomCost = bathroomCount > 1 ? (bathroomCount - 1) * 3000000 : 0;
+    // 화장실 개수에 따른 추가 비용 (배열에서 첫 번째 값 사용)
+    const bathroomCountArr = JSON.parse(bathroomCount || '[]');
+    const selectedBathroomCount = parseInt(bathroomCountArr[0]) || 1;
+    const additionalBathroomCost = selectedBathroomCount > 1 ? (selectedBathroomCount - 1) * 3000000 : 0;
     baseConstructionCost += additionalBathroomCost;
 
     // 스펙북에서 해당 등급 아이템들의 가격 조회
@@ -110,7 +115,7 @@ router.post('/create', authenticateToken, async (req, res) => {
       // 평수에 따른 수량 계산 (카테고리별로 다르게 적용)
       let quantity = 1;
       if (['변기', '세면대', '수전', '샤워수전'].includes(fixture.category)) {
-        quantity = bathroomCount;
+        quantity = selectedBathroomCount;
       } else if (['타일', '마루', '벽지'].includes(fixture.category)) {
         quantity = Math.ceil(areaSize / 10); // 10평당 1단위
       }
@@ -161,8 +166,8 @@ router.post('/create', authenticateToken, async (req, res) => {
         total_min_cost, total_max_cost, detail_breakdown, created_by,
         floor_material, wall_material, bathroom_work_type, ceiling_work_type,
         switch_public, switch_room, lighting_type, indirect_lighting_public, indirect_lighting_room,
-        bathroom_ceiling, bathroom_faucet, bathroom_tile, molding_type
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        bathroom_ceiling, bathroom_faucet_general, bathroom_faucet_built_in, bathroom_tile, molding_type
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.run(query, [
@@ -172,7 +177,7 @@ router.post('/create', authenticateToken, async (req, res) => {
       totalMinCost, totalMaxCost, detailBreakdown, req.user.userId,
       floorMaterial, wallMaterial, bathroomWorkType, ceilingWorkType,
       switchPublic, switchRoom, lightingType, indirectLightingPublic, indirectLightingRoom,
-      bathroomCeiling, bathroomFaucet, bathroomTile, moldingType
+      bathroomCeiling, bathroomFaucetGeneral, bathroomFaucetBuiltIn, bathroomTile, moldingType
     ], function(err) {
       if (err) {
         console.error('가견적서 저장 실패:', err);
@@ -203,7 +208,8 @@ router.post('/create', authenticateToken, async (req, res) => {
         indirectLightingPublic,
         indirectLightingRoom,
         bathroomCeiling,
-        bathroomFaucet,
+        bathroomFaucetGeneral,
+        bathroomFaucetBuiltIn,
         bathroomTile,
         moldingType
       });
