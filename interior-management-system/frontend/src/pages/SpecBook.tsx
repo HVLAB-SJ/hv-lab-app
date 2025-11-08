@@ -813,8 +813,8 @@ const SpecBook = () => {
           /* 라이브러리 뷰: 전체 폭 */
           <div className="flex-1 flex flex-col overflow-hidden pr-4">
           {/* 버튼 영역 */}
-          <div className="mb-4 flex gap-6">
-            <div className="flex-1">
+          <div className="mb-4 flex">
+            <div className="w-1/2 pr-3">
               <button
                 onClick={() => {
                   setView('library');
@@ -825,7 +825,8 @@ const SpecBook = () => {
                 스펙 라이브러리
               </button>
             </div>
-            <div className="flex-1">
+            <div className="w-px bg-transparent"></div>
+            <div className="w-1/2 pl-3">
               <select
                 value={selectedProject || ''}
                 onChange={(e) => {
@@ -851,7 +852,7 @@ const SpecBook = () => {
 
           <div className="flex-1 flex overflow-hidden">
             {/* 좌측: 스펙 라이브러리 */}
-            <div className="w-1/2 flex flex-col overflow-hidden pb-4 border-r border-gray-300">
+            <div className="w-1/2 flex flex-col overflow-hidden pb-4 pr-3">
               <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg pr-4 pb-4 pt-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
@@ -886,8 +887,10 @@ const SpecBook = () => {
                 )}
               </div>
             </div>
+            {/* 중앙 경계선 */}
+            <div className="w-px bg-gray-300 self-stretch"></div>
             {/* 우측: 빈 공간 */}
-            <div className="w-1/2 flex flex-col overflow-hidden pl-6 pb-4">
+            <div className="w-1/2 flex flex-col overflow-hidden pl-3 pb-4">
               <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">
                   프로젝트를 선택하면 여기에 프로젝트 아이템이 표시됩니다
@@ -900,8 +903,8 @@ const SpecBook = () => {
           /* 프로젝트 뷰: 좌우 분할 - 스펙 라이브러리 + 프로젝트 아이템 */
           <div className="flex-1 flex flex-col overflow-hidden pr-4">
             {/* 버튼 영역 */}
-            <div className="mb-4 flex gap-6">
-              <div className="flex-1">
+            <div className="mb-4 flex">
+              <div className="w-1/2 pr-3">
                 <button
                   onClick={() => {
                     setView('library');
@@ -912,7 +915,8 @@ const SpecBook = () => {
                   스펙 라이브러리
                 </button>
               </div>
-              <div className="flex-1">
+              <div className="w-px bg-transparent"></div>
+              <div className="w-1/2 pl-3">
                 <select
                   value={selectedProject || ''}
                   onChange={(e) => {
@@ -938,7 +942,7 @@ const SpecBook = () => {
 
             <div className="flex-1 flex overflow-hidden">
               {/* 좌측: 스펙 라이브러리 (드래그 소스) */}
-              <div className="w-1/2 flex flex-col overflow-hidden pb-4 border-r border-gray-300">
+              <div className="w-1/2 flex flex-col overflow-hidden pb-4 pr-3">
                 <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg pr-4 pb-4 pt-4">
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
@@ -999,9 +1003,10 @@ const SpecBook = () => {
                 )}
               </div>
             </div>
-
-              {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
-              <div className="w-1/2 flex flex-col overflow-hidden pl-6 pb-4">
+            {/* 중앙 경계선 */}
+            <div className="w-px bg-gray-300 self-stretch"></div>
+            {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
+            <div className="w-1/2 flex flex-col overflow-hidden pl-3 pb-4">
                 <div
                   className="flex-1 overflow-y-auto bg-gray-50 rounded-lg pr-4 pb-4 pt-4"
                 onDragOver={(e) => {
