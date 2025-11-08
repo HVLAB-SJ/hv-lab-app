@@ -595,22 +595,27 @@ const ConstructionPayment = () => {
               </div>
 
               {/* Total Amount */}
-              <div className="mb-4 space-y-2">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-600 mb-1">순수 공사금액</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    ₩{record.totalAmount.toLocaleString()}
-                  </p>
-                </div>
+              <div className="mb-4">
                 <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs text-gray-700">
-                      총 계약금액 (부가세 {record.vatType === 'percentage' ? `${record.vatPercentage ?? 100}%` : `₩${(record.vatAmount || 0).toLocaleString()}`} 포함)
-                    </p>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-600 mb-1">순수 공사금액</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        ₩{record.totalAmount.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="ml-4 text-right">
+                      <p className="text-xs text-gray-500 mb-1">
+                        총 계약금액
+                      </p>
+                      <p className="text-sm font-semibold text-gray-700">
+                        ₩{totalContractAmount.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        (부가세 {record.vatType === 'percentage' ? `${record.vatPercentage ?? 100}%` : `₩${(record.vatAmount || 0).toLocaleString()}`} 포함)
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ₩{totalContractAmount.toLocaleString()}
-                  </p>
                 </div>
               </div>
 
