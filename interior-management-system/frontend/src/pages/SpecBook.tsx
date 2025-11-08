@@ -545,7 +545,7 @@ const SpecBook = () => {
             </form>
           </div>
 
-          {/* 카테고리 버튼들 (4열) */}
+          {/* 카테고리 버튼들 (3열) */}
           <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">카테고리</h3>
@@ -557,7 +557,7 @@ const SpecBook = () => {
                 <Settings className="h-4 w-4" />
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {categories.map(category => {
                 const count = getCategoryCount(category);
                 // 스펙 라이브러리이고 수량이 0이 아닌 경우만 수량 표시
