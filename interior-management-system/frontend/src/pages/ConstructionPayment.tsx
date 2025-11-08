@@ -1574,10 +1574,10 @@ const ConstructionPayment = () => {
 
       {/* Cash Receipt Modal */}
       {showCashReceiptModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 print:bg-white print:relative print:p-0">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto print:shadow-none print:max-w-none print:max-h-none">
+            <div className="p-6 print:p-8">
+              <div className="flex items-center justify-between mb-6 print:hidden">
                 <h2 className="text-2xl font-bold text-gray-900">현금수령증</h2>
                 <button
                   onClick={() => setShowCashReceiptModal(false)}
@@ -1587,128 +1587,124 @@ const ConstructionPayment = () => {
                 </button>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-6 print:space-y-0">
                 {/* Receipt Content */}
-                <div className="border-2 border-gray-300 rounded-lg p-6 bg-white">
-                  <h3 className="text-center text-xl font-bold mb-6 border-b-2 border-gray-800 pb-2">
-                    현금 수령증
-                  </h3>
+                <div className="border-2 border-black p-8 bg-white print:border-2 print:p-12">
+                  {/* 제목 */}
+                  <div className="border-2 border-black p-3 mb-8">
+                    <h3 className="text-center text-2xl font-bold">현금수령 확인증</h3>
+                  </div>
 
-                  <div className="space-y-4">
-                    {/* 프로젝트 정보 */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          프로젝트명
-                        </label>
-                        <input
-                          type="text"
-                          value={cashReceiptData.project}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                          readOnly
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          수령일자
-                        </label>
+                  {/* 테이블 형식의 정보 */}
+                  <table className="w-full mb-8 border-collapse">
+                    <tbody>
+                      <tr className="border-2 border-black">
+                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium w-32">공사명</td>
+                        <td className="py-3 px-4 print:py-3">
+                          <span className="print:hidden">{cashReceiptData.project}</span>
+                          <input
+                            type="text"
+                            value={cashReceiptData.project}
+                            className="hidden print:block w-full bg-transparent border-none outline-none p-0"
+                            readOnly
+                          />
+                        </td>
+                      </tr>
+                      <tr className="border-2 border-t-0 border-black">
+                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium">공사기간</td>
+                        <td className="py-3 px-4">
+                          {cashReceiptData.startDate && cashReceiptData.endDate ? (
+                            <span>{format(new Date(cashReceiptData.startDate), 'yyyy.MM.dd')} ~ {format(new Date(cashReceiptData.endDate), 'yyyy.MM.dd')}</span>
+                          ) : (
+                            <span className="text-gray-400 print:hidden">-</span>
+                          )}
+                        </td>
+                      </tr>
+                      <tr className="border-2 border-t-0 border-black">
+                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium">총공사 금액</td>
+                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.totalContractAmount.toLocaleString()}</td>
+                      </tr>
+                      <tr className="border-2 border-t-0 border-black">
+                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium">이전수령 금액</td>
+                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.previousAmount.toLocaleString()}</td>
+                      </tr>
+                      <tr className="border-2 border-t-0 border-black">
+                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium">당일수령 금액</td>
+                        <td className="py-3 px-4 text-right pr-4">
+                          <span className="print:hidden">
+                            <input
+                              type="text"
+                              value={cashReceiptData.amount}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^0-9]/g, '');
+                                const formatted = value ? parseInt(value).toLocaleString() : '';
+                                setCashReceiptData({...cashReceiptData, amount: formatted});
+                              }}
+                              placeholder="금액 입력"
+                              className="w-full text-right border border-gray-300 rounded px-2 py-1"
+                            />
+                          </span>
+                          <span className="hidden print:inline">{cashReceiptData.amount}</span>
+                        </td>
+                      </tr>
+                      <tr className="border-2 border-t-0 border-black">
+                        <td className="border-r-2 border-black py-3 px-4 bg-white font-medium">최종잔여 금액</td>
+                        <td className="py-3 px-4 text-right pr-4">
+                          {(() => {
+                            const todayAmount = cashReceiptData.amount ? parseInt(cashReceiptData.amount.replace(/,/g, '')) : 0;
+                            const remaining = cashReceiptData.remainingAmount - todayAmount;
+                            return remaining.toLocaleString();
+                          })()}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  {/* 확인 문구 */}
+                  <div className="text-center mb-12">
+                    <p className="text-base">* 위와 같이 현금으로 지급 받았음을 확인 합니다.</p>
+                  </div>
+
+                  {/* 날짜 */}
+                  <div className="text-center mb-12">
+                    <p className="text-base">
+                      <span className="print:hidden">
                         <input
                           type="date"
                           value={cashReceiptData.date}
                           onChange={(e) => setCashReceiptData({...cashReceiptData, date: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          className="border border-gray-300 rounded px-2 py-1"
                         />
-                      </div>
-                    </div>
+                      </span>
+                      <span className="hidden print:inline">{format(new Date(cashReceiptData.date), 'yyyy년 M월 d일')}</span>
+                    </p>
+                  </div>
 
-                    {/* 공사 기간 */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        공사 기간
-                      </label>
-                      <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
-                        {cashReceiptData.startDate && cashReceiptData.endDate ? (
-                          <span>{format(new Date(cashReceiptData.startDate), 'yyyy년 MM월 dd일')} ~ {format(new Date(cashReceiptData.endDate), 'yyyy년 MM월 dd일')}</span>
-                        ) : (
-                          <span className="text-gray-400">기간 정보 없음</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 금액 정보 */}
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-700">총 공사금액</span>
-                        <span className="text-sm font-semibold">{cashReceiptData.totalContractAmount.toLocaleString()}원</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-700">이전 수령금액</span>
-                        <span className="text-sm">{cashReceiptData.previousAmount.toLocaleString()}원</span>
-                      </div>
-                      <div className="border-t border-gray-300 pt-2 mt-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          당일 수령금액 <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={cashReceiptData.amount}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/[^0-9]/g, '');
-                              const formatted = value ? parseInt(value).toLocaleString() : '';
-                              setCashReceiptData({...cashReceiptData, amount: formatted});
-                            }}
-                            placeholder="수령한 금액을 입력하세요"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-12"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">원</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center border-t border-gray-300 pt-2">
-                        <span className="text-sm font-medium text-gray-700">잔여금액 (추가내역 제외)</span>
-                        <span className="text-sm font-semibold text-red-600">
-                          {(() => {
-                            const todayAmount = cashReceiptData.amount ? parseInt(cashReceiptData.amount.replace(/,/g, '')) : 0;
-                            const remaining = cashReceiptData.remainingAmount - todayAmount;
-                            return remaining.toLocaleString() + '원';
-                          })()}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 서명 */}
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <p className="text-sm text-gray-700 mb-4">
-                        상기 금액을 정히 수령하였음을 확인합니다.
+                  {/* 서명란 */}
+                  <div className="grid grid-cols-2 gap-16">
+                    <div className="text-center">
+                      <p className="mb-8">
+                        <span className="font-medium">[수령자]</span> 에이치브이랩 대표
                       </p>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-2">수령인 (발행자)</p>
-                          <div className="border-b border-gray-400 pb-2 min-h-[60px] flex flex-col items-center justify-center">
-                            <p className="text-xs text-gray-600 mb-1">에이치브이랩 대표</p>
-                            <div className="flex items-center justify-center gap-8 w-full">
-                              <p className="text-lg font-bold">김상준</p>
-                              <span className="text-xs text-gray-500">(인)</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-2">지급인</p>
-                          <div className="border-b border-gray-400 pb-2 min-h-[60px] flex items-center justify-center gap-8">
-                            <div className="flex-1 text-center">
-                              <span className="text-gray-400 text-sm">(인쇄 후 작성)</span>
-                            </div>
-                            <span className="text-xs text-gray-500">(인)</span>
-                          </div>
-                        </div>
+                      <div className="flex justify-center items-center gap-16">
+                        <p className="text-xl font-bold">김 상 준</p>
+                        <p>(인)</p>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <p className="mb-8">
+                        <span className="font-medium">[지급자]</span> {cashReceiptData.project}
+                      </p>
+                      <div className="flex justify-center items-center gap-16">
+                        <p className="text-xl">&nbsp;</p>
+                        <p>(인)</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3">
+                <div className="flex gap-3 print:hidden">
                   <button
                     onClick={() => {
                       if (!cashReceiptData.amount) {
