@@ -723,7 +723,7 @@ const ExecutionHistory = () => {
               </div>
 
               {/* 내역추가 버튼 */}
-              <div className="my-6">
+              <div className="my-6" style={{ marginTop: '20px' }}>
                 <button
                   onClick={handleSave}
                   className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
@@ -747,7 +747,7 @@ const ExecutionHistory = () => {
                 <span className="text-sm text-gray-600">부가세 총합:</span>
                 <span className="text-sm font-medium text-gray-900">{projectTotals.vat.toLocaleString()}원</span>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200" style={{ marginTop: '10px' }}>
                 <span className="text-sm font-bold text-gray-900">총 합계:</span>
                 <span className="text-base font-bold text-gray-900">{projectTotals.total.toLocaleString()}원</span>
               </div>
