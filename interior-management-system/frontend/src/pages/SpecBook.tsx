@@ -724,7 +724,7 @@ const SpecBook = () => {
           <div className="flex-1 flex overflow-hidden">
             {/* 좌측: 스펙 라이브러리 */}
             <div className="w-1/2 flex flex-col overflow-hidden pb-4 border-r border-gray-300">
-              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 ml-0">
+              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg pr-4 pb-4 pt-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-gray-500">로딩 중...</div>
@@ -850,7 +850,7 @@ const SpecBook = () => {
             <div className="flex-1 flex overflow-hidden">
               {/* 좌측: 스펙 라이브러리 (드래그 소스) */}
               <div className="w-1/2 flex flex-col overflow-hidden pb-4 border-r border-gray-300">
-                <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 ml-0">
+                <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg pr-4 pb-4 pt-4">
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-gray-500">로딩 중...</div>
@@ -914,7 +914,7 @@ const SpecBook = () => {
               {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
               <div className="w-1/2 flex flex-col overflow-hidden pl-4 pb-4">
                 <div
-                  className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4"
+                  className="flex-1 overflow-y-auto bg-gray-50 rounded-lg pr-4 pb-4 pt-4"
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.dataTransfer.dropEffect = 'copy';
