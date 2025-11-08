@@ -581,7 +581,13 @@ const initDatabase = () => {
         'bathroom_faucet_general TEXT',
         'bathroom_faucet_built_in TEXT',
         'bathroom_tile TEXT',
-        'molding_type TEXT'
+        'molding_type TEXT',
+        'aircon_type TEXT',
+        'ceiling_material TEXT',
+        'furniture_work TEXT',
+        'kitchen_countertop TEXT',
+        'molding_public TEXT',
+        'molding_room TEXT'
       ];
 
       newColumns.forEach(column => {

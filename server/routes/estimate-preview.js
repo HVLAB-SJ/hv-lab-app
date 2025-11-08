@@ -58,10 +58,12 @@ router.post('/create', authenticateToken, async (req, res) => {
     includeSash,
     includeFloorHeating,
     includeAircon,
+    airconType,
     floorMaterial,
     wallMaterial,
-    bathroomWorkType,
-    ceilingWorkType,
+    ceilingMaterial,
+    furnitureWork,
+    kitchenCountertop,
     switchPublic,
     switchRoom,
     lightingType,
@@ -70,7 +72,8 @@ router.post('/create', authenticateToken, async (req, res) => {
     bathroomCeiling,
     bathroomFaucet,
     bathroomTile,
-    moldingType
+    moldingPublic,
+    moldingRoom
   } = req.body;
 
   try {
@@ -163,10 +166,10 @@ router.post('/create', authenticateToken, async (req, res) => {
         bathroom_count, ceiling_height, include_sash, include_floor_heating, include_aircon,
         base_construction_cost, fixture_cost, sash_cost, heating_cost, aircon_cost,
         total_min_cost, total_max_cost, detail_breakdown, created_by,
-        floor_material, wall_material, bathroom_work_type, ceiling_work_type,
+        aircon_type, floor_material, wall_material, ceiling_material, furniture_work, kitchen_countertop,
         switch_public, switch_room, lighting_type, indirect_lighting_public, indirect_lighting_room,
-        bathroom_ceiling, bathroom_faucet, bathroom_tile, molding_type
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        bathroom_ceiling, bathroom_faucet, bathroom_tile, molding_public, molding_room
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.run(query, [
@@ -174,9 +177,9 @@ router.post('/create', authenticateToken, async (req, res) => {
       bathroomCount, ceilingHeight, includeSash ? 1 : 0, includeFloorHeating ? 1 : 0, includeAircon ? 1 : 0,
       baseConstructionCost, fixtureCost, sashCost, heatingCost, airconCost,
       totalMinCost, totalMaxCost, detailBreakdown, req.user.userId,
-      floorMaterial, wallMaterial, bathroomWorkType, ceilingWorkType,
+      airconType, floorMaterial, wallMaterial, ceilingMaterial, furnitureWork, kitchenCountertop,
       switchPublic, switchRoom, lightingType, indirectLightingPublic, indirectLightingRoom,
-      bathroomCeiling, bathroomFaucet, bathroomTile, moldingType
+      bathroomCeiling, bathroomFaucet, bathroomTile, moldingPublic, moldingRoom
     ], function(err) {
       if (err) {
         console.error('가견적서 저장 실패:', err);
