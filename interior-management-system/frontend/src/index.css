@@ -1257,15 +1257,16 @@ div.rbc-popup {
 
   /* 페이지 여백 및 크기 설정 */
   @page {
-    margin: 15mm; /* 적절한 여백 */
+    margin: 40mm; /* 40mm 여백 */
     size: A4 portrait;
   }
 
   html, body {
     margin: 0 !important;
     padding: 0 !important;
-    height: auto !important;
-    overflow: visible !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
