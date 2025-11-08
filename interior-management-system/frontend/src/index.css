@@ -1252,7 +1252,7 @@ div.rbc-popup {
 @media print {
   /* 페이지 여백 및 크기 설정 */
   @page {
-    margin: 10mm 15mm 15mm 15mm; /* 상단 10mm, 나머지 15mm */
+    margin: 0mm 20mm 15mm 20mm; /* 상단 0mm, 좌우 20mm, 하단 15mm */
     size: A4 portrait;
   }
 
