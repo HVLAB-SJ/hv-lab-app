@@ -536,8 +536,8 @@ const Schedule = () => {
           if (!receivedTypes.has('계약금') && cp.expectedPaymentDates?.contract) {
             events.push({
               id: `payment-${cp.id}-contract`,
-              title: `[수금일정] ${cp.project} - 계약금`,
-              originalTitle: `[수금일정] ${cp.project} - 계약금`,
+              title: `[수금일정] 계약금`,
+              originalTitle: `[수금일정] 계약금`,
               start: new Date(cp.expectedPaymentDates.contract),
               end: new Date(cp.expectedPaymentDates.contract),
               projectId: '',
@@ -557,8 +557,8 @@ const Schedule = () => {
           if (!receivedTypes.has('착수금') && cp.expectedPaymentDates?.start) {
             events.push({
               id: `payment-${cp.id}-start`,
-              title: `[수금일정] ${cp.project} - 착수금`,
-              originalTitle: `[수금일정] ${cp.project} - 착수금`,
+              title: `[수금일정] 착수금`,
+              originalTitle: `[수금일정] 착수금`,
               start: new Date(cp.expectedPaymentDates.start),
               end: new Date(cp.expectedPaymentDates.start),
               projectId: '',
@@ -578,8 +578,8 @@ const Schedule = () => {
           if (!receivedTypes.has('중도금') && cp.expectedPaymentDates?.middle) {
             events.push({
               id: `payment-${cp.id}-middle`,
-              title: `[수금일정] ${cp.project} - 중도금`,
-              originalTitle: `[수금일정] ${cp.project} - 중도금`,
+              title: `[수금일정] 중도금`,
+              originalTitle: `[수금일정] 중도금`,
               start: new Date(cp.expectedPaymentDates.middle),
               end: new Date(cp.expectedPaymentDates.middle),
               projectId: '',
@@ -599,8 +599,8 @@ const Schedule = () => {
           if (!receivedTypes.has('잔금') && cp.expectedPaymentDates?.final) {
             events.push({
               id: `payment-${cp.id}-final`,
-              title: `[수금일정] ${cp.project} - 잔금`,
-              originalTitle: `[수금일정] ${cp.project} - 잔금`,
+              title: `[수금일정] 잔금`,
+              originalTitle: `[수금일정] 잔금`,
               start: new Date(cp.expectedPaymentDates.final),
               end: new Date(cp.expectedPaymentDates.final),
               projectId: '',
@@ -641,8 +641,8 @@ const Schedule = () => {
         if (!receivedTypes.has('계약금') && cp.expectedPaymentDates?.contract) {
           events.push({
             id: `payment-${cp.id}-contract`,
-            title: `[수금일정] ${cp.project} - 계약금`,
-            originalTitle: `[수금일정] ${cp.project} - 계약금`,
+            title: `[수금일정] 계약금`,
+            originalTitle: `[수금일정] 계약금`,
             start: new Date(cp.expectedPaymentDates.contract),
             end: new Date(cp.expectedPaymentDates.contract),
             projectId: project.id || '',
@@ -662,8 +662,8 @@ const Schedule = () => {
         if (!receivedTypes.has('착수금') && cp.expectedPaymentDates?.start) {
           events.push({
             id: `payment-${cp.id}-start`,
-            title: `[수금일정] ${cp.project} - 착수금`,
-            originalTitle: `[수금일정] ${cp.project} - 착수금`,
+            title: `[수금일정] 착수금`,
+            originalTitle: `[수금일정] 착수금`,
             start: new Date(cp.expectedPaymentDates.start),
             end: new Date(cp.expectedPaymentDates.start),
             projectId: project.id || '',
@@ -683,8 +683,8 @@ const Schedule = () => {
         if (!receivedTypes.has('중도금') && cp.expectedPaymentDates?.middle) {
           events.push({
             id: `payment-${cp.id}-middle`,
-            title: `[수금일정] ${cp.project} - 중도금`,
-            originalTitle: `[수금일정] ${cp.project} - 중도금`,
+            title: `[수금일정] 중도금`,
+            originalTitle: `[수금일정] 중도금`,
             start: new Date(cp.expectedPaymentDates.middle),
             end: new Date(cp.expectedPaymentDates.middle),
             projectId: project.id || '',
@@ -704,8 +704,8 @@ const Schedule = () => {
         if (!receivedTypes.has('잔금') && cp.expectedPaymentDates?.final) {
           events.push({
             id: `payment-${cp.id}-final`,
-            title: `[수금일정] ${cp.project} - 잔금`,
-            originalTitle: `[수금일정] ${cp.project} - 잔금`,
+            title: `[수금일정] 잔금`,
+            originalTitle: `[수금일정] 잔금`,
             start: new Date(cp.expectedPaymentDates.final),
             end: new Date(cp.expectedPaymentDates.final),
             projectId: project.id || '',

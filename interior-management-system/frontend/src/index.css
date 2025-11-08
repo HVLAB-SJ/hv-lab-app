@@ -1258,22 +1258,15 @@ div.rbc-popup {
   /* 페이지 여백 및 크기 설정 */
   @page {
     margin: 10mm 20mm; /* 상하 10mm, 좌우 20mm */
-    size: A4;
+    size: A4 portrait;
   }
 
   html, body {
     margin: 0 !important;
     padding: 0 !important;
-    height: auto;
-    overflow: visible;
-  }
-
-  /* 브라우저 기본 헤더/푸터 제거 */
-  @page {
-    margin-top: 10mm;
-    margin-bottom: 10mm;
-    margin-left: 20mm;
-    margin-right: 20mm;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
   }
 
   /* 모달 배경 위치 및 크기 조정 */
@@ -1281,10 +1274,14 @@ div.rbc-popup {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
-    transform: scale(0.8) !important;
-    transform-origin: top left !important;
-    width: 125% !important;
+    transform: scale(0.75) !important;
+    transform-origin: top center !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     page-break-after: avoid !important;
+    page-break-inside: avoid !important;
   }
 
   /* 페이지 브레이크 방지 */
@@ -1292,5 +1289,8 @@ div.rbc-popup {
     page-break-inside: avoid !important;
     page-break-after: avoid !important;
     page-break-before: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
+    break-before: avoid !important;
   }
 }
