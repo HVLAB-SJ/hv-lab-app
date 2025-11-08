@@ -435,9 +435,8 @@ const SpecBook = () => {
 
       {/* 메인 컨텐츠 */}
       <div className="flex-1 flex gap-6 overflow-hidden -ml-0">
-        {/* 좌측: 입력 폼 + 카테고리 (프로젝트 선택 시 숨김) */}
-        {view === 'library' && (
-          <div className="w-1/5 flex flex-col gap-4">
+        {/* 좌측: 입력 폼 + 카테고리 (항상 표시) */}
+        <div className="w-1/5 flex flex-col gap-4">
           {/* 새 아이템 추가 폼 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
             <div className="p-3">
@@ -465,7 +464,7 @@ const SpecBook = () => {
                     <img
                       src={formData.imageData || editingItem?.image_url || ''}
                       alt="Preview"
-                      className="w-full h-full object-cover rounded-lg"
+                      className="w-full h-full object-contain rounded-lg"
                     />
                   ) : (
                     <div className="text-center">
@@ -603,7 +602,6 @@ const SpecBook = () => {
             </div>
           </div>
           </div>
-        )}
 
         {/* 아이템 그리드 영역 */}
         {view === 'library' ? (
@@ -630,7 +628,7 @@ const SpecBook = () => {
                       <img
                         src={item.image_url}
                         alt={item.name}
-                        className="w-full h-full object-cover block"
+                        className="w-full h-full object-contain block"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
@@ -681,41 +679,8 @@ const SpecBook = () => {
           )}
           </div>
         ) : (
-          /* 프로젝트 뷰: 상단 카테고리, 좌우 분할 */
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* 상단: 카테고리 필터 */}
-            <div className="px-4 pt-4 pb-3">
-              <div className="grid grid-cols-8 gap-1">
-                {categories.map(category => {
-                  const libraryCount = allLibraryItems.filter(item => category === '전체' || item.category === category).length;
-                  const projectCount = items.filter(item => category === '전체' || item.category === category).length;
-                  return (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`px-1 py-0.5 rounded text-[10px] font-medium transition-colors truncate ${
-                        selectedCategory === category
-                          ? 'bg-gray-800 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                      title={`${category} (라이브러리: ${libraryCount}, 프로젝트: ${projectCount})`}
-                    >
-                      {category}
-                      {(libraryCount > 0 || projectCount > 0) && (
-                        <span className={`ml-0.5 ${
-                          selectedCategory === category ? 'text-gray-300' : 'text-gray-400'
-                        }`}>
-                          ({libraryCount}/{projectCount})
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 좌우 분할 영역 */}
-            <div className="flex-1 flex overflow-hidden">
+          /* 프로젝트 뷰: 좌우 분할 - 스펙 라이브러리 + 프로젝트 아이템 */
+          <div className="flex-1 flex overflow-hidden pr-4">
               {/* 좌측: 스펙 라이브러리 (드래그 소스) */}
               <div className="w-1/2 flex flex-col overflow-hidden px-4 pb-4">
                 <h2 className="text-lg font-bold mb-3 text-gray-900">스펙 라이브러리</h2>
@@ -747,7 +712,7 @@ const SpecBook = () => {
                             <img
                               src={item.image_url}
                               alt={item.name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
@@ -872,7 +837,6 @@ const SpecBook = () => {
                   </div>
                 )}
               </div>
-            </div>
             </div>
           </div>
         )}
