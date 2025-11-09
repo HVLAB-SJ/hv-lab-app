@@ -36,6 +36,11 @@ interface EstimateForm {
   bathroomGrout: string[];
   moldingPublic: string[];
   moldingRoom: string[];
+  includeSash?: boolean;
+  includeGrooving?: boolean;
+  includeBangtong?: boolean;
+  includeAircon?: boolean;
+  airconType?: string[];
 }
 
 interface EstimateResult {
@@ -89,7 +94,12 @@ const EstimatePreview: React.FC = () => {
     bathroomTile: [],
     bathroomGrout: [],
     moldingPublic: [],
-    moldingRoom: []
+    moldingRoom: [],
+    includeSash: false,
+    includeGrooving: false,
+    includeBangtong: false,
+    includeAircon: false,
+    airconType: []
   });
 
   const [result, setResult] = useState<EstimateResult | null>(null);
@@ -206,7 +216,8 @@ const EstimatePreview: React.FC = () => {
         bathroomCount: data.bathroom_count ? JSON.parse(data.bathroom_count) : [],
         ceilingHeight: data.ceiling_height ? JSON.parse(data.ceiling_height) : [],
         includeSash: data.include_sash === 1,
-        includeFloorHeating: data.include_floor_heating === 1,
+        includeGrooving: data.include_grooving === 1,
+        includeBangtong: data.include_bangtong === 1,
         includeAircon: data.include_aircon === 1,
         airconType: data.aircon_type ? JSON.parse(data.aircon_type) : [],
         floorMaterial: data.floor_material ? JSON.parse(data.floor_material) : [],
@@ -282,7 +293,8 @@ const EstimatePreview: React.FC = () => {
       bathroomCount: [],
       ceilingHeight: [],
       includeSash: false,
-      includeFloorHeating: false,
+      includeGrooving: false,
+      includeBangtong: false,
       includeAircon: false,
       airconType: [],
       livingRoomExpansion: false,
@@ -654,12 +666,22 @@ const EstimatePreview: React.FC = () => {
                       <label className="flex items-center text-sm">
                         <input
                           type="checkbox"
-                          name="includeFloorHeating"
-                          checked={form.includeFloorHeating}
+                          name="includeGrooving"
+                          checked={form.includeGrooving}
                           onChange={handleInputChange}
                           className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                         />
-                        <span className="text-gray-700">바닥난방배관 공사(+수도배관공사 포함)</span>
+                        <span className="text-gray-700">홈파기(바닥난방+수도배관)공사</span>
+                      </label>
+                      <label className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          name="includeBangtong"
+                          checked={form.includeBangtong}
+                          onChange={handleInputChange}
+                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">방통(바닥난방+수도배관)공사</span>
                       </label>
                       <div>
                         <label className="flex items-center text-sm">
