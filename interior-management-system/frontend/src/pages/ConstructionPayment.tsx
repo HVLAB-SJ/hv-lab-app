@@ -1693,14 +1693,19 @@ const ConstructionPayment = () => {
                       <span className="text-xl font-bold">김 상 준</span>
                       <div className="relative inline-block">
                         <img
-                          src="/stamp.svg"
+                          src="/stamp.png"
                           alt="직인"
                           className="h-12 w-12 object-contain"
-                          style={{ filter: 'opacity(0.7)' }}
+                          style={{ filter: 'opacity(0.8)' }}
                           onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const fallback = e.currentTarget.nextElementSibling;
-                            if (fallback) fallback.style.display = 'inline';
+                            // PNG 파일이 없으면 SVG로 대체
+                            if (e.currentTarget.src.endsWith('/stamp.png')) {
+                              e.currentTarget.src = '/stamp.svg';
+                            } else {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling;
+                              if (fallback) fallback.style.display = 'inline';
+                            }
                           }}
                         />
                         <span className="text-sm hidden">(인)</span>
