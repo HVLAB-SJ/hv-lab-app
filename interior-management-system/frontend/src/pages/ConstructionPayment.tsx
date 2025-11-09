@@ -5,6 +5,7 @@ import { useDataStore, type ConstructionPayment } from '../store/dataStore';
 import additionalWorkService from '../services/additionalWorkService';
 import toast from 'react-hot-toast';
 import type { PaymentType, PaymentRecord } from '../types/forms';
+import { stampBase64 } from '../assets/stampBase64';
 
 interface PaymentRecord {
   id: string;
@@ -1711,18 +1712,10 @@ const ConstructionPayment = () => {
                       <div className="relative inline-block text-right" style={{ minWidth: '50px', minHeight: '30px' }}>
                         <span className="text-sm relative z-10" style={{ position: 'relative', left: '-25px' }}>(인)</span>
                         <img
-                          src={window.location.origin + "/stamp.png"}
+                          src={stampBase64}
                           alt="직인"
-                          className="stamp-image absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-14 w-14 aspect-square print:opacity-100 print:block"
+                          className="stamp-image absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-14 w-14 aspect-square print:opacity-70 print:block"
                           style={{ filter: 'opacity(0.7)', left: 'calc(50% + 25px)', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact', colorAdjust: 'exact' }}
-                          onError={(e) => {
-                            // PNG 파일이 없으면 SVG로 대체
-                            if (e.currentTarget.src.includes('/stamp.png')) {
-                              e.currentTarget.src = window.location.origin + '/stamp.svg';
-                            } else {
-                              e.currentTarget.style.display = 'none';
-                            }
-                          }}
                         />
                       </div>
                     </div>
