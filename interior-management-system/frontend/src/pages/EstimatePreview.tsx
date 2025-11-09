@@ -477,7 +477,7 @@ const EstimatePreview: React.FC = () => {
                     </label>
                     <div className="space-y-1">
                       <div className="flex gap-4">
-                        {['장판', '데코타일'].map(item => (
+                        {['장판', '데코타일', '강마루', '원목마루'].map(item => (
                           <label key={item} className="flex items-center text-sm">
                             <input
                               type="checkbox"
@@ -502,75 +502,64 @@ const EstimatePreview: React.FC = () => {
                           </label>
                         ))}
                       </div>
-                      <div className="flex gap-4">
-                        {['강마루', '원목마루'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
-                            <input
-                              type="checkbox"
-                              checked={form.floorMaterial.includes(item)}
-                              onChange={() => handleMaterialCheckbox('floorMaterial', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                            />
-                            <span className="text-gray-700">{item}</span>
-                          </label>
-                        ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      벽재 / 천장재
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-sm font-bold text-gray-600 mb-1">벽재</label>
+                        <div className="space-y-1">
+                          {[
+                            '합지도배',
+                            '실크도배(일반)',
+                            '실크도배(고급)',
+                            '도장(수입-전체)',
+                            '도장(수입-공용부)+실크도배(방)',
+                            '필름',
+                            '대형타일',
+                            '박판타일',
+                            '무늬목'
+                          ].map(item => (
+                            <label key={item} className="flex items-center text-sm">
+                              <input
+                                type="checkbox"
+                                checked={form.wallMaterial.includes(item)}
+                                onChange={() => handleMaterialCheckbox('wallMaterial', item)}
+                                className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              />
+                              <span className="text-gray-700">{item}</span>
+                            </label>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      벽재
-                    </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {[
-                        '합지도배',
-                        '실크도배(일반-로하스 등)',
-                        '실크도배(고급-디아망 포티스 등)',
-                        '도장(수입-전체)',
-                        '도장(수입-공용부)+실크도배(방)',
-                        '필름',
-                        '대형타일',
-                        '박판타일',
-                        '무늬목'
-                      ].map(item => (
-                        <label key={item} className="flex items-center text-sm">
-                          <input
-                            type="checkbox"
-                            checked={form.wallMaterial.includes(item)}
-                            onChange={() => handleMaterialCheckbox('wallMaterial', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                          />
-                          <span className="text-gray-700">{item}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      천장재
-                    </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {[
-                        '합지도배',
-                        '실크도배(일반-로하스 등)',
-                        '실크도배(고급-디아망 포티스 등)',
-                        '도장(수입-전체)',
-                        '도장(수입-공용부)+실크도배(방)',
-                        '필름',
-                        '무늬목'
-                      ].map(item => (
-                        <label key={item} className="flex items-center text-sm">
-                          <input
-                            type="checkbox"
-                            checked={form.ceilingMaterial.includes(item)}
-                            onChange={() => handleMaterialCheckbox('ceilingMaterial', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                          />
-                          <span className="text-gray-700">{item}</span>
-                        </label>
-                      ))}
+                      <div>
+                        <label className="text-sm font-bold text-gray-600 mb-1">천장재</label>
+                        <div className="space-y-1">
+                          {[
+                            '합지도배',
+                            '실크도배(일반)',
+                            '실크도배(고급)',
+                            '도장(수입-전체)',
+                            '도장(수입-공용부)+실크도배(방)',
+                            '필름',
+                            '무늬목'
+                          ].map(item => (
+                            <label key={item} className="flex items-center text-sm">
+                              <input
+                                type="checkbox"
+                                checked={form.ceilingMaterial.includes(item)}
+                                onChange={() => handleMaterialCheckbox('ceilingMaterial', item)}
+                                className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              />
+                              <span className="text-gray-700">{item}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
