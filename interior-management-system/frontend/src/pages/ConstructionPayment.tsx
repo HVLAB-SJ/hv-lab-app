@@ -6,6 +6,7 @@ import additionalWorkService from '../services/additionalWorkService';
 import toast from 'react-hot-toast';
 import type { PaymentType, PaymentRecord } from '../types/forms';
 import { stampBase64 } from '../assets/stampBase64';
+import { StampSvg } from '../components/StampSvg';
 
 interface PaymentRecord {
   id: string;
@@ -1578,15 +1579,24 @@ const ConstructionPayment = () => {
         <style>
           {`
             @media print {
-              img {
+              * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
               }
-              .stamp-image {
+              svg {
                 display: block !important;
                 visibility: visible !important;
                 opacity: 0.7 !important;
+              }
+              .stamp-svg {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 0.7 !important;
+                position: absolute !important;
+                top: 50% !important;
+                left: calc(50% + 25px) !important;
+                transform: translate(-50%, -50%) !important;
               }
             }
           `}
@@ -1711,12 +1721,17 @@ const ConstructionPayment = () => {
                       <span className="text-xl font-bold text-right pr-4">김 상 준</span>
                       <div className="relative inline-block text-right" style={{ minWidth: '50px', minHeight: '30px' }}>
                         <span className="text-sm relative z-10" style={{ position: 'relative', left: '-25px' }}>(인)</span>
+                        {/* 화면 표시용 이미지 */}
                         <img
                           src={stampBase64}
                           alt="직인"
-                          className="stamp-image absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-14 w-14 aspect-square print:opacity-70 print:block"
-                          style={{ filter: 'opacity(0.7)', left: 'calc(50% + 25px)', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact', colorAdjust: 'exact' }}
+                          className="stamp-image absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-14 w-14 aspect-square print:hidden"
+                          style={{ filter: 'opacity(0.7)', left: 'calc(50% + 25px)' }}
                         />
+                        {/* 인쇄용 인라인 SVG */}
+                        <div className="hidden print:block">
+                          <StampSvg />
+                        </div>
                       </div>
                     </div>
                     <div className="grid grid-cols-4 items-center border-b border-gray-300 pb-2">
