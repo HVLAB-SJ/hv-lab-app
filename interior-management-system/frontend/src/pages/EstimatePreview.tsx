@@ -8,6 +8,7 @@ interface EstimateForm {
   projectName: string;
   clientName: string;
   areaSize: number;
+  residenceType: string[];
   grade: string[];
   finishType: string;
   bathroomCount: string[];
@@ -57,6 +58,7 @@ const EstimatePreview: React.FC = () => {
     projectName: '',
     clientName: '',
     areaSize: 0,
+    residenceType: [],
     grade: [],
     finishType: '',
     bathroomCount: [],
@@ -143,6 +145,7 @@ const EstimatePreview: React.FC = () => {
       // 배열 필드들을 JSON 문자열로 변환
       const formData = {
         ...form,
+        residenceType: JSON.stringify(form.residenceType),
         grade: JSON.stringify(form.grade),
         bathroomCount: JSON.stringify(form.bathroomCount),
         ceilingHeight: JSON.stringify(form.ceilingHeight),
@@ -189,6 +192,7 @@ const EstimatePreview: React.FC = () => {
         projectName: data.project_name,
         clientName: data.client_name,
         areaSize: data.area_size,
+        residenceType: data.residence_type ? JSON.parse(data.residence_type) : [],
         grade: data.grade,
         finishType: data.finish_type || '',
         bathroomCount: data.bathroom_count ? JSON.parse(data.bathroom_count) : [],
@@ -264,6 +268,7 @@ const EstimatePreview: React.FC = () => {
       projectName: '',
       clientName: '',
       areaSize: 0,
+      residenceType: [],
       grade: [],
       finishType: '',
       bathroomCount: [],
@@ -364,63 +369,85 @@ const EstimatePreview: React.FC = () => {
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   기본 정보
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-                      프로젝트명 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="projectName"
-                      value={form.projectName}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                      placeholder="예: 강남 오피스텔"
-                    />
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                        프로젝트명 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="projectName"
+                        value={form.projectName}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                        placeholder="예: 강남 오피스텔"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                        고객명 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="clientName"
+                        value={form.clientName}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                        placeholder="예: 홍길동"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                        평수 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        name="areaSize"
+                        value={form.areaSize || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                        placeholder="예: 25"
+                        min="1"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-                      고객명 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="clientName"
-                      value={form.clientName}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                      placeholder="예: 홍길동"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-                      평수 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="areaSize"
-                      value={form.areaSize || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                      placeholder="예: 25"
-                      min="1"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-                      등급 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-3">
-                      {['알뜰', '기본', '고급', '하이엔드'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
-                          <input
-                            type="checkbox"
-                            checked={form.grade.includes(item)}
-                            onChange={() => handleMaterialCheckbox('grade', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                          />
-                          <span className="text-gray-700">{item}</span>
-                        </label>
-                      ))}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                        주거 형태
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {['아파트', '빌라', '오피스텔', '단독주택', '주상복합'].map(item => (
+                          <label key={item} className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.residenceType.includes(item)}
+                              onChange={() => handleMaterialCheckbox('residenceType', item)}
+                              className="mr-1 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700 text-xs">{item}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                        등급 <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex gap-3">
+                        {['알뜰', '기본', '고급', '하이엔드'].map(item => (
+                          <label key={item} className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.grade.includes(item)}
+                              onChange={() => handleMaterialCheckbox('grade', item)}
+                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700">{item}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -584,9 +611,6 @@ const EstimatePreview: React.FC = () => {
                   </div>
 
                   <div className="pt-2 border-t border-gray-200">
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
-                      추가 공사
-                    </label>
                     <div className="space-y-2">
                       <label className="flex items-center text-sm">
                         <input
@@ -596,7 +620,7 @@ const EstimatePreview: React.FC = () => {
                           onChange={handleInputChange}
                           className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                         />
-                        <span className="text-gray-700">샤시 공사 포함</span>
+                        <span className="text-gray-700">샤시 공사</span>
                       </label>
                       <label className="flex items-center text-sm">
                         <input
