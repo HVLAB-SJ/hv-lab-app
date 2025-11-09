@@ -40,6 +40,7 @@ interface EstimateForm {
   includeGrooving?: boolean;
   includeBangtong?: boolean;
   includeAircon?: boolean;
+  airconCount?: number;
   airconType?: string[];
 }
 
@@ -99,6 +100,7 @@ const EstimatePreview: React.FC = () => {
     includeGrooving: false,
     includeBangtong: false,
     includeAircon: false,
+    airconCount: 1,
     airconType: []
   });
 
@@ -126,7 +128,7 @@ const EstimatePreview: React.FC = () => {
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setForm(prev => ({ ...prev, [name]: checked }));
-    } else if (name === 'areaSize' || name === 'bathroomCount') {
+    } else if (name === 'areaSize' || name === 'bathroomCount' || name === 'airconCount' || name === 'roomExpansionCount') {
       setForm(prev => ({ ...prev, [name]: Number(value) || 0 }));
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
@@ -219,6 +221,7 @@ const EstimatePreview: React.FC = () => {
         includeGrooving: data.include_grooving === 1,
         includeBangtong: data.include_bangtong === 1,
         includeAircon: data.include_aircon === 1,
+        airconCount: data.aircon_count || 1,
         airconType: data.aircon_type ? JSON.parse(data.aircon_type) : [],
         floorMaterial: data.floor_material ? JSON.parse(data.floor_material) : [],
         wallMaterial: data.wall_material ? JSON.parse(data.wall_material) : [],
@@ -296,6 +299,7 @@ const EstimatePreview: React.FC = () => {
       includeGrooving: false,
       includeBangtong: false,
       includeAircon: false,
+      airconCount: 1,
       airconType: [],
       livingRoomExpansion: false,
       roomExpansion: false,
@@ -681,19 +685,33 @@ const EstimatePreview: React.FC = () => {
                           onChange={handleInputChange}
                           className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                         />
-                        <span className="text-gray-700">방통(바닥난방+수도배관)공사</span>
+                        <span className="text-gray-700">방통(바닥단열+바닥난방+수도배관)공사</span>
                       </label>
                       <div>
-                        <label className="flex items-center text-sm">
-                          <input
-                            type="checkbox"
-                            name="includeAircon"
-                            checked={form.includeAircon}
-                            onChange={handleInputChange}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                          />
-                          <span className="text-gray-700">에어컨 공사</span>
-                        </label>
+                        <div className="flex items-center">
+                          <label className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              name="includeAircon"
+                              checked={form.includeAircon}
+                              onChange={handleInputChange}
+                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700">에어컨 공사</span>
+                          </label>
+                          {form.includeAircon && (
+                            <select
+                              name="airconCount"
+                              value={form.airconCount}
+                              onChange={handleInputChange}
+                              className="ml-3 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                            >
+                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                                <option key={num} value={num}>{num}대</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
                         {form.includeAircon && (
                           <div className="ml-6 mt-1 flex gap-3">
                             {['2 in 1', '시스템 에어컨'].map(item => (
