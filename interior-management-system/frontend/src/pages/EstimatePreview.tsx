@@ -436,18 +436,46 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
                       바닥재
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {['장판', '데코타일', '600각 타일', '800-900각 타일', '1200각 타일', '강마루', '원목마루'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
-                          <input
-                            type="checkbox"
-                            checked={form.floorMaterial.includes(item)}
-                            onChange={() => handleMaterialCheckbox('floorMaterial', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                          />
-                          <span className="text-gray-700">{item}</span>
-                        </label>
-                      ))}
+                    <div className="space-y-1">
+                      <div className="flex gap-4">
+                        {['장판', '데코타일'].map(item => (
+                          <label key={item} className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.floorMaterial.includes(item)}
+                              onChange={() => handleMaterialCheckbox('floorMaterial', item)}
+                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700">{item}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex gap-4">
+                        {['600각 타일', '800-900각 타일', '1200각 타일'].map(item => (
+                          <label key={item} className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.floorMaterial.includes(item)}
+                              onChange={() => handleMaterialCheckbox('floorMaterial', item)}
+                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700 text-xs">{item}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex gap-4">
+                        {['강마루', '원목마루'].map(item => (
+                          <label key={item} className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.floorMaterial.includes(item)}
+                              onChange={() => handleMaterialCheckbox('floorMaterial', item)}
+                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700">{item}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -515,41 +543,98 @@ const EstimatePreview: React.FC = () => {
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   공사 범위
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
-                      화장실 개수
-                    </label>
-                    <div className="flex gap-3">
-                      {['0', '1', '2', '3', '4'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
-                          <input
-                            type="checkbox"
-                            checked={form.bathroomCount.includes(item)}
-                            onChange={() => handleMaterialCheckbox('bathroomCount', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                          />
-                          <span className="text-gray-700">{item}</span>
-                        </label>
-                      ))}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                        화장실 개수
+                      </label>
+                      <div className="flex gap-3">
+                        {['0', '1', '2', '3', '4'].map(item => (
+                          <label key={item} className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.bathroomCount.includes(item)}
+                              onChange={() => handleMaterialCheckbox('bathroomCount', item)}
+                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700">{item}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                        층고
+                      </label>
+                      <div className="flex flex-col gap-2">
+                        {['2400이하', '2400~2600', '2600이상'].map(item => (
+                          <label key={item} className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.ceilingHeight.includes(item)}
+                              onChange={() => handleMaterialCheckbox('ceilingHeight', item)}
+                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700">{item}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div>
+
+                  <div className="pt-2 border-t border-gray-200">
                     <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
-                      층고
+                      추가 공사
                     </label>
-                    <div className="flex flex-col gap-2">
-                      {['2400이하', '2400~2600', '2600이상'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
+                    <div className="space-y-2">
+                      <label className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          name="includeSash"
+                          checked={form.includeSash}
+                          onChange={handleInputChange}
+                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">샤시 공사 포함</span>
+                      </label>
+                      <label className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          name="includeFloorHeating"
+                          checked={form.includeFloorHeating}
+                          onChange={handleInputChange}
+                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">바닥난방배관 공사(+수도배관공사 포함)</span>
+                      </label>
+                      <div>
+                        <label className="flex items-center text-sm">
                           <input
                             type="checkbox"
-                            checked={form.ceilingHeight.includes(item)}
-                            onChange={() => handleMaterialCheckbox('ceilingHeight', item)}
+                            name="includeAircon"
+                            checked={form.includeAircon}
+                            onChange={handleInputChange}
                             className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                           />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-gray-700">에어컨 공사</span>
                         </label>
-                      ))}
+                        {form.includeAircon && (
+                          <div className="ml-6 mt-1 flex gap-3">
+                            {['2 in 1', '시스템 에어컨'].map(item => (
+                              <label key={item} className="flex items-center text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={form.airconType.includes(item)}
+                                  onChange={() => handleMaterialCheckbox('airconType', item)}
+                                  className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                                />
+                                <span className="text-gray-700 text-xs">{item}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -667,18 +752,33 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                       조명
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {['마그네틱조명', '라인조명', '매입조명(하이엔드)', '매입조명(고급)', '매입조명(일반)'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
-                          <input
-                            type="checkbox"
-                            checked={form.lightingType.includes(item)}
-                            onChange={() => handleMaterialCheckbox('lightingType', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                          />
-                          <span className="text-gray-700">{item}</span>
-                        </label>
-                      ))}
+                    <div className="space-y-1">
+                      <div className="flex gap-4">
+                        {['마그네틱조명', '라인조명'].map(item => (
+                          <label key={item} className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.lightingType.includes(item)}
+                              onChange={() => handleMaterialCheckbox('lightingType', item)}
+                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700">{item}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex gap-3">
+                        {['매입조명(일반)', '매입조명(고급)', '매입조명(하이엔드)'].map(item => (
+                          <label key={item} className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.lightingType.includes(item)}
+                              onChange={() => handleMaterialCheckbox('lightingType', item)}
+                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700 text-xs">{item}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -879,67 +979,6 @@ const EstimatePreview: React.FC = () => {
                 </div>
               </div>
 
-              {/* 추가 공사 섹션 */}
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
-                  추가 공사
-                </h3>
-                <div className="space-y-2">
-                  <div>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        name="includeSash"
-                        checked={form.includeSash}
-                        onChange={handleInputChange}
-                        className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                      />
-                      <span className="text-gray-700 font-medium">샤시 공사 포함</span>
-                    </label>
-                  </div>
-
-                  <div>
-                    <label className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        name="includeFloorHeating"
-                        checked={form.includeFloorHeating}
-                        onChange={handleInputChange}
-                        className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                      />
-                      <span className="text-gray-700 font-medium">바닥난방배관 공사(+수도배관공사 포함)</span>
-                    </label>
-                  </div>
-
-                  <div>
-                    <label className="flex items-center text-sm mb-2">
-                      <input
-                        type="checkbox"
-                        name="includeAircon"
-                        checked={form.includeAircon}
-                        onChange={handleInputChange}
-                        className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                      />
-                      <span className="text-gray-700 font-medium">에어컨 공사</span>
-                    </label>
-                    {form.includeAircon && (
-                      <div className="ml-6 flex gap-4">
-                        {['2 in 1', '시스템 에어컨'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
-                            <input
-                              type="checkbox"
-                              checked={form.airconType.includes(item)}
-                              onChange={() => handleMaterialCheckbox('airconType', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                            />
-                            <span className="text-gray-700">{item}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
 
               <button
                 onClick={calculateEstimate}
