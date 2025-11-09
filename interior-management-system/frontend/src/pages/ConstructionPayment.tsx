@@ -1696,7 +1696,7 @@ const ConstructionPayment = () => {
                         <img
                           src="/stamp.png"
                           alt="직인"
-                          className="absolute -top-2 -left-2 h-14 w-14 aspect-square"
+                          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-14 w-14 aspect-square"
                           style={{ filter: 'opacity(0.7)' }}
                           onError={(e) => {
                             // PNG 파일이 없으면 SVG로 대체
