@@ -509,57 +509,28 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       벽재 / 천장재
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-sm font-bold text-gray-600 mb-1">벽재</label>
-                        <div className="space-y-1">
-                          {[
-                            '합지도배',
-                            '실크도배(일반)',
-                            '실크도배(고급)',
-                            '도장(수입-전체)',
-                            '도장(수입-공용부)+실크도배(방)',
-                            '필름',
-                            '대형타일',
-                            '박판타일',
-                            '무늬목'
-                          ].map(item => (
-                            <label key={item} className="flex items-center text-sm">
-                              <input
-                                type="checkbox"
-                                checked={form.wallMaterial.includes(item)}
-                                onChange={() => handleMaterialCheckbox('wallMaterial', item)}
-                                className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                              />
-                              <span className="text-gray-700">{item}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm font-bold text-gray-600 mb-1">천장재</label>
-                        <div className="space-y-1">
-                          {[
-                            '합지도배',
-                            '실크도배(일반)',
-                            '실크도배(고급)',
-                            '도장(수입-전체)',
-                            '도장(수입-공용부)+실크도배(방)',
-                            '필름',
-                            '무늬목'
-                          ].map(item => (
-                            <label key={item} className="flex items-center text-sm">
-                              <input
-                                type="checkbox"
-                                checked={form.ceilingMaterial.includes(item)}
-                                onChange={() => handleMaterialCheckbox('ceilingMaterial', item)}
-                                className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                              />
-                              <span className="text-gray-700">{item}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {[
+                        '합지도배',
+                        '실크도배(일반)',
+                        '실크도배(고급)',
+                        '도장(수입-전체)',
+                        '도장(수입-공용부)+실크도배(방)',
+                        '필름',
+                        '대형타일',
+                        '박판타일',
+                        '무늬목'
+                      ].map(item => (
+                        <label key={item} className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            checked={form.wallMaterial.includes(item)}
+                            onChange={() => handleMaterialCheckbox('wallMaterial', item)}
+                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          />
+                          <span className="text-gray-700">{item}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
 
@@ -615,56 +586,52 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       확장 공사
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
+                    <div className="flex gap-4 flex-wrap">
+                      <label className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          name="livingRoomExpansion"
+                          checked={form.livingRoomExpansion}
+                          onChange={handleInputChange}
+                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">거실 확장</span>
+                      </label>
+                      <label className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          name="kitchenExpansion"
+                          checked={form.kitchenExpansion}
+                          onChange={handleInputChange}
+                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">주방 확장</span>
+                      </label>
+                      <div className="flex items-center">
                         <label className="flex items-center text-sm">
                           <input
                             type="checkbox"
-                            name="livingRoomExpansion"
-                            checked={form.livingRoomExpansion}
+                            name="roomExpansion"
+                            checked={form.roomExpansion}
                             onChange={handleInputChange}
                             className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                           />
-                          <span className="text-gray-700">거실 확장</span>
+                          <span className="text-gray-700">방 확장</span>
                         </label>
-                        <label className="flex items-center text-sm">
-                          <input
-                            type="checkbox"
-                            name="kitchenExpansion"
-                            checked={form.kitchenExpansion}
+                        {form.roomExpansion && (
+                          <select
+                            name="roomExpansionCount"
+                            value={form.roomExpansionCount}
                             onChange={handleInputChange}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                          />
-                          <span className="text-gray-700">주방 확장</span>
-                        </label>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center">
-                          <label className="flex items-center text-sm">
-                            <input
-                              type="checkbox"
-                              name="roomExpansion"
-                              checked={form.roomExpansion}
-                              onChange={handleInputChange}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                            />
-                            <span className="text-gray-700">방 확장</span>
-                          </label>
-                          {form.roomExpansion && (
-                            <select
-                              name="roomExpansionCount"
-                              value={form.roomExpansionCount}
-                              onChange={handleInputChange}
-                              className="ml-3 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
-                            >
-                              <option value={0}>선택</option>
-                              <option value={1}>1개</option>
-                              <option value={2}>2개</option>
-                              <option value={3}>3개</option>
-                              <option value={4}>4개</option>
-                            </select>
-                          )}
-                        </div>
+                            className="ml-3 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                          >
+                            <option value={0}>선택</option>
+                            <option value={1}>1개</option>
+                            <option value={2}>2개</option>
+                            <option value={3}>3개</option>
+                            <option value={4}>4개</option>
+                          </select>
+                        )}
                       </div>
                     </div>
                   </div>
