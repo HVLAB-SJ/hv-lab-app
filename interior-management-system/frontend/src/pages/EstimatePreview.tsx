@@ -384,7 +384,7 @@ const EstimatePreview: React.FC = () => {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     <div>
-                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         프로젝트명 <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -397,7 +397,7 @@ const EstimatePreview: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         고객명 <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -410,7 +410,7 @@ const EstimatePreview: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         평수 <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -426,7 +426,7 @@ const EstimatePreview: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         주거 형태
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -438,13 +438,13 @@ const EstimatePreview: React.FC = () => {
                               onChange={() => handleMaterialCheckbox('residenceType', item)}
                               className="mr-1 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                             />
-                            <span className="text-gray-700 text-xs">{item}</span>
+                            <span className="text-gray-700">{item}</span>
                           </label>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         등급 <span className="text-red-500">*</span>
                       </label>
                       <div className="flex gap-3">
@@ -472,7 +472,7 @@ const EstimatePreview: React.FC = () => {
                 </h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       바닥재
                     </label>
                     <div className="space-y-1">
@@ -498,7 +498,7 @@ const EstimatePreview: React.FC = () => {
                               onChange={() => handleMaterialCheckbox('floorMaterial', item)}
                               className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                             />
-                            <span className="text-gray-700 text-xs">{item}</span>
+                            <span className="text-gray-700">{item}</span>
                           </label>
                         ))}
                       </div>
@@ -519,7 +519,7 @@ const EstimatePreview: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       벽재
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -541,14 +541,14 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('wallMaterial', item)}
                             className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                           />
-                          <span className="text-gray-700 text-xs">{item}</span>
+                          <span className="text-gray-700">{item}</span>
                         </label>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       천장재
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -568,7 +568,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('ceilingMaterial', item)}
                             className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                           />
-                          <span className="text-gray-700 text-xs">{item}</span>
+                          <span className="text-gray-700">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -585,7 +585,7 @@ const EstimatePreview: React.FC = () => {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
                         화장실 개수
                       </label>
                       <div className="flex gap-3">
@@ -603,7 +603,7 @@ const EstimatePreview: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
                         층고
                       </label>
                       <div className="flex flex-col gap-2">
@@ -623,7 +623,7 @@ const EstimatePreview: React.FC = () => {
                   </div>
 
                   <div className="pt-2 border-t border-gray-200">
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       확장 공사
                     </label>
                     <div className="grid grid-cols-2 gap-3">
@@ -650,26 +650,23 @@ const EstimatePreview: React.FC = () => {
                         </label>
                       </div>
                       <div className="space-y-2">
-                        <label className="flex items-center text-sm">
-                          <input
-                            type="checkbox"
-                            name="roomExpansion"
-                            checked={form.roomExpansion}
-                            onChange={handleInputChange}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                          />
-                          <span className="text-gray-700">방 확장</span>
-                        </label>
-                        {form.roomExpansion && (
-                          <div className="ml-6">
-                            <label className="block text-xs text-gray-600 mb-1">
-                              확장할 방 개수
-                            </label>
+                        <div className="flex items-center">
+                          <label className="flex items-center text-sm">
+                            <input
+                              type="checkbox"
+                              name="roomExpansion"
+                              checked={form.roomExpansion}
+                              onChange={handleInputChange}
+                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            />
+                            <span className="text-gray-700">방 확장</span>
+                          </label>
+                          {form.roomExpansion && (
                             <select
                               name="roomExpansionCount"
                               value={form.roomExpansionCount}
                               onChange={handleInputChange}
-                              className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                              className="ml-3 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
                             >
                               <option value={0}>선택</option>
                               <option value={1}>1개</option>
@@ -677,14 +674,14 @@ const EstimatePreview: React.FC = () => {
                               <option value={3}>3개</option>
                               <option value={4}>4개</option>
                             </select>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-gray-200">
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       기타 공사
                     </label>
                     <div className="space-y-2">
@@ -729,7 +726,7 @@ const EstimatePreview: React.FC = () => {
                                   onChange={() => handleMaterialCheckbox('airconType', item)}
                                   className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                                 />
-                                <span className="text-gray-700 text-xs">{item}</span>
+                                <span className="text-gray-700">{item}</span>
                               </label>
                             ))}
                           </div>
@@ -747,7 +744,7 @@ const EstimatePreview: React.FC = () => {
                 </h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
                       가구 공사 범위
                     </label>
                     <div className="space-y-1">
@@ -765,7 +762,7 @@ const EstimatePreview: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
                       하드웨어 등급
                     </label>
                     <div className="space-y-1">
@@ -783,7 +780,7 @@ const EstimatePreview: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
                       주방 상판
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -811,7 +808,7 @@ const EstimatePreview: React.FC = () => {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         스위치/콘센트 (공용부)
                       </label>
                       <div className="space-y-1">
@@ -829,7 +826,7 @@ const EstimatePreview: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         스위치/콘센트 (방)
                       </label>
                       <div className="space-y-1">
@@ -849,7 +846,7 @@ const EstimatePreview: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
                       조명
                     </label>
                     <div className="space-y-1">
@@ -875,7 +872,7 @@ const EstimatePreview: React.FC = () => {
                               onChange={() => handleMaterialCheckbox('lightingType', item)}
                               className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                             />
-                            <span className="text-gray-700 text-xs">{item}</span>
+                            <span className="text-gray-700">{item}</span>
                           </label>
                         ))}
                       </div>
@@ -884,7 +881,7 @@ const EstimatePreview: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         간접조명 (공용부)
                       </label>
                       <div className="flex gap-3">
@@ -902,7 +899,7 @@ const EstimatePreview: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         간접조명 (방)
                       </label>
                       <div className="flex gap-3">
@@ -930,7 +927,7 @@ const EstimatePreview: React.FC = () => {
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
                       몰딩 (공용부)
                     </label>
                     <div className="space-y-1">
@@ -942,13 +939,13 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('moldingPublic', item)}
                             className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                           />
-                          <span className="text-gray-700 text-xs">{item}</span>
+                          <span className="text-gray-700">{item}</span>
                         </label>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
                       몰딩 (방)
                     </label>
                     <div className="space-y-1">
@@ -960,7 +957,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('moldingRoom', item)}
                             className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                           />
-                          <span className="text-gray-700 text-xs">{item}</span>
+                          <span className="text-gray-700">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -976,7 +973,7 @@ const EstimatePreview: React.FC = () => {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         화장실 천장
                       </label>
                       <div className="flex gap-2">
@@ -994,7 +991,7 @@ const EstimatePreview: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
                         화장실 수전
                       </label>
                       <div className="flex gap-2">
@@ -1014,7 +1011,7 @@ const EstimatePreview: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
                       타일 등급
                     </label>
                     <div className="flex gap-3">
@@ -1033,7 +1030,7 @@ const EstimatePreview: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
                       화장실 타일
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -1052,14 +1049,14 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('bathroomTile', item)}
                             className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                           />
-                          <span className="text-gray-700 text-xs">{item}</span>
+                          <span className="text-gray-700">{item}</span>
                         </label>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
                       줄눈
                     </label>
                     <div className="grid grid-cols-2 gap-2">
@@ -1071,7 +1068,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('bathroomGrout', item)}
                             className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                           />
-                          <span className="text-gray-700 text-xs">{item}</span>
+                          <span className="text-gray-700">{item}</span>
                         </label>
                       ))}
                     </div>
