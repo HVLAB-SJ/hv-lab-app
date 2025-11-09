@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>직인 생성기</title>
+</head>
+<body>
+  <canvas id="canvas" width="100" height="100"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 배경 투명
+    ctx.clearRect(0, 0, 100, 100);
+
+    // 빨간색 원 그리기
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(50, 50, 40, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // 텍스트 추가
+    ctx.fillStyle = 'red';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // 김상준 텍스트를 세로로 배치
+    ctx.fillText('김', 50, 35);
+    ctx.fillText('상', 50, 50);
+    ctx.fillText('준', 50, 65);
+
+    // 이미지 다운로드
+    canvas.toBlob(function(blob) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'stamp.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

@@ -1691,7 +1691,20 @@ const ConstructionPayment = () => {
                       <span className="font-medium">[수령인]</span>
                       <span>에이치브이랩 대표</span>
                       <span className="text-xl font-bold">김 상 준</span>
-                      <span className="text-sm">(인)</span>
+                      <div className="relative inline-block">
+                        <img
+                          src="/stamp.svg"
+                          alt="직인"
+                          className="h-12 w-12 object-contain"
+                          style={{ filter: 'opacity(0.7)' }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.nextElementSibling;
+                            if (fallback) fallback.style.display = 'inline';
+                          }}
+                        />
+                        <span className="text-sm hidden">(인)</span>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between border-b border-gray-300 pb-2">
                       <span className="font-medium">[지급인]</span>
