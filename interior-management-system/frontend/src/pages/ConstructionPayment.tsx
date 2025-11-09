@@ -1692,12 +1692,12 @@ const ConstructionPayment = () => {
                       <span>에이치브이랩 대표</span>
                       <span className="text-xl font-bold text-right pr-4">김 상 준</span>
                       <div className="relative inline-block text-right" style={{ minWidth: '50px', minHeight: '30px' }}>
-                        <span className="text-sm relative z-10">(인)</span>
+                        <span className="text-sm relative z-10" style={{ position: 'relative', left: '-25px' }}>(인)</span>
                         <img
                           src="/stamp.png"
                           alt="직인"
-                          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-14 w-14 aspect-square"
-                          style={{ filter: 'opacity(0.7)' }}
+                          className="absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-14 w-14 aspect-square"
+                          style={{ filter: 'opacity(0.7)', left: 'calc(50% + 25px)' }}
                           onError={(e) => {
                             // PNG 파일이 없으면 SVG로 대체
                             if (e.currentTarget.src.endsWith('/stamp.png')) {
@@ -1714,7 +1714,7 @@ const ConstructionPayment = () => {
                       <span>{cashReceiptData.project.split('_')[0]}</span>
                       <span className="text-xl text-right pr-4">&nbsp;</span>
                       <div className="text-right" style={{ minWidth: '50px' }}>
-                        <span className="text-sm">(인)</span>
+                        <span className="text-sm" style={{ position: 'relative', left: '-25px' }}>(인)</span>
                       </div>
                     </div>
                   </div>
