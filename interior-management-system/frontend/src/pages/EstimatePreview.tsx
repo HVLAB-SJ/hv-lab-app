@@ -841,7 +841,7 @@ const EstimatePreview: React.FC = () => {
                         간접조명 (공용부)
                       </label>
                       <div className="flex gap-3">
-                        {['LED', 'T3 조명', '안함'].map(item => (
+                        {['LED', 'T3 조명'].map(item => (
                           <label key={item} className="flex items-center text-sm">
                             <input
                               type="checkbox"
@@ -859,7 +859,7 @@ const EstimatePreview: React.FC = () => {
                         간접조명 (방)
                       </label>
                       <div className="flex gap-3">
-                        {['LED', 'T3 조명', '안함'].map(item => (
+                        {['LED', 'T3 조명'].map(item => (
                           <label key={item} className="flex items-center text-sm">
                             <input
                               type="checkbox"
@@ -887,7 +887,7 @@ const EstimatePreview: React.FC = () => {
                       몰딩 (공용부)
                     </label>
                     <div className="space-y-1">
-                      {['무걸레받이+무몰딩', '걸레받이+천장몰딩', '걸레받이+무몰딩', '무걸레받이+마이너스몰딩'].map(item => (
+                      {['무걸레받이+마이너스몰딩', '무걸레받이+무몰딩', '걸레받이+무몰딩', '걸레받이+천장몰딩'].map(item => (
                         <label key={item} className="flex items-center text-sm">
                           <input
                             type="checkbox"
@@ -905,7 +905,7 @@ const EstimatePreview: React.FC = () => {
                       몰딩 (방)
                     </label>
                     <div className="space-y-1">
-                      {['무걸레받이+무몰딩', '걸레받이+천장몰딩', '걸레받이+무몰딩', '무걸레받이+마이너스몰딩'].map(item => (
+                      {['무걸레받이+마이너스몰딩', '무걸레받이+무몰딩', '걸레받이+무몰딩', '걸레받이+천장몰딩'].map(item => (
                         <label key={item} className="flex items-center text-sm">
                           <input
                             type="checkbox"
@@ -991,7 +991,7 @@ const EstimatePreview: React.FC = () => {
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {[
-                        '300x600(벽)+300각(바닥) 바닥철거 덧방시공',
+                        '300x600(벽)+300각(바닥)',
                         '600각(덧방)',
                         '600각(올철거)',
                         '600x1200 or 800각(올철거)',
