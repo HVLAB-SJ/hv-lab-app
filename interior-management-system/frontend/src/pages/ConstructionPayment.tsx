@@ -1584,13 +1584,20 @@ const ConstructionPayment = () => {
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
               }
-              /* 직인이 인쇄 시에도 보이도록 보장 */
-              div[style*="border: 2px solid red"] {
-                display: flex !important;
+              /* SVG 직인이 인쇄 시에도 보이도록 보장 */
+              svg {
+                display: inline-block !important;
                 visibility: visible !important;
-                opacity: 0.8 !important;
-                border: 2px solid red !important;
-                color: red !important;
+                opacity: 0.7 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              svg rect {
+                stroke: red !important;
+                stroke-width: 3 !important;
+              }
+              svg text {
+                fill: red !important;
               }
             }
             @page {
@@ -1719,47 +1726,72 @@ const ConstructionPayment = () => {
                       <span className="text-xl font-bold text-right pr-4">김 상 준</span>
                       <div className="flex items-center justify-end gap-1">
                         <span className="text-sm">(인)</span>
-                        {/* 직인 - 인라인 스타일로 인쇄 시에도 표시 */}
-                        <div
+                        {/* SVG 직인 - 원래 디자인 유지하면서 인쇄 개선 */}
+                        <svg
+                          width="56"
+                          height="56"
+                          viewBox="0 0 100 100"
+                          xmlns="http://www.w3.org/2000/svg"
                           style={{
                             display: 'inline-block',
-                            position: 'relative',
-                            width: '56px',
-                            height: '56px',
-                            marginLeft: '-20px',
+                            marginLeft: '-25px',
                             marginRight: '10px',
-                            opacity: 0.8
+                            opacity: 0.7,
+                            printColorAdjust: 'exact',
+                            WebkitPrintColorAdjust: 'exact',
+                            colorAdjust: 'exact'
                           }}
                         >
-                          <div
-                            style={{
-                              position: 'absolute',
-                              top: '0',
-                              left: '0',
-                              width: '100%',
-                              height: '100%',
-                              border: '2px solid red',
-                              borderRadius: '4px',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: 'red',
-                              fontWeight: 'bold',
-                              fontSize: '10px',
-                              lineHeight: '1.2',
-                              fontFamily: 'sans-serif',
-                              backgroundColor: 'transparent',
-                              printColorAdjust: 'exact',
-                              WebkitPrintColorAdjust: 'exact',
-                              colorAdjust: 'exact'
-                            }}
+                          {/* 빨간 사각형 테두리 */}
+                          <rect
+                            x="5"
+                            y="5"
+                            width="90"
+                            height="90"
+                            fill="none"
+                            stroke="red"
+                            strokeWidth="3"
+                          />
+
+                          {/* 에이치브이랩 텍스트 */}
+                          <text
+                            x="50"
+                            y="30"
+                            textAnchor="middle"
+                            fill="red"
+                            fontSize="11"
+                            fontWeight="bold"
+                            fontFamily="sans-serif"
                           >
-                            <div style={{ marginBottom: '2px' }}>에이치브이랩</div>
-                            <div style={{ fontSize: '12px', marginBottom: '2px' }}>김상준</div>
-                            <div>대표</div>
-                          </div>
-                        </div>
+                            에이치브이랩
+                          </text>
+
+                          {/* 김상준 텍스트 */}
+                          <text
+                            x="50"
+                            y="50"
+                            textAnchor="middle"
+                            fill="red"
+                            fontSize="14"
+                            fontWeight="bold"
+                            fontFamily="sans-serif"
+                          >
+                            김상준
+                          </text>
+
+                          {/* 대표 텍스트 */}
+                          <text
+                            x="50"
+                            y="70"
+                            textAnchor="middle"
+                            fill="red"
+                            fontSize="11"
+                            fontWeight="bold"
+                            fontFamily="sans-serif"
+                          >
+                            대표
+                          </text>
+                        </svg>
                       </div>
                     </div>
                     <div className="grid grid-cols-4 items-center border-b border-gray-300 pb-2">
