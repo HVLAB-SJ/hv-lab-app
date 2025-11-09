@@ -14,6 +14,10 @@ interface EstimateForm {
   bathroomCount: string[];
   ceilingHeight: string[];
   expansionWork: string[];
+  livingRoomExpansion?: boolean;
+  roomExpansion?: boolean;
+  roomExpansionCount?: number;
+  kitchenExpansion?: boolean;
   floorMaterial: string[];
   wallMaterial: string[];
   ceilingMaterial: string[];
@@ -64,6 +68,10 @@ const EstimatePreview: React.FC = () => {
     bathroomCount: [],
     ceilingHeight: [],
     expansionWork: [],
+    livingRoomExpansion: false,
+    roomExpansion: false,
+    roomExpansionCount: 0,
+    kitchenExpansion: false,
     floorMaterial: [],
     wallMaterial: [],
     ceilingMaterial: [],
@@ -277,6 +285,10 @@ const EstimatePreview: React.FC = () => {
       includeFloorHeating: false,
       includeAircon: false,
       airconType: [],
+      livingRoomExpansion: false,
+      roomExpansion: false,
+      roomExpansionCount: 0,
+      kitchenExpansion: false,
       floorMaterial: [],
       wallMaterial: [],
       ceilingMaterial: [],
@@ -611,6 +623,70 @@ const EstimatePreview: React.FC = () => {
                   </div>
 
                   <div className="pt-2 border-t border-gray-200">
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                      확장 공사
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <label className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            name="livingRoomExpansion"
+                            checked={form.livingRoomExpansion}
+                            onChange={handleInputChange}
+                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          />
+                          <span className="text-gray-700">거실 확장</span>
+                        </label>
+                        <label className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            name="kitchenExpansion"
+                            checked={form.kitchenExpansion}
+                            onChange={handleInputChange}
+                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          />
+                          <span className="text-gray-700">주방 확장</span>
+                        </label>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            name="roomExpansion"
+                            checked={form.roomExpansion}
+                            onChange={handleInputChange}
+                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          />
+                          <span className="text-gray-700">방 확장</span>
+                        </label>
+                        {form.roomExpansion && (
+                          <div className="ml-6">
+                            <label className="block text-xs text-gray-600 mb-1">
+                              확장할 방 개수
+                            </label>
+                            <select
+                              name="roomExpansionCount"
+                              value={form.roomExpansionCount}
+                              onChange={handleInputChange}
+                              className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                            >
+                              <option value={0}>선택</option>
+                              <option value={1}>1개</option>
+                              <option value={2}>2개</option>
+                              <option value={3}>3개</option>
+                              <option value={4}>4개</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-200">
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                      기타 공사
+                    </label>
                     <div className="space-y-2">
                       <label className="flex items-center text-sm">
                         <input
@@ -987,7 +1063,7 @@ const EstimatePreview: React.FC = () => {
                       줄눈
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                      {['스트라이크에보(친환경 에폭시)', '케라폭시(에폭시)', 'FG8(수입 고탄성 줄눈)', 'FG4(수입 줄눈)'].map(item => (
+                      {['스트라이크에보(친환경 에폭시)', '케라폭시(에폭시)', '푸가벨라', 'FG8(수입 고탄성 줄눈)', 'FG4(수입 줄눈)'].map(item => (
                         <label key={item} className="flex items-center text-sm">
                           <input
                             type="checkbox"
