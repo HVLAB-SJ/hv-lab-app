@@ -1691,12 +1691,12 @@ const ConstructionPayment = () => {
                       <span className="font-medium">[수령인]</span>
                       <span>에이치브이랩 대표</span>
                       <span className="text-xl font-bold">김 상 준</span>
-                      <div className="relative inline-block">
-                        <span className="text-sm">(인)</span>
+                      <div className="relative inline-block" style={{ minWidth: '60px', minHeight: '30px' }}>
+                        <span className="text-sm relative z-10">(인)</span>
                         <img
                           src="/stamp.png"
                           alt="직인"
-                          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-14 w-14 object-contain"
+                          className="absolute -top-3 -left-3 h-16 w-16"
                           style={{ filter: 'opacity(0.7)' }}
                           onError={(e) => {
                             // PNG 파일이 없으면 SVG로 대체
