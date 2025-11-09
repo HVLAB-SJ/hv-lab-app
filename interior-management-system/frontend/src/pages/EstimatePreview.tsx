@@ -514,8 +514,8 @@ const EstimatePreview: React.FC = () => {
                         '합지도배',
                         '실크도배(일반)',
                         '실크도배(고급)',
-                        '도장(수입-전체)',
-                        '도장(수입-공용부)+실크도배(방)',
+                        '도장(전체)',
+                        '도장(공용부)+실크도배(방)',
                         '필름',
                         '대형타일',
                         '박판타일',
@@ -582,7 +582,7 @@ const EstimatePreview: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-gray-200">
+                  <div className="pt-2">
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       확장 공사
                     </label>
@@ -636,7 +636,7 @@ const EstimatePreview: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-gray-200">
+                  <div className="pt-2">
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       기타 공사
                     </label>
@@ -768,7 +768,7 @@ const EstimatePreview: React.FC = () => {
                         스위치/콘센트 (공용부)
                       </label>
                       <div className="space-y-1">
-                        {['융스위치(메탈)', '융스위치(일반)', '르그랑(일반)'].map(item => (
+                        {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오(고급)', '르그랑 아펠라(일반)'].map(item => (
                           <label key={item} className="flex items-center text-sm">
                             <input
                               type="checkbox"
@@ -786,7 +786,7 @@ const EstimatePreview: React.FC = () => {
                         스위치/콘센트 (방)
                       </label>
                       <div className="space-y-1">
-                        {['융스위치(메탈)', '융스위치(일반)', '르그랑(일반)'].map(item => (
+                        {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오(고급)', '르그랑 아펠라(일반)'].map(item => (
                           <label key={item} className="flex items-center text-sm">
                             <input
                               type="checkbox"
