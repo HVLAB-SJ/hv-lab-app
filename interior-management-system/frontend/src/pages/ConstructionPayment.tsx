@@ -1584,20 +1584,18 @@ const ConstructionPayment = () => {
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
               }
-              svg {
-                display: block !important;
+              /* 직인이 인쇄 시에도 보이도록 보장 */
+              div[style*="border: 2px solid red"] {
+                display: flex !important;
                 visibility: visible !important;
-                opacity: 0.7 !important;
+                opacity: 0.8 !important;
+                border: 2px solid red !important;
+                color: red !important;
               }
-              .stamp-svg {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 0.7 !important;
-                position: absolute !important;
-                top: 50% !important;
-                left: calc(50% + 25px) !important;
-                transform: translate(-50%, -50%) !important;
-              }
+            }
+            @page {
+              size: A4;
+              margin: 20mm;
             }
           `}
         </style>
@@ -1719,18 +1717,48 @@ const ConstructionPayment = () => {
                       <span className="font-medium">[수령인]</span>
                       <span>에이치브이랩 대표</span>
                       <span className="text-xl font-bold text-right pr-4">김 상 준</span>
-                      <div className="relative inline-block text-right" style={{ minWidth: '50px', minHeight: '30px' }}>
-                        <span className="text-sm relative z-10" style={{ position: 'relative', left: '-25px' }}>(인)</span>
-                        {/* 화면 표시용 이미지 */}
-                        <img
-                          src={stampBase64}
-                          alt="직인"
-                          className="stamp-image absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-14 w-14 aspect-square print:hidden"
-                          style={{ filter: 'opacity(0.7)', left: 'calc(50% + 25px)' }}
-                        />
-                        {/* 인쇄용 인라인 SVG */}
-                        <div className="hidden print:block">
-                          <StampSvg />
+                      <div className="flex items-center justify-end gap-1">
+                        <span className="text-sm">(인)</span>
+                        {/* 직인 - 인라인 스타일로 인쇄 시에도 표시 */}
+                        <div
+                          style={{
+                            display: 'inline-block',
+                            position: 'relative',
+                            width: '56px',
+                            height: '56px',
+                            marginLeft: '-20px',
+                            marginRight: '10px',
+                            opacity: 0.8
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '0',
+                              left: '0',
+                              width: '100%',
+                              height: '100%',
+                              border: '2px solid red',
+                              borderRadius: '4px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'red',
+                              fontWeight: 'bold',
+                              fontSize: '10px',
+                              lineHeight: '1.2',
+                              fontFamily: 'sans-serif',
+                              backgroundColor: 'transparent',
+                              printColorAdjust: 'exact',
+                              WebkitPrintColorAdjust: 'exact',
+                              colorAdjust: 'exact'
+                            }}
+                          >
+                            <div style={{ marginBottom: '2px' }}>에이치브이랩</div>
+                            <div style={{ fontSize: '12px', marginBottom: '2px' }}>김상준</div>
+                            <div>대표</div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1738,8 +1766,8 @@ const ConstructionPayment = () => {
                       <span className="font-medium">[지급인]</span>
                       <span>{cashReceiptData.project.split('_')[0]}</span>
                       <span className="text-xl text-right pr-4">&nbsp;</span>
-                      <div className="text-right" style={{ minWidth: '50px' }}>
-                        <span className="text-sm" style={{ position: 'relative', left: '-25px' }}>(인)</span>
+                      <div className="flex items-center justify-end">
+                        <span className="text-sm">(인)</span>
                       </div>
                     </div>
                   </div>
