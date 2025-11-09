@@ -8,18 +8,16 @@ interface EstimateForm {
   projectName: string;
   clientName: string;
   areaSize: number;
-  grade: '알뜰' | '기본' | '고급' | '하이엔드' | '';
+  grade: string[];
   finishType: string;
   bathroomCount: string[];
   ceilingHeight: string[];
-  includeSash: boolean;
-  includeFloorHeating: boolean;
-  includeAircon: boolean;
-  airconType: string[];
+  expansionWork: string[];
   floorMaterial: string[];
   wallMaterial: string[];
   ceilingMaterial: string[];
   furnitureWork: string[];
+  furnitureHardwareGrade: string[];
   kitchenCountertop: string[];
   switchPublic: string[];
   switchRoom: string[];
@@ -27,8 +25,10 @@ interface EstimateForm {
   indirectLightingPublic: string[];
   indirectLightingRoom: string[];
   bathroomCeiling: string[];
+  bathroomTileGrade: string[];
   bathroomFaucet: string[];
   bathroomTile: string[];
+  bathroomGrout: string[];
   moldingPublic: string[];
   moldingRoom: string[];
 }
@@ -57,18 +57,16 @@ const EstimatePreview: React.FC = () => {
     projectName: '',
     clientName: '',
     areaSize: 0,
-    grade: '',
+    grade: [],
     finishType: '',
     bathroomCount: [],
     ceilingHeight: [],
-    includeSash: false,
-    includeFloorHeating: false,
-    includeAircon: false,
-    airconType: [],
+    expansionWork: [],
     floorMaterial: [],
     wallMaterial: [],
     ceilingMaterial: [],
     furnitureWork: [],
+    furnitureHardwareGrade: [],
     kitchenCountertop: [],
     switchPublic: [],
     switchRoom: [],
@@ -76,8 +74,10 @@ const EstimatePreview: React.FC = () => {
     indirectLightingPublic: [],
     indirectLightingRoom: [],
     bathroomCeiling: [],
+    bathroomTileGrade: [],
     bathroomFaucet: [],
     bathroomTile: [],
+    bathroomGrout: [],
     moldingPublic: [],
     moldingRoom: []
   });
@@ -133,7 +133,7 @@ const EstimatePreview: React.FC = () => {
       toast.error('평수를 올바르게 입력해주세요');
       return;
     }
-    if (!form.grade) {
+    if (form.grade.length === 0) {
       toast.error('등급을 선택해주세요');
       return;
     }
@@ -143,13 +143,15 @@ const EstimatePreview: React.FC = () => {
       // 배열 필드들을 JSON 문자열로 변환
       const formData = {
         ...form,
+        grade: JSON.stringify(form.grade),
         bathroomCount: JSON.stringify(form.bathroomCount),
         ceilingHeight: JSON.stringify(form.ceilingHeight),
-        airconType: JSON.stringify(form.airconType),
+        expansionWork: JSON.stringify(form.expansionWork),
         floorMaterial: JSON.stringify(form.floorMaterial),
         wallMaterial: JSON.stringify(form.wallMaterial),
         ceilingMaterial: JSON.stringify(form.ceilingMaterial),
         furnitureWork: JSON.stringify(form.furnitureWork),
+        furnitureHardwareGrade: JSON.stringify(form.furnitureHardwareGrade),
         kitchenCountertop: JSON.stringify(form.kitchenCountertop),
         switchPublic: JSON.stringify(form.switchPublic),
         switchRoom: JSON.stringify(form.switchRoom),
@@ -157,8 +159,10 @@ const EstimatePreview: React.FC = () => {
         indirectLightingPublic: JSON.stringify(form.indirectLightingPublic),
         indirectLightingRoom: JSON.stringify(form.indirectLightingRoom),
         bathroomCeiling: JSON.stringify(form.bathroomCeiling),
+        bathroomTileGrade: JSON.stringify(form.bathroomTileGrade),
         bathroomFaucet: JSON.stringify(form.bathroomFaucet),
         bathroomTile: JSON.stringify(form.bathroomTile),
+        bathroomGrout: JSON.stringify(form.bathroomGrout),
         moldingPublic: JSON.stringify(form.moldingPublic),
         moldingRoom: JSON.stringify(form.moldingRoom)
       };
@@ -197,6 +201,7 @@ const EstimatePreview: React.FC = () => {
         wallMaterial: data.wall_material ? JSON.parse(data.wall_material) : [],
         ceilingMaterial: data.ceiling_material ? JSON.parse(data.ceiling_material) : [],
         furnitureWork: data.furniture_work ? JSON.parse(data.furniture_work) : [],
+        furnitureHardwareGrade: data.furniture_hardware_grade ? JSON.parse(data.furniture_hardware_grade) : [],
         kitchenCountertop: data.kitchen_countertop ? JSON.parse(data.kitchen_countertop) : [],
         switchPublic: data.switch_public ? JSON.parse(data.switch_public) : [],
         switchRoom: data.switch_room ? JSON.parse(data.switch_room) : [],
@@ -204,8 +209,10 @@ const EstimatePreview: React.FC = () => {
         indirectLightingPublic: data.indirect_lighting_public ? JSON.parse(data.indirect_lighting_public) : [],
         indirectLightingRoom: data.indirect_lighting_room ? JSON.parse(data.indirect_lighting_room) : [],
         bathroomCeiling: data.bathroom_ceiling ? JSON.parse(data.bathroom_ceiling) : [],
+        bathroomTileGrade: data.bathroom_tile_grade ? JSON.parse(data.bathroom_tile_grade) : [],
         bathroomFaucet: data.bathroom_faucet ? JSON.parse(data.bathroom_faucet) : [],
         bathroomTile: data.bathroom_tile ? JSON.parse(data.bathroom_tile) : [],
+        bathroomGrout: data.bathroom_grout ? JSON.parse(data.bathroom_grout) : [],
         moldingPublic: data.molding_public ? JSON.parse(data.molding_public) : [],
         moldingRoom: data.molding_room ? JSON.parse(data.molding_room) : []
       });
@@ -257,7 +264,7 @@ const EstimatePreview: React.FC = () => {
       projectName: '',
       clientName: '',
       areaSize: 0,
-      grade: '',
+      grade: [],
       finishType: '',
       bathroomCount: [],
       ceilingHeight: [],
@@ -269,6 +276,7 @@ const EstimatePreview: React.FC = () => {
       wallMaterial: [],
       ceilingMaterial: [],
       furnitureWork: [],
+      furnitureHardwareGrade: [],
       kitchenCountertop: [],
       switchPublic: [],
       switchRoom: [],
@@ -276,8 +284,10 @@ const EstimatePreview: React.FC = () => {
       indirectLightingPublic: [],
       indirectLightingRoom: [],
       bathroomCeiling: [],
+      bathroomTileGrade: [],
       bathroomFaucet: [],
       bathroomTile: [],
+      bathroomGrout: [],
       moldingPublic: [],
       moldingRoom: []
     });
@@ -349,13 +359,13 @@ const EstimatePreview: React.FC = () => {
               견적 정보 입력
             </h2>
 
-            <div className="space-y-6">
+            <div className="space-y-3">
               {/* 기본 정보 섹션 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   기본 정보
                 </h3>
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                       프로젝트명 <span className="text-red-500">*</span>
@@ -400,28 +410,29 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                       등급 <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      name="grade"
-                      value={form.grade}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                    >
-                      <option value="">선택하세요</option>
-                      <option value="알뜰">알뜰</option>
-                      <option value="기본">기본</option>
-                      <option value="고급">고급</option>
-                      <option value="하이엔드">하이엔드</option>
-                    </select>
+                    <div className="flex gap-3">
+                      {['알뜰', '기본', '고급', '하이엔드'].map(item => (
+                        <label key={item} className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            checked={form.grade.includes(item)}
+                            onChange={() => handleMaterialCheckbox('grade', item)}
+                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          />
+                          <span className="text-gray-700">{item}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* 마감재 섹션 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   마감재 선택
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
                     <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
                       바닥재
@@ -501,11 +512,11 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 공사 범위 섹션 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   공사 범위
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
                       화장실 개수
@@ -546,16 +557,16 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 가구 공사 섹션 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   가구 공사
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                       가구 공사 범위
                     </label>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {['공용부만', '주방가구와 방에 붙박이장 일부', '전체 커스텀 가구'].map(item => (
                         <label key={item} className="flex items-center text-sm">
                           <input
@@ -570,11 +581,29 @@ const EstimatePreview: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                      하드웨어 등급
+                    </label>
+                    <div className="space-y-1">
+                      {['전체 BLUM(블룸)', '경첩 BLUM(블룸)+서랍(일반)', '경첩(일반)+서랍(일반)'].map(item => (
+                        <label key={item} className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            checked={form.furnitureHardwareGrade.includes(item)}
+                            onChange={() => handleMaterialCheckbox('furnitureHardwareGrade', item)}
+                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          />
+                          <span className="text-gray-700">{item}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                       주방 상판
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {['세라믹', '칸스톤', '천연대리석', '인조대리석', '스텐'].map(item => (
+                      {['세라믹', '칸스톤', '천연대리석', '인조대리석', '스테인리스'].map(item => (
                         <label key={item} className="flex items-center text-sm">
                           <input
                             type="checkbox"
@@ -591,18 +620,18 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 전기/조명 섹션 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   전기/조명
                 </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                         스위치/콘센트 (공용부)
                       </label>
                       <div className="space-y-1">
-                        {['융스위치(스텐)', '융스위치(일반)', '르그랑(일반)'].map(item => (
+                        {['융스위치(메탈)', '융스위치(일반)', '르그랑(일반)'].map(item => (
                           <label key={item} className="flex items-center text-sm">
                             <input
                               type="checkbox"
@@ -616,11 +645,11 @@ const EstimatePreview: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                         스위치/콘센트 (방)
                       </label>
                       <div className="space-y-1">
-                        {['융스위치(스텐)', '융스위치(일반)', '르그랑(일반)'].map(item => (
+                        {['융스위치(메탈)', '융스위치(일반)', '르그랑(일반)'].map(item => (
                           <label key={item} className="flex items-center text-sm">
                             <input
                               type="checkbox"
@@ -636,7 +665,7 @@ const EstimatePreview: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                       조명
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -654,9 +683,9 @@ const EstimatePreview: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                         간접조명 (공용부)
                       </label>
                       <div className="flex gap-3">
@@ -674,7 +703,7 @@ const EstimatePreview: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                         간접조명 (방)
                       </label>
                       <div className="flex gap-3">
@@ -696,13 +725,13 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 기타 마감 섹션 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   기타 마감
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                       몰딩 (공용부)
                     </label>
                     <div className="space-y-1">
@@ -720,7 +749,7 @@ const EstimatePreview: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                       몰딩 (방)
                     </label>
                     <div className="space-y-1">
@@ -741,17 +770,17 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 화장실 상세 섹션 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   화장실 상세
                 </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                         화장실 천장
                       </label>
-                      <div className="flex gap-3">
+                      <div className="flex gap-2">
                         {['SMC', '도장', '이노솔'].map(item => (
                           <label key={item} className="flex items-center text-sm">
                             <input
@@ -766,10 +795,10 @@ const EstimatePreview: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                         화장실 수전
                       </label>
-                      <div className="flex gap-3">
+                      <div className="flex gap-2">
                         {['일반수전', '매립수전'].map(item => (
                           <label key={item} className="flex items-center text-sm">
                             <input
@@ -786,7 +815,26 @@ const EstimatePreview: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                      타일 등급
+                    </label>
+                    <div className="flex gap-3">
+                      {['유럽산(고급)', '중국산(중급)', '중국산(기본)'].map(item => (
+                        <label key={item} className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            checked={form.bathroomTileGrade.includes(item)}
+                            onChange={() => handleMaterialCheckbox('bathroomTileGrade', item)}
+                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          />
+                          <span className="text-gray-700">{item}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
                       화장실 타일
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -810,15 +858,34 @@ const EstimatePreview: React.FC = () => {
                       ))}
                     </div>
                   </div>
+
+                  <div>
+                    <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                      줄눈
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['스트라이크에보(친환경 에폭시)', '케라폭시(에폭시)', 'FG8(수입 고탄성 줄눈)', 'FG4(수입 줄눈)'].map(item => (
+                        <label key={item} className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            checked={form.bathroomGrout.includes(item)}
+                            onChange={() => handleMaterialCheckbox('bathroomGrout', item)}
+                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          />
+                          <span className="text-gray-700 text-xs">{item}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* 추가 공사 섹션 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   추가 공사
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div>
                     <label className="flex items-center text-sm">
                       <input
