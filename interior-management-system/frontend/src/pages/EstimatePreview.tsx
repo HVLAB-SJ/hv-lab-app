@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Download, Save, FileText, Plus, Trash2, Eye, Clock, Building2 } from 'lucide-react';
+import { Download, Save, FileText, Plus, Trash2, Eye, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import api from '../services/api';
@@ -315,7 +315,7 @@ const EstimatePreview: React.FC = () => {
       <div className="border-b border-gray-200 flex items-center justify-between">
         <nav className="flex space-x-4 md:space-x-8">
           {[
-            { id: 'form' as TabView, label: '견적 작성', icon: Calculator },
+            { id: 'form' as TabView, label: '견적 작성' },
             { id: 'history' as TabView, label: '저장된 견적', count: stats.total, icon: Clock }
           ].map(tab => (
             <button
@@ -328,7 +328,7 @@ const EstimatePreview: React.FC = () => {
                   : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
               )}
             >
-              <tab.icon className="h-4 w-4" />
+              {tab.icon && <tab.icon className="h-4 w-4" />}
               {tab.label}
               {tab.count !== undefined && tab.count > 0 && (
                 <span className={clsx(
@@ -354,14 +354,13 @@ const EstimatePreview: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {/* 입력 폼 */}
           <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
-            <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-gray-500" />
+            <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">
               견적 정보 입력
             </h2>
 
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* 기본 정보 섹션 */}
-              <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="bg-gray-50 p-3 rounded-lg md:col-span-2">
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   기본 정보
                 </h3>
@@ -945,9 +944,8 @@ const EstimatePreview: React.FC = () => {
               <button
                 onClick={calculateEstimate}
                 disabled={loading}
-                className="w-full py-3 bg-gray-700 text-white rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base transition-colors"
+                className="md:col-span-2 w-full py-3 bg-gray-700 text-white rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base transition-colors"
               >
-                <Calculator className="h-4 w-4 md:h-5 md:w-5" />
                 {loading ? '계산 중...' : '견적 계산'}
               </button>
             </div>
