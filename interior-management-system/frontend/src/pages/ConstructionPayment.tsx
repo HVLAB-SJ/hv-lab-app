@@ -1687,16 +1687,16 @@ const ConstructionPayment = () => {
 
                   {/* 서명란 */}
                   <div className="space-y-8">
-                    <div className="flex items-center justify-between border-b border-gray-300 pb-2">
+                    <div className="grid grid-cols-4 items-center border-b border-gray-300 pb-2">
                       <span className="font-medium">[수령인]</span>
                       <span>에이치브이랩 대표</span>
-                      <span className="text-xl font-bold">김 상 준</span>
-                      <div className="relative inline-block" style={{ minWidth: '60px', minHeight: '30px' }}>
+                      <span className="text-xl font-bold text-right pr-4">김 상 준</span>
+                      <div className="relative inline-block text-right" style={{ minWidth: '50px', minHeight: '30px' }}>
                         <span className="text-sm relative z-10">(인)</span>
                         <img
                           src="/stamp.png"
                           alt="직인"
-                          className="absolute -top-3 -left-3 h-16 w-16"
+                          className="absolute -top-2 -left-2 h-14 w-14 aspect-square"
                           style={{ filter: 'opacity(0.7)' }}
                           onError={(e) => {
                             // PNG 파일이 없으면 SVG로 대체
@@ -1709,11 +1709,13 @@ const ConstructionPayment = () => {
                         />
                       </div>
                     </div>
-                    <div className="flex items-center justify-between border-b border-gray-300 pb-2">
+                    <div className="grid grid-cols-4 items-center border-b border-gray-300 pb-2">
                       <span className="font-medium">[지급인]</span>
                       <span>{cashReceiptData.project.split('_')[0]}</span>
-                      <span className="text-xl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                      <span className="text-sm">(인)</span>
+                      <span className="text-xl text-right pr-4">&nbsp;</span>
+                      <div className="text-right" style={{ minWidth: '50px' }}>
+                        <span className="text-sm">(인)</span>
+                      </div>
                     </div>
                   </div>
                 </div>
