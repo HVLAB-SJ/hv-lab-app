@@ -1743,6 +1743,17 @@ const ConstructionPayment = () => {
                       <span className="text-xl text-right pr-4">&nbsp;</span>
                       <div className="flex items-center justify-end gap-1">
                         <span className="text-sm" style={{ marginRight: '10px' }}>(인)</span>
+                        {/* 빈 공간 - 수령인의 직인과 같은 너비 확보 */}
+                        <div
+                          style={{
+                            display: 'inline-block',
+                            width: '56px',
+                            height: '56px',
+                            marginLeft: '-35px',
+                            marginRight: '10px',
+                            visibility: 'hidden'
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
