@@ -1718,7 +1718,7 @@ const ConstructionPayment = () => {
                       <span>에이치브이랩 대표</span>
                       <span className="text-xl font-bold text-right pr-4">김 상 준</span>
                       <div className="flex items-center justify-end gap-1">
-                        <span className="text-sm" style={{ marginRight: '10px' }}>(인)</span>
+                        <span className="text-sm" style={{ marginRight: '20px' }}>(인)</span>
                         {/* 직인 이미지 - 원본 직인.png 사용 */}
                         <img
                           src={stampBase64}
@@ -1727,7 +1727,7 @@ const ConstructionPayment = () => {
                             display: 'inline-block',
                             width: '56px',
                             height: '56px',
-                            marginLeft: '-35px',
+                            marginLeft: '-45px',
                             marginRight: '10px',
                             opacity: 0.8,
                             printColorAdjust: 'exact',
@@ -1742,14 +1742,14 @@ const ConstructionPayment = () => {
                       <span>{cashReceiptData.project.split('_')[0]}</span>
                       <span className="text-xl text-right pr-4">&nbsp;</span>
                       <div className="flex items-center justify-end gap-1">
-                        <span className="text-sm" style={{ marginRight: '10px' }}>(인)</span>
+                        <span className="text-sm" style={{ marginRight: '20px' }}>(인)</span>
                         {/* 빈 공간 - 수령인의 직인과 같은 너비 확보 */}
                         <div
                           style={{
                             display: 'inline-block',
                             width: '56px',
                             height: '56px',
-                            marginLeft: '-35px',
+                            marginLeft: '-45px',
                             marginRight: '10px',
                             visibility: 'hidden'
                           }}
