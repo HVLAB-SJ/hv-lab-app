@@ -745,11 +745,17 @@ div.rbc-popup {
   .rbc-day-bg,
   .rbc-date-cell,
   .rbc-header {
+    display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
   }
 
   /* 특정 요소들의 display 복원 */
+  .rbc-month-view {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
   .rbc-row,
   .rbc-row-bg {
     display: flex !important;
