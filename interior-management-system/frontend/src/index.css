@@ -685,6 +685,8 @@ div.rbc-popup {
 
   /* 캘린더 전체 여백 - 모바일 */
   .rbc-month-view {
+    display: flex !important;
+    flex-direction: column !important;
     padding: 0 !important;
     height: auto !important;
     min-height: 500px !important;
@@ -692,12 +694,16 @@ div.rbc-popup {
 
   /* 캘린더 컨테이너 높이 자동 */
   .rbc-calendar {
+    display: flex !important;
+    flex-direction: column !important;
     height: auto !important;
     min-height: 500px !important;
   }
 
   /* 캘린더 컨테이너 - 6주일 때 자동 높이 */
   .calendar-container {
+    display: flex !important;
+    flex-direction: column !important;
     height: auto !important;
     min-height: 500px !important;
     overflow: visible !important;
