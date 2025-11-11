@@ -505,7 +505,7 @@ const Schedule = () => {
         projectName: req.project,
         type: 'as_visit' as const,
         phase: '',
-        assignedTo: req.assignedTo || [],
+        assignedTo: req.assignedTo ? req.assignedTo.split(',').map(s => s.trim()) : [],
         priority: 'high' as const,
         allDay: !visitTime || visitTime === '-',
         color: '#FEF3C7', // 연한 노란색 배경
@@ -1748,11 +1748,19 @@ const Schedule = () => {
                     const asRequestId = selectedEvent.id.replace('as-', '');
 
                     // AS 요청 업데이트 - 제목과 담당자 변경
+                    // assignedTo 처리: 배열을 문자열로 안전하게 변환
+                    let assignedToStr = '';
+                    if (newEvent.assignedTo && Array.isArray(newEvent.assignedTo) && newEvent.assignedTo.length > 0) {
+                      assignedToStr = newEvent.assignedTo.join(', ');
+                    } else if (selectedEvent.assignedTo && Array.isArray(selectedEvent.assignedTo)) {
+                      assignedToStr = selectedEvent.assignedTo.join(', ');
+                    } else if (typeof selectedEvent.assignedTo === 'string') {
+                      assignedToStr = selectedEvent.assignedTo;
+                    }
+
                     await updateASRequestInAPI(asRequestId, {
                       project: newEvent.title || selectedEvent.title, // 제목을 프로젝트명으로 사용
-                      assignedTo: newEvent.assignedTo && newEvent.assignedTo.length > 0
-                        ? newEvent.assignedTo.join(', ') // 배열을 문자열로 변환
-                        : selectedEvent.assignedTo?.join(', '),
+                      assignedTo: assignedToStr,
                       scheduledVisitDate: newEvent.start,
                       scheduledVisitTime: newEvent.time || selectedEvent.time
                     });
