@@ -1430,16 +1430,6 @@ const Payments = () => {
                               <h3 className="font-semibold text-gray-900 text-sm">{project}</h3>
                               <p className="text-xs text-gray-500">총 {records.length}건 · {projectTotal.toLocaleString()}원</p>
                             </div>
-                            <button
-                              onClick={() => {
-                                setCashReceiptProject(project);
-                                setShowCashReceiptModal(true);
-                              }}
-                              className="px-3 py-1.5 bg-gray-900 text-white rounded text-xs font-medium hover:bg-gray-800 flex items-center gap-1"
-                            >
-                              <FileText className="h-3.5 w-3.5" />
-                              현금수령증
-                            </button>
                           </div>
 
                           {/* 프로젝트 내 결제 목록 */}
@@ -1532,19 +1522,6 @@ const Payments = () => {
                                       수정
                                     </button>
                                   </div>
-
-                                  {/* 현금수령증 버튼 */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setCashReceiptProject(record.project);
-                                      setShowCashReceiptModal(true);
-                                    }}
-                                    className="w-full py-1.5 px-2 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
-                                  >
-                                    <FileText className="h-3 w-3" />
-                                    현금수령증
-                                  </button>
                                 </div>
                               );
                             })}
