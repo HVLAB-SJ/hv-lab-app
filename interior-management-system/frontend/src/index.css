@@ -669,18 +669,18 @@ div.rbc-popup {
 
   /* 날짜 셀 - 완전한 가운데 정렬 */
   .rbc-month-view .rbc-date-cell {
-    padding: 8px 0 8px 0 !important;
+    padding: 4px 0 4px 0 !important;
     display: flex !important;
     align-items: flex-start !important;
     justify-content: center !important;
     overflow: visible !important;
-    min-height: 60px !important;
+    min-height: 45px !important;
     position: relative !important;
   }
 
   /* 첫번째 주에 추가 상단 여백 */
   .rbc-month-view .rbc-month-row:first-child .rbc-date-cell {
-    padding-top: 10px !important;
+    padding-top: 6px !important;
   }
 
   /* 캘린더 전체 여백 - 모바일 */
@@ -732,13 +732,13 @@ div.rbc-popup {
 
   /* 날짜 셀 높이 조정 - 자동 높이로 설정하여 6주일 때도 잘리지 않도록 */
   .rbc-month-view .rbc-month-row {
-    min-height: 60px !important;
+    min-height: 45px !important;
     height: auto !important;
   }
 
   /* 첫번째 주 행 높이 추가 */
   .rbc-month-view .rbc-month-row:first-child {
-    min-height: 65px !important;
+    min-height: 48px !important;
   }
 
   /* row-content는 숨기지 말고 높이만 0으로 */
@@ -749,23 +749,23 @@ div.rbc-popup {
 
   /* 6주일 때 달력 높이 자동 조정 */
   .rbc-month-view .rbc-row-bg {
-    min-height: 60px !important;
+    min-height: 45px !important;
     height: auto !important;
   }
 
   /* 날짜 버튼 스타일 */
   .rbc-month-view .rbc-date-cell button,
   .rbc-month-view .rbc-date-cell .rbc-button-link {
-    font-size: 13px !important;
+    font-size: 12px !important;
     font-weight: 600 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     visibility: visible !important;
-    width: 28px !important;
-    height: 28px !important;
+    width: 24px !important;
+    height: 24px !important;
     margin: 0 !important;
-    margin-top: 6px !important;
+    margin-top: 3px !important;
     border-radius: 50% !important;
     transition: none !important;
     position: relative !important;
