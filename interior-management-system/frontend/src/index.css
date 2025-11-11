@@ -669,22 +669,37 @@ div.rbc-popup {
 
   /* 날짜 셀 - 완전한 가운데 정렬 */
   .rbc-month-view .rbc-date-cell {
-    padding: 4px 0 !important;
+    padding: 14px 0 8px 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     overflow: visible !important;
+    min-height: 50px !important;
+  }
+
+  /* 첫번째 주에 추가 상단 여백 */
+  .rbc-month-view .rbc-month-row:first-child .rbc-date-cell {
+    padding-top: 18px !important;
   }
 
   /* 캘린더 전체 여백 - 모바일 */
   .rbc-month-view {
     padding: 0 !important;
     height: auto !important;
+    min-height: auto !important;
   }
 
   /* 캘린더 컨테이너 높이 자동 */
   .rbc-calendar {
     height: auto !important;
+    min-height: auto !important;
+  }
+
+  /* 캘린더 컨테이너 - 6주일 때 자동 높이 */
+  .calendar-container {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
   }
 
   /* Agenda 뷰 모바일 최적화 */
@@ -714,10 +729,15 @@ div.rbc-popup {
     display: none !important;
   }
 
-  /* 날짜 셀 높이 조정 - 30px 원 + 여유 공간 */
+  /* 날짜 셀 높이 조정 - 자동 높이로 설정하여 6주일 때도 잘리지 않도록 */
   .rbc-month-view .rbc-month-row {
-    min-height: 40px !important;
-    height: 40px !important;
+    min-height: 50px !important;
+    height: auto !important;
+  }
+
+  /* 첫번째 주 행 높이 추가 */
+  .rbc-month-view .rbc-month-row:first-child {
+    min-height: 55px !important;
   }
 
   /* row-content는 숨기지 말고 높이만 0으로 */
@@ -726,18 +746,25 @@ div.rbc-popup {
     height: 0 !important;
   }
 
+  /* 6주일 때 달력 높이 자동 조정 */
+  .rbc-month-view .rbc-row-bg {
+    min-height: 45px !important;
+    height: auto !important;
+  }
+
   /* 날짜 버튼 스타일 */
   .rbc-month-view .rbc-date-cell button,
   .rbc-month-view .rbc-date-cell .rbc-button-link {
-    font-size: 13px !important;
+    font-size: 12px !important;
     font-weight: 600 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     visibility: visible !important;
-    width: 26px !important;
-    height: 26px !important;
+    width: 24px !important;
+    height: 24px !important;
     margin: 0 !important;
+    margin-top: 4px !important;
     border-radius: 50% !important;
     transition: none !important;
     position: relative !important;

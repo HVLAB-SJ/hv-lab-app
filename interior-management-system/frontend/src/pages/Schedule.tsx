@@ -398,6 +398,7 @@ const Schedule = () => {
     projects,
     asRequests,
     updateASRequestInAPI,
+    loadASRequestsFromAPI,
     constructionPayments,
     updateConstructionPaymentInAPI
   } = useDataStore();
@@ -1742,8 +1743,27 @@ const Schedule = () => {
               console.log('📤 Schedule.tsx onSave called with newEvent:', newEvent);
               try {
                 if (selectedEvent) {
+                  // AS 방문 일정인지 확인 (ID가 'as-'로 시작하는 경우)
+                  if (selectedEvent.id.startsWith('as-')) {
+                    const asRequestId = selectedEvent.id.replace('as-', '');
+
+                    // AS 요청 업데이트 - 제목과 담당자 변경
+                    await updateASRequestInAPI(asRequestId, {
+                      project: newEvent.title || selectedEvent.title, // 제목을 프로젝트명으로 사용
+                      assignedTo: newEvent.assignedTo && newEvent.assignedTo.length > 0
+                        ? newEvent.assignedTo.join(', ') // 배열을 문자열로 변환
+                        : selectedEvent.assignedTo?.join(', '),
+                      scheduledVisitDate: newEvent.start,
+                      scheduledVisitTime: newEvent.time || selectedEvent.time
+                    });
+
+                    toast.success('AS 방문 일정이 수정되었습니다');
+                    // AS 요청 다시 로드
+                    await loadASRequestsFromAPI();
+                    setShowModal(false);
+                  }
                   // 수금 일정인지 확인 (ID가 'payment-'로 시작하는 경우)
-                  if (selectedEvent.id.startsWith('payment-')) {
+                  else if (selectedEvent.id.startsWith('payment-')) {
                     // payment-{cpId}-{type} 형식에서 cpId와 type 추출
                     const parts = selectedEvent.id.split('-');
                     const cpId = parts[1];

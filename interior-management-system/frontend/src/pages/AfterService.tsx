@@ -33,6 +33,7 @@ const AfterService = () => {
   const [editingDate, setEditingDate] = useState<{
     requestId: string;
     field: 'requestDate' | 'scheduledVisitDate';
+    time?: { period: '오전' | '오후'; hour: number; minute: number };
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedRequestForImage, setSelectedRequestForImage] = useState<string | null>(null);
@@ -110,10 +111,31 @@ const AfterService = () => {
   };
 
   const handleDateClick = (requestId: string, field: 'requestDate' | 'scheduledVisitDate') => {
-    setEditingDate({ requestId, field });
+    // 방문예정일의 경우 기본 시간 설정
+    if (field === 'scheduledVisitDate') {
+      const request = asRequests.find(r => r.id === requestId);
+      let defaultTime = { period: '오전' as '오전' | '오후', hour: 9, minute: 0 };
+
+      // 기존 시간이 있으면 파싱
+      if (request?.scheduledVisitTime) {
+        const [hoursStr, minutesStr] = request.scheduledVisitTime.split(':');
+        const hours = parseInt(hoursStr, 10);
+        const minutes = parseInt(minutesStr, 10);
+
+        defaultTime = {
+          period: hours >= 12 ? '오후' : '오전',
+          hour: hours === 0 ? 12 : (hours > 12 ? hours - 12 : hours),
+          minute: minutes
+        };
+      }
+
+      setEditingDate({ requestId, field, time: defaultTime });
+    } else {
+      setEditingDate({ requestId, field });
+    }
   };
 
-  const handleDateChange = async (newDateValue: string) => {
+  const handleDateChange = async (newDateValue: string, timeValue?: { period: '오전' | '오후'; hour: number; minute: number }) => {
     if (!editingDate) return;
 
     const newDate = new Date(newDateValue);
@@ -122,9 +144,22 @@ const AfterService = () => {
     }
 
     try {
-      await updateASRequestInAPI(editingDate.requestId, {
+      const updateData: any = {
         [editingDate.field]: newDate
-      });
+      };
+
+      // 방문예정일이고 시간 정보가 있는 경우
+      if (editingDate.field === 'scheduledVisitDate' && timeValue) {
+        let hours24 = timeValue.hour;
+        if (timeValue.period === '오후' && timeValue.hour !== 12) {
+          hours24 = timeValue.hour + 12;
+        } else if (timeValue.period === '오전' && timeValue.hour === 12) {
+          hours24 = 0;
+        }
+        updateData.scheduledVisitTime = `${hours24.toString().padStart(2, '0')}:${timeValue.minute.toString().padStart(2, '0')}`;
+      }
+
+      await updateASRequestInAPI(editingDate.requestId, updateData);
       setEditingDate(null);
     } catch (error) {
       console.error('Failed to update date:', error);
@@ -417,15 +452,106 @@ const AfterService = () => {
                   <p className="text-xs text-gray-500 mb-1">방문예정일</p>
                   <div className="relative inline-block">
                     {editingDate?.requestId === request.id && editingDate?.field === 'scheduledVisitDate' && (
-                      <input
-                        ref={inputRef}
-                        type="date"
-                        defaultValue={request.scheduledVisitDate ? format(request.scheduledVisitDate, 'yyyy-MM-dd') : ''}
-                        onChange={(e) => handleDateChange(e.target.value)}
-                        onBlur={() => setEditingDate(null)}
-                        className="absolute left-0 top-0 w-auto h-auto opacity-0 z-50"
-                        style={{ pointerEvents: 'auto' }}
-                      />
+                      <div className="absolute left-0 top-0 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-3" style={{ minWidth: '280px' }}>
+                        <div className="space-y-3">
+                          {/* 날짜 선택 */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">날짜</label>
+                            <input
+                              ref={inputRef}
+                              type="date"
+                              defaultValue={request.scheduledVisitDate ? format(request.scheduledVisitDate, 'yyyy-MM-dd') : ''}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                              onChange={(e) => {
+                                const newDate = e.target.value;
+                                const timeValue = editingDate.time || { period: '오전', hour: 9, minute: 0 };
+                                handleDateChange(newDate, timeValue);
+                              }}
+                            />
+                          </div>
+
+                          {/* 시간 선택 */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">시간</label>
+                            <div className="flex items-center gap-2">
+                              {/* AM/PM 선택 */}
+                              <div className="flex gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오전' } } : null)}
+                                  className={`px-2 py-1 text-xs rounded border transition-colors ${
+                                    editingDate?.time?.period === '오전'
+                                      ? 'bg-gray-900 text-white border-gray-900'
+                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  오전
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오후' } } : null)}
+                                  className={`px-2 py-1 text-xs rounded border transition-colors ${
+                                    editingDate?.time?.period === '오후'
+                                      ? 'bg-gray-900 text-white border-gray-900'
+                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  오후
+                                </button>
+                              </div>
+
+                              {/* Hour 선택 */}
+                              <select
+                                value={editingDate?.time?.hour || 9}
+                                onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, hour: parseInt(e.target.value) } } : null)}
+                                className="px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                              >
+                                {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((hour) => (
+                                  <option key={hour} value={hour}>
+                                    {hour}시
+                                  </option>
+                                ))}
+                              </select>
+
+                              {/* Minute 선택 */}
+                              <select
+                                value={editingDate?.time?.minute || 0}
+                                onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, minute: parseInt(e.target.value) } } : null)}
+                                className="px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                              >
+                                {[0, 10, 20, 30, 40, 50].map((minute) => (
+                                  <option key={minute} value={minute}>
+                                    {minute}분
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* 확인/취소 버튼 */}
+                          <div className="flex justify-end gap-2 pt-2 border-t">
+                            <button
+                              type="button"
+                              onClick={() => setEditingDate(null)}
+                              className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                            >
+                              취소
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const dateInput = inputRef.current;
+                                if (dateInput && editingDate?.time) {
+                                  handleDateChange(dateInput.value, editingDate.time);
+                                }
+                              }}
+                              className="px-3 py-1 text-xs bg-gray-900 text-white rounded hover:bg-gray-800"
+                            >
+                              확인
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     )}
                     <button
                       onClick={() => handleDateClick(request.id, 'scheduledVisitDate')}
@@ -568,15 +694,106 @@ const AfterService = () => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="relative inline-block">
                     {editingDate?.requestId === request.id && editingDate?.field === 'scheduledVisitDate' && (
-                      <input
-                        ref={inputRef}
-                        type="date"
-                        defaultValue={request.scheduledVisitDate ? format(request.scheduledVisitDate, 'yyyy-MM-dd') : ''}
-                        onChange={(e) => handleDateChange(e.target.value)}
-                        onBlur={() => setEditingDate(null)}
-                        className="absolute left-0 top-0 w-auto h-auto opacity-0 z-50"
-                        style={{ pointerEvents: 'auto' }}
-                      />
+                      <div className="absolute left-0 top-0 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-3" style={{ minWidth: '300px' }}>
+                        <div className="space-y-3">
+                          {/* 날짜 선택 */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">날짜</label>
+                            <input
+                              ref={inputRef}
+                              type="date"
+                              defaultValue={request.scheduledVisitDate ? format(request.scheduledVisitDate, 'yyyy-MM-dd') : ''}
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                              onChange={(e) => {
+                                const newDate = e.target.value;
+                                const timeValue = editingDate.time || { period: '오전', hour: 9, minute: 0 };
+                                handleDateChange(newDate, timeValue);
+                              }}
+                            />
+                          </div>
+
+                          {/* 시간 선택 */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">시간</label>
+                            <div className="flex items-center gap-2">
+                              {/* AM/PM 선택 */}
+                              <div className="flex gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오전' } } : null)}
+                                  className={`px-3 py-1.5 text-xs rounded border transition-colors ${
+                                    editingDate?.time?.period === '오전'
+                                      ? 'bg-gray-900 text-white border-gray-900'
+                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  오전
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오후' } } : null)}
+                                  className={`px-3 py-1.5 text-xs rounded border transition-colors ${
+                                    editingDate?.time?.period === '오후'
+                                      ? 'bg-gray-900 text-white border-gray-900'
+                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  오후
+                                </button>
+                              </div>
+
+                              {/* Hour 선택 */}
+                              <select
+                                value={editingDate?.time?.hour || 9}
+                                onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, hour: parseInt(e.target.value) } } : null)}
+                                className="px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                              >
+                                {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((hour) => (
+                                  <option key={hour} value={hour}>
+                                    {hour}시
+                                  </option>
+                                ))}
+                              </select>
+
+                              {/* Minute 선택 */}
+                              <select
+                                value={editingDate?.time?.minute || 0}
+                                onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, minute: parseInt(e.target.value) } } : null)}
+                                className="px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                              >
+                                {[0, 10, 20, 30, 40, 50].map((minute) => (
+                                  <option key={minute} value={minute}>
+                                    {minute}분
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* 확인/취소 버튼 */}
+                          <div className="flex justify-end gap-2 pt-2 border-t">
+                            <button
+                              type="button"
+                              onClick={() => setEditingDate(null)}
+                              className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                            >
+                              취소
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const dateInput = inputRef.current;
+                                if (dateInput && editingDate?.time) {
+                                  handleDateChange(dateInput.value, editingDate.time);
+                                }
+                              }}
+                              className="px-3 py-1.5 text-xs bg-gray-900 text-white rounded hover:bg-gray-800"
+                            >
+                              확인
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     )}
                     <button
                       onClick={() => handleDateClick(request.id, 'scheduledVisitDate')}
