@@ -782,44 +782,102 @@ const Payments = () => {
           toast.error(result.error || '송금 요청에 실패했습니다');
         }
       } else {
-        // 계좌정보 복사 방식 (임시)
-        try {
-          await navigator.clipboard.writeText(accountNumber);
+        // 토스 딥링크를 이용한 즉시송금
+        // 은행 코드 매핑 (토스 표준 은행 코드)
+        const bankCodes: Record<string, string> = {
+          'KB국민은행': '004',
+          '신한은행': '088',
+          '우리은행': '020',
+          '하나은행': '081',
+          'NH농협은행': '011',
+          '기업은행': '003',
+          'SC제일은행': '023',
+          '씨티은행': '027',
+          '새마을금고': '045',
+          '대구은행': '031',
+          '부산은행': '032',
+          '경남은행': '039',
+          '광주은행': '034',
+          '전북은행': '037',
+          '제주은행': '035',
+          '카카오뱅크': '090',
+          '케이뱅크': '089',
+          '토스뱅크': '092',
+        };
 
+        const bankCode = bankCodes[bankName];
+
+        if (bankCode) {
+          // 계좌번호에서 하이픈 제거
+          const cleanAccountNumber = accountNumber.replace(/-/g, '');
+
+          // 토스 딥링크 생성
+          const tossUrl = `supertoss://send?bank=${bankCode}&accountNo=${cleanAccountNumber}&amount=${payment.amount}&msg=${encodeURIComponent(payment.project + ' - ' + (payment.itemName || payment.purpose || '결제'))}`;
+
+          // 토스 앱으로 이동
           const confirmed = window.confirm(
-            `계좌번호가 복사되었습니다!\n\n` +
+            `토스 앱으로 즉시 송금하시겠습니까?\n\n` +
             `받는분: ${accountHolder}\n` +
             `은행: ${bankName}\n` +
             `계좌번호: ${accountNumber}\n` +
             `금액: ${payment.amount.toLocaleString()}원\n\n` +
-            `인터넷뱅킹/모바일뱅킹 앱으로 송금을 진행해주세요.\n` +
-            `송금 완료 후 "송금완료" 버튼을 눌러주세요.`
+            `토스 앱이 설치되어 있어야 합니다.`
           );
 
           if (confirmed) {
-            // 모바일에서 은행 앱 열기 시도
-            const bankApps: Record<string, string> = {
-              'KB국민은행': 'kbbank://',
-              '신한은행': 'shinhan-sr://',
-              '우리은행': 'wooribank://',
-              '하나은행': 'hanabank://',
-              '카카오뱅크': 'kakaotalk://kakaopay',
-              '토스뱅크': 'toss://',
-            };
+            // 토스 앱 열기
+            window.location.href = tossUrl;
 
-            const appScheme = bankApps[bankName];
-            if (appScheme && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-              window.location.href = appScheme;
-            }
+            // 토스 앱이 없을 경우를 대비해 2초 후 토스 다운로드 페이지로 이동
+            setTimeout(() => {
+              const shouldDownload = window.confirm(
+                '토스 앱이 설치되어 있지 않습니다.\n토스 앱 설치 페이지로 이동하시겠습니까?'
+              );
+              if (shouldDownload) {
+                window.open('https://toss.im/app', '_blank');
+              }
+            }, 2000);
           }
-        } catch (err) {
-          alert(
-            `받는분: ${accountHolder}\n` +
-            `은행: ${bankName}\n` +
-            `계좌번호: ${accountNumber}\n` +
-            `금액: ${payment.amount.toLocaleString()}원\n\n` +
-            `위 정보를 확인하여 송금을 진행해주세요.`
-          );
+        } else {
+          // 토스에서 지원하지 않는 은행인 경우 계좌정보 복사 방식
+          try {
+            await navigator.clipboard.writeText(accountNumber);
+
+            const confirmed = window.confirm(
+              `계좌번호가 복사되었습니다!\n\n` +
+              `받는분: ${accountHolder}\n` +
+              `은행: ${bankName}\n` +
+              `계좌번호: ${accountNumber}\n` +
+              `금액: ${payment.amount.toLocaleString()}원\n\n` +
+              `인터넷뱅킹/모바일뱅킹 앱으로 송금을 진행해주세요.\n` +
+              `송금 완료 후 "송금완료" 버튼을 눌러주세요.`
+            );
+
+            if (confirmed) {
+              // 모바일에서 은행 앱 열기 시도
+              const bankApps: Record<string, string> = {
+                'KB국민은행': 'kbbank://',
+                '신한은행': 'shinhan-sr://',
+                '우리은행': 'wooribank://',
+                '하나은행': 'hanabank://',
+                '카카오뱅크': 'kakaotalk://kakaopay',
+                '토스뱅크': 'toss://',
+              };
+
+              const appScheme = bankApps[bankName];
+              if (appScheme && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                window.location.href = appScheme;
+              }
+            }
+          } catch (err) {
+            alert(
+              `받는분: ${accountHolder}\n` +
+              `은행: ${bankName}\n` +
+              `계좌번호: ${accountNumber}\n` +
+              `금액: ${payment.amount.toLocaleString()}원\n\n` +
+              `위 정보를 확인하여 송금을 진행해주세요.`
+            );
+          }
         }
       }
     } catch (error) {
