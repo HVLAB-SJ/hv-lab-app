@@ -689,7 +689,7 @@ div.rbc-popup {
     flex-direction: column !important;
     padding: 0 !important;
     height: auto !important;
-    min-height: 300px !important;
+    min-height: 280px !important;
   }
 
   /* 캘린더 컨테이너 높이 자동 */
@@ -697,7 +697,7 @@ div.rbc-popup {
     display: flex !important;
     flex-direction: column !important;
     height: auto !important;
-    min-height: 300px !important;
+    min-height: 280px !important;
   }
 
   /* 캘린더 컨테이너 - 6주일 때 자동 높이 */
@@ -705,7 +705,7 @@ div.rbc-popup {
     display: flex !important;
     flex-direction: column !important;
     height: auto !important;
-    min-height: 300px !important;
+    min-height: 280px !important;
     overflow: visible !important;
   }
 
@@ -780,10 +780,10 @@ div.rbc-popup {
     padding-bottom: 0 !important;
   }
 
-  /* 첫번째 주 행 높이 및 상단 여백 */
+  /* 첫번째 주 행 높이 */
   .rbc-month-view .rbc-month-row:first-child {
     min-height: 40px !important;
-    margin-top: 8px !important;
+    margin-top: 0 !important;
   }
 
   /* row-content는 숨기지 말고 높이만 0으로 */
@@ -810,7 +810,7 @@ div.rbc-popup {
     width: 28px !important;
     height: 28px !important;
     margin: 0 !important;
-    margin-top: 4px !important;
+    margin-top: 10px !important;
     border-radius: 50% !important;
     transition: none !important;
     position: relative !important;
