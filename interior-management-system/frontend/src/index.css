@@ -687,20 +687,20 @@ div.rbc-popup {
   .rbc-month-view {
     padding: 0 !important;
     height: auto !important;
-    min-height: auto !important;
+    min-height: 400px !important;
   }
 
   /* 캘린더 컨테이너 높이 자동 */
   .rbc-calendar {
     height: auto !important;
-    min-height: auto !important;
+    min-height: 400px !important;
   }
 
   /* 캘린더 컨테이너 - 6주일 때 자동 높이 */
   .calendar-container {
     height: auto !important;
-    min-height: auto !important;
-    overflow: visible !important;
+    min-height: 400px !important;
+    overflow: hidden !important;
   }
 
   /* Agenda 뷰 모바일 최적화 */
