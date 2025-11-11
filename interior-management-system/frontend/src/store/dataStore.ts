@@ -484,7 +484,11 @@ export const useDataStore = create<DataStore>()(
           assignedToLength: Array.isArray(s.assignedTo) ? s.assignedTo.length : 'not array'
         });
 
-        const attendees = s.assigneeNames || s.assignedTo?.map(a => typeof a === 'object' ? a.name : a) || [];
+        const attendees = Array.isArray(s.assigneeNames)
+          ? s.assigneeNames
+          : (s.assigneeNames
+              ? (typeof s.assigneeNames === 'string' ? s.assigneeNames.split(',').map(n => n.trim()) : [s.assigneeNames])
+              : (s.assignedTo?.map(a => typeof a === 'object' ? a.name : a) || []));
         console.log('🟣 Final attendees:', attendees);
 
         return {
@@ -1025,7 +1029,9 @@ export const useDataStore = create<DataStore>()(
         description: req.description,
         scheduledVisitDate: req.scheduledVisitDate ? new Date(req.scheduledVisitDate) : undefined,
         scheduledVisitTime: req.scheduledVisitTime,
-        assignedTo: req.assignedTo || [],
+        assignedTo: req.assignedTo
+          ? (Array.isArray(req.assignedTo) ? req.assignedTo : [req.assignedTo])
+          : [],
         completionDate: req.completionDate ? new Date(req.completionDate) : undefined,
         notes: req.notes,
         status: req.status || 'pending'

@@ -505,7 +505,11 @@ const Schedule = () => {
         projectName: req.project,
         type: 'as_visit' as const,
         phase: '',
-        assignedTo: req.assignedTo ? req.assignedTo.split(',').map(s => s.trim()) : [],
+        assignedTo: req.assignedTo
+          ? (Array.isArray(req.assignedTo)
+              ? req.assignedTo
+              : req.assignedTo.split(',').map(s => s.trim()))
+          : [],
         priority: 'high' as const,
         allDay: !visitTime || visitTime === '-',
         color: '#FEF3C7', // 연한 노란색 배경
