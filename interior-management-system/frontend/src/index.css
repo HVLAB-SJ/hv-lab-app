@@ -773,6 +773,11 @@ div.rbc-popup {
   .rbc-month-view .rbc-month-row {
     min-height: 40px !important;
     height: auto !important;
+    border-bottom: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
   }
 
   /* 첫번째 주 행 높이 추가 */
