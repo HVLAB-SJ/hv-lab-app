@@ -689,7 +689,7 @@ div.rbc-popup {
     flex-direction: column !important;
     padding: 0 !important;
     height: auto !important;
-    min-height: 500px !important;
+    min-height: 350px !important;
   }
 
   /* 캘린더 컨테이너 높이 자동 */
@@ -697,7 +697,7 @@ div.rbc-popup {
     display: flex !important;
     flex-direction: column !important;
     height: auto !important;
-    min-height: 500px !important;
+    min-height: 350px !important;
   }
 
   /* 캘린더 컨테이너 - 6주일 때 자동 높이 */
@@ -705,7 +705,7 @@ div.rbc-popup {
     display: flex !important;
     flex-direction: column !important;
     height: auto !important;
-    min-height: 500px !important;
+    min-height: 350px !important;
     overflow: visible !important;
   }
 
