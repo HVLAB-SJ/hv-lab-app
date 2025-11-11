@@ -674,7 +674,7 @@ div.rbc-popup {
     align-items: flex-start !important;
     justify-content: center !important;
     overflow: visible !important;
-    min-height: 50px !important;
+    min-height: 40px !important;
     position: relative !important;
   }
 
@@ -771,13 +771,13 @@ div.rbc-popup {
 
   /* 날짜 셀 높이 조정 - 자동 높이로 설정하여 6주일 때도 잘리지 않도록 */
   .rbc-month-view .rbc-month-row {
-    min-height: 50px !important;
+    min-height: 40px !important;
     height: auto !important;
   }
 
   /* 첫번째 주 행 높이 추가 */
   .rbc-month-view .rbc-month-row:first-child {
-    min-height: 52px !important;
+    min-height: 42px !important;
   }
 
   /* row-content는 숨기지 말고 높이만 0으로 */
@@ -788,7 +788,7 @@ div.rbc-popup {
 
   /* 6주일 때 달력 높이 자동 조정 */
   .rbc-month-view .rbc-row-bg {
-    min-height: 50px !important;
+    min-height: 40px !important;
     height: auto !important;
   }
 
