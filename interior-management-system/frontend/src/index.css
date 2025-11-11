@@ -688,14 +688,12 @@ div.rbc-popup {
     padding: 0 !important;
     height: auto !important;
     min-height: 500px !important;
-    display: block !important;
   }
 
   /* 캘린더 컨테이너 높이 자동 */
   .rbc-calendar {
     height: auto !important;
     min-height: 500px !important;
-    display: block !important;
   }
 
   /* 캘린더 컨테이너 - 6주일 때 자동 높이 */
@@ -703,7 +701,6 @@ div.rbc-popup {
     height: auto !important;
     min-height: 500px !important;
     overflow: visible !important;
-    display: block !important;
   }
 
   /* Agenda 뷰 모바일 최적화 */
@@ -742,8 +739,22 @@ div.rbc-popup {
   .rbc-day-bg,
   .rbc-date-cell,
   .rbc-header {
-    display: block !important;
     visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* 특정 요소들의 display 복원 */
+  .rbc-row,
+  .rbc-row-bg {
+    display: flex !important;
+  }
+
+  .rbc-month-header {
+    display: flex !important;
+  }
+
+  .rbc-header {
+    display: flex !important;
   }
 
   /* 날짜 셀 높이 조정 - 자동 높이로 설정하여 6주일 때도 잘리지 않도록 */
@@ -916,7 +927,6 @@ div.rbc-popup {
   height: auto;
   min-height: 500px;
   padding-bottom: 0 !important;
-  display: block !important;
 }
 
 .calendar-container .rbc-calendar {
