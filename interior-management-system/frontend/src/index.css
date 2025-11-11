@@ -678,9 +678,9 @@ div.rbc-popup {
     position: relative !important;
   }
 
-  /* 첫번째 주에 추가 상단 여백 */
+  /* 첫번째 주 날짜도 다른 주와 동일하게 */
   .rbc-month-view .rbc-month-row:first-child .rbc-date-cell {
-    padding-top: 8px !important;
+    padding-top: 6px !important;
   }
 
   /* 캘린더 전체 여백 - 모바일 */
