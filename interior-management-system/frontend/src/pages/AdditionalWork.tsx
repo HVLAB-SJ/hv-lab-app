@@ -418,22 +418,25 @@ const AdditionalWork = () => {
 
                 {/* 업로드된 이미지들 (스크롤) */}
                 <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-                  {workImages[selectedWorkId]?.map((image, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={image}
-                        alt={`추가내역 이미지 ${index + 1}`}
-                        onClick={() => handleImageClick(image)}
-                        className="w-full h-auto object-contain cursor-pointer rounded-lg border border-gray-200"
-                      />
-                      <button
-                        onClick={() => handleDeleteImage(selectedWorkId, index)}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
+                  {workImages[selectedWorkId]?.map((image, index) => {
+                    if (index === 1) return null;
+                    return (
+                      <div key={index} className="relative">
+                        <img
+                          src={image}
+                          alt={`추가내역 이미지 ${index + 1}`}
+                          onClick={() => handleImageClick(image)}
+                          className="w-full h-auto object-contain cursor-pointer rounded-lg border border-gray-200"
+                        />
+                        <button
+                          onClick={() => handleDeleteImage(selectedWorkId, index)}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
 
                   {/* 이미지 추가 버튼 */}
                   <label
