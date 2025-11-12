@@ -219,6 +219,11 @@ const Payments = () => {
         console.log('[자동 송금완료] 현재 payments 개수:', payments.length);
         console.log('[자동 송금완료] payments IDs:', payments.map(p => p.id));
 
+        // 모바일에서 내역 화면으로 전환
+        setMobileView('list');
+        // 대기중 필터로 전환 (송금 완료 전이므로)
+        setStatusFilter('pending');
+
         // payments가 아직 로드되지 않았으면 대기
         if (payments.length === 0) {
           console.log('[자동 송금완료] payments 로드 대기 중...');
@@ -237,6 +242,8 @@ const Payments = () => {
             if (payment.status === 'completed') {
               console.log('[자동 송금완료] 이미 완료된 결제');
               toast.info('이미 송금완료 처리된 내역입니다');
+              // 송금완료 필터로 전환
+              setStatusFilter('completed');
               // URL에서 파라미터 제거
               window.history.replaceState({}, '', '/payments');
             } else {
@@ -245,6 +252,9 @@ const Payments = () => {
               console.log('[자동 송금완료] API 호출 결과:', result);
 
               toast.success('송금완료 처리되었습니다');
+
+              // 송금완료 필터로 전환하여 결과 확인
+              setStatusFilter('completed');
 
               // URL에서 파라미터 제거
               window.history.replaceState({}, '', '/payments');
