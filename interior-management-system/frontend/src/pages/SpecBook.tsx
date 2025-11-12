@@ -1533,33 +1533,15 @@ const SpecBook = () => {
               }}
               onDrop={handleSubImageDrop}
             >
-              {/* 드래그 앤 드롭 영역 */}
-              <div className="mb-6">
-                <input
-                  ref={subImageFileInputRef}
-                  type="file"
-                  accept="image/*,application/pdf"
-                  multiple
-                  onChange={handleAddSubImage}
-                  className="hidden"
-                />
-                <div
-                  onClick={() => subImageFileInputRef.current?.click()}
-                  className={`w-full px-4 py-8 border-2 border-dashed rounded-lg transition-all cursor-pointer ${
-                    isDraggingSubImage
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex flex-col items-center justify-center gap-2 text-gray-600">
-                    <Upload className="h-8 w-8" />
-                    <p className="font-medium">이미지 또는 PDF 추가</p>
-                    <p className="text-sm text-gray-500">
-                      클릭하여 파일 선택 / 드래그 앤 드롭 / Ctrl+V
-                    </p>
-                  </div>
-                </div>
-              </div>
+              {/* 숨겨진 파일 입력 */}
+              <input
+                ref={subImageFileInputRef}
+                type="file"
+                accept="image/*,application/pdf"
+                multiple
+                onChange={handleAddSubImage}
+                className="hidden"
+              />
 
               {/* 이미지 그리드 */}
               <div className="grid grid-cols-4 gap-4">
@@ -1630,7 +1612,7 @@ const SpecBook = () => {
             </div>
 
             {/* 푸터 */}
-            <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-center p-4 border-t border-gray-200 bg-gray-50">
               <div className="flex items-center gap-4">
                 <p className="text-sm text-gray-600">
                   총 {(selectedItemForImages.image_url ? 1 : 0) + subImages.length}개의 파일
@@ -1645,12 +1627,6 @@ const SpecBook = () => {
                   </p>
                 )}
               </div>
-              <button
-                onClick={handleCloseSubImageModal}
-                className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium"
-              >
-                닫기
-              </button>
             </div>
           </div>
         </div>
