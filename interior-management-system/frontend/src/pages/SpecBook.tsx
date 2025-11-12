@@ -1130,36 +1130,46 @@ const SpecBook = () => {
           /* 라이브러리 뷰: 전체 폭 */
           <div className="flex-1 flex flex-col overflow-hidden pr-4">
           {/* 버튼 영역 */}
-          <div className="mb-4 grid grid-cols-2 lg:grid-cols-3 gap-4">
-            <button
-              onClick={() => {
-                setView('library');
-                setSelectedProject(null);
-              }}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
-            >
-              스펙 라이브러리
-            </button>
-            <select
-              value={selectedProject || ''}
-              onChange={(e) => {
-                if (e.target.value) {
-                  setView('project');
-                  setSelectedProject(Number(e.target.value));
-                } else {
-                  setView('library');
-                  setSelectedProject(null);
-                }
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
-            >
-              <option value="">프로젝트 선택</option>
-              {projects.map(project => (
-                <option key={project.id} value={project.id}>
-                  {project.title}
-                </option>
-              ))}
-            </select>
+          <div className="mb-4 flex flex-col md:flex-row gap-4">
+            {/* 좌측 절반 */}
+            <div className="w-full md:w-1/2 md:pr-[2px]">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <button
+                  onClick={() => {
+                    setView('library');
+                    setSelectedProject(null);
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
+                >
+                  스펙 라이브러리
+                </button>
+              </div>
+            </div>
+            {/* 우측 절반 */}
+            <div className="w-full md:w-1/2 md:pl-[2px]">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <select
+                  value={selectedProject || ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setView('project');
+                      setSelectedProject(Number(e.target.value));
+                    } else {
+                      setView('library');
+                      setSelectedProject(null);
+                    }
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
+                >
+                  <option value="">프로젝트 선택</option>
+                  {projects.map(project => (
+                    <option key={project.id} value={project.id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
@@ -1216,36 +1226,46 @@ const SpecBook = () => {
           /* 프로젝트 뷰: 좌우 분할 - 스펙 라이브러리 + 프로젝트 아이템 */
           <div className="flex-1 flex flex-col overflow-hidden pr-4">
             {/* 버튼 영역 */}
-            <div className="mb-4 grid grid-cols-2 lg:grid-cols-3 gap-4">
-              <button
-                onClick={() => {
-                  setView('library');
-                  setSelectedProject(null);
-                }}
-                className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700"
-              >
-                스펙 라이브러리
-              </button>
-              <select
-                value={selectedProject || ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    setView('project');
-                    setSelectedProject(Number(e.target.value));
-                  } else {
-                    setView('library');
-                    setSelectedProject(null);
-                  }
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
-              >
-                <option value="">프로젝트 선택</option>
-                {projects.map(project => (
-                  <option key={project.id} value={project.id}>
-                    {project.title}
-                  </option>
-                ))}
-              </select>
+            <div className="mb-4 flex flex-col md:flex-row gap-4">
+              {/* 좌측 절반 */}
+              <div className="w-full md:w-1/2 md:pr-[2px]">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <button
+                    onClick={() => {
+                      setView('library');
+                      setSelectedProject(null);
+                    }}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700"
+                  >
+                    스펙 라이브러리
+                  </button>
+                </div>
+              </div>
+              {/* 우측 절반 */}
+              <div className="w-full md:w-1/2 md:pl-[2px]">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <select
+                    value={selectedProject || ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setView('project');
+                        setSelectedProject(Number(e.target.value));
+                      } else {
+                        setView('library');
+                        setSelectedProject(null);
+                      }
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
+                  >
+                    <option value="">프로젝트 선택</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden gap-4">
