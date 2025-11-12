@@ -724,7 +724,7 @@ const Payments = () => {
     setShowDetailModal(true);
   };
 
-  // 즉시송금 - API를 통한 자동 송금
+  // 즉시송금 - KB스타기업뱅킹 앱 실행
   const handleInstantTransfer = async (payment: PaymentRequest) => {
     try {
       // 필수 정보 확인 - bankInfo 객체 또는 개별 필드 사용
@@ -737,145 +737,88 @@ const Payments = () => {
         return;
       }
 
-      // 오픈뱅킹 API를 통한 자동 송금
+      // KB스타기업뱅킹 앱 실행 확인
       const confirmed = window.confirm(
-        `${accountHolder}님에게 ${payment.amount.toLocaleString()}원을 송금하시겠습니까?\n\n` +
+        `KB스타기업뱅킹으로 이체하시겠습니까?\n\n` +
+        `받는분: ${accountHolder}\n` +
         `은행: ${bankName}\n` +
         `계좌: ${accountNumber}\n` +
-        `예금주: ${accountHolder}\n\n` +
-        `※ 송금이 즉시 실행됩니다.`
+        `금액: ${payment.amount.toLocaleString()}원\n\n` +
+        `※ 앱이 실행되면 이체 정보가 자동으로 입력됩니다.`
       );
 
       if (!confirmed) return;
 
-      const loadingToast = toast.loading('송금을 처리 중입니다...');
+      // 은행 코드 매핑 (금융결제원 표준 코드)
+      const bankCodes: Record<string, string> = {
+        'KB국민은행': '004',
+        '신한은행': '088',
+        '우리은행': '020',
+        '하나은행': '081',
+        'NH농협은행': '011',
+        'IBK기업은행': '003',
+        '기업은행': '003',
+        'SC제일은행': '023',
+        '한국씨티은행': '027',
+        '씨티은행': '027',
+        '새마을금고': '045',
+        '신협': '048',
+        '우체국': '071',
+        'KDB산업은행': '002',
+        '수협은행': '007',
+        '대구은행': '031',
+        '부산은행': '032',
+        '경남은행': '039',
+        '광주은행': '034',
+        '전북은행': '037',
+        '제주은행': '035',
+        '카카오뱅크': '090',
+        '케이뱅크': '089',
+        '토스뱅크': '092',
+      };
 
-      const response = await fetch('/api/payments/openbanking/instant-transfer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          paymentId: payment.id,
-          receiverName: accountHolder,
-          receiverBank: bankName,
-          receiverAccount: accountNumber,
-          amount: payment.amount,
-          description: `${payment.project} - ${payment.itemName || payment.purpose}`
-        })
-      });
+      const bankCode = bankCodes[bankName] || '';
 
-      const result = await response.json();
-      toast.dismiss(loadingToast);
+      // 계좌번호에서 하이픈 제거
+      const cleanAccountNumber = accountNumber.replace(/-/g, '');
 
-      if (result.success) {
-        toast.success('송금이 완료되었습니다!');
-        await loadPaymentsFromAPI();
-      } else if (result.fallbackToManual) {
-        // API 송금 실패 시 토스 딥링크로 폴백
-        toast.error(result.error || '자동 송금에 실패했습니다. 수동 송금을 시도합니다.');
-        // 토스 딥링크를 이용한 즉시송금
-        // 은행 코드 매핑 (토스 표준 은행 코드)
-        const bankCodes: Record<string, string> = {
-          'KB국민은행': '004',
-          '신한은행': '088',
-          '우리은행': '020',
-          '하나은행': '081',
-          'NH농협은행': '011',
-          '기업은행': '003',
-          'SC제일은행': '023',
-          '씨티은행': '027',
-          '새마을금고': '045',
-          '대구은행': '031',
-          '부산은행': '032',
-          '경남은행': '039',
-          '광주은행': '034',
-          '전북은행': '037',
-          '제주은행': '035',
-          '카카오뱅크': '090',
-          '케이뱅크': '089',
-          '토스뱅크': '092',
-        };
-
-        const bankCode = bankCodes[bankName];
-
-        if (bankCode) {
-          // 계좌번호에서 하이픈 제거
-          const cleanAccountNumber = accountNumber.replace(/-/g, '');
-
-          // 토스 딥링크 생성
-          const tossUrl = `supertoss://send?bank=${bankCode}&accountNo=${cleanAccountNumber}&amount=${payment.amount}&msg=${encodeURIComponent(payment.project + ' - ' + (payment.itemName || payment.purpose || '결제'))}`;
-
-          // 토스 앱으로 이동
-          const confirmed = window.confirm(
-            `토스 앱으로 즉시 송금하시겠습니까?\n\n` +
-            `받는분: ${accountHolder}\n` +
-            `은행: ${bankName}\n` +
-            `계좌번호: ${accountNumber}\n` +
-            `금액: ${payment.amount.toLocaleString()}원\n\n` +
-            `토스 앱이 설치되어 있어야 합니다.`
-          );
-
-          if (confirmed) {
-            // 토스 앱 열기
-            window.location.href = tossUrl;
-
-            // 토스 앱이 없을 경우를 대비해 2초 후 토스 다운로드 페이지로 이동
-            setTimeout(() => {
-              const shouldDownload = window.confirm(
-                '토스 앱이 설치되어 있지 않습니다.\n토스 앱 설치 페이지로 이동하시겠습니까?'
-              );
-              if (shouldDownload) {
-                window.open('https://toss.im/app', '_blank');
-              }
-            }, 2000);
-          }
-        } else {
-          // 토스에서 지원하지 않는 은행인 경우 계좌정보 복사 방식
-          try {
-            await navigator.clipboard.writeText(accountNumber);
-
-            const confirmed = window.confirm(
-              `계좌번호가 복사되었습니다!\n\n` +
-              `받는분: ${accountHolder}\n` +
-              `은행: ${bankName}\n` +
-              `계좌번호: ${accountNumber}\n` +
-              `금액: ${payment.amount.toLocaleString()}원\n\n` +
-              `인터넷뱅킹/모바일뱅킹 앱으로 송금을 진행해주세요.\n` +
-              `송금 완료 후 "송금완료" 버튼을 눌러주세요.`
-            );
-
-            if (confirmed) {
-              // 모바일에서 은행 앱 열기 시도
-              const bankApps: Record<string, string> = {
-                'KB국민은행': 'kbbank://',
-                '신한은행': 'shinhan-sr://',
-                '우리은행': 'wooribank://',
-                '하나은행': 'hanabank://',
-                '카카오뱅크': 'kakaotalk://kakaopay',
-                '토스뱅크': 'toss://',
-              };
-
-              const appScheme = bankApps[bankName];
-              if (appScheme && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                window.location.href = appScheme;
-              }
-            }
-          } catch (err) {
-            alert(
-              `받는분: ${accountHolder}\n` +
-              `은행: ${bankName}\n` +
-              `계좌번호: ${accountNumber}\n` +
-              `금액: ${payment.amount.toLocaleString()}원\n\n` +
-              `위 정보를 확인하여 송금을 진행해주세요.`
-            );
-          }
-        }
-      } else {
-        // 일반 오류
-        toast.error(result.error || '송금에 실패했습니다');
+      // 계좌번호와 은행정보를 클립보드에 복사
+      const transferInfo = `${bankName} ${accountNumber} ${accountHolder} ${payment.amount.toLocaleString()}원`;
+      try {
+        await navigator.clipboard.writeText(transferInfo);
+        toast.success('이체 정보가 클립보드에 복사되었습니다');
+      } catch (err) {
+        console.log('클립보드 복사 실패:', err);
       }
+
+      // KB스타기업뱅킹 앱 URL 스킴 시도
+      // KB기업은행/KB스타뱅킹의 딥링크 형식
+      const kbStarUrl = `kbbank://transfer?bankcode=${bankCode}&account=${cleanAccountNumber}&amount=${payment.amount}&name=${encodeURIComponent(accountHolder)}`;
+
+      // 웹 기반 KB스타기업뱅킹 URL (앱이 없을 경우)
+      const kbStarWebUrl = `https://obank.kbstar.com/quics?page=C025256`;
+
+      toast.info('KB스타기업뱅킹 앱을 실행합니다...', { duration: 2000 });
+
+      // 딥링크로 앱 실행 시도
+      window.location.href = kbStarUrl;
+
+      // 3초 후 앱이 실행되지 않았으면 웹 버전 또는 안내 표시
+      setTimeout(() => {
+        const openWeb = window.confirm(
+          'KB스타기업뱅킹 앱이 설치되어 있지 않거나 실행되지 않았습니다.\n\n' +
+          '이체 정보가 클립보드에 복사되었습니다:\n' +
+          `${transferInfo}\n\n` +
+          '웹 기반 KB스타기업뱅킹을 여시겠습니까?\n' +
+          '(또는 앱을 직접 실행하여 붙여넣기 하세요)'
+        );
+
+        if (openWeb) {
+          window.open(kbStarWebUrl, '_blank');
+          toast.info('이체 정보를 수동으로 입력해주세요');
+        }
+      }, 3000);
+
     } catch (error) {
       console.error('즉시송금 오류:', error);
       toast.error('처리 중 오류가 발생했습니다');
