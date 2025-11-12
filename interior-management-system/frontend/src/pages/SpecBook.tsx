@@ -1205,10 +1205,10 @@ const SpecBook = () => {
                 )}
               </div>
             </div>
-            {/* 중앙 경계선 */}
-            <div className="w-px bg-gray-300 self-stretch"></div>
-            {/* 우측: 빈 공간 */}
-            <div className="w-1/2 flex flex-col overflow-hidden pl-3 pb-4">
+            {/* 중앙 경계선 (데스크톱에서만 표시) */}
+            <div className="hidden md:block w-px bg-gray-300 self-stretch"></div>
+            {/* 우측: 빈 공간 (데스크톱에서만 표시) */}
+            <div className="hidden md:flex w-1/2 flex-col overflow-hidden pl-3 pb-4">
               <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">
                   프로젝트를 선택하면 여기에 프로젝트 아이템이 표시됩니다
