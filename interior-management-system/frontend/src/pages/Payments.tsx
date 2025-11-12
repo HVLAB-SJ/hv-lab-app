@@ -782,16 +782,6 @@ const Payments = () => {
       // 토스 송금 URL 생성
       const tossUrl = `supertoss://send?bank=${bankCode}&accountNo=${cleanAccountNumber}&amount=${payment.amount}&depositorName=${encodeURIComponent(accountHolder)}`;
 
-      // 이체 정보를 클립보드에 복사 (백업용)
-      const transferInfo = `${bankName}\n${accountNumber}\n${accountHolder}\n${payment.amount.toLocaleString()}원`;
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(transferInfo);
-        }
-      } catch (err) {
-        console.log('클립보드 복사 실패:', err);
-      }
-
       // 토스 앱 실행 시도
       let appOpened = false;
 
