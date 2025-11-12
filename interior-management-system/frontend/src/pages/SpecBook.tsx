@@ -1506,8 +1506,7 @@ const SpecBook = () => {
             {/* 헤더 */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">상세 이미지 관리</h2>
-                <p className="text-sm text-gray-600 mt-1">{selectedItemForImages.name}</p>
+                <h2 className="text-xl font-bold text-gray-900">{selectedItemForImages.name}</h2>
                 <p className="text-xs text-gray-500 mt-1">
                   드래그 앤 드롭 또는 Ctrl+V로 이미지/PDF를 추가할 수 있습니다
                 </p>
@@ -1601,14 +1600,16 @@ const SpecBook = () => {
                     </div>
                   );
                 })}
+
+                {/* 이미지 추가 버튼 */}
+                <div
+                  onClick={() => subImageFileInputRef.current?.click()}
+                  className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                >
+                  <Plus className="h-12 w-12 text-gray-400" />
+                </div>
               </div>
 
-              {subImages.length === 0 && !selectedItemForImages.image_url && (
-                <div className="text-center py-12 text-gray-500">
-                  <Upload className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                  <p>이미지 또는 PDF를 추가해주세요</p>
-                </div>
-              )}
             </div>
 
             {/* 푸터 */}
