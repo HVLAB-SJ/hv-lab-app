@@ -794,44 +794,65 @@ const Payments = () => {
         // 클립보드 실패는 치명적이지 않으므로 계속 진행
       }
 
-      // KB스타기업뱅킹 앱 실행 시도
-      toast('KB스타기업뱅킹 앱을 실행합니다...', {
-        icon: 'ℹ️',
-        duration: 3000
-      });
-
-      // 방법 1: 단순 앱 열기 (가장 안전)
-      const kbStarAppUrl = 'kbbank://';
-
-      // 방법 2: 이체 화면으로 바로 이동 시도 (딥링크)
-      const kbStarTransferUrl = `kbbank://transfer?bankcode=${bankCode}&account=${cleanAccountNumber}&amount=${payment.amount}&name=${encodeURIComponent(accountHolder)}`;
-
-      // iframe을 사용한 앱 실행 (모바일에서 더 안전)
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = kbStarAppUrl;
-      document.body.appendChild(iframe);
-
-      // iframe 제거
-      setTimeout(() => {
-        if (iframe && iframe.parentNode) {
-          iframe.parentNode.removeChild(iframe);
+      // 이체 정보 안내
+      toast.success(
+        `이체 정보가 복사되었습니다.\nKB스타기업뱅킹 앱을 열어주세요.`,
+        {
+          duration: 5000
         }
-      }, 100);
+      );
 
-      // 추가 안내 메시지
-      setTimeout(() => {
+      // 여러 방법으로 앱 실행 시도
+      const appUrls = [
+        'kbstarbank://',  // KB스타기업뱅킹
+        'kbbank://',      // KB국민은행
+        'kb-acp://',      // KB앱
+      ];
+
+      let appOpened = false;
+
+      // 모바일 기기 확인
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        // 모바일: window.location.href 사용
+        for (const url of appUrls) {
+          try {
+            window.location.href = url;
+            appOpened = true;
+            break;
+          } catch (e) {
+            console.log(`Failed to open ${url}:`, e);
+          }
+        }
+
+        // 앱이 열리지 않았을 경우 스토어로 이동
+        if (!appOpened) {
+          setTimeout(() => {
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const storeUrl = isIOS
+              ? 'https://apps.apple.com/kr/app/kb%EC%8A%A4%ED%83%80%EA%B8%B0%EC%97%85%EB%B1%85%ED%82%B9/id373742138'
+              : 'https://play.google.com/store/apps/details?id=com.kbstar.kbbank';
+
+            if (window.confirm('KB스타기업뱅킹 앱이 설치되어 있지 않습니다.\n앱 스토어로 이동하시겠습니까?')) {
+              window.location.href = storeUrl;
+            }
+          }, 1500);
+        }
+      } else {
+        // 데스크탑: 안내 메시지만 표시
         toast(
-          `앱이 실행되면 이체 정보를 입력해주세요.\n\n` +
+          `모바일 기기에서 KB스타기업뱅킹 앱을 열어주세요.\n\n` +
           `받는분: ${accountHolder}\n` +
+          `은행: ${bankName}\n` +
           `계좌: ${accountNumber}\n` +
           `금액: ${payment.amount.toLocaleString()}원`,
           {
             icon: '💳',
-            duration: 5000
+            duration: 7000
           }
         );
-      }, 1000);
+      }
 
     } catch (error) {
       console.error('즉시송금 오류:', error);
