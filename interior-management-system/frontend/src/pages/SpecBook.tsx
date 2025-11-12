@@ -890,12 +890,7 @@ const SpecBook = () => {
         <div className="hidden md:flex flex-col gap-4 w-80 lg:w-96 flex-shrink-0">
           {/* 새 아이템 추가 폼 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-              <div className="p-3">
-                <h2 className="text-sm font-semibold mb-2 text-gray-900">
-                  {editingItem ? '아이템 수정' : '새 아이템 추가'}
-                </h2>
-              </div>
-              <form onSubmit={handleSubmit} className="flex flex-col">
+              <form onSubmit={handleSubmit} className="flex flex-col pt-3">
                 {/* 수평 카드 형태: 이미지 + 입력 필드 */}
                 <div className="flex flex-col sm:flex-row gap-3 px-3">
                   {/* 좌측: 이미지 - 정사각형 */}
