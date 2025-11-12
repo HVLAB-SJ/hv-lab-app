@@ -166,7 +166,7 @@ const SortableSpecBookItem = ({
             {item.category}
           </span>
           {item.grade && (
-            <span className={`inline-block px-1 py-0.5 text-[10px] rounded ${getGradeColor(item.grade)}`}>
+            <span className={`hidden md:inline-block px-1 py-0.5 text-[10px] rounded ${getGradeColor(item.grade)}`}>
               {formatGradeRange(item.grade)}
             </span>
           )}
@@ -179,7 +179,7 @@ const SortableSpecBookItem = ({
             )}
           </div>
           {item.price && (
-            <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
+            <span className="hidden md:inline text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
           )}
         </div>
       </div>
@@ -906,7 +906,7 @@ const SpecBook = () => {
                     }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={handleImageDrop}
-                    className={`w-full sm:w-40 h-40 sm:h-40 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
+                    className={`w-full sm:w-48 h-40 sm:h-52 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
                       isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
                     }`}
                     onClick={() => fileInputRef.current?.click()}
