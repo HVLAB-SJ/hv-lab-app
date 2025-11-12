@@ -724,7 +724,7 @@ const Payments = () => {
     setShowDetailModal(true);
   };
 
-  // 즉시송금 - KB스타기업뱅킹 앱 실행
+  // 즉시송금 - 이체 정보 복사
   const handleInstantTransfer = async (payment: PaymentRequest) => {
     try {
       // 필수 정보 확인 - bankInfo 객체 또는 개별 필드 사용
@@ -737,119 +737,64 @@ const Payments = () => {
         return;
       }
 
-      // KB스타기업뱅킹 앱 실행 확인
+      // 이체 정보 확인
       const confirmed = window.confirm(
-        `KB스타기업뱅킹으로 이체하시겠습니까?\n\n` +
+        `이체 정보를 클립보드에 복사합니다.\n\n` +
         `받는분: ${accountHolder}\n` +
         `은행: ${bankName}\n` +
         `계좌: ${accountNumber}\n` +
         `금액: ${payment.amount.toLocaleString()}원\n\n` +
-        `※ 이체 정보가 클립보드에 복사됩니다.`
+        `KB스타기업뱅킹 앱을 직접 열어 이체해주세요.`
       );
 
       if (!confirmed) return;
 
-      // 은행 코드 매핑 (금융결제원 표준 코드)
-      const bankCodes: Record<string, string> = {
-        'KB국민은행': '004',
-        '신한은행': '088',
-        '우리은행': '020',
-        '하나은행': '081',
-        'NH농협은행': '011',
-        'IBK기업은행': '003',
-        '기업은행': '003',
-        'SC제일은행': '023',
-        '한국씨티은행': '027',
-        '씨티은행': '027',
-        '새마을금고': '045',
-        '신협': '048',
-        '우체국': '071',
-        'KDB산업은행': '002',
-        '수협은행': '007',
-        '대구은행': '031',
-        '부산은행': '032',
-        '경남은행': '039',
-        '광주은행': '034',
-        '전북은행': '037',
-        '제주은행': '035',
-        '카카오뱅크': '090',
-        '케이뱅크': '089',
-        '토스뱅크': '092',
-      };
-
-      const bankCode = bankCodes[bankName] || '';
-
-      // 계좌번호에서 하이픈 제거
-      const cleanAccountNumber = accountNumber.replace(/-/g, '');
-
       // 계좌번호와 은행정보를 클립보드에 복사
       const transferInfo = `${bankName}\n${accountNumber}\n${accountHolder}\n${payment.amount.toLocaleString()}원`;
+
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           await navigator.clipboard.writeText(transferInfo);
-          toast.success('이체 정보가 클립보드에 복사되었습니다');
+          toast.success(
+            `이체 정보가 복사되었습니다!\n\n` +
+            `받는분: ${accountHolder}\n` +
+            `은행: ${bankName}\n` +
+            `계좌: ${accountNumber}\n` +
+            `금액: ${payment.amount.toLocaleString()}원\n\n` +
+            `KB스타기업뱅킹 앱을 열어 이체해주세요.`,
+            {
+              icon: '💳',
+              duration: 8000
+            }
+          );
+        } else {
+          // 클립보드 API를 사용할 수 없는 경우 정보만 표시
+          toast(
+            `이체 정보:\n\n` +
+            `받는분: ${accountHolder}\n` +
+            `은행: ${bankName}\n` +
+            `계좌: ${accountNumber}\n` +
+            `금액: ${payment.amount.toLocaleString()}원\n\n` +
+            `KB스타기업뱅킹 앱을 열어 이체해주세요.`,
+            {
+              icon: '💳',
+              duration: 10000
+            }
+          );
         }
       } catch (err) {
         console.log('클립보드 복사 실패:', err);
-        // 클립보드 실패는 치명적이지 않으므로 계속 진행
-      }
-
-      // 이체 정보 안내
-      toast.success(
-        `이체 정보가 복사되었습니다.\nKB스타기업뱅킹 앱을 열어주세요.`,
-        {
-          duration: 5000
-        }
-      );
-
-      // 여러 방법으로 앱 실행 시도
-      const appUrls = [
-        'kbstarbank://',  // KB스타기업뱅킹
-        'kbbank://',      // KB국민은행
-        'kb-acp://',      // KB앱
-      ];
-
-      let appOpened = false;
-
-      // 모바일 기기 확인
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-      if (isMobile) {
-        // 모바일: window.location.href 사용
-        for (const url of appUrls) {
-          try {
-            window.location.href = url;
-            appOpened = true;
-            break;
-          } catch (e) {
-            console.log(`Failed to open ${url}:`, e);
-          }
-        }
-
-        // 앱이 열리지 않았을 경우 스토어로 이동
-        if (!appOpened) {
-          setTimeout(() => {
-            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const storeUrl = isIOS
-              ? 'https://apps.apple.com/kr/app/kb%EC%8A%A4%ED%83%80%EA%B8%B0%EC%97%85%EB%B1%85%ED%82%B9/id373742138'
-              : 'https://play.google.com/store/apps/details?id=com.kbstar.kbbank';
-
-            if (window.confirm('KB스타기업뱅킹 앱이 설치되어 있지 않습니다.\n앱 스토어로 이동하시겠습니까?')) {
-              window.location.href = storeUrl;
-            }
-          }, 1500);
-        }
-      } else {
-        // 데스크탑: 안내 메시지만 표시
+        // 클립보드 실패 시 정보만 표시
         toast(
-          `모바일 기기에서 KB스타기업뱅킹 앱을 열어주세요.\n\n` +
+          `이체 정보:\n\n` +
           `받는분: ${accountHolder}\n` +
           `은행: ${bankName}\n` +
           `계좌: ${accountNumber}\n` +
-          `금액: ${payment.amount.toLocaleString()}원`,
+          `금액: ${payment.amount.toLocaleString()}원\n\n` +
+          `KB스타기업뱅킹 앱을 열어 이체해주세요.`,
           {
             icon: '💳',
-            duration: 7000
+            duration: 10000
           }
         );
       }
