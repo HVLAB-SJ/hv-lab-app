@@ -1139,7 +1139,7 @@ const SpecBook = () => {
           <div className="flex-1 flex flex-col overflow-hidden pr-4 pt-3">
           {/* 버튼 영역 */}
           <div className="mb-4 px-4">
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 lg:grid-cols-6 gap-4">
               <button
                 onClick={() => {
                   setView('library');
@@ -1160,7 +1160,7 @@ const SpecBook = () => {
                     setSelectedProject(null);
                   }
                 }}
-                className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2 lg:col-start-3"
+                className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2 lg:col-start-4"
               >
                 <option value="">프로젝트 선택</option>
                 {projects.map(project => (
@@ -1227,7 +1227,7 @@ const SpecBook = () => {
           <div className="flex-1 flex flex-col overflow-hidden pr-4 pt-3">
             {/* 버튼 영역 */}
             <div className="mb-4 px-4">
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 lg:grid-cols-6 gap-4">
                 <button
                   onClick={() => {
                     setView('library');
@@ -1248,7 +1248,7 @@ const SpecBook = () => {
                       setSelectedProject(null);
                     }
                   }}
-                  className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2 lg:col-start-3"
+                  className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2 lg:col-start-4"
                 >
                   <option value="">프로젝트 선택</option>
                   {projects.map(project => (
