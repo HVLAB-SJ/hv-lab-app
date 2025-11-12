@@ -942,7 +942,7 @@ const SpecBook = () => {
                   </div>
 
                   {/* 우측: 입력 필드들 */}
-                  <div className="flex-1 flex flex-col justify-between sm:h-40">
+                  <div className="flex-1 flex flex-col gap-2">
                     <div className="space-y-1.5">
                       <select
                         value={formData.category}
@@ -986,7 +986,7 @@ const SpecBook = () => {
                     </div>
 
                     {/* 등급 선택 버튼들 */}
-                    <div className="flex gap-1 mt-2">
+                    <div className="flex gap-1">
                       {['알뜰', '기본', '고급', '하이'].map((grade, index) => {
                         const fullGrade = index === 3 ? '하이엔드' : grade;
                         return (
