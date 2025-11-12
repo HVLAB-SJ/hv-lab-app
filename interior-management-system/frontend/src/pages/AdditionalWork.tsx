@@ -395,94 +395,17 @@ const AdditionalWork = () => {
 
       {/* Desktop View - 3 Column Grid */}
       <div className="hidden md:grid md:grid-cols-3 gap-4">
-        {/* 첫 번째 열: 추가내역 목록 (선택된 항목 강조) */}
-        <div className="space-y-4">
-          {projectGroups.map((group) => (
-            <div key={group.projectName} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              {/* Project Header */}
-              <button
-                onClick={() => toggleProject(group.projectName)}
-                className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
-              >
-                <h3 className="font-bold text-lg text-gray-900 truncate flex-1 text-left mr-3">{group.projectName}</h3>
-                <div className="flex items-center space-x-2 flex-shrink-0">
-                  <p className="text-base font-semibold text-gray-700">
-                    {group.works.length}건 {group.totalAmount.toLocaleString()}원
-                  </p>
-                  {expandedProjects.has(group.projectName) ? (
-                    <ChevronUp className="h-5 w-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
-                  )}
-                </div>
-              </button>
+        {/* 첫 번째 열: 이미지 업로드 영역 (여러 장, 스크롤) */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-4">이미지</h3>
 
-              {/* Project Works List (compact) */}
-              {expandedProjects.has(group.projectName) && (
-                <div className="divide-y divide-gray-200">
-                  {group.works.map((work) => (
-                    <div
-                      key={work.id}
-                      onClick={() => setSelectedWorkId(work.id)}
-                      className={`p-4 cursor-pointer transition-colors ${
-                        selectedWorkId === work.id
-                          ? 'bg-blue-50 border-l-4 border-blue-500'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <p className="text-sm text-gray-600 flex-shrink-0">{format(work.date, 'MM.dd (eee)', { locale: ko })}</p>
-                        <p className="text-base text-gray-900 font-medium flex-1 truncate">{work.description}</p>
-                        <p className="text-base font-semibold text-gray-900 flex-shrink-0 mr-2">{work.amount.toLocaleString()}원</p>
-                        <div className="flex items-center space-x-1 flex-shrink-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditWork(work);
-                            }}
-                            className="text-gray-600 hover:text-gray-700 transition-colors p-1"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteWork(work.id, work.project);
-                            }}
-                            className="text-rose-600 hover:text-rose-700 transition-colors p-1"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {work.notes && (
-                        <p className="text-sm text-gray-600 mt-2">{work.notes}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-          {projectGroups.length === 0 && (
-            <div className="text-center py-8 text-gray-500 bg-white border border-gray-200 rounded-lg">
-              추가내역이 없습니다
-            </div>
-          )}
-        </div>
-
-        {/* 두 번째, 세 번째 열: 이미지 업로드 영역 */}
-        {selectedWorkId ? (
-          <>
-            {/* 두 번째 열 - 이미지 1 */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-4">이미지 1</h3>
+          {selectedWorkId ? (
+            <div>
+              {/* 이미지 업로드 영역 */}
               <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className="h-full"
               >
                 <input
                   id="image-file-input"
@@ -492,80 +415,222 @@ const AdditionalWork = () => {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                {workImages[selectedWorkId]?.[0] ? (
-                  <div className="relative h-full min-h-[400px]">
-                    <img
-                      src={workImages[selectedWorkId][0]}
-                      alt="추가내역 이미지 1"
-                      onClick={() => handleImageClick(workImages[selectedWorkId][0])}
-                      className="w-full h-full object-contain cursor-pointer rounded-lg"
-                    />
-                    <button
-                      onClick={() => handleDeleteImage(selectedWorkId, 0)}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
+
+                {/* 업로드된 이미지들 (스크롤) */}
+                <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                  {workImages[selectedWorkId]?.map((image, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={image}
+                        alt={`추가내역 이미지 ${index + 1}`}
+                        onClick={() => handleImageClick(image)}
+                        className="w-full h-auto object-contain cursor-pointer rounded-lg border border-gray-200"
+                      />
+                      <button
+                        onClick={() => handleDeleteImage(selectedWorkId, index)}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* 이미지 추가 버튼 */}
                   <label
                     htmlFor="image-file-input"
-                    className="h-full flex items-center justify-center cursor-pointer"
+                    className="block cursor-pointer"
                   >
                     <div
-                      className={`w-full h-full min-h-[400px] border-2 border-dashed rounded-lg p-6 text-center transition-colors flex flex-col items-center justify-center ${
+                      className={`w-full min-h-[200px] border-2 border-dashed rounded-lg p-6 text-center transition-colors flex flex-col items-center justify-center ${
                         isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
                       }`}
                     >
                       <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                      <p className="text-sm font-medium text-gray-700">클릭하여 선택</p>
+                      <p className="text-sm font-medium text-gray-700">
+                        {workImages[selectedWorkId]?.length > 0 ? '이미지 추가' : '클릭하여 선택'}
+                      </p>
                       <p className="text-xs text-gray-500 mt-1">또는 이미지를 드래그하거나 Ctrl+V로 붙여넣기</p>
+                      {workImages[selectedWorkId]?.length > 0 && (
+                        <p className="text-xs text-blue-600 mt-2 font-medium">
+                          현재 {workImages[selectedWorkId].length}장
+                        </p>
+                      )}
                     </div>
                   </label>
-                )}
+                </div>
               </div>
             </div>
-
-            {/* 세 번째 열 - 이미지 2 */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-4">이미지 2</h3>
-              <div className="h-full">
-                {workImages[selectedWorkId]?.[1] ? (
-                  <div className="relative h-full min-h-[400px]">
-                    <img
-                      src={workImages[selectedWorkId][1]}
-                      alt="추가내역 이미지 2"
-                      onClick={() => handleImageClick(workImages[selectedWorkId][1])}
-                      className="w-full h-full object-contain cursor-pointer rounded-lg"
-                    />
-                    <button
-                      onClick={() => handleDeleteImage(selectedWorkId, 1)}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="h-full min-h-[400px] border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-center text-gray-400">
-                    <ImageIcon className="h-10 w-10 mx-auto mb-2" />
-                    <p className="text-sm">추가 이미지는</p>
-                    <p className="text-sm">왼쪽 영역에서 업로드하세요</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="col-span-2 bg-white border border-gray-200 rounded-lg p-8 flex items-center justify-center">
+          ) : (
+            <div className="h-full min-h-[400px] flex items-center justify-center">
               <div className="text-center text-gray-400">
                 <ImageIcon className="h-16 w-16 mx-auto mb-4" />
                 <p className="text-lg font-medium">추가내역을 선택하세요</p>
                 <p className="text-sm mt-2">선택하면 이미지를 업로드할 수 있습니다</p>
               </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
+
+        {/* 두 번째, 세 번째 열: 프로젝트 목록 (2열로 나눔) */}
+        {(() => {
+          // 프로젝트를 2개씩 나눔
+          const midPoint = Math.ceil(projectGroups.length / 2);
+          const firstHalf = projectGroups.slice(0, midPoint);
+          const secondHalf = projectGroups.slice(midPoint);
+
+          return (
+            <>
+              {/* 두 번째 열 - 첫 번째 절반 */}
+              <div className="space-y-4">
+                {firstHalf.map((group) => (
+                  <div key={group.projectName} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    {/* Project Header */}
+                    <button
+                      onClick={() => toggleProject(group.projectName)}
+                      className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
+                      <h3 className="font-bold text-lg text-gray-900 truncate flex-1 text-left mr-3">{group.projectName}</h3>
+                      <div className="flex items-center space-x-2 flex-shrink-0">
+                        <p className="text-base font-semibold text-gray-700">
+                          {group.works.length}건 {group.totalAmount.toLocaleString()}원
+                        </p>
+                        {expandedProjects.has(group.projectName) ? (
+                          <ChevronUp className="h-5 w-5 text-gray-600" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-gray-600" />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Project Works List */}
+                    {expandedProjects.has(group.projectName) && (
+                      <div className="divide-y divide-gray-200">
+                        {group.works.map((work) => (
+                          <div
+                            key={work.id}
+                            onClick={() => setSelectedWorkId(work.id)}
+                            className={`p-4 cursor-pointer transition-colors ${
+                              selectedWorkId === work.id
+                                ? 'bg-blue-50 border-l-4 border-blue-500'
+                                : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-4">
+                              <p className="text-sm text-gray-600 flex-shrink-0">{format(work.date, 'MM.dd (eee)', { locale: ko })}</p>
+                              <p className="text-base text-gray-900 font-medium flex-1 truncate">{work.description}</p>
+                              <p className="text-base font-semibold text-gray-900 flex-shrink-0 mr-2">{work.amount.toLocaleString()}원</p>
+                              <div className="flex items-center space-x-1 flex-shrink-0">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditWork(work);
+                                  }}
+                                  className="text-gray-600 hover:text-gray-700 transition-colors p-1"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteWork(work.id, work.project);
+                                  }}
+                                  className="text-rose-600 hover:text-rose-700 transition-colors p-1"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {work.notes && (
+                              <p className="text-sm text-gray-600 mt-2">{work.notes}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {firstHalf.length === 0 && projectGroups.length === 0 && (
+                  <div className="text-center py-8 text-gray-500 bg-white border border-gray-200 rounded-lg">
+                    추가내역이 없습니다
+                  </div>
+                )}
+              </div>
+
+              {/* 세 번째 열 - 두 번째 절반 */}
+              <div className="space-y-4">
+                {secondHalf.map((group) => (
+                  <div key={group.projectName} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    {/* Project Header */}
+                    <button
+                      onClick={() => toggleProject(group.projectName)}
+                      className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
+                      <h3 className="font-bold text-lg text-gray-900 truncate flex-1 text-left mr-3">{group.projectName}</h3>
+                      <div className="flex items-center space-x-2 flex-shrink-0">
+                        <p className="text-base font-semibold text-gray-700">
+                          {group.works.length}건 {group.totalAmount.toLocaleString()}원
+                        </p>
+                        {expandedProjects.has(group.projectName) ? (
+                          <ChevronUp className="h-5 w-5 text-gray-600" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-gray-600" />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Project Works List */}
+                    {expandedProjects.has(group.projectName) && (
+                      <div className="divide-y divide-gray-200">
+                        {group.works.map((work) => (
+                          <div
+                            key={work.id}
+                            onClick={() => setSelectedWorkId(work.id)}
+                            className={`p-4 cursor-pointer transition-colors ${
+                              selectedWorkId === work.id
+                                ? 'bg-blue-50 border-l-4 border-blue-500'
+                                : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-4">
+                              <p className="text-sm text-gray-600 flex-shrink-0">{format(work.date, 'MM.dd (eee)', { locale: ko })}</p>
+                              <p className="text-base text-gray-900 font-medium flex-1 truncate">{work.description}</p>
+                              <p className="text-base font-semibold text-gray-900 flex-shrink-0 mr-2">{work.amount.toLocaleString()}원</p>
+                              <div className="flex items-center space-x-1 flex-shrink-0">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditWork(work);
+                                  }}
+                                  className="text-gray-600 hover:text-gray-700 transition-colors p-1"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteWork(work.id, work.project);
+                                  }}
+                                  className="text-rose-600 hover:text-rose-700 transition-colors p-1"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {work.notes && (
+                              <p className="text-sm text-gray-600 mt-2">{work.notes}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* Additional Work Modal */}
