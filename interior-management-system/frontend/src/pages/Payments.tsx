@@ -744,7 +744,7 @@ const Payments = () => {
         `은행: ${bankName}\n` +
         `계좌: ${accountNumber}\n` +
         `금액: ${payment.amount.toLocaleString()}원\n\n` +
-        `※ 앱이 실행되면 이체 정보가 자동으로 입력됩니다.`
+        `※ 이체 정보가 클립보드에 복사됩니다.`
       );
 
       if (!confirmed) return;
@@ -783,45 +783,59 @@ const Payments = () => {
       const cleanAccountNumber = accountNumber.replace(/-/g, '');
 
       // 계좌번호와 은행정보를 클립보드에 복사
-      const transferInfo = `${bankName} ${accountNumber} ${accountHolder} ${payment.amount.toLocaleString()}원`;
+      const transferInfo = `${bankName}\n${accountNumber}\n${accountHolder}\n${payment.amount.toLocaleString()}원`;
       try {
-        await navigator.clipboard.writeText(transferInfo);
-        toast.success('이체 정보가 클립보드에 복사되었습니다');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(transferInfo);
+          toast.success('이체 정보가 클립보드에 복사되었습니다');
+        }
       } catch (err) {
         console.log('클립보드 복사 실패:', err);
+        // 클립보드 실패는 치명적이지 않으므로 계속 진행
       }
 
-      // KB스타기업뱅킹 앱 URL 스킴 시도
-      // KB기업은행/KB스타뱅킹의 딥링크 형식
-      const kbStarUrl = `kbbank://transfer?bankcode=${bankCode}&account=${cleanAccountNumber}&amount=${payment.amount}&name=${encodeURIComponent(accountHolder)}`;
+      // KB스타기업뱅킹 앱 실행 시도
+      toast('KB스타기업뱅킹 앱을 실행합니다...', {
+        icon: 'ℹ️',
+        duration: 3000
+      });
 
-      // 웹 기반 KB스타기업뱅킹 URL (앱이 없을 경우)
-      const kbStarWebUrl = `https://obank.kbstar.com/quics?page=C025256`;
+      // 방법 1: 단순 앱 열기 (가장 안전)
+      const kbStarAppUrl = 'kbbank://';
 
-      toast.info('KB스타기업뱅킹 앱을 실행합니다...', { duration: 2000 });
+      // 방법 2: 이체 화면으로 바로 이동 시도 (딥링크)
+      const kbStarTransferUrl = `kbbank://transfer?bankcode=${bankCode}&account=${cleanAccountNumber}&amount=${payment.amount}&name=${encodeURIComponent(accountHolder)}`;
 
-      // 딥링크로 앱 실행 시도
-      window.location.href = kbStarUrl;
+      // iframe을 사용한 앱 실행 (모바일에서 더 안전)
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = kbStarAppUrl;
+      document.body.appendChild(iframe);
 
-      // 3초 후 앱이 실행되지 않았으면 웹 버전 또는 안내 표시
+      // iframe 제거
       setTimeout(() => {
-        const openWeb = window.confirm(
-          'KB스타기업뱅킹 앱이 설치되어 있지 않거나 실행되지 않았습니다.\n\n' +
-          '이체 정보가 클립보드에 복사되었습니다:\n' +
-          `${transferInfo}\n\n` +
-          '웹 기반 KB스타기업뱅킹을 여시겠습니까?\n' +
-          '(또는 앱을 직접 실행하여 붙여넣기 하세요)'
-        );
-
-        if (openWeb) {
-          window.open(kbStarWebUrl, '_blank');
-          toast.info('이체 정보를 수동으로 입력해주세요');
+        if (iframe && iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
         }
-      }, 3000);
+      }, 100);
+
+      // 추가 안내 메시지
+      setTimeout(() => {
+        toast(
+          `앱이 실행되면 이체 정보를 입력해주세요.\n\n` +
+          `받는분: ${accountHolder}\n` +
+          `계좌: ${accountNumber}\n` +
+          `금액: ${payment.amount.toLocaleString()}원`,
+          {
+            icon: '💳',
+            duration: 5000
+          }
+        );
+      }, 1000);
 
     } catch (error) {
       console.error('즉시송금 오류:', error);
-      toast.error('처리 중 오류가 발생했습니다');
+      toast.error(`처리 중 오류가 발생했습니다: ${(error as Error).message}`);
     }
   };
 
