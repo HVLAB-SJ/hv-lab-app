@@ -290,6 +290,7 @@ const SpecBook = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
   const subImagesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const initialSubImagesRef = useRef<string[]>([]);
 
   // DnD 센서 설정
   const sensors = useSensors(
@@ -596,7 +597,9 @@ const SpecBook = () => {
   // 이미지 클릭 - Sub 이미지 모달 열기
   const handleImageClick = (item: SpecBookItem) => {
     setSelectedItemForImages(item);
-    setSubImages(item.sub_images || []);
+    const initialImages = item.sub_images || [];
+    setSubImages(initialImages);
+    initialSubImagesRef.current = initialImages;
     setIsSubImageModalOpen(true);
   };
 
@@ -665,6 +668,10 @@ const SpecBook = () => {
   useEffect(() => {
     if (!selectedItemForImages || !isSubImageModalOpen) return;
 
+    // 초기 로드인지 확인 (실제로 변경되었는지 확인)
+    const hasChanged = JSON.stringify(subImages) !== JSON.stringify(initialSubImagesRef.current);
+    if (!hasChanged) return;
+
     // 이전 타이머 취소
     if (subImagesSaveTimeoutRef.current) {
       clearTimeout(subImagesSaveTimeoutRef.current);
@@ -677,7 +684,8 @@ const SpecBook = () => {
         await api.put(`/specbook/${selectedItemForImages.id}/sub-images`, {
           sub_images: subImages
         });
-        // 성공 시 아이템 목록 업데이트
+        // 성공 시 초기값 업데이트 및 아이템 목록 업데이트
+        initialSubImagesRef.current = subImages;
         loadItems();
         if (view === 'library') {
           loadAllLibraryItems();
