@@ -833,4 +833,160 @@ router.get('/tosspay/limit', authenticateToken, isManager, async (req, res) => {
   }
 });
 
+// ==================== 오픈뱅킹 즉시송금 ====================
+
+// 오픈뱅킹 즉시송금 요청
+router.post('/openbanking/instant-transfer', authenticateToken, isManager, async (req, res) => {
+  try {
+    const { paymentId, receiverName, receiverBank, receiverAccount, amount, description } = req.body;
+
+    console.log('[POST /api/payments/openbanking/instant-transfer] 송금 요청:', {
+      paymentId,
+      receiverName,
+      receiverBank,
+      receiverAccount,
+      amount
+    });
+
+    // 필수 정보 확인
+    if (!receiverName || !receiverBank || !receiverAccount || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: '필수 정보가 누락되었습니다.'
+      });
+    }
+
+    // 은행 코드 매핑
+    const bankCodeMap = {
+      'KB국민은행': '004',
+      '신한은행': '088',
+      '우리은행': '020',
+      '하나은행': '081',
+      'NH농협은행': '011',
+      '기업은행': '003',
+      'SC제일은행': '023',
+      '씨티은행': '027',
+      '새마을금고': '045',
+      '대구은행': '031',
+      '부산은행': '032',
+      '경남은행': '039',
+      '광주은행': '034',
+      '전북은행': '037',
+      '제주은행': '035',
+      '카카오뱅크': '090',
+      '케이뱅크': '089',
+      '토스뱅크': '092',
+    };
+
+    const bankCode = bankCodeMap[receiverBank];
+    if (!bankCode) {
+      return res.status(400).json({
+        success: false,
+        error: `지원하지 않는 은행입니다: ${receiverBank}. 토스 앱을 통한 송금을 이용해주세요.`
+      });
+    }
+
+    // 계좌번호에서 하이픈 제거
+    const cleanAccountNumber = receiverAccount.replace(/-/g, '');
+
+    // 오픈뱅킹 API 설정 확인
+    const companyFintechUseNum = process.env.COMPANY_FINTECH_USE_NUM;
+    const institutionCode = process.env.OPENBANKING_INSTITUTION_CODE;
+
+    // 오픈뱅킹 토큰 조회 (데이터베이스에서)
+    const token = await new Promise((resolve, reject) => {
+      db.get(
+        'SELECT access_token FROM kb_banking_tokens WHERE id = 1 AND expires_at > datetime("now") ORDER BY created_at DESC LIMIT 1',
+        [],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (!token || !companyFintechUseNum || !institutionCode) {
+      // 오픈뱅킹 API가 설정되지 않은 경우
+      return res.status(503).json({
+        success: false,
+        error: '오픈뱅킹 API가 설정되지 않았습니다. 관리자에게 오픈뱅킹 연동을 요청해주세요.',
+        fallbackToManual: true
+      });
+    }
+
+    // 거래고유번호 생성 (기관코드 + 날짜시간 + 일련번호)
+    const bankTranId = `${institutionCode}U${Date.now()}${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`.substring(0, 20);
+
+    // 오픈뱅킹 출금이체 API 호출
+    const apiUrl = process.env.OPENBANKING_API_URL || 'https://testapi.openbanking.or.kr';
+    const openBankingResponse = await fetch(`${apiUrl}/v2.0/transfer/withdraw/fin_num`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token.access_token}`
+      },
+      body: JSON.stringify({
+        bank_tran_id: bankTranId,
+        cntr_account_type: 'N',
+        cntr_account_num: process.env.COMPANY_ACCOUNT_NO || '',
+        dps_print_content: (description || `${receiverName}님에게 송금`).substring(0, 16),
+        fintech_use_num: companyFintechUseNum,
+        wd_print_content: (description || '송금').substring(0, 16),
+        tran_amt: String(amount),
+        tran_dtime: new Date().toISOString().replace(/[-:T.]/g, '').substring(0, 14),
+        req_client_name: receiverName,
+        req_client_bank_code: bankCode,
+        req_client_account_num: cleanAccountNumber,
+        req_client_num: String(paymentId),
+        transfer_purpose: 'TR',
+        recv_client_name: receiverName,
+        recv_client_bank_code: bankCode,
+        recv_client_account_num: cleanAccountNumber
+      })
+    });
+
+    const openbankingResult = await openBankingResponse.json();
+
+    if (openbankingResult.rsp_code === 'A0000' || openbankingResult.api_tran_id) {
+      // 송금 성공
+      db.run(
+        `UPDATE payment_requests
+         SET status = ?,
+             paid_at = ?,
+             openbanking_tran_id = ?
+         WHERE id = ?`,
+        ['completed', new Date().toISOString(), openbankingResult.api_tran_id, paymentId],
+        (err) => {
+          if (err) {
+            console.error('송금 정보 저장 실패:', err);
+          }
+        }
+      );
+
+      res.json({
+        success: true,
+        tranId: openbankingResult.api_tran_id,
+        message: '송금이 완료되었습니다'
+      });
+    } else {
+      // 송금 실패
+      console.error('오픈뱅킹 송금 실패:', openbankingResult);
+      res.status(400).json({
+        success: false,
+        error: openbankingResult.rsp_message || '송금에 실패했습니다',
+        errorCode: openbankingResult.rsp_code,
+        fallbackToManual: true
+      });
+    }
+
+  } catch (error) {
+    console.error('[POST /api/payments/openbanking/instant-transfer] 오류:', error);
+    res.status(500).json({
+      success: false,
+      error: '송금 요청 처리 중 오류가 발생했습니다.',
+      fallbackToManual: true
+    });
+  }
+});
+
 module.exports = router;

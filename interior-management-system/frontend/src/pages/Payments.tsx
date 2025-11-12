@@ -724,7 +724,7 @@ const Payments = () => {
     setShowDetailModal(true);
   };
 
-  // 즉시송금 - 토스페이 API 또는 계좌정보 복사
+  // 즉시송금 - API를 통한 자동 송금
   const handleInstantTransfer = async (payment: PaymentRequest) => {
     try {
       // 필수 정보 확인 - bankInfo 객체 또는 개별 필드 사용
@@ -737,51 +737,44 @@ const Payments = () => {
         return;
       }
 
-      // 토스페이 API 설정 확인
-      const hasTossPayAPI = process.env.TOSSPAY_API_KEY &&
-                            process.env.TOSSPAY_SECRET_KEY &&
-                            process.env.TOSSPAY_SENDER_ACCOUNT !== '1002-000-0000';
+      // 오픈뱅킹 API를 통한 자동 송금
+      const confirmed = window.confirm(
+        `${accountHolder}님에게 ${payment.amount.toLocaleString()}원을 송금하시겠습니까?\n\n` +
+        `은행: ${bankName}\n` +
+        `계좌: ${accountNumber}\n` +
+        `예금주: ${accountHolder}\n\n` +
+        `※ 송금이 즉시 실행됩니다.`
+      );
 
-      if (hasTossPayAPI) {
-        // 토스페이 API 사용
-        const confirmed = window.confirm(
-          `토스페이로 ${accountHolder}님에게 ${payment.amount.toLocaleString()}원을 송금하시겠습니까?\n\n` +
-          `은행: ${bankName}\n` +
-          `계좌: ${accountNumber}\n` +
-          `예금주: ${accountHolder}\n\n` +
-          `※ 송금이 즉시 실행됩니다.`
-        );
+      if (!confirmed) return;
 
-        if (!confirmed) return;
+      const loadingToast = toast.loading('송금을 처리 중입니다...');
 
-        const loadingToast = toast.loading('토스페이로 송금을 처리 중입니다...');
+      const response = await fetch('/api/payments/openbanking/instant-transfer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          paymentId: payment.id,
+          receiverName: accountHolder,
+          receiverBank: bankName,
+          receiverAccount: accountNumber,
+          amount: payment.amount,
+          description: `${payment.project} - ${payment.itemName || payment.purpose}`
+        })
+      });
 
-        const response = await fetch('/api/payments/tosspay/instant-transfer', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            paymentId: payment.id,
-            receiverName: accountHolder,
-            receiverBank: bankName,
-            receiverAccount: accountNumber,
-            amount: payment.amount,
-            description: `${payment.project} - ${payment.itemName || payment.purpose}`
-          })
-        });
+      const result = await response.json();
+      toast.dismiss(loadingToast);
 
-        const result = await response.json();
-        toast.dismiss(loadingToast);
-
-        if (result.success) {
-          toast.success('송금이 완료되었습니다!');
-          await loadPaymentsFromAPI();
-        } else {
-          toast.error(result.error || '송금 요청에 실패했습니다');
-        }
-      } else {
+      if (result.success) {
+        toast.success('송금이 완료되었습니다!');
+        await loadPaymentsFromAPI();
+      } else if (result.fallbackToManual) {
+        // API 송금 실패 시 토스 딥링크로 폴백
+        toast.error(result.error || '자동 송금에 실패했습니다. 수동 송금을 시도합니다.');
         // 토스 딥링크를 이용한 즉시송금
         // 은행 코드 매핑 (토스 표준 은행 코드)
         const bankCodes: Record<string, string> = {
@@ -879,6 +872,9 @@ const Payments = () => {
             );
           }
         }
+      } else {
+        // 일반 오류
+        toast.error(result.error || '송금에 실패했습니다');
       }
     } catch (error) {
       console.error('즉시송금 오류:', error);
