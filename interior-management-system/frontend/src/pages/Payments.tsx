@@ -216,60 +216,34 @@ const Payments = () => {
 
       if (completeId) {
         console.log('[자동 송금완료] URL 파라미터 확인:', completeId);
-        console.log('[자동 송금완료] 현재 payments 개수:', payments.length);
-        console.log('[자동 송금완료] payments IDs:', payments.map(p => p.id));
 
         // 모바일에서 내역 화면으로 전환
         setMobileView('list');
         // 대기중 필터로 전환 (송금 완료 전이므로)
         setStatusFilter('pending');
 
-        // payments가 아직 로드되지 않았으면 대기
-        if (payments.length === 0) {
-          console.log('[자동 송금완료] payments 로드 대기 중...');
-          return;
-        }
-
         try {
-          // ID를 문자열과 숫자 모두 비교
-          const payment = payments.find(p =>
-            String(p.id) === String(completeId)
-          );
+          // 항상 최신 데이터를 로드
+          console.log('[자동 송금완료] 최신 데이터 로드 중...');
+          await loadPaymentsFromAPI();
 
-          console.log('[자동 송금완료] 결제 검색 결과:', payment);
+          // 로드 후 다시 payments 확인 (로컬 상태가 아직 업데이트 안됐을 수 있으므로 직접 API 호출)
+          console.log('[자동 송금완료] API로 직접 결제 상태 업데이트 시도:', completeId);
 
-          if (payment) {
-            if (payment.status === 'completed') {
-              console.log('[자동 송금완료] 이미 완료된 결제');
-              toast.info('이미 송금완료 처리된 내역입니다');
-              // 송금완료 필터로 전환
-              setStatusFilter('completed');
-              // URL에서 파라미터 제거
-              window.history.replaceState({}, '', '/payments');
-            } else {
-              console.log('[자동 송금완료] API 호출 시작:', completeId);
-              const result = await updatePaymentInAPI(String(completeId), { status: 'completed' });
-              console.log('[자동 송금완료] API 호출 결과:', result);
+          // 바로 API를 통해 상태 업데이트 (결제가 존재하는지 여부와 관계없이)
+          await updatePaymentInAPI(String(completeId), { status: 'completed' });
 
-              toast.success('송금완료 처리되었습니다');
+          console.log('[자동 송금완료] 업데이트 성공');
+          toast.success('송금완료 처리되었습니다');
 
-              // 송금완료 필터로 전환하여 결과 확인
-              setStatusFilter('completed');
+          // 송금완료 필터로 전환하여 결과 확인
+          setStatusFilter('completed');
 
-              // URL에서 파라미터 제거
-              window.history.replaceState({}, '', '/payments');
+          // URL에서 파라미터 제거
+          window.history.replaceState({}, '', '/payments');
 
-              // 데이터 새로고침
-              await loadPaymentsFromAPI();
-            }
-          } else {
-            // payments가 로드되었는데도 찾지 못한 경우
-            console.error('[자동 송금완료] 결제 요청을 찾을 수 없음:', completeId);
-            console.error('[자동 송금완료] 사용 가능한 IDs:', payments.map(p => ({ id: p.id, status: p.status })));
-            toast.error('결제 요청을 찾을 수 없습니다 (ID: ' + completeId + ')');
-            // URL에서 파라미터 제거
-            window.history.replaceState({}, '', '/payments');
-          }
+          // 데이터 다시 새로고침
+          await loadPaymentsFromAPI();
         } catch (error) {
           console.error('[자동 송금완료] 처리 실패:', error);
           toast.error('송금완료 처리에 실패했습니다: ' + (error as Error).message);
@@ -280,7 +254,7 @@ const Payments = () => {
     };
 
     handleAutoComplete();
-  }, [payments, loadPaymentsFromAPI]);
+  }, [loadPaymentsFromAPI, updatePaymentInAPI]);
 
   // 공정 변경 시 해당 공정의 협력업체 필터링
   useEffect(() => {
