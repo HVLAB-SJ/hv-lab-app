@@ -1138,7 +1138,7 @@ const SpecBook = () => {
           /* 라이브러리 뷰: 전체 폭 */
           <div className="flex-1 flex flex-col overflow-hidden pr-4">
           {/* 버튼 영역 */}
-          <div className="mb-4 bg-gray-50 rounded-lg p-4">
+          <div className="mb-2 bg-gray-50 rounded-lg p-2">
             <div className="flex flex-row gap-4">
               {/* 좌측 절반 */}
               <div className="w-1/2">
@@ -1148,7 +1148,7 @@ const SpecBook = () => {
                       setView('library');
                       setSelectedProject(null);
                     }}
-                    className={`h-12 rounded-lg font-medium transition-colors text-xs md:text-sm flex items-center justify-center ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
+                    className={`h-9 rounded-lg font-medium transition-colors text-xs md:text-sm flex items-center justify-center ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
                   >
                     스펙 라이브러리
                   </button>
@@ -1168,7 +1168,7 @@ const SpecBook = () => {
                         setSelectedProject(null);
                       }
                     }}
-                    className="h-12 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
+                    className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
                   >
                     <option value="">프로젝트 선택</option>
                     {projects.map(project => (
@@ -1236,7 +1236,7 @@ const SpecBook = () => {
           /* 프로젝트 뷰: 좌우 분할 - 스펙 라이브러리 + 프로젝트 아이템 */
           <div className="flex-1 flex flex-col overflow-hidden pr-4">
             {/* 버튼 영역 */}
-            <div className="mb-4 bg-gray-50 rounded-lg p-4">
+            <div className="mb-2 bg-gray-50 rounded-lg p-2">
               <div className="flex flex-row gap-4">
                 {/* 좌측 절반 */}
                 <div className="w-1/2">
@@ -1246,7 +1246,7 @@ const SpecBook = () => {
                         setView('library');
                         setSelectedProject(null);
                       }}
-                      className="h-12 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 text-xs md:text-sm flex items-center justify-center"
+                      className="h-9 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 text-xs md:text-sm flex items-center justify-center"
                     >
                       스펙 라이브러리
                     </button>
@@ -1266,7 +1266,7 @@ const SpecBook = () => {
                           setSelectedProject(null);
                         }
                       }}
-                      className="h-12 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
+                      className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
                     >
                       <option value="">프로젝트 선택</option>
                       {projects.map(project => (
