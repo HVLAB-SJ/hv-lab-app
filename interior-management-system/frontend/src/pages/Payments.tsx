@@ -1588,8 +1588,18 @@ const Payments = () => {
                                         onClick={async (e) => {
                                           e.stopPropagation();
                                           if (window.confirm('이 결제요청을 삭제하시겠습니까?')) {
-                                            await deletePaymentFromAPI(record.id);
-                                            toast.success('삭제되었습니다');
+                                            try {
+                                              await deletePaymentFromAPI(record.id);
+                                              toast.success('삭제되었습니다');
+                                            } catch (error: any) {
+                                              console.error('삭제 실패:', error);
+                                              if (error.response?.status === 404) {
+                                                toast.error('이미 삭제된 항목입니다. 목록을 새로고침합니다.');
+                                                await loadPaymentsFromAPI();
+                                              } else {
+                                                toast.error('삭제에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+                                              }
+                                            }
                                           }
                                         }}
                                         className="p-0.5 text-gray-300 hover:text-red-500 transition-colors"
