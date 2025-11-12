@@ -1745,27 +1745,47 @@ const Payments = () => {
                       </div>
 
                       {/* 버튼 그룹 */}
-                      {/* 송금 버튼 (manager 이상만) */}
+                      {/* 송금 버튼 (manager 이상만, pending 상태만) */}
                       {statusFilter === 'pending' && user?.role && ['manager', 'admin'].includes(user.role) && (
                         <div className="flex items-center gap-2">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              if (record.status === 'completed') {
+                                toast.info('이미 송금완료 처리된 건입니다');
+                                return;
+                              }
                               handleInstantTransfer(record);
                             }}
-                            className="flex-1 py-1.5 px-2 bg-gray-700 text-white rounded text-xs font-medium hover:bg-gray-800 transition-colors"
+                            disabled={record.status === 'completed'}
+                            className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors ${
+                              record.status === 'completed'
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-gray-700 text-white hover:bg-gray-800'
+                            }`}
                           >
-                            즉시송금
+                            {record.status === 'completed' ? '송금완료됨' : '즉시송금'}
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleMarkAsCompleted(record.id);
                             }}
-                            className="flex-1 py-1.5 px-2 text-white rounded text-xs font-medium transition-colors"
-                            style={{ backgroundColor: '#5f81a5' }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4a6b8a'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#5f81a5'}
+                            disabled={record.status === 'completed'}
+                            className={`flex-1 py-1.5 px-2 text-white rounded text-xs font-medium transition-colors ${
+                              record.status === 'completed' ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                            style={{ backgroundColor: record.status === 'completed' ? '#9ca3af' : '#5f81a5' }}
+                            onMouseEnter={(e) => {
+                              if (record.status !== 'completed') {
+                                e.currentTarget.style.backgroundColor = '#4a6b8a';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (record.status !== 'completed') {
+                                e.currentTarget.style.backgroundColor = '#5f81a5';
+                              }
+                            }}
                           >
                             송금완료
                           </button>
