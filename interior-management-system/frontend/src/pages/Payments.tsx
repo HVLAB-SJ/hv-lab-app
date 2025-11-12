@@ -1065,6 +1065,7 @@ const Payments = () => {
           }}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
+          <option value="">프로젝트 선택</option>
           {projects.filter(p => p.status !== 'completed').map(project => (
             <option key={project.id} value={project.name}>{project.name}</option>
           ))}
@@ -1128,6 +1129,7 @@ const Payments = () => {
                 }}
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
+                <option value="">프로젝트 선택</option>
                 {projects.filter(p => p.status !== 'completed').map(project => (
                   <option key={project.id} value={project.name}>{project.name}</option>
                 ))}
