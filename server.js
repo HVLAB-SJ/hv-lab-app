@@ -28,6 +28,7 @@ const { addExpectedPaymentDates } = require('./server/migrations/add-expected-pa
 const createKBBankingTokensTable = require('./server/migrations/create-kb-banking-tokens-table');
 const addKakaoPayFields = require('./server/migrations/add-kakaopay-fields');
 const createSpecbookTable = require('./server/migrations/create-specbook-table');
+const addSubImagesColumn = require('./server/migrations/add-sub-images-column');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
@@ -37,6 +38,7 @@ addExpectedPaymentDates().catch(console.error);
 createKBBankingTokensTable().catch(console.error);
 addKakaoPayFields().catch(console.error);
 createSpecbookTable().catch(console.error);
+addSubImagesColumn().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";

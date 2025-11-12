@@ -199,7 +199,22 @@ router.get('/library', authenticateToken, (req, res) => {
       console.error('스펙북 라이브러리 조회 실패:', err);
       return res.status(500).json({ error: '스펙북 라이브러리 조회 실패' });
     }
-    res.json(rows);
+
+    // sub_images JSON 파싱
+    const parsedRows = rows.map(row => {
+      if (row.sub_images) {
+        try {
+          row.sub_images = JSON.parse(row.sub_images);
+        } catch (e) {
+          row.sub_images = [];
+        }
+      } else {
+        row.sub_images = [];
+      }
+      return row;
+    });
+
+    res.json(parsedRows);
   });
 });
 
@@ -236,7 +251,22 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
       console.error('프로젝트 스펙 조회 실패:', err);
       return res.status(500).json({ error: '프로젝트 스펙 조회 실패' });
     }
-    res.json(rows);
+
+    // sub_images JSON 파싱
+    const parsedRows = rows.map(row => {
+      if (row.sub_images) {
+        try {
+          row.sub_images = JSON.parse(row.sub_images);
+        } catch (e) {
+          row.sub_images = [];
+        }
+      } else {
+        row.sub_images = [];
+      }
+      return row;
+    });
+
+    res.json(parsedRows);
   });
 });
 
@@ -533,6 +563,46 @@ router.put('/reorder', authenticateToken, isManager, (req, res) => {
       );
     });
   });
+});
+
+// Sub 이미지 업데이트
+router.put('/:id/sub-images', authenticateToken, isManager, (req, res) => {
+  const { id } = req.params;
+  const { sub_images } = req.body;
+
+  if (!sub_images || !Array.isArray(sub_images)) {
+    return res.status(400).json({ error: 'sub_images 배열이 필요합니다.' });
+  }
+
+  // 각 이미지가 유효한 base64인지 검증
+  try {
+    sub_images.forEach((img) => {
+      if (img) validateBase64Image(img);
+    });
+  } catch (error) {
+    console.error('Sub 이미지 검증 실패:', error);
+    return res.status(400).json({ error: 'Sub 이미지 검증 실패' });
+  }
+
+  // JSON 문자열로 변환하여 저장
+  const sub_images_json = JSON.stringify(sub_images);
+
+  db.run(
+    'UPDATE specbook_items SET sub_images = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [sub_images_json, id],
+    function(err) {
+      if (err) {
+        console.error('Sub 이미지 업데이트 실패:', err);
+        return res.status(500).json({ error: 'Sub 이미지 업데이트 실패' });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ error: '스펙북 아이템을 찾을 수 없습니다.' });
+      }
+
+      res.json({ message: 'Sub 이미지가 업데이트되었습니다.' });
+    }
+  );
 });
 
 module.exports = router;
