@@ -552,6 +552,8 @@ async function sendPaymentNotification(data) {
 
     // CoolSMS 문자 발송 데이터
     const notificationData = {
+      paymentId: data.paymentId || data.id,  // 송금완료 링크를 위한 payment ID
+      id: data.id || data.paymentId,
       projectName: project?.name || '프로젝트',
       amount: data.amount,
       accountHolder: data.account_holder || '',
