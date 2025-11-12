@@ -164,10 +164,11 @@ class CoolSMSService {
             taxPart = '(3.3%)';
         }
 
-        // 토스 딥링크 생성 - 은행명을 토스 인식 형식으로 변환
+        // 토스 딥링크 생성 - 은행 코드와 은행명을 함께 전달
         const cleanAccountNumber = (data.accountNumber || '').replace(/-/g, '');
         const tossBankName = this.convertToTossBankName(data.bankName || '');
-        const tossDeeplink = `supertoss://send?amount=${data.amount}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}`;
+        const bankCode = this.getBankCode(data.bankName || '');
+        const tossDeeplink = `supertoss://send?amount=${data.amount}&bankCode=${bankCode}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}`;
 
         // 송금완료 링크 생성
         const completeLink = `https://hvlab.app/payments?complete=${data.paymentId || data.id}`;
@@ -260,6 +261,44 @@ class CoolSMSService {
         };
 
         return bankNameMap[bankName] || bankName;
+    }
+
+    /**
+     * 은행명을 은행 코드로 변환
+     * @param {string} bankName - 은행명
+     */
+    getBankCode(bankName) {
+        const bankCodeMap = {
+            'KB국민은행': '004',
+            '국민은행': '004',
+            '신한은행': '088',
+            '우리은행': '020',
+            '하나은행': '081',
+            'NH농협은행': '011',
+            '농협은행': '011',
+            'IBK기업은행': '003',
+            '기업은행': '003',
+            'SC제일은행': '023',
+            '한국씨티은행': '027',
+            '씨티은행': '027',
+            '새마을금고': '045',
+            '신협': '048',
+            '우체국': '071',
+            'KDB산업은행': '002',
+            '산업은행': '002',
+            '수협은행': '007',
+            '대구은행': '031',
+            '부산은행': '032',
+            '경남은행': '039',
+            '광주은행': '034',
+            '전북은행': '037',
+            '제주은행': '035',
+            '카카오뱅크': '090',
+            '케이뱅크': '089',
+            '토스뱅크': '092'
+        };
+
+        return bankCodeMap[bankName] || '004';
     }
 }
 

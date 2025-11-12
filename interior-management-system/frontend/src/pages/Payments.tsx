@@ -214,27 +214,51 @@ const Payments = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const completeId = urlParams.get('complete');
 
-      if (completeId && payments.length > 0) {
+      if (completeId) {
+        console.log('[자동 송금완료] 처리 시작:', completeId);
+
         try {
-          const payment = payments.find(p => p.id === completeId);
-          if (payment && payment.status !== 'completed') {
-            await updatePaymentInAPI(completeId, { status: 'completed' });
-            toast.success('송금완료 처리되었습니다');
+          // ID를 문자열과 숫자 모두 비교
+          const payment = payments.find(p =>
+            String(p.id) === String(completeId)
+          );
 
-            // URL에서 파라미터 제거
-            window.history.replaceState({}, '', '/payments');
+          console.log('[자동 송금완료] 결제 찾음:', payment);
 
-            // 데이터 새로고침
-            loadPaymentsFromAPI();
+          if (payment) {
+            if (payment.status === 'completed') {
+              toast.info('이미 송금완료 처리된 내역입니다');
+            } else {
+              await updatePaymentInAPI(String(completeId), { status: 'completed' });
+              toast.success('송금완료 처리되었습니다');
+              console.log('[자동 송금완료] 처리 완료');
+
+              // 데이터 새로고침
+              await loadPaymentsFromAPI();
+            }
+          } else if (payments.length > 0) {
+            // payments가 로드되었는데도 찾지 못한 경우
+            console.error('[자동 송금완료] 결제 요청을 찾을 수 없음:', completeId);
+            toast.error('결제 요청을 찾을 수 없습니다');
           }
+          // payments가 아직 로드되지 않은 경우는 다음 렌더링에서 재시도
+
+          // URL에서 파라미터 제거
+          window.history.replaceState({}, '', '/payments');
         } catch (error) {
-          console.error('자동 송금완료 처리 실패:', error);
+          console.error('[자동 송금완료] 처리 실패:', error);
           toast.error('송금완료 처리에 실패했습니다');
+
+          // URL에서 파라미터 제거
+          window.history.replaceState({}, '', '/payments');
         }
       }
     };
 
-    handleAutoComplete();
+    // payments가 로드된 후에만 실행
+    if (payments.length > 0) {
+      handleAutoComplete();
+    }
   }, [payments, loadPaymentsFromAPI]);
 
   // 공정 변경 시 해당 공정의 협력업체 필터링
@@ -812,8 +836,41 @@ const Payments = () => {
 
       const tossBankName = bankNameMap[bankName] || bankName;
 
-      // 토스 송금 URL 생성 (은행명을 토스 인식 형식으로 변환하여 전달)
-      const tossUrl = `supertoss://send?amount=${payment.amount}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}`;
+      // 은행 코드 매핑
+      const bankCodeMap: Record<string, string> = {
+        'KB국민은행': '004',
+        '국민은행': '004',
+        '신한은행': '088',
+        '우리은행': '020',
+        '하나은행': '081',
+        'NH농협은행': '011',
+        '농협은행': '011',
+        'IBK기업은행': '003',
+        '기업은행': '003',
+        'SC제일은행': '023',
+        '한국씨티은행': '027',
+        '씨티은행': '027',
+        '새마을금고': '045',
+        '신협': '048',
+        '우체국': '071',
+        'KDB산업은행': '002',
+        '산업은행': '002',
+        '수협은행': '007',
+        '대구은행': '031',
+        '부산은행': '032',
+        '경남은행': '039',
+        '광주은행': '034',
+        '전북은행': '037',
+        '제주은행': '035',
+        '카카오뱅크': '090',
+        '케이뱅크': '089',
+        '토스뱅크': '092'
+      };
+
+      const bankCode = bankCodeMap[bankName] || '004';
+
+      // 토스 송금 URL 생성 (은행 코드와 은행명을 함께 전달)
+      const tossUrl = `supertoss://send?amount=${payment.amount}&bankCode=${bankCode}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}`;
 
       // 토스 앱 실행 시도
       let appOpened = false;
