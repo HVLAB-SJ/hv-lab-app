@@ -220,59 +220,85 @@ const Payments = () => {
     return () => clearInterval(autoRefreshInterval);
   }, [loadPaymentsFromAPI]);
 
-  // URL 파라미터로 송금완료 자동 처리
+  // URL 파라미터로 결제 건 자동 열기
   useEffect(() => {
-    const handleAutoComplete = async () => {
+    const handleUrlParams = async () => {
       const urlParams = new URLSearchParams(window.location.search);
+      const paymentId = urlParams.get('id');
       const completeId = urlParams.get('complete');
 
-      if (completeId) {
+      // 결제 건 ID로 자동 열기
+      if (paymentId) {
+        console.log('[결제 자동 열기] URL 파라미터 확인:', paymentId);
+
+        // 로그인 확인
+        if (!user) {
+          console.log('[결제 자동 열기] 로그인 필요 - 대기 중');
+          return;
+        }
+
+        try {
+          // 최신 데이터 로드
+          await loadPaymentsFromAPI();
+
+          // 해당 결제 건 찾기
+          const payment = payments.find(p => String(p.id) === String(paymentId));
+
+          if (payment) {
+            console.log('[결제 자동 열기] 결제 건 찾음:', payment);
+
+            // 모바일에서 내역 화면으로 전환
+            setMobileView('list');
+
+            // 상태에 따라 필터 설정
+            if (payment.status === 'completed') {
+              setStatusFilter('completed');
+            } else {
+              setStatusFilter('pending');
+            }
+
+            // 상세보기 모달 열기
+            setDetailPayment(payment);
+            setShowDetailModal(true);
+
+            // URL에서 파라미터 제거
+            window.history.replaceState({}, '', '/payments');
+          } else {
+            console.error('[결제 자동 열기] 결제 건을 찾을 수 없음:', paymentId);
+            toast.error('결제 요청을 찾을 수 없습니다');
+            window.history.replaceState({}, '', '/payments');
+          }
+        } catch (error) {
+          console.error('[결제 자동 열기] 실패:', error);
+          window.history.replaceState({}, '', '/payments');
+        }
+      }
+
+      // 송금완료 자동 처리 (기존 기능 유지 - 삭제 예정)
+      else if (completeId) {
         console.log('[자동 송금완료] URL 파라미터 확인:', completeId);
-        console.log('[자동 송금완료] 현재 사용자:', user);
 
         // 로그인 확인
         if (!user) {
           console.log('[자동 송금완료] 로그인 필요 - 대기 중');
-          // URL에서 파라미터는 유지 (로그인 후 다시 처리하도록)
           return;
         }
 
         // 모바일에서 내역 화면으로 전환
         setMobileView('list');
-        // 대기중 필터로 전환 (송금 완료 전이므로)
         setStatusFilter('pending');
 
         try {
-          // 항상 최신 데이터를 로드
-          console.log('[자동 송금완료] 최신 데이터 로드 중...');
           await loadPaymentsFromAPI();
-
-          // 로드 후 다시 payments 확인 (로컬 상태가 아직 업데이트 안됐을 수 있으므로 직접 API 호출)
-          console.log('[자동 송금완료] API로 직접 결제 상태 업데이트 시도:', completeId);
-
-          // 바로 API를 통해 상태 업데이트 (결제가 존재하는지 여부와 관계없이)
           await updatePaymentInAPI(String(completeId), { status: 'completed' });
 
-          console.log('[자동 송금완료] 업데이트 성공');
           toast.success('송금완료 처리되었습니다');
-
-          // 송금완료 필터로 전환하여 결과 확인
           setStatusFilter('completed');
-
-          // URL에서 파라미터 제거
           window.history.replaceState({}, '', '/payments');
-
-          // 데이터 다시 새로고침
           await loadPaymentsFromAPI();
         } catch (error: any) {
           console.error('[자동 송금완료] 처리 실패:', error);
-          console.error('[자동 송금완료] 에러 상세:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status
-          });
 
-          // 에러 메시지 개선
           let errorMessage = '송금완료 처리에 실패했습니다';
           if (error.response?.status === 401) {
             errorMessage = '인증이 만료되었습니다. 다시 로그인해주세요';
@@ -285,14 +311,13 @@ const Payments = () => {
           }
 
           toast.error(errorMessage);
-          // URL에서 파라미터 제거
           window.history.replaceState({}, '', '/payments');
         }
       }
     };
 
-    handleAutoComplete();
-  }, [loadPaymentsFromAPI, updatePaymentInAPI, user]);
+    handleUrlParams();
+  }, [loadPaymentsFromAPI, updatePaymentInAPI, user, payments]);
 
   // 공정 변경 시 해당 공정의 협력업체 필터링
   useEffect(() => {

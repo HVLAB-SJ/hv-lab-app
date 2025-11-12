@@ -164,19 +164,13 @@ class CoolSMSService {
             taxPart = '(3.3%)';
         }
 
-        // 토스 딥링크 생성 - 은행 코드와 은행명을 함께 전달
-        const cleanAccountNumber = (data.accountNumber || '').replace(/-/g, '');
-        const tossBankName = this.convertToTossBankName(data.bankName || '');
-        const bankCode = this.getBankCode(data.bankName || '');
-        const tossDeeplink = `supertoss://send?amount=${data.amount}&bankCode=${bankCode}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}`;
-
-        // 송금완료 링크 생성
+        // 결제요청 상세보기 링크 생성
         const paymentId = data.paymentId || data.id;
-        console.log('[CoolSMS] 송금완료 링크 생성 - Payment ID:', paymentId);
-        const completeLink = `https://hvlab.app/payments?complete=${paymentId}`;
+        console.log('[CoolSMS] 결제요청 링크 생성 - Payment ID:', paymentId);
+        const paymentLink = `https://hvlab.app/payments?id=${paymentId}`;
 
         // 메시지 기본 구조 (공정/항목 제외한 부분)
-        const fixedPart = `\n${bankInfo}\n${amountPart}${taxPart}\n\n토스송금:\n${tossDeeplink}\n\n송금완료:\n${completeLink}`;
+        const fixedPart = `\n${bankInfo}\n${amountPart}${taxPart}\n\n결제요청:\n${paymentLink}`;
         const fixedBytes = Buffer.byteLength(`//\n${fixedPart}`, 'utf8');
         const projectBytes = Buffer.byteLength(projectPrefix, 'utf8');
 
@@ -212,9 +206,7 @@ class CoolSMSService {
         let message = `${projectPrefix}${fullContent}\n`;
         message += `${bankInfo}\n`;
         message += `${amountPart}${taxPart}\n\n`;
-        message += `토스송금:\n${tossDeeplink}\n\n`;
-        message += `※송금 후 아래 링크 클릭\n`;
-        message += `송금완료:\n${completeLink}`;
+        message += `결제요청:\n${paymentLink}`;
 
         return message;
     }
