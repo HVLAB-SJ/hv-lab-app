@@ -27,9 +27,10 @@ interface AdditionalWorkModalProps {
   work: AdditionalWork | null;
   onClose: () => void;
   onSave: (data: AdditionalWorkFormData) => void;
+  initialProject?: string;
 }
 
-const AdditionalWorkModal = ({ work, onClose, onSave }: AdditionalWorkModalProps) => {
+const AdditionalWorkModal = ({ work, onClose, onSave, initialProject }: AdditionalWorkModalProps) => {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
   const { projects } = useDataStore();
   const [isDragging, setIsDragging] = useState(false);
@@ -51,8 +52,12 @@ const AdditionalWorkModal = ({ work, onClose, onSave }: AdditionalWorkModalProps
       setValue('date', today);
       setImages([]);
       setImagePreview([]);
+      // initialProject가 있으면 프로젝트를 미리 선택
+      if (initialProject) {
+        setValue('project', initialProject);
+      }
     }
-  }, [work, setValue]);
+  }, [work, setValue, initialProject]);
 
   // 클립보드 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {

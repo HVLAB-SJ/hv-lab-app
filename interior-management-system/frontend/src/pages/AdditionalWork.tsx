@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Trash2, Edit, ChevronDown, ChevronUp, Upload, ImageIcon, X } from 'lucide-react';
+import { Trash2, Edit, ChevronDown, ChevronUp, Upload, ImageIcon, X, Plus } from 'lucide-react';
 import AdditionalWorkModal from '../components/AdditionalWorkModal';
 import additionalWorkService from '../services/additionalWorkService';
 import toast from 'react-hot-toast';
@@ -28,6 +28,7 @@ const AdditionalWork = () => {
   const [selectedWork, setSelectedWork] = useState<AdditionalWork | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  const [initialProject, setInitialProject] = useState<string | undefined>(undefined);
 
   // 이미지 관련 상태
   const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
@@ -193,13 +194,20 @@ const AdditionalWork = () => {
     }
   };
 
-  const handleAddWork = () => {
+  const handleAddWork = (projectName?: string) => {
     setSelectedWork(null);
+    setInitialProject(projectName);
     setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setInitialProject(undefined);
   };
 
   const handleEditWork = (work: AdditionalWork) => {
     setSelectedWork(work);
+    setInitialProject(undefined);
     setIsModalOpen(true);
   };
 
@@ -227,6 +235,7 @@ const AdditionalWork = () => {
       }
       await loadAdditionalWorks();
       setIsModalOpen(false);
+      setInitialProject(undefined);
     } catch (error) {
       console.error('Failed to save additional work:', error);
       toast.error('추가내역 저장에 실패했습니다');
@@ -322,22 +331,34 @@ const AdditionalWork = () => {
         {projectGroups.map((group) => (
           <div key={group.projectName} className="card overflow-hidden">
             {/* Project Header */}
-            <button
-              onClick={() => toggleProject(group.projectName)}
-              className="w-full p-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex-1 text-left">
+            <div className="w-full p-4 flex items-center justify-between bg-gray-50">
+              <button
+                onClick={() => toggleProject(group.projectName)}
+                className="flex-1 text-left hover:bg-gray-100 transition-colors -m-4 p-4 rounded-l"
+              >
                 <h3 className="font-bold text-base text-gray-900">{group.projectName}</h3>
                 <p className="text-sm text-gray-600 mt-1">
                   {group.works.length}건 · {group.totalAmount.toLocaleString()}원
                 </p>
+              </button>
+              <div className="flex items-center space-x-1 flex-shrink-0">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddWork(group.projectName);
+                  }}
+                  className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
+                  title="이 프로젝트에 추가내역 등록"
+                >
+                  <Plus className="h-4 w-4 text-gray-600" />
+                </button>
+                {expandedProjects.has(group.projectName) ? (
+                  <ChevronUp className="h-5 w-5 text-gray-600" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-600" />
+                )}
               </div>
-              {expandedProjects.has(group.projectName) ? (
-                <ChevronUp className="h-5 w-5 text-gray-600" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-600" />
-              )}
-            </button>
+            </div>
 
             {/* Project Works */}
             {expandedProjects.has(group.projectName) && (
@@ -409,22 +430,36 @@ const AdditionalWork = () => {
                 {firstHalf.map((group) => (
                   <div key={group.projectName} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                     {/* Project Header */}
-                    <button
-                      onClick={() => toggleProject(group.projectName)}
-                      className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <h3 className="font-bold text-lg text-gray-900 truncate flex-1 text-left mr-3">{group.projectName}</h3>
-                      <div className="flex items-center space-x-2 flex-shrink-0">
-                        <p className="text-base font-semibold text-gray-700">
-                          {group.works.length}건 {group.totalAmount.toLocaleString()}원
-                        </p>
+                    <div className="w-full px-4 py-3 flex items-center justify-between bg-gray-50">
+                      <button
+                        onClick={() => toggleProject(group.projectName)}
+                        className="flex-1 flex items-center justify-between hover:bg-gray-100 transition-colors -m-3 p-3 rounded-l"
+                      >
+                        <h3 className="font-bold text-lg text-gray-900 truncate flex-1 text-left mr-3">{group.projectName}</h3>
+                        <div className="flex items-center space-x-2 flex-shrink-0">
+                          <p className="text-base font-semibold text-gray-700">
+                            {group.works.length}건 {group.totalAmount.toLocaleString()}원
+                          </p>
+                        </div>
+                      </button>
+                      <div className="flex items-center space-x-1 flex-shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddWork(group.projectName);
+                          }}
+                          className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
+                          title="이 프로젝트에 추가내역 등록"
+                        >
+                          <Plus className="h-4 w-4 text-gray-600" />
+                        </button>
                         {expandedProjects.has(group.projectName) ? (
                           <ChevronUp className="h-5 w-5 text-gray-600" />
                         ) : (
                           <ChevronDown className="h-5 w-5 text-gray-600" />
                         )}
                       </div>
-                    </button>
+                    </div>
 
                     {/* Project Works List */}
                     {expandedProjects.has(group.projectName) && (
@@ -486,22 +521,36 @@ const AdditionalWork = () => {
                 {secondHalf.map((group) => (
                   <div key={group.projectName} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                     {/* Project Header */}
-                    <button
-                      onClick={() => toggleProject(group.projectName)}
-                      className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <h3 className="font-bold text-lg text-gray-900 truncate flex-1 text-left mr-3">{group.projectName}</h3>
-                      <div className="flex items-center space-x-2 flex-shrink-0">
-                        <p className="text-base font-semibold text-gray-700">
-                          {group.works.length}건 {group.totalAmount.toLocaleString()}원
-                        </p>
+                    <div className="w-full px-4 py-3 flex items-center justify-between bg-gray-50">
+                      <button
+                        onClick={() => toggleProject(group.projectName)}
+                        className="flex-1 flex items-center justify-between hover:bg-gray-100 transition-colors -m-3 p-3 rounded-l"
+                      >
+                        <h3 className="font-bold text-lg text-gray-900 truncate flex-1 text-left mr-3">{group.projectName}</h3>
+                        <div className="flex items-center space-x-2 flex-shrink-0">
+                          <p className="text-base font-semibold text-gray-700">
+                            {group.works.length}건 {group.totalAmount.toLocaleString()}원
+                          </p>
+                        </div>
+                      </button>
+                      <div className="flex items-center space-x-1 flex-shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddWork(group.projectName);
+                          }}
+                          className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
+                          title="이 프로젝트에 추가내역 등록"
+                        >
+                          <Plus className="h-4 w-4 text-gray-600" />
+                        </button>
                         {expandedProjects.has(group.projectName) ? (
                           <ChevronUp className="h-5 w-5 text-gray-600" />
                         ) : (
                           <ChevronDown className="h-5 w-5 text-gray-600" />
                         )}
                       </div>
-                    </button>
+                    </div>
 
                     {/* Project Works List */}
                     {expandedProjects.has(group.projectName) && (
@@ -640,8 +689,9 @@ const AdditionalWork = () => {
       {isModalOpen && (
         <AdditionalWorkModal
           work={selectedWork}
-          onClose={() => setIsModalOpen(false)}
+          onClose={handleCloseModal}
           onSave={handleSaveWork}
+          initialProject={initialProject}
         />
       )}
 
