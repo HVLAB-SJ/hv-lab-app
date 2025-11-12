@@ -220,8 +220,7 @@ const Payments = () => {
 
         // 로그인 확인
         if (!user) {
-          console.log('[자동 송금완료] 로그인 필요');
-          toast.error('송금완료 처리를 위해 먼저 로그인해주세요');
+          console.log('[자동 송금완료] 로그인 필요 - 대기 중');
           // URL에서 파라미터는 유지 (로그인 후 다시 처리하도록)
           return;
         }
