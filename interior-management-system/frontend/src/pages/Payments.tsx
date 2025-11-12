@@ -748,38 +748,43 @@ const Payments = () => {
 
       if (!confirmed) return;
 
-      // 은행 코드 매핑 (토스 은행 코드)
-      const bankCodes: Record<string, string> = {
-        'KB국민은행': '004',
-        '신한은행': '088',
-        '우리은행': '020',
-        '하나은행': '081',
-        'NH농협은행': '011',
-        'IBK기업은행': '003',
-        '기업은행': '003',
-        'SC제일은행': '023',
-        '한국씨티은행': '027',
-        '씨티은행': '027',
-        '새마을금고': '045',
-        '신협': '048',
-        '우체국': '071',
-        'KDB산업은행': '002',
-        '수협은행': '007',
-        '대구은행': '031',
-        '부산은행': '032',
-        '경남은행': '039',
-        '광주은행': '034',
-        '전북은행': '037',
-        '제주은행': '035',
-        '카카오뱅크': '090',
-        '케이뱅크': '089',
-        '토스뱅크': '092',
-      };
-
       const cleanAccountNumber = accountNumber.replace(/-/g, '');
 
-      // 토스 송금 URL 생성 (은행명을 직접 전달)
-      const tossUrl = `supertoss://send?amount=${payment.amount}&bank=${encodeURIComponent(bankName)}&accountNo=${cleanAccountNumber}`;
+      // 은행명을 토스 인식 형식으로 변환
+      const bankNameMap: Record<string, string> = {
+        'KB국민은행': '국민은행',
+        '국민은행': '국민은행',
+        '신한은행': '신한은행',
+        '우리은행': '우리은행',
+        '하나은행': '하나은행',
+        'NH농협은행': '농협은행',
+        '농협은행': '농협은행',
+        'IBK기업은행': '기업은행',
+        '기업은행': '기업은행',
+        'SC제일은행': 'SC제일은행',
+        '한국씨티은행': '씨티은행',
+        '씨티은행': '씨티은행',
+        '새마을금고': '새마을금고',
+        '신협': '신협',
+        '우체국': '우체국',
+        'KDB산업은행': '산업은행',
+        '산업은행': '산업은행',
+        '수협은행': '수협은행',
+        '대구은행': '대구은행',
+        '부산은행': '부산은행',
+        '경남은행': '경남은행',
+        '광주은행': '광주은행',
+        '전북은행': '전북은행',
+        '제주은행': '제주은행',
+        '카카오뱅크': '카카오뱅크',
+        '케이뱅크': '케이뱅크',
+        '토스뱅크': '토스뱅크'
+      };
+
+      const tossBankName = bankNameMap[bankName] || bankName;
+
+      // 토스 송금 URL 생성 (은행명을 토스 인식 형식으로 변환하여 전달)
+      const tossUrl = `supertoss://send?amount=${payment.amount}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}`;
 
       // 토스 앱 실행 시도
       let appOpened = false;

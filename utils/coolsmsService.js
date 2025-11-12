@@ -164,9 +164,10 @@ class CoolSMSService {
             taxPart = '(3.3%)';
         }
 
-        // 토스 딥링크 생성
+        // 토스 딥링크 생성 - 은행명을 토스 인식 형식으로 변환
         const cleanAccountNumber = (data.accountNumber || '').replace(/-/g, '');
-        const tossDeeplink = `supertoss://send?amount=${data.amount}&bank=${encodeURIComponent(data.bankName || '')}&accountNo=${cleanAccountNumber}`;
+        const tossBankName = this.convertToTossBankName(data.bankName || '');
+        const tossDeeplink = `supertoss://send?amount=${data.amount}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}`;
 
         // 메시지 기본 구조 (공정/항목 제외한 부분)
         const fixedPart = `\n${bankInfo}\n${amountPart}${taxPart}\n\n토스송금:\n${tossDeeplink}`;
@@ -217,6 +218,44 @@ class CoolSMSService {
     formatAmount(amount) {
         if (!amount) return '0';
         return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    /**
+     * 은행명을 토스 앱이 인식하는 형식으로 변환
+     * @param {string} bankName - 원본 은행명
+     */
+    convertToTossBankName(bankName) {
+        const bankNameMap = {
+            'KB국민은행': '국민은행',
+            '국민은행': '국민은행',
+            '신한은행': '신한은행',
+            '우리은행': '우리은행',
+            '하나은행': '하나은행',
+            'NH농협은행': '농협은행',
+            '농협은행': '농협은행',
+            'IBK기업은행': '기업은행',
+            '기업은행': '기업은행',
+            'SC제일은행': 'SC제일은행',
+            '한국씨티은행': '씨티은행',
+            '씨티은행': '씨티은행',
+            '새마을금고': '새마을금고',
+            '신협': '신협',
+            '우체국': '우체국',
+            'KDB산업은행': '산업은행',
+            '산업은행': '산업은행',
+            '수협은행': '수협은행',
+            '대구은행': '대구은행',
+            '부산은행': '부산은행',
+            '경남은행': '경남은행',
+            '광주은행': '광주은행',
+            '전북은행': '전북은행',
+            '제주은행': '제주은행',
+            '카카오뱅크': '카카오뱅크',
+            '케이뱅크': '케이뱅크',
+            '토스뱅크': '토스뱅크'
+        };
+
+        return bankNameMap[bankName] || bankName;
     }
 }
 
