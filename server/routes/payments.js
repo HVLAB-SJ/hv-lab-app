@@ -914,29 +914,46 @@ router.post('/openbanking/instant-transfer', authenticateToken, isManager, async
       });
     }
 
-    // 거래고유번호 생성 (기관코드 + 날짜시간 + 일련번호)
-    const bankTranId = `${institutionCode}U${Date.now()}${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`.substring(0, 20);
+    // 거래고유번호 생성 (기관코드 + U + 날짜시간 + 일련번호, 최대 20자리)
+    const timestamp = Date.now().toString();
+    const random = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+    const bankTranId = `${institutionCode}U${timestamp}${random}`.substring(0, 20);
 
-    // 오픈뱅킹 출금이체 API 호출
-    const apiUrl = process.env.OPENBANKING_API_URL || 'https://testapi.openbanking.or.kr';
-    const openBankingResponse = await fetch(`${apiUrl}/v2.0/transfer/withdraw/fin_num`, {
+    // 요청일시 (YYYYMMDDhhmmss)
+    const now = new Date();
+    const tranDtime = now.getFullYear().toString() +
+                     (now.getMonth() + 1).toString().padStart(2, '0') +
+                     now.getDate().toString().padStart(2, '0') +
+                     now.getHours().toString().padStart(2, '0') +
+                     now.getMinutes().toString().padStart(2, '0') +
+                     now.getSeconds().toString().padStart(2, '0');
+
+    // 오픈뱅킹 입금이체 API 호출 (계좌번호 사용)
+    const apiUrl = process.env.OPENBANKING_API_URL || 'https://openapi.openbanking.or.kr';
+    console.log('[오픈뱅킹] API 호출 시작:', {
+      url: `${apiUrl}/v2.0/transfer/deposit/acnt_num`,
+      bankTranId,
+      receiverBank: bankCode,
+      receiverAccount: cleanAccountNumber,
+      amount
+    });
+
+    const openBankingResponse = await fetch(`${apiUrl}/v2.0/transfer/deposit/acnt_num`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': `Bearer ${token.access_token}`
       },
       body: JSON.stringify({
         bank_tran_id: bankTranId,
         cntr_account_type: 'N',
         cntr_account_num: process.env.COMPANY_ACCOUNT_NO || '',
-        dps_print_content: (description || `${receiverName}님에게 송금`).substring(0, 16),
+        dps_print_content: (description || `${receiverName}님 송금`).substring(0, 16),
         fintech_use_num: companyFintechUseNum,
         wd_print_content: (description || '송금').substring(0, 16),
         tran_amt: String(amount),
-        tran_dtime: new Date().toISOString().replace(/[-:T.]/g, '').substring(0, 14),
+        tran_dtime: tranDtime,
         req_client_name: receiverName,
-        req_client_bank_code: bankCode,
-        req_client_account_num: cleanAccountNumber,
         req_client_num: String(paymentId),
         transfer_purpose: 'TR',
         recv_client_name: receiverName,
@@ -947,8 +964,22 @@ router.post('/openbanking/instant-transfer', authenticateToken, isManager, async
 
     const openbankingResult = await openBankingResponse.json();
 
-    if (openbankingResult.rsp_code === 'A0000' || openbankingResult.api_tran_id) {
+    console.log('[오픈뱅킹] API 응답:', {
+      rsp_code: openbankingResult.rsp_code,
+      rsp_message: openbankingResult.rsp_message,
+      api_tran_id: openbankingResult.api_tran_id,
+      api_tran_dtm: openbankingResult.api_tran_dtm,
+      tran_amt: openbankingResult.tran_amt
+    });
+
+    if (openbankingResult.rsp_code === 'A0000' && openbankingResult.api_tran_id) {
       // 송금 성공
+      console.log('[오픈뱅킹] 송금 성공:', {
+        api_tran_id: openbankingResult.api_tran_id,
+        tran_amt: openbankingResult.tran_amt,
+        wd_bank_code_name: openbankingResult.wd_bank_code_name
+      });
+
       db.run(
         `UPDATE payment_requests
          SET status = ?,
@@ -959,6 +990,8 @@ router.post('/openbanking/instant-transfer', authenticateToken, isManager, async
         (err) => {
           if (err) {
             console.error('송금 정보 저장 실패:', err);
+          } else {
+            console.log(`[오픈뱅킹] 결제 요청 ${paymentId} 상태 업데이트 완료`);
           }
         }
       );
@@ -970,7 +1003,15 @@ router.post('/openbanking/instant-transfer', authenticateToken, isManager, async
       });
     } else {
       // 송금 실패
-      console.error('오픈뱅킹 송금 실패:', openbankingResult);
+      console.error('[오픈뱅킹] 송금 실패:', {
+        rsp_code: openbankingResult.rsp_code,
+        rsp_message: openbankingResult.rsp_message,
+        bank_tran_id: bankTranId,
+        receiverBank: bankCode,
+        receiverAccount: cleanAccountNumber,
+        amount
+      });
+
       res.status(400).json({
         success: false,
         error: openbankingResult.rsp_message || '송금에 실패했습니다',
