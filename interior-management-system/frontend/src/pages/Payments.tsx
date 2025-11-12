@@ -1395,20 +1395,6 @@ const Payments = () => {
                   </span>
                 </button>
               </nav>
-
-              {/* 선택된 프로젝트 보기 버튼 */}
-              {formData.project && (
-                <button
-                  onClick={() => setProjectFilter(projectFilter === 'all' ? formData.project : 'all')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-                    projectFilter === formData.project
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {projectFilter === formData.project ? '전체보기' : `${formData.project} 보기`}
-                </button>
-              )}
             </div>
           </div>
           <div className="border-b border-gray-200"></div>
