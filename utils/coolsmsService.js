@@ -213,6 +213,7 @@ class CoolSMSService {
         message += `${bankInfo}\n`;
         message += `${amountPart}${taxPart}\n\n`;
         message += `토스송금:\n${tossDeeplink}\n\n`;
+        message += `※송금 후 아래 링크 클릭\n`;
         message += `송금완료:\n${completeLink}`;
 
         return message;

@@ -208,6 +208,18 @@ const Payments = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, [loadPaymentsFromAPI, projects]);
 
+  // 자동 새로고침 (30초마다)
+  useEffect(() => {
+    const autoRefreshInterval = setInterval(() => {
+      console.log('[자동 새로고침] 결제 내역 업데이트 중...');
+      loadPaymentsFromAPI().catch(error => {
+        console.error('[자동 새로고침] 실패:', error);
+      });
+    }, 30000); // 30초
+
+    return () => clearInterval(autoRefreshInterval);
+  }, [loadPaymentsFromAPI]);
+
   // URL 파라미터로 송금완료 자동 처리
   useEffect(() => {
     const handleAutoComplete = async () => {
