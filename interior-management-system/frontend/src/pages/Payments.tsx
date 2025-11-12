@@ -208,6 +208,35 @@ const Payments = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, [loadPaymentsFromAPI, projects]);
 
+  // URL 파라미터로 송금완료 자동 처리
+  useEffect(() => {
+    const handleAutoComplete = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const completeId = urlParams.get('complete');
+
+      if (completeId && payments.length > 0) {
+        try {
+          const payment = payments.find(p => p.id === completeId);
+          if (payment && payment.status !== 'completed') {
+            await updatePaymentInAPI(completeId, { status: 'completed' });
+            toast.success('송금완료 처리되었습니다');
+
+            // URL에서 파라미터 제거
+            window.history.replaceState({}, '', '/payments');
+
+            // 데이터 새로고침
+            loadPaymentsFromAPI();
+          }
+        } catch (error) {
+          console.error('자동 송금완료 처리 실패:', error);
+          toast.error('송금완료 처리에 실패했습니다');
+        }
+      }
+    };
+
+    handleAutoComplete();
+  }, [payments, loadPaymentsFromAPI]);
+
   // 공정 변경 시 해당 공정의 협력업체 필터링
   useEffect(() => {
     if (formData.process) {
