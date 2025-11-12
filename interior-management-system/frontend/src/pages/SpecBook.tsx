@@ -901,7 +901,7 @@ const SpecBook = () => {
                     }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={handleImageDrop}
-                    className={`w-full sm:w-48 h-40 sm:h-52 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
+                    className={`w-full sm:w-48 aspect-square flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
                       isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
                     }`}
                     onClick={() => fileInputRef.current?.click()}
