@@ -286,8 +286,10 @@ const SpecBook = () => {
   const [subImages, setSubImages] = useState<string[]>([]);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [isDraggingSubImage, setIsDraggingSubImage] = useState(false);
+  const [isSavingSubImages, setIsSavingSubImages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
+  const subImagesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // DnD 센서 설정
   const sensors = useSensors(
@@ -659,38 +661,59 @@ const SpecBook = () => {
     }
   }, [isSubImageModalOpen]);
 
+  // Sub 이미지 자동 저장 (debounce 적용)
+  useEffect(() => {
+    if (!selectedItemForImages || !isSubImageModalOpen) return;
+
+    // 이전 타이머 취소
+    if (subImagesSaveTimeoutRef.current) {
+      clearTimeout(subImagesSaveTimeoutRef.current);
+    }
+
+    // 1초 후 저장
+    subImagesSaveTimeoutRef.current = setTimeout(async () => {
+      setIsSavingSubImages(true);
+      try {
+        await api.put(`/specbook/${selectedItemForImages.id}/sub-images`, {
+          sub_images: subImages
+        });
+        // 성공 시 아이템 목록 업데이트
+        loadItems();
+        if (view === 'library') {
+          loadAllLibraryItems();
+        } else if (view === 'project' && selectedProject) {
+          loadAllProjectItems();
+        }
+      } catch (error) {
+        console.error('Sub 이미지 자동 저장 실패:', error);
+        toast.error('상세 이미지 저장에 실패했습니다');
+      } finally {
+        setIsSavingSubImages(false);
+      }
+    }, 1000);
+
+    return () => {
+      if (subImagesSaveTimeoutRef.current) {
+        clearTimeout(subImagesSaveTimeoutRef.current);
+      }
+    };
+  }, [subImages, selectedItemForImages, isSubImageModalOpen]);
+
   // Sub 이미지 삭제
   const handleDeleteSubImage = (index: number) => {
     setSubImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Sub 이미지 저장
-  const handleSaveSubImages = async () => {
-    if (!selectedItemForImages) return;
-
-    try {
-      await api.put(`/specbook/${selectedItemForImages.id}/sub-images`, {
-        sub_images: subImages
-      });
-      toast.success('상세 이미지가 저장되었습니다');
-      setIsSubImageModalOpen(false);
-      loadItems();
-      if (view === 'library') {
-        loadAllLibraryItems();
-      } else if (view === 'project' && selectedProject) {
-        loadAllProjectItems();
-      }
-    } catch (error) {
-      console.error('Sub 이미지 저장 실패:', error);
-      toast.error('상세 이미지 저장에 실패했습니다');
-    }
-  };
-
   // Sub 이미지 모달 닫기
   const handleCloseSubImageModal = () => {
+    // 저장 중이면 타이머 취소
+    if (subImagesSaveTimeoutRef.current) {
+      clearTimeout(subImagesSaveTimeoutRef.current);
+    }
     setIsSubImageModalOpen(false);
     setSelectedItemForImages(null);
     setSubImages([]);
+    setIsSavingSubImages(false);
   };
 
   // 아이템 순서 변경 처리
@@ -1608,23 +1631,26 @@ const SpecBook = () => {
 
             {/* 푸터 */}
             <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-              <p className="text-sm text-gray-600">
-                총 {(selectedItemForImages.image_url ? 1 : 0) + subImages.length}개의 이미지
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleCloseSubImageModal}
-                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleSaveSubImages}
-                  className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium"
-                >
-                  저장
-                </button>
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-gray-600">
+                  총 {(selectedItemForImages.image_url ? 1 : 0) + subImages.length}개의 파일
+                </p>
+                {isSavingSubImages && (
+                  <p className="text-sm text-blue-600 flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    저장 중...
+                  </p>
+                )}
               </div>
+              <button
+                onClick={handleCloseSubImageModal}
+                className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium"
+              >
+                닫기
+              </button>
             </div>
           </div>
         </div>
