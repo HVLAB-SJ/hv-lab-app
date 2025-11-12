@@ -27,6 +27,7 @@ interface SpecBookItem {
   brand: string;
   price: string;
   image_url: string | null;
+  sub_images?: string[]; // 상세 이미지들
   description: string;
   project_id: number | null;
   is_library: number;
@@ -80,12 +81,17 @@ const getGradeColor = (gradeString: string | undefined): string => {
 const SortableSpecBookItem = ({
   item,
   onEdit,
-  onDelete
+  onDelete,
+  onImageClick
 }: {
   item: SpecBookItem;
   onEdit: (item: SpecBookItem) => void;
   onDelete: (id: number) => void;
+  onImageClick: (item: SpecBookItem) => void;
 }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -101,6 +107,10 @@ const SortableSpecBookItem = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // 모든 이미지 배열 (메인 이미지 + sub 이미지들)
+  const allImages = [item.image_url, ...(item.sub_images || [])].filter(Boolean) as string[];
+  const currentImage = allImages[currentImageIndex] || null;
+
   return (
     <div
       ref={setNodeRef}
@@ -111,18 +121,55 @@ const SortableSpecBookItem = ({
     >
 
       {/* 상단: 정사각형 이미지 */}
-      <div className="w-full aspect-square bg-gray-100 flex-shrink-0 relative">
-        {item.image_url ? (
+      <div
+        className="w-full aspect-square bg-gray-100 flex-shrink-0 relative"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        {currentImage ? (
           <img
-            src={item.image_url}
+            src={currentImage}
             alt={item.name}
             className="w-full h-full object-contain block"
+            onClick={(e) => {
+              e.stopPropagation();
+              onImageClick(item);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
             이미지 없음
           </div>
         )}
+
+        {/* 썸네일 갤러리 - 호버 시 하단에 표시 */}
+        {allImages.length > 1 && isHovering && (
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-2 flex gap-1 justify-center"
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            {allImages.map((img, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex(index);
+                }}
+                className={`w-10 h-10 flex-shrink-0 rounded overflow-hidden border-2 transition-all ${
+                  currentImageIndex === index ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100'
+                }`}
+              >
+                <img
+                  src={img}
+                  alt={`${item.name} ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* 수정/삭제 버튼 - 호버 시 이미지 우측 상단에 표시 */}
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
@@ -272,7 +319,11 @@ const SpecBook = () => {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategories, setEditingCategories] = useState<string[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [isSubImageModalOpen, setIsSubImageModalOpen] = useState(false);
+  const [selectedItemForImages, setSelectedItemForImages] = useState<SpecBookItem | null>(null);
+  const [subImages, setSubImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const subImageFileInputRef = useRef<HTMLInputElement>(null);
 
   // DnD 센서 설정
   const sensors = useSensors(
@@ -574,6 +625,62 @@ const SpecBook = () => {
       grades: ['기본'],
       imageData: null
     });
+  };
+
+  // 이미지 클릭 - Sub 이미지 모달 열기
+  const handleImageClick = (item: SpecBookItem) => {
+    setSelectedItemForImages(item);
+    setSubImages(item.sub_images || []);
+    setIsSubImageModalOpen(true);
+  };
+
+  // Sub 이미지 추가
+  const handleAddSubImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const base64 = event.target?.result as string;
+          setSubImages(prev => [...prev, base64]);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  };
+
+  // Sub 이미지 삭제
+  const handleDeleteSubImage = (index: number) => {
+    setSubImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Sub 이미지 저장
+  const handleSaveSubImages = async () => {
+    if (!selectedItemForImages) return;
+
+    try {
+      await api.put(`/specbook/${selectedItemForImages.id}/sub-images`, {
+        sub_images: subImages
+      });
+      toast.success('상세 이미지가 저장되었습니다');
+      setIsSubImageModalOpen(false);
+      loadItems();
+      if (view === 'library') {
+        loadAllLibraryItems();
+      } else if (view === 'project' && selectedProject) {
+        loadAllProjectItems();
+      }
+    } catch (error) {
+      console.error('Sub 이미지 저장 실패:', error);
+      toast.error('상세 이미지 저장에 실패했습니다');
+    }
+  };
+
+  // Sub 이미지 모달 닫기
+  const handleCloseSubImageModal = () => {
+    setIsSubImageModalOpen(false);
+    setSelectedItemForImages(null);
+    setSubImages([]);
   };
 
   // 아이템 순서 변경 처리
@@ -1065,6 +1172,7 @@ const SpecBook = () => {
                       item={item}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      onImageClick={handleImageClick}
                     />
                   ))}
                 </div>
@@ -1350,6 +1458,118 @@ const SpecBook = () => {
                   className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
                 >
                   닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sub 이미지 관리 모달 */}
+      {isSubImageModalOpen && selectedItemForImages && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* 헤더 */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">상세 이미지 관리</h2>
+                <p className="text-sm text-gray-600 mt-1">{selectedItemForImages.name}</p>
+              </div>
+              <button
+                onClick={handleCloseSubImageModal}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* 컨텐츠 */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* 이미지 업로드 영역 */}
+              <div className="mb-6">
+                <input
+                  ref={subImageFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleAddSubImage}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => subImageFileInputRef.current?.click()}
+                  className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800"
+                >
+                  <Upload className="h-5 w-5" />
+                  <span className="font-medium">이미지 추가</span>
+                </button>
+              </div>
+
+              {/* 이미지 그리드 */}
+              <div className="grid grid-cols-3 gap-4">
+                {/* 메인 이미지 (읽기 전용) */}
+                {selectedItemForImages.image_url && (
+                  <div className="relative group">
+                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-blue-500">
+                      <img
+                        src={selectedItemForImages.image_url}
+                        alt="메인 이미지"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">
+                      메인
+                    </div>
+                  </div>
+                )}
+
+                {/* Sub 이미지들 */}
+                {subImages.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-400 transition-colors">
+                      <img
+                        src={image}
+                        alt={`상세 이미지 ${index + 1}`}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <button
+                      onClick={() => handleDeleteSubImage(index)}
+                      className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                      {index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {subImages.length === 0 && !selectedItemForImages.image_url && (
+                <div className="text-center py-12 text-gray-500">
+                  <Upload className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <p>이미지를 추가해주세요</p>
+                </div>
+              )}
+            </div>
+
+            {/* 푸터 */}
+            <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+              <p className="text-sm text-gray-600">
+                총 {(selectedItemForImages.image_url ? 1 : 0) + subImages.length}개의 이미지
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCloseSubImageModal}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleSaveSubImages}
+                  className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium"
+                >
+                  저장
                 </button>
               </div>
             </div>
