@@ -1148,7 +1148,7 @@ const SpecBook = () => {
                       setView('library');
                       setSelectedProject(null);
                     }}
-                    className={`aspect-square rounded-lg font-medium transition-colors text-xs md:text-sm flex items-center justify-center ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
+                    className={`h-12 rounded-lg font-medium transition-colors text-xs md:text-sm flex items-center justify-center ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
                   >
                     스펙 라이브러리
                   </button>
@@ -1168,7 +1168,7 @@ const SpecBook = () => {
                         setSelectedProject(null);
                       }
                     }}
-                    className="aspect-square border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
+                    className="h-12 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
                   >
                     <option value="">프로젝트 선택</option>
                     {projects.map(project => (
@@ -1246,7 +1246,7 @@ const SpecBook = () => {
                         setView('library');
                         setSelectedProject(null);
                       }}
-                      className="aspect-square rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 text-xs md:text-sm flex items-center justify-center"
+                      className="h-12 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 text-xs md:text-sm flex items-center justify-center"
                     >
                       스펙 라이브러리
                     </button>
@@ -1266,7 +1266,7 @@ const SpecBook = () => {
                           setSelectedProject(null);
                         }
                       }}
-                      className="aspect-square border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
+                      className="h-12 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
                     >
                       <option value="">프로젝트 선택</option>
                       {projects.map(project => (
