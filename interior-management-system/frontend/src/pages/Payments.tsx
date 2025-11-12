@@ -724,7 +724,7 @@ const Payments = () => {
     setShowDetailModal(true);
   };
 
-  // 즉시송금 - 이체 정보 복사
+  // 즉시송금 - 토스 앱 실행
   const handleInstantTransfer = async (payment: PaymentRequest) => {
     try {
       // 필수 정보 확인 - bankInfo 객체 또는 개별 필드 사용
@@ -739,59 +739,102 @@ const Payments = () => {
 
       // 이체 정보 확인
       const confirmed = window.confirm(
-        `이체 정보를 클립보드에 복사합니다.\n\n` +
+        `토스 앱으로 이체하시겠습니까?\n\n` +
         `받는분: ${accountHolder}\n` +
         `은행: ${bankName}\n` +
         `계좌: ${accountNumber}\n` +
-        `금액: ${payment.amount.toLocaleString()}원\n\n` +
-        `KB스타기업뱅킹 앱을 직접 열어 이체해주세요.`
+        `금액: ${payment.amount.toLocaleString()}원`
       );
 
       if (!confirmed) return;
 
-      // 계좌번호와 은행정보를 클립보드에 복사
-      const transferInfo = `${bankName}\n${accountNumber}\n${accountHolder}\n${payment.amount.toLocaleString()}원`;
+      // 은행 코드 매핑 (토스 은행 코드)
+      const bankCodes: Record<string, string> = {
+        'KB국민은행': '004',
+        '신한은행': '088',
+        '우리은행': '020',
+        '하나은행': '081',
+        'NH농협은행': '011',
+        'IBK기업은행': '003',
+        '기업은행': '003',
+        'SC제일은행': '023',
+        '한국씨티은행': '027',
+        '씨티은행': '027',
+        '새마을금고': '045',
+        '신협': '048',
+        '우체국': '071',
+        'KDB산업은행': '002',
+        '수협은행': '007',
+        '대구은행': '031',
+        '부산은행': '032',
+        '경남은행': '039',
+        '광주은행': '034',
+        '전북은행': '037',
+        '제주은행': '035',
+        '카카오뱅크': '090',
+        '케이뱅크': '089',
+        '토스뱅크': '092',
+      };
 
+      const bankCode = bankCodes[bankName] || '004';
+      const cleanAccountNumber = accountNumber.replace(/-/g, '');
+
+      // 토스 송금 URL 생성
+      const tossUrl = `supertoss://send?bank=${bankCode}&accountNo=${cleanAccountNumber}&amount=${payment.amount}&depositorName=${encodeURIComponent(accountHolder)}`;
+
+      // 이체 정보를 클립보드에 복사 (백업용)
+      const transferInfo = `${bankName}\n${accountNumber}\n${accountHolder}\n${payment.amount.toLocaleString()}원`;
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           await navigator.clipboard.writeText(transferInfo);
-          toast.success(
-            `이체 정보가 복사되었습니다!\n\n` +
-            `받는분: ${accountHolder}\n` +
-            `은행: ${bankName}\n` +
-            `계좌: ${accountNumber}\n` +
-            `금액: ${payment.amount.toLocaleString()}원\n\n` +
-            `KB스타기업뱅킹 앱을 열어 이체해주세요.`,
-            {
-              icon: '💳',
-              duration: 8000
-            }
-          );
-        } else {
-          // 클립보드 API를 사용할 수 없는 경우 정보만 표시
-          toast(
-            `이체 정보:\n\n` +
-            `받는분: ${accountHolder}\n` +
-            `은행: ${bankName}\n` +
-            `계좌: ${accountNumber}\n` +
-            `금액: ${payment.amount.toLocaleString()}원\n\n` +
-            `KB스타기업뱅킹 앱을 열어 이체해주세요.`,
-            {
-              icon: '💳',
-              duration: 10000
-            }
-          );
         }
       } catch (err) {
         console.log('클립보드 복사 실패:', err);
-        // 클립보드 실패 시 정보만 표시
+      }
+
+      // 토스 앱 실행 시도
+      let appOpened = false;
+
+      try {
+        // window.location.href로 앱 실행
+        window.location.href = tossUrl;
+        appOpened = true;
+
+        toast.success('토스 앱을 실행합니다...', {
+          duration: 3000
+        });
+
+        // 2초 후 앱이 실행되지 않았다면 안내
+        setTimeout(() => {
+          const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+          const isAndroid = /Android/i.test(navigator.userAgent);
+
+          if (isIOS || isAndroid) {
+            toast(
+              '토스 앱이 설치되어 있지 않거나 실행에 실패했습니다.\n\n' +
+              `받는분: ${accountHolder}\n` +
+              `계좌: ${accountNumber}\n` +
+              `금액: ${payment.amount.toLocaleString()}원\n\n` +
+              '토스 앱을 직접 열어 이체해주세요.',
+              {
+                icon: '💳',
+                duration: 8000
+              }
+            );
+          }
+        }, 2000);
+
+      } catch (error) {
+        console.error('토스 앱 실행 실패:', error);
+
+        // 실패 시 정보 표시
         toast(
-          `이체 정보:\n\n` +
+          `토스 앱 실행에 실패했습니다.\n\n` +
           `받는분: ${accountHolder}\n` +
           `은행: ${bankName}\n` +
           `계좌: ${accountNumber}\n` +
           `금액: ${payment.amount.toLocaleString()}원\n\n` +
-          `KB스타기업뱅킹 앱을 열어 이체해주세요.`,
+          `토스 앱을 직접 열어 이체해주세요.`,
           {
             icon: '💳',
             duration: 10000
