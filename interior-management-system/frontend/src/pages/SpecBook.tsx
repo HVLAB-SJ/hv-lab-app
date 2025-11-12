@@ -1167,9 +1167,9 @@ const SpecBook = () => {
             </select>
           </div>
 
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
             {/* 스펙 라이브러리 */}
-            <div className="w-full flex flex-col overflow-hidden pb-4">
+            <div className="w-full md:w-1/2 flex flex-col overflow-hidden pb-4 md:pr-3">
               <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
