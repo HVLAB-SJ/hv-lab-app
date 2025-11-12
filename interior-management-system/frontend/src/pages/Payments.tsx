@@ -776,11 +776,10 @@ const Payments = () => {
         '토스뱅크': '092',
       };
 
-      const bankCode = bankCodes[bankName] || '004';
       const cleanAccountNumber = accountNumber.replace(/-/g, '');
 
-      // 토스 송금 URL 생성
-      const tossUrl = `supertoss://send?bank=${bankCode}&accountNo=${cleanAccountNumber}&amount=${payment.amount}&depositorName=${encodeURIComponent(accountHolder)}`;
+      // 토스 송금 URL 생성 (은행명을 직접 전달)
+      const tossUrl = `supertoss://send?amount=${payment.amount}&bank=${encodeURIComponent(bankName)}&accountNo=${cleanAccountNumber}`;
 
       // 토스 앱 실행 시도
       let appOpened = false;
