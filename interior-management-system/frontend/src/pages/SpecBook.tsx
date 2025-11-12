@@ -1160,7 +1160,7 @@ const SpecBook = () => {
                     setSelectedProject(null);
                   }
                 }}
-                className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
+                className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2 lg:col-start-3"
               >
                 <option value="">프로젝트 선택</option>
                 {projects.map(project => (
@@ -1248,7 +1248,7 @@ const SpecBook = () => {
                       setSelectedProject(null);
                     }
                   }}
-                  className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
+                  className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2 lg:col-start-3"
                 >
                   <option value="">프로젝트 선택</option>
                   {projects.map(project => (
