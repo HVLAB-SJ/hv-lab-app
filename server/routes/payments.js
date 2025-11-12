@@ -188,8 +188,12 @@ router.post('/', authenticateToken, async (req, res) => {
       }
 
       // 알림 전송 (관리자에게) - 모든 결제요청에 대해 SMS 발송
+      const paymentId = this.lastID;
+      console.log('[결제요청 생성] Payment ID:', paymentId);
+
       sendPaymentNotification({
-        id: this.lastID,
+        id: paymentId,
+        paymentId: paymentId,  // 명시적으로 paymentId 필드 추가
         requester: req.user.username,
         amount: amount,
         vendor_name: vendor_name || '',  // 공정명 (목공, 도배 등) - vendor_name이 실제 공정명

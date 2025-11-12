@@ -171,7 +171,9 @@ class CoolSMSService {
         const tossDeeplink = `supertoss://send?amount=${data.amount}&bankCode=${bankCode}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}`;
 
         // 송금완료 링크 생성
-        const completeLink = `https://hvlab.app/payments?complete=${data.paymentId || data.id}`;
+        const paymentId = data.paymentId || data.id;
+        console.log('[CoolSMS] 송금완료 링크 생성 - Payment ID:', paymentId);
+        const completeLink = `https://hvlab.app/payments?complete=${paymentId}`;
 
         // 메시지 기본 구조 (공정/항목 제외한 부분)
         const fixedPart = `\n${bankInfo}\n${amountPart}${taxPart}\n\n토스송금:\n${tossDeeplink}\n\n송금완료:\n${completeLink}`;
