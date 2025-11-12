@@ -885,9 +885,9 @@ const SpecBook = () => {
     >
 
       {/* 메인 컨텐츠 */}
-      <div className="flex-1 flex gap-6 overflow-hidden -ml-0">
+      <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden">
         {/* 좌측: 입력 폼 + 카테고리 (항상 표시) */}
-        <div className="flex flex-col gap-4" style={{ width: '20%' }}>
+        <div className="flex flex-col gap-4 w-full md:w-80 lg:w-96 flex-shrink-0">
           {/* 새 아이템 추가 폼 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
               <div className="p-3">
@@ -897,7 +897,7 @@ const SpecBook = () => {
               </div>
               <form onSubmit={handleSubmit} className="flex flex-col">
                 {/* 수평 카드 형태: 이미지 + 입력 필드 */}
-                <div className="flex gap-3 px-3">
+                <div className="flex flex-col sm:flex-row gap-3 px-3">
                   {/* 좌측: 이미지 - 정사각형 */}
                   <div
                     onDragOver={(e) => {
@@ -906,7 +906,7 @@ const SpecBook = () => {
                     }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={handleImageDrop}
-                    className={`w-56 h-56 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
+                    className={`w-full sm:w-40 h-40 sm:h-40 flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
                       isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
                     }`}
                     onClick={() => fileInputRef.current?.click()}
@@ -942,7 +942,7 @@ const SpecBook = () => {
                   </div>
 
                   {/* 우측: 입력 필드들 */}
-                  <div className="flex-1 flex flex-col justify-between h-56">
+                  <div className="flex-1 flex flex-col justify-between sm:h-40">
                     <div className="space-y-1.5">
                       <select
                         value={formData.category}
@@ -1099,7 +1099,7 @@ const SpecBook = () => {
                 <Settings className="h-4 w-4" />
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {categories.map(category => {
                 const count = getCategoryCount(category);
                 // 라이브러리 또는 프로젝트가 선택된 경우에 수량 표시
@@ -1198,7 +1198,7 @@ const SpecBook = () => {
                 items={items.map(item => item.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {items.map(item => (
                     <SortableSpecBookItem
                       key={item.id}
@@ -1271,9 +1271,9 @@ const SpecBook = () => {
               </div>
             </div>
 
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden gap-4">
               {/* 좌측: 스펙 라이브러리 (드래그 소스) */}
-              <div className="w-1/2 flex flex-col overflow-hidden pb-4 pr-3">
+              <div className="w-full md:w-1/2 flex flex-col overflow-hidden pb-4 md:pr-3">
                 <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
@@ -1284,7 +1284,7 @@ const SpecBook = () => {
                     라이브러리 아이템이 없습니다
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {allLibraryItems
                       .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
                       .map(item => (
@@ -1340,9 +1340,9 @@ const SpecBook = () => {
               </div>
             </div>
             {/* 중앙 경계선 */}
-            <div className="w-px bg-gray-300 self-stretch"></div>
+            <div className="hidden md:block w-px bg-gray-300 self-stretch"></div>
             {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
-            <div className="w-1/2 flex flex-col overflow-hidden pl-3 pb-4">
+            <div className="w-full md:w-1/2 flex flex-col overflow-hidden md:pl-3 pb-4">
                 <div
                   className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4"
                 onDragOver={(e) => {
@@ -1394,7 +1394,7 @@ const SpecBook = () => {
                         .map(item => item.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {items
                           .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
                           .map(item => (
@@ -1504,7 +1504,7 @@ const SpecBook = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* 헤더 */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{selectedItemForImages.name}</h2>
                 <p className="text-xs text-gray-500 mt-1">
@@ -1521,7 +1521,7 @@ const SpecBook = () => {
 
             {/* 컨텐츠 */}
             <div
-              className="flex-1 overflow-y-auto p-6"
+              className="flex-1 overflow-y-auto p-4 md:p-6"
               onDragOver={(e) => {
                 e.preventDefault();
                 setIsDraggingSubImage(true);
@@ -1543,7 +1543,7 @@ const SpecBook = () => {
               />
 
               {/* 이미지 그리드 */}
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {/* 메인 이미지 (읽기 전용) */}
                 {selectedItemForImages.image_url && (
                   <div className="relative group">
