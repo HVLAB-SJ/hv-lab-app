@@ -164,13 +164,17 @@ class CoolSMSService {
             taxPart = '(3.3%)';
         }
 
+        // 토스 딥링크 생성
+        const cleanAccountNumber = (data.accountNumber || '').replace(/-/g, '');
+        const tossDeeplink = `supertoss://send?amount=${data.amount}&bank=${encodeURIComponent(data.bankName || '')}&accountNo=${cleanAccountNumber}`;
+
         // 메시지 기본 구조 (공정/항목 제외한 부분)
-        const fixedPart = `\n${bankInfo}\n${amountPart}${taxPart}`;
+        const fixedPart = `\n${bankInfo}\n${amountPart}${taxPart}\n\n토스송금:\n${tossDeeplink}`;
         const fixedBytes = Buffer.byteLength(`//\n${fixedPart}`, 'utf8');
         const projectBytes = Buffer.byteLength(projectPrefix, 'utf8');
 
-        // 95바이트 제한에서 고정 부분을 뺀 나머지 바이트
-        const availableBytes = 95 - fixedBytes - projectBytes;
+        // 바이트 제한에서 고정 부분을 뺀 나머지 바이트 (LMS는 2000바이트까지 가능)
+        const availableBytes = 2000 - fixedBytes - projectBytes;
 
         // 공정/항목명 조합
         let processContent = process || '공정';
@@ -180,7 +184,7 @@ class CoolSMSService {
         let fullContent = `/${processContent}/${itemContent}`;
         let fullBytes = Buffer.byteLength(fullContent, 'utf8');
 
-        // 95바이트 초과 시 항목명 축약
+        // 제한 바이트 초과 시 항목명 축약
         if (fullBytes > availableBytes) {
             // 항목명을 점진적으로 줄임
             let maxItemLength = itemContent.length;
@@ -200,7 +204,8 @@ class CoolSMSService {
         // 최종 메시지 조합
         let message = `${projectPrefix}${fullContent}\n`;
         message += `${bankInfo}\n`;
-        message += `${amountPart}${taxPart}`;
+        message += `${amountPart}${taxPart}\n\n`;
+        message += `토스송금:\n${tossDeeplink}`;
 
         return message;
     }
