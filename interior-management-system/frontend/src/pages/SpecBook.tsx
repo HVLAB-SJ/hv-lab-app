@@ -89,9 +89,6 @@ const SortableSpecBookItem = ({
   onDelete: (id: number) => void;
   onImageClick: (item: SpecBookItem) => void;
 }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isHovering, setIsHovering] = useState(false);
-
   const {
     attributes,
     listeners,
@@ -107,10 +104,6 @@ const SortableSpecBookItem = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // 모든 이미지 배열 (메인 이미지 + sub 이미지들)
-  const allImages = [item.image_url, ...(item.sub_images || [])].filter(Boolean) as string[];
-  const currentImage = allImages[currentImageIndex] || null;
-
   return (
     <div
       ref={setNodeRef}
@@ -121,16 +114,12 @@ const SortableSpecBookItem = ({
     >
 
       {/* 상단: 정사각형 이미지 */}
-      <div
-        className="w-full aspect-square bg-gray-100 flex-shrink-0 relative"
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-      >
-        {currentImage ? (
+      <div className="w-full aspect-square bg-gray-100 flex-shrink-0 relative">
+        {item.image_url ? (
           <img
-            src={currentImage}
+            src={item.image_url}
             alt={item.name}
-            className="w-full h-full object-contain block"
+            className="w-full h-full object-contain block cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               onImageClick(item);
@@ -140,33 +129,6 @@ const SortableSpecBookItem = ({
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
             이미지 없음
-          </div>
-        )}
-
-        {/* 썸네일 갤러리 - 호버 시 하단에 표시 */}
-        {allImages.length > 1 && isHovering && (
-          <div
-            className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-2 flex gap-1 justify-center"
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            {allImages.map((img, index) => (
-              <button
-                key={index}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentImageIndex(index);
-                }}
-                className={`w-10 h-10 flex-shrink-0 rounded overflow-hidden border-2 transition-all ${
-                  currentImageIndex === index ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100'
-                }`}
-              >
-                <img
-                  src={img}
-                  alt={`${item.name} ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
           </div>
         )}
 
@@ -322,6 +284,8 @@ const SpecBook = () => {
   const [isSubImageModalOpen, setIsSubImageModalOpen] = useState(false);
   const [selectedItemForImages, setSelectedItemForImages] = useState<SpecBookItem | null>(null);
   const [subImages, setSubImages] = useState<string[]>([]);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [isDraggingSubImage, setIsDraggingSubImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -634,20 +598,66 @@ const SpecBook = () => {
     setIsSubImageModalOpen(true);
   };
 
-  // Sub 이미지 추가
+  // Sub 이미지 추가 (이미지 및 PDF 지원)
   const handleAddSubImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    processSubImageFiles(files);
+  };
+
+  // 파일 처리 함수
+  const processSubImageFiles = (files: File[]) => {
     files.forEach(file => {
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith('image/') || file.type === 'application/pdf') {
         const reader = new FileReader();
         reader.onload = (event) => {
           const base64 = event.target?.result as string;
           setSubImages(prev => [...prev, base64]);
         };
         reader.readAsDataURL(file);
+      } else {
+        toast.error(`지원하지 않는 파일 형식입니다: ${file.name}`);
       }
     });
   };
+
+  // Sub 이미지 드래그 앤 드롭
+  const handleSubImageDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingSubImage(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    processSubImageFiles(files);
+  };
+
+  // Sub 이미지 Paste 이벤트
+  const handleSubImagePaste = (e: ClipboardEvent) => {
+    if (!isSubImageModalOpen) return;
+
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const files: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) files.push(file);
+      }
+    }
+
+    if (files.length > 0) {
+      processSubImageFiles(files);
+      toast.success(`${files.length}개의 이미지가 추가되었습니다`);
+    }
+  };
+
+  // Paste 이벤트 리스너 등록
+  useEffect(() => {
+    if (isSubImageModalOpen) {
+      document.addEventListener('paste', handleSubImagePaste as any);
+      return () => document.removeEventListener('paste', handleSubImagePaste as any);
+    }
+  }, [isSubImageModalOpen]);
 
   // Sub 이미지 삭제
   const handleDeleteSubImage = (index: number) => {
@@ -1370,6 +1380,7 @@ const SpecBook = () => {
                               item={item}
                               onEdit={handleEdit}
                               onDelete={handleDelete}
+                              onImageClick={handleImageClick}
                             />
                           ))}
                       </div>
@@ -1468,12 +1479,15 @@ const SpecBook = () => {
       {/* Sub 이미지 관리 모달 */}
       {isSubImageModalOpen && selectedItemForImages && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* 헤더 */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">상세 이미지 관리</h2>
                 <p className="text-sm text-gray-600 mt-1">{selectedItemForImages.name}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  드래그 앤 드롭 또는 Ctrl+V로 이미지/PDF를 추가할 수 있습니다
+                </p>
               </div>
               <button
                 onClick={handleCloseSubImageModal}
@@ -1484,32 +1498,55 @@ const SpecBook = () => {
             </div>
 
             {/* 컨텐츠 */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {/* 이미지 업로드 영역 */}
+            <div
+              className="flex-1 overflow-y-auto p-6"
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingSubImage(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                setIsDraggingSubImage(false);
+              }}
+              onDrop={handleSubImageDrop}
+            >
+              {/* 드래그 앤 드롭 영역 */}
               <div className="mb-6">
                 <input
                   ref={subImageFileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,application/pdf"
                   multiple
                   onChange={handleAddSubImage}
                   className="hidden"
                 />
-                <button
+                <div
                   onClick={() => subImageFileInputRef.current?.click()}
-                  className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800"
+                  className={`w-full px-4 py-8 border-2 border-dashed rounded-lg transition-all cursor-pointer ${
+                    isDraggingSubImage
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                  }`}
                 >
-                  <Upload className="h-5 w-5" />
-                  <span className="font-medium">이미지 추가</span>
-                </button>
+                  <div className="flex flex-col items-center justify-center gap-2 text-gray-600">
+                    <Upload className="h-8 w-8" />
+                    <p className="font-medium">이미지 또는 PDF 추가</p>
+                    <p className="text-sm text-gray-500">
+                      클릭하여 파일 선택 / 드래그 앤 드롭 / Ctrl+V
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* 이미지 그리드 */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 {/* 메인 이미지 (읽기 전용) */}
                 {selectedItemForImages.image_url && (
                   <div className="relative group">
-                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-blue-500">
+                    <div
+                      className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-blue-500 cursor-pointer hover:border-blue-600 transition-colors"
+                      onClick={() => setViewingImage(selectedItemForImages.image_url!)}
+                    >
                       <img
                         src={selectedItemForImages.image_url}
                         alt="메인 이미지"
@@ -1523,32 +1560,48 @@ const SpecBook = () => {
                 )}
 
                 {/* Sub 이미지들 */}
-                {subImages.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-400 transition-colors">
-                      <img
-                        src={image}
-                        alt={`상세 이미지 ${index + 1}`}
-                        className="w-full h-full object-contain"
-                      />
+                {subImages.map((fileData, index) => {
+                  const isPDF = fileData.startsWith('data:application/pdf');
+                  return (
+                    <div key={index} className="relative group">
+                      <div
+                        className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-400 transition-colors cursor-pointer"
+                        onClick={() => !isPDF && setViewingImage(fileData)}
+                      >
+                        {isPDF ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-red-600">
+                            <svg className="h-16 w-16 mb-2" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                              <path d="M14 2v6h6M10 12h4M10 16h4"/>
+                            </svg>
+                            <span className="text-xs font-medium">PDF</span>
+                          </div>
+                        ) : (
+                          <img
+                            src={fileData}
+                            alt={`상세 이미지 ${index + 1}`}
+                            className="w-full h-full object-contain"
+                          />
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteSubImage(index)}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                        {index + 1}
+                      </div>
                     </div>
-                    <button
-                      onClick={() => handleDeleteSubImage(index)}
-                      className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
-                      {index + 1}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {subImages.length === 0 && !selectedItemForImages.image_url && (
                 <div className="text-center py-12 text-gray-500">
                   <Upload className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                  <p>이미지를 추가해주세요</p>
+                  <p>이미지 또는 PDF를 추가해주세요</p>
                 </div>
               )}
             </div>
@@ -1574,6 +1627,27 @@ const SpecBook = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 원본 사이즈 이미지 뷰어 */}
+      {viewingImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[60] p-4"
+          onClick={() => setViewingImage(null)}
+        >
+          <button
+            onClick={() => setViewingImage(null)}
+            className="absolute top-4 right-4 p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition-colors"
+          >
+            <X className="h-8 w-8 text-white" />
+          </button>
+          <img
+            src={viewingImage}
+            alt="원본 이미지"
+            className="max-w-full max-h-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
