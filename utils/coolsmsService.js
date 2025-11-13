@@ -54,8 +54,9 @@ class CoolSMSService {
      * SMS 발송
      * @param {string} to - 수신번호
      * @param {string} text - 메시지 내용
+     * @param {string} subject - 메시지 제목 (선택)
      */
-    async sendSMS(to, text) {
+    async sendSMS(to, text, subject = null) {
         if (!this.apiKey || !this.apiSecret) {
             console.error('❌ CoolSMS API 키가 설정되지 않았습니다.');
             return { success: false, error: 'API key not configured' };
@@ -63,14 +64,19 @@ class CoolSMSService {
 
         try {
             // CoolSMS API v4 형식 - 단일 메시지
-            const data = {
-                message: {
-                    to: to.replace(/-/g, ''),
-                    from: this.from.replace(/-/g, ''),
-                    text: text
-                    // type을 지정하지 않으면 자동으로 메시지 길이에 따라 SMS/LMS 선택
-                }
+            const message = {
+                to: to.replace(/-/g, ''),
+                from: this.from.replace(/-/g, ''),
+                text: text
             };
+
+            // 제목이 있으면 LMS로 발송
+            if (subject) {
+                message.type = 'LMS';
+                message.subject = subject;
+            }
+
+            const data = { message };
 
             console.log('📤 [CoolSMS] 발송 요청 데이터:', JSON.stringify(data, null, 2));
 
@@ -110,12 +116,16 @@ class CoolSMSService {
         // SMS 메시지 생성
         const message = this.createPaymentMessage(data);
 
+        // 프로젝트명 앞 2글자를 제목으로 사용
+        const projectName = data.projectName || '프로젝트';
+        const subject = projectName.substring(0, 2) + ' 결제요청';
+
         // 각 관리자에게 SMS 발송
         console.log(`📱 [CoolSMS] 총 ${this.adminPhones.length}명의 관리자에게 SMS 발송 시작`);
         for (const phoneNumber of this.adminPhones) {
             try {
                 console.log(`📤 [CoolSMS] ${phoneNumber}로 SMS 발송 시도...`);
-                const result = await this.sendSMS(phoneNumber, message);
+                const result = await this.sendSMS(phoneNumber, message, subject);
                 results.push({
                     phone: phoneNumber,
                     success: result.success,
