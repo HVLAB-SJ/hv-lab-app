@@ -246,6 +246,29 @@ router.get('/:id/attachment/:index', authenticateToken, (req, res) => {
   );
 });
 
+// 견적문의 삭제 (관리자만 가능)
+router.delete('/:id', authenticateToken, isManager, (req, res) => {
+  const { id } = req.params;
+
+  db.run(
+    `DELETE FROM quote_inquiries WHERE id = ?`,
+    [id],
+    function(err) {
+      if (err) {
+        console.error('Error deleting quote inquiry:', err);
+        return res.status(500).json({ error: '견적문의 삭제 실패' });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ error: '견적문의를 찾을 수 없습니다.' });
+      }
+
+      console.log('견적문의 삭제:', { id });
+      res.json({ message: '견적문의가 삭제되었습니다.' });
+    }
+  );
+});
+
 // 이메일 수동 체크 (관리자만 가능)
 router.post('/check-email', authenticateToken, isManager, async (req, res) => {
   try {

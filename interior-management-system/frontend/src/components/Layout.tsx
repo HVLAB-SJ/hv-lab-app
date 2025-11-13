@@ -131,8 +131,7 @@ const Layout = () => {
       '/additional-work',
       '/construction-payment',
       '/contractors',
-      '/work-request',
-      '/payments'
+      '/work-request'
     ];
 
     if (!pagesWithAddButton.includes(path)) {

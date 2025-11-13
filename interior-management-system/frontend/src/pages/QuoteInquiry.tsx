@@ -57,6 +57,29 @@ const QuoteInquiry = () => {
     }
   };
 
+  const handleDelete = async (id: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // 클릭 이벤트가 상위로 전파되지 않도록
+
+    if (!confirm('이 견적문의를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/quote-inquiries/${id}`);
+      setInquiries(prev => prev.filter(inq => inq.id !== id));
+
+      // 삭제된 항목이 선택된 항목이면 선택 해제
+      if (selectedInquiry?.id === id) {
+        setSelectedInquiry(null);
+      }
+
+      toast.success('견적문의가 삭제되었습니다');
+    } catch (error) {
+      console.error('Failed to delete inquiry:', error);
+      toast.error('견적문의 삭제에 실패했습니다');
+    }
+  };
+
   const unreadCount = inquiries.filter(inq => !inq.isRead).length;
 
   if (loading) {
@@ -90,34 +113,47 @@ const QuoteInquiry = () => {
           ) : (
             <div className="divide-y">
               {inquiries.map(inquiry => (
-                <button
+                <div
                   key={inquiry.id}
-                  onClick={() => handleSelectInquiry(inquiry)}
-                  className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
+                  className={`relative group ${
                     selectedInquiry?.id === inquiry.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
                   } ${!inquiry.isRead ? 'bg-yellow-50' : ''}`}
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900">{inquiry.name}</span>
-                      {!inquiry.isRead && (
-                        <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                      )}
+                  <button
+                    onClick={() => handleSelectInquiry(inquiry)}
+                    className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-900">{inquiry.name}</span>
+                        {!inquiry.isRead && (
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">
+                          {format(new Date(inquiry.createdAt), 'MM/dd HH:mm')}
+                        </span>
+                        <button
+                          onClick={(e) => handleDelete(inquiry.id, e)}
+                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="삭제"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <span className="text-xs text-gray-500">
-                      {format(new Date(inquiry.createdAt), 'MM/dd HH:mm')}
-                    </span>
-                  </div>
 
-                  <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
-                    <Phone className="w-3 h-3" />
-                    {inquiry.phone}
-                  </div>
+                    <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                      <Phone className="w-3 h-3" />
+                      {inquiry.phone}
+                    </div>
 
-                  <div className="text-sm text-gray-500 line-clamp-2">
-                    {inquiry.message}
-                  </div>
-                </button>
+                    <div className="text-sm text-gray-500 line-clamp-2">
+                      {inquiry.message}
+                    </div>
+                  </button>
+                </div>
               ))}
             </div>
           )}
