@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
-import { Mail, Phone, MapPin, Calendar, User, Building } from 'lucide-react';
+import { Mail, Phone, MapPin, Calendar, User, Building, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
 interface QuoteInquiry {
@@ -92,8 +92,8 @@ const QuoteInquiry = () => {
 
   return (
     <div className="h-full flex flex-col md:flex-row gap-4 p-4">
-      {/* 목록 */}
-      <div className="w-full md:w-1/3 bg-white rounded-lg shadow overflow-hidden flex flex-col">
+      {/* 목록 - 모바일에서는 상세가 선택되면 숨김 */}
+      <div className={`w-full md:w-1/3 bg-white rounded-lg shadow overflow-hidden flex flex-col ${selectedInquiry ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b bg-gray-50">
           <h2 className="text-lg font-semibold text-gray-900">
             견적문의 목록
@@ -160,14 +160,23 @@ const QuoteInquiry = () => {
         </div>
       </div>
 
-      {/* 상세 */}
-      <div className="flex-1 bg-white rounded-lg shadow overflow-hidden">
+      {/* 상세 - 모바일에서는 목록이 선택되지 않으면 숨김 */}
+      <div className={`flex-1 bg-white rounded-lg shadow overflow-hidden ${!selectedInquiry ? 'hidden md:flex md:flex-col' : 'flex flex-col'}`}>
         {selectedInquiry ? (
           <div className="h-full flex flex-col">
             <div className="p-6 border-b bg-gray-50">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {selectedInquiry.name}
-              </h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {selectedInquiry.name}
+                </h3>
+                {/* 모바일에서 목록으로 돌아가기 버튼 */}
+                <button
+                  onClick={() => setSelectedInquiry(null)}
+                  className="md:hidden px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors"
+                >
+                  목록으로
+                </button>
+              </div>
               <div className="text-sm text-gray-500">
                 {format(new Date(selectedInquiry.createdAt), 'yyyy년 MM월 dd일 HH:mm')}
               </div>
