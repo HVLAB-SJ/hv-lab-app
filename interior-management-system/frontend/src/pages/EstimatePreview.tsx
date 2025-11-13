@@ -440,19 +440,19 @@ const EstimatePreview: React.FC = () => {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1">
                         주거 형태
                       </label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
                         {['아파트', '빌라', '오피스텔', '단독주택', '주상복합'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
+                          <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                             <input
                               type="checkbox"
                               checked={form.residenceType.includes(item)}
                               onChange={() => handleMaterialCheckbox('residenceType', item)}
-                              className="mr-1 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
                             <span className="text-gray-700">{item}</span>
                           </label>
@@ -463,14 +463,14 @@ const EstimatePreview: React.FC = () => {
                       <label className="block text-sm font-bold text-gray-700 mb-1">
                         등급 <span className="text-red-500">*</span>
                       </label>
-                      <div className="flex gap-3">
+                      <div className="grid grid-cols-2 md:flex gap-2 md:gap-3">
                         {['알뜰', '기본', '고급', '하이엔드'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
+                          <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                             <input
                               type="checkbox"
                               checked={form.grade.includes(item)}
                               onChange={() => handleMaterialCheckbox('grade', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
                             <span className="text-gray-700">{item}</span>
                           </label>
@@ -491,28 +491,28 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       바닥재
                     </label>
-                    <div className="space-y-1">
-                      <div className="flex gap-4">
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 md:flex gap-2 md:gap-4">
                         {['장판', '데코타일', '강마루', '원목마루'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
+                          <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                             <input
                               type="checkbox"
                               checked={form.floorMaterial.includes(item)}
                               onChange={() => handleMaterialCheckbox('floorMaterial', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
                             <span className="text-gray-700">{item}</span>
                           </label>
                         ))}
                       </div>
-                      <div className="flex gap-4">
+                      <div className="grid grid-cols-2 md:flex gap-2 md:gap-4">
                         {['600각 타일', '800-900각 타일', '1200각 타일'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
+                          <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                             <input
                               type="checkbox"
                               checked={form.floorMaterial.includes(item)}
                               onChange={() => handleMaterialCheckbox('floorMaterial', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
                             <span className="text-gray-700">{item}</span>
                           </label>
@@ -525,7 +525,7 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       벽재 / 천장재
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                       {[
                         '합지도배',
                         '실크도배(일반)',
@@ -537,14 +537,14 @@ const EstimatePreview: React.FC = () => {
                         '박판타일',
                         '무늬목'
                       ].map(item => (
-                        <label key={item} className="flex items-center text-sm">
+                        <label key={item} className="flex items-center text-xs md:text-sm">
                           <input
                             type="checkbox"
                             checked={form.wallMaterial.includes(item)}
                             onChange={() => handleMaterialCheckbox('wallMaterial', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-gray-700 break-keep">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -559,19 +559,19 @@ const EstimatePreview: React.FC = () => {
                   공사 범위
                 </h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-2">
                         화장실 개수
                       </label>
-                      <div className="flex gap-3">
+                      <div className="flex gap-2 md:gap-3">
                         {['0', '1', '2', '3', '4'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
+                          <label key={item} className="flex items-center text-xs md:text-sm">
                             <input
                               type="checkbox"
                               checked={form.bathroomCount.includes(item)}
                               onChange={() => handleMaterialCheckbox('bathroomCount', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
                             <span className="text-gray-700">{item}</span>
                           </label>
@@ -582,14 +582,14 @@ const EstimatePreview: React.FC = () => {
                       <label className="block text-sm font-bold text-gray-700 mb-2">
                         층고
                       </label>
-                      <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-1 md:flex md:flex-col gap-2">
                         {['2400이하', '2400~2600', '2600이상'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
+                          <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                             <input
                               type="checkbox"
                               checked={form.ceilingHeight.includes(item)}
                               onChange={() => handleMaterialCheckbox('ceilingHeight', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
                             <span className="text-gray-700">{item}</span>
                           </label>
@@ -602,35 +602,35 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       확장 공사
                     </label>
-                    <div className="flex gap-4 flex-wrap">
-                      <label className="flex items-center text-sm">
+                    <div className="grid grid-cols-1 md:flex gap-2 md:gap-4 md:flex-wrap">
+                      <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
                         <input
                           type="checkbox"
                           name="livingRoomExpansion"
                           checked={form.livingRoomExpansion}
                           onChange={handleInputChange}
-                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                         />
                         <span className="text-gray-700">거실 확장</span>
                       </label>
-                      <label className="flex items-center text-sm">
+                      <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
                         <input
                           type="checkbox"
                           name="kitchenExpansion"
                           checked={form.kitchenExpansion}
                           onChange={handleInputChange}
-                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                         />
                         <span className="text-gray-700">주방 확장</span>
                       </label>
                       <div className="flex items-center">
-                        <label className="flex items-center text-sm">
+                        <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
                           <input
                             type="checkbox"
                             name="roomExpansion"
                             checked={form.roomExpansion}
                             onChange={handleInputChange}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
                           <span className="text-gray-700">방 확장</span>
                         </label>
@@ -639,7 +639,7 @@ const EstimatePreview: React.FC = () => {
                             name="roomExpansionCount"
                             value={form.roomExpansionCount}
                             onChange={handleInputChange}
-                            className="ml-3 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                            className="ml-2 px-2 py-1 text-xs md:text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
                           >
                             <option value={0}>선택</option>
                             <option value={1}>1개</option>
@@ -657,45 +657,45 @@ const EstimatePreview: React.FC = () => {
                       기타 공사
                     </label>
                     <div className="space-y-2">
-                      <label className="flex items-center text-sm">
+                      <label className="flex items-center text-xs md:text-sm">
                         <input
                           type="checkbox"
                           name="includeSash"
                           checked={form.includeSash}
                           onChange={handleInputChange}
-                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                         />
                         <span className="text-gray-700">샤시 공사</span>
                       </label>
-                      <label className="flex items-center text-sm">
+                      <label className="flex items-center text-xs md:text-sm">
                         <input
                           type="checkbox"
                           name="includeGrooving"
                           checked={form.includeGrooving}
                           onChange={handleInputChange}
-                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                         />
-                        <span className="text-gray-700">홈파기(바닥난방+수도배관)공사</span>
+                        <span className="text-gray-700 break-keep">홈파기(바닥난방+수도배관)공사</span>
                       </label>
-                      <label className="flex items-center text-sm">
+                      <label className="flex items-center text-xs md:text-sm">
                         <input
                           type="checkbox"
                           name="includeBangtong"
                           checked={form.includeBangtong}
                           onChange={handleInputChange}
-                          className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                          className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                         />
-                        <span className="text-gray-700">방통(바닥단열+바닥난방+수도배관)공사</span>
+                        <span className="text-gray-700 break-keep">방통(바닥단열+바닥난방+수도배관)공사</span>
                       </label>
                       <div>
-                        <div className="flex items-center">
-                          <label className="flex items-center text-sm">
+                        <div className="flex items-center flex-wrap gap-2">
+                          <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
                             <input
                               type="checkbox"
                               name="includeAircon"
                               checked={form.includeAircon}
                               onChange={handleInputChange}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
                             <span className="text-gray-700">에어컨 공사</span>
                           </label>
@@ -704,7 +704,7 @@ const EstimatePreview: React.FC = () => {
                               name="airconCount"
                               value={form.airconCount}
                               onChange={handleInputChange}
-                              className="ml-3 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                              className="px-2 py-1 text-xs md:text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
                             >
                               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                                 <option key={num} value={num}>{num}대</option>
@@ -713,14 +713,14 @@ const EstimatePreview: React.FC = () => {
                           )}
                         </div>
                         {form.includeAircon && (
-                          <div className="ml-6 mt-1 flex gap-3">
+                          <div className="ml-0 md:ml-6 mt-2 flex gap-2 md:gap-3">
                             {['2 in 1', '시스템 에어컨'].map(item => (
-                              <label key={item} className="flex items-center text-sm">
+                              <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                                 <input
                                   type="checkbox"
                                   checked={form.airconType.includes(item)}
                                   onChange={() => handleMaterialCheckbox('airconType', item)}
-                                  className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                                  className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                                 />
                                 <span className="text-gray-700">{item}</span>
                               </label>
@@ -745,14 +745,14 @@ const EstimatePreview: React.FC = () => {
                     </label>
                     <div className="space-y-1">
                       {['공용부만', '주방가구와 방에 붙박이장 일부', '전체 커스텀 가구'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
+                        <label key={item} className="flex items-center text-xs md:text-sm">
                           <input
                             type="checkbox"
                             checked={form.furnitureWork.includes(item)}
                             onChange={() => handleMaterialCheckbox('furnitureWork', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-gray-700 break-keep">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -763,14 +763,14 @@ const EstimatePreview: React.FC = () => {
                     </label>
                     <div className="space-y-1">
                       {['전체 BLUM(블룸)', '경첩 BLUM(블룸)+서랍(일반)', '경첩(일반)+서랍(일반)'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
+                        <label key={item} className="flex items-center text-xs md:text-sm">
                           <input
                             type="checkbox"
                             checked={form.furnitureHardwareGrade.includes(item)}
                             onChange={() => handleMaterialCheckbox('furnitureHardwareGrade', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-gray-700 break-keep">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -781,12 +781,12 @@ const EstimatePreview: React.FC = () => {
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                       {['세라믹', '칸스톤', '천연대리석', '인조대리석', '스테인리스'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
+                        <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                           <input
                             type="checkbox"
                             checked={form.kitchenCountertop.includes(item)}
                             onChange={() => handleMaterialCheckbox('kitchenCountertop', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
                           <span className="text-gray-700">{item}</span>
                         </label>
