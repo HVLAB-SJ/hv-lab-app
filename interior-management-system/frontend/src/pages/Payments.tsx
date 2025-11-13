@@ -220,62 +220,13 @@ const Payments = () => {
     return () => clearInterval(autoRefreshInterval);
   }, [loadPaymentsFromAPI]);
 
-  // URL 파라미터로 결제 건 자동 열기
+  // URL 파라미터로 송금완료 자동 처리
   useEffect(() => {
-    const handleUrlParams = async () => {
+    const handleAutoComplete = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const paymentId = urlParams.get('id');
       const completeId = urlParams.get('complete');
 
-      // 결제 건 ID로 자동 열기
-      if (paymentId) {
-        console.log('[결제 자동 열기] URL 파라미터 확인:', paymentId);
-
-        // 로그인 확인
-        if (!user) {
-          console.log('[결제 자동 열기] 로그인 필요 - 대기 중');
-          return;
-        }
-
-        try {
-          // 최신 데이터 로드
-          await loadPaymentsFromAPI();
-
-          // 해당 결제 건 찾기
-          const payment = payments.find(p => String(p.id) === String(paymentId));
-
-          if (payment) {
-            console.log('[결제 자동 열기] 결제 건 찾음:', payment);
-
-            // 모바일에서 내역 화면으로 전환
-            setMobileView('list');
-
-            // 상태에 따라 필터 설정
-            if (payment.status === 'completed') {
-              setStatusFilter('completed');
-            } else {
-              setStatusFilter('pending');
-            }
-
-            // 상세보기 모달 열기
-            setDetailPayment(payment);
-            setShowDetailModal(true);
-
-            // URL에서 파라미터 제거
-            window.history.replaceState({}, '', '/payments');
-          } else {
-            console.error('[결제 자동 열기] 결제 건을 찾을 수 없음:', paymentId);
-            toast.error('결제 요청을 찾을 수 없습니다');
-            window.history.replaceState({}, '', '/payments');
-          }
-        } catch (error) {
-          console.error('[결제 자동 열기] 실패:', error);
-          window.history.replaceState({}, '', '/payments');
-        }
-      }
-
-      // 송금완료 자동 처리 (기존 기능 유지 - 삭제 예정)
-      else if (completeId) {
+      if (completeId) {
         console.log('[자동 송금완료] URL 파라미터 확인:', completeId);
 
         // 로그인 확인
@@ -316,8 +267,8 @@ const Payments = () => {
       }
     };
 
-    handleUrlParams();
-  }, [loadPaymentsFromAPI, updatePaymentInAPI, user, payments]);
+    handleAutoComplete();
+  }, [loadPaymentsFromAPI, updatePaymentInAPI, user]);
 
   // 공정 변경 시 해당 공정의 협력업체 필터링
   useEffect(() => {
