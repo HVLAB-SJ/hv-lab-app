@@ -92,24 +92,14 @@ const ConstructionPayment = () => {
     return () => window.removeEventListener('headerAddButtonClick', handleHeaderAddButton);
   }, []);
 
-  // Sync local state with dataStore, normalize data, and remove orphaned records
+  // Sync local state with dataStore and normalize data
   useEffect(() => {
     console.log('💰 ConstructionPayment: Syncing with dataStore');
     console.log('💰 constructionPayments:', constructionPayments);
     console.log('💰 projects:', projects);
 
-    // Get valid project names
-    const validProjectNames = projects.map(p => p.name);
-    console.log('💰 Valid project names:', validProjectNames);
-
-    // Filter out records that don't have corresponding projects
-    const validRecords = constructionPayments.filter(record =>
-      validProjectNames.includes(record.project)
-    );
-    console.log('💰 Valid records after filtering:', validRecords);
-
-    // Normalize the valid records
-    const normalizedRecords = validRecords.map(record => ({
+    // Normalize all records (don't filter or delete)
+    const normalizedRecords = constructionPayments.map(record => ({
       ...record,
       vatType: record.vatType || 'percentage',
       vatPercentage: record.vatPercentage ?? 100,
@@ -122,28 +112,8 @@ const ConstructionPayment = () => {
     }));
     console.log('💰 Normalized records:', normalizedRecords);
 
-    // If orphaned records were found, delete them from the store
-    if (validRecords.length < constructionPayments.length) {
-      // Find orphaned records
-      const orphanedRecords = constructionPayments.filter(
-        record => !validProjectNames.includes(record.project)
-      );
-
-      // Delete each orphaned record from the store
-      orphanedRecords.forEach(async (record) => {
-        try {
-          await deleteConstructionPaymentFromAPI(record.id);
-        } catch (error) {
-          console.error('Failed to delete orphaned record:', error);
-        }
-      });
-
-      console.log('Removed orphaned construction payment records:',
-        orphanedRecords.map(r => `${r.project} (${r.id})`));
-    }
-
     setRecords(normalizedRecords);
-  }, [constructionPayments, projects, deleteConstructionPaymentFromAPI]);
+  }, [constructionPayments, projects]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<PaymentRecord | null>(null);
@@ -597,6 +567,34 @@ const ConstructionPayment = () => {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-bold text-lg text-gray-900">{record.project}</h3>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const received = calculateReceived(record);
+                        const totalContract = calculateTotalContractAmount(record);
+                        // 추가내역을 제외한 잔여금액 계산
+                        const remainingWithoutAdditional = totalContract - received;
+
+                        // 프로젝트 정보에서 기간 가져오기
+                        const projectInfo = projects.find(p => p.name === record.project);
+
+                        setCashReceiptData({
+                          project: record.project,
+                          client: record.client,
+                          amount: '',
+                          date: format(new Date(), 'yyyy-MM-dd'),
+                          clientSignature: '',
+                          totalContractAmount: totalContract,
+                          previousAmount: received,
+                          remainingAmount: remainingWithoutAdditional,
+                          startDate: projectInfo?.startDate ? format(new Date(projectInfo.startDate), 'yyyy-MM-dd') : '',
+                          endDate: projectInfo?.endDate ? format(new Date(projectInfo.endDate), 'yyyy-MM-dd') : ''
+                        });
+                        setShowCashReceiptModal(true);
+                      }}
+                      className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+                    >
+                      현금수령증
+                    </button>
                     <button
                       onClick={() => setSelectedRecord(record)}
                       className="text-sm text-gray-600 hover:text-gray-800"
