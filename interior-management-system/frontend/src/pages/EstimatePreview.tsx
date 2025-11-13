@@ -743,7 +743,7 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       가구 공사 범위
                     </label>
-                    <div className="space-y-1">
+                    <div className="grid grid-cols-2 gap-2">
                       {['공용부만', '주방가구와 방에 붙박이장 일부', '전체 커스텀 가구'].map(item => (
                         <label key={item} className="flex items-center text-xs md:text-sm">
                           <input
@@ -761,7 +761,7 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       하드웨어 등급
                     </label>
-                    <div className="space-y-1">
+                    <div className="grid grid-cols-2 gap-2">
                       {['전체 BLUM(블룸)', '경첩 BLUM(블룸)+서랍(일반)', '경첩(일반)+서랍(일반)'].map(item => (
                         <label key={item} className="flex items-center text-xs md:text-sm">
                           <input
@@ -802,21 +802,21 @@ const EstimatePreview: React.FC = () => {
                   전기/조명
                 </h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1">
                         스위치/콘센트 (공용부)
                       </label>
-                      <div className="space-y-1">
+                      <div className="grid grid-cols-2 gap-2">
                         {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오(고급)', '르그랑 아펠라(일반)'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
+                          <label key={item} className="flex items-center text-xs md:text-sm">
                             <input
                               type="checkbox"
                               checked={form.switchPublic.includes(item)}
                               onChange={() => handleMaterialCheckbox('switchPublic', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
-                            <span className="text-gray-700">{item}</span>
+                            <span className="text-gray-700 break-keep">{item}</span>
                           </label>
                         ))}
                       </div>
@@ -825,16 +825,16 @@ const EstimatePreview: React.FC = () => {
                       <label className="block text-sm font-bold text-gray-700 mb-1">
                         스위치/콘센트 (방)
                       </label>
-                      <div className="space-y-1">
+                      <div className="grid grid-cols-2 gap-2">
                         {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오(고급)', '르그랑 아펠라(일반)'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
+                          <label key={item} className="flex items-center text-xs md:text-sm">
                             <input
                               type="checkbox"
                               checked={form.switchRoom.includes(item)}
                               onChange={() => handleMaterialCheckbox('switchRoom', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
-                            <span className="text-gray-700">{item}</span>
+                            <span className="text-gray-700 break-keep">{item}</span>
                           </label>
                         ))}
                       </div>
@@ -845,32 +845,43 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       조명
                     </label>
-                    <div className="space-y-1">
-                      <div className="flex gap-4">
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
                         {['마그네틱조명', '라인조명'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
+                          <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                             <input
                               type="checkbox"
                               checked={form.lightingType.includes(item)}
                               onChange={() => handleMaterialCheckbox('lightingType', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
                             <span className="text-gray-700">{item}</span>
                           </label>
                         ))}
                       </div>
-                      <div className="flex gap-3">
-                        {['매입조명(일반)', '매입조명(고급)', '매입조명(하이엔드)'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
+                      <div className="grid grid-cols-2 gap-2">
+                        {['매입조명(일반)', '매입조명(고급)'].map(item => (
+                          <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                             <input
                               type="checkbox"
                               checked={form.lightingType.includes(item)}
                               onChange={() => handleMaterialCheckbox('lightingType', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
                             <span className="text-gray-700">{item}</span>
                           </label>
                         ))}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={form.lightingType.includes('매입조명(하이엔드)')}
+                            onChange={() => handleMaterialCheckbox('lightingType', '매입조명(하이엔드)')}
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                          />
+                          <span className="text-gray-700">매입조명(하이엔드)</span>
+                        </label>
                       </div>
                     </div>
                   </div>
@@ -921,21 +932,21 @@ const EstimatePreview: React.FC = () => {
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   기타 마감
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       몰딩 (공용부)
                     </label>
-                    <div className="space-y-1">
+                    <div className="grid grid-cols-2 gap-2">
                       {['무걸레받이+마이너스몰딩', '무걸레받이+무몰딩', '걸레받이+무몰딩', '걸레받이+천장몰딩'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
+                        <label key={item} className="flex items-center text-xs md:text-sm">
                           <input
                             type="checkbox"
                             checked={form.moldingPublic.includes(item)}
                             onChange={() => handleMaterialCheckbox('moldingPublic', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-gray-700 break-keep">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -944,16 +955,16 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       몰딩 (방)
                     </label>
-                    <div className="space-y-1">
+                    <div className="grid grid-cols-2 gap-2">
                       {['무걸레받이+마이너스몰딩', '무걸레받이+무몰딩', '걸레받이+무몰딩', '걸레받이+천장몰딩'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
+                        <label key={item} className="flex items-center text-xs md:text-sm">
                           <input
                             type="checkbox"
                             checked={form.moldingRoom.includes(item)}
                             onChange={() => handleMaterialCheckbox('moldingRoom', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-gray-700 break-keep">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -967,42 +978,41 @@ const EstimatePreview: React.FC = () => {
                   화장실 상세
                 </h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1">
-                        화장실 천장
-                      </label>
-                      <div className="flex gap-2">
-                        {['SMC', '도장', '이노솔'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
-                            <input
-                              type="checkbox"
-                              checked={form.bathroomCeiling.includes(item)}
-                              onChange={() => handleMaterialCheckbox('bathroomCeiling', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                            />
-                            <span className="text-gray-700">{item}</span>
-                          </label>
-                        ))}
-                      </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                      화장실 천장
+                    </label>
+                    <div className="grid grid-cols-2 md:flex gap-2 md:gap-3">
+                      {['SMC', '도장', '이노솔'].map(item => (
+                        <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={form.bathroomCeiling.includes(item)}
+                            onChange={() => handleMaterialCheckbox('bathroomCeiling', item)}
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                          />
+                          <span className="text-gray-700">{item}</span>
+                        </label>
+                      ))}
                     </div>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1">
-                        화장실 수전
-                      </label>
-                      <div className="flex gap-2">
-                        {['일반수전', '매립수전'].map(item => (
-                          <label key={item} className="flex items-center text-sm">
-                            <input
-                              type="checkbox"
-                              checked={form.bathroomFaucet.includes(item)}
-                              onChange={() => handleMaterialCheckbox('bathroomFaucet', item)}
-                              className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                            />
-                            <span className="text-gray-700">{item}</span>
-                          </label>
-                        ))}
-                      </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                      화장실 수전
+                    </label>
+                    <div className="grid grid-cols-2 md:flex gap-2 md:gap-3">
+                      {['일반수전', '매립수전'].map(item => (
+                        <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={form.bathroomFaucet.includes(item)}
+                            onChange={() => handleMaterialCheckbox('bathroomFaucet', item)}
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                          />
+                          <span className="text-gray-700">{item}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
 
@@ -1010,14 +1020,14 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       타일 등급
                     </label>
-                    <div className="flex gap-3">
+                    <div className="grid grid-cols-2 md:flex gap-2 md:gap-3">
                       {['유럽산(고급)', '중국산(중급)', '중국산(기본)'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
+                        <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                           <input
                             type="checkbox"
                             checked={form.bathroomTileGrade.includes(item)}
                             onChange={() => handleMaterialCheckbox('bathroomTileGrade', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
                           <span className="text-gray-700">{item}</span>
                         </label>
@@ -1029,7 +1039,7 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       화장실 타일
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {[
                         '300x600(벽)+300각(바닥)',
                         '600각(덧방)',
@@ -1038,14 +1048,14 @@ const EstimatePreview: React.FC = () => {
                         '750x1500',
                         '박판타일'
                       ].map(item => (
-                        <label key={item} className="flex items-center text-sm">
+                        <label key={item} className="flex items-center text-xs md:text-sm">
                           <input
                             type="checkbox"
                             checked={form.bathroomTile.includes(item)}
                             onChange={() => handleMaterialCheckbox('bathroomTile', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-gray-700 break-keep">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -1055,18 +1065,44 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       줄눈
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['스트라이크에보(친환경 에폭시)', '케라폭시(에폭시)', '푸가벨라', 'FG8(수입 고탄성 줄눈)', 'FG4(수입 줄눈)'].map(item => (
-                        <label key={item} className="flex items-center text-sm">
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-1">
+                        <label className="flex items-center text-xs md:text-sm">
                           <input
                             type="checkbox"
-                            checked={form.bathroomGrout.includes(item)}
-                            onChange={() => handleMaterialCheckbox('bathroomGrout', item)}
-                            className="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
+                            checked={form.bathroomGrout.includes('스트라이크에보(친환경 에폭시)')}
+                            onChange={() => handleMaterialCheckbox('bathroomGrout', '스트라이크에보(친환경 에폭시)')}
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-gray-700 break-keep">스트라이크에보(친환경 에폭시)</span>
                         </label>
-                      ))}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['케라폭시(에폭시)', '푸가벨라'].map(item => (
+                          <label key={item} className="flex items-center text-xs md:text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.bathroomGrout.includes(item)}
+                              onChange={() => handleMaterialCheckbox('bathroomGrout', item)}
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                            />
+                            <span className="text-gray-700 break-keep">{item}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['FG8(수입 고탄성 줄눈)', 'FG4(수입 줄눈)'].map(item => (
+                          <label key={item} className="flex items-center text-xs md:text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.bathroomGrout.includes(item)}
+                              onChange={() => handleMaterialCheckbox('bathroomGrout', item)}
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                            />
+                            <span className="text-gray-700 break-keep">{item}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
