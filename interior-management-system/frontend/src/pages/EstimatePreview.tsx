@@ -525,28 +525,40 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       벽재 / 천장재
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {[
-                        '합지도배',
-                        '실크도배(일반)',
-                        '실크도배(고급)',
-                        '도장(전체)',
-                        '도장(공용부)+실크도배(방)',
-                        '필름',
-                        '대형타일',
-                        '박판타일',
-                        '무늬목'
-                      ].map(item => (
-                        <label key={item} className="flex items-center text-xs md:text-sm">
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {[
+                          '합지도배',
+                          '실크도배(일반)',
+                          '실크도배(고급)',
+                          '도장(전체)',
+                          '필름',
+                          '대형타일',
+                          '박판타일',
+                          '무늬목'
+                        ].map(item => (
+                          <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={form.wallMaterial.includes(item)}
+                              onChange={() => handleMaterialCheckbox('wallMaterial', item)}
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                            />
+                            <span className="text-gray-700">{item}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-1">
+                        <label className="flex items-center text-xs md:text-sm">
                           <input
                             type="checkbox"
-                            checked={form.wallMaterial.includes(item)}
-                            onChange={() => handleMaterialCheckbox('wallMaterial', item)}
+                            checked={form.wallMaterial.includes('도장(공용부)+실크도배(방)')}
+                            onChange={() => handleMaterialCheckbox('wallMaterial', '도장(공용부)+실크도배(방)')}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
+                          <span className="text-gray-700 break-keep">도장(공용부)+실크도배(방)</span>
                         </label>
-                      ))}
+                      </div>
                     </div>
                   </div>
 
@@ -675,7 +687,7 @@ const EstimatePreview: React.FC = () => {
                           onChange={handleInputChange}
                           className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                         />
-                        <span className="text-gray-700 whitespace-nowrap">홈파기(바닥난방+수도배관)공사</span>
+                        <span className="text-gray-700 break-keep">홈파기(바닥난방+수도배관)공사</span>
                       </label>
                       <label className="flex items-center text-xs md:text-sm">
                         <input
@@ -685,7 +697,7 @@ const EstimatePreview: React.FC = () => {
                           onChange={handleInputChange}
                           className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                         />
-                        <span className="text-gray-700 whitespace-nowrap">방통(바닥단열+바닥난방+수도배관)공사</span>
+                        <span className="text-gray-700 break-keep">방통(바닥단열+바닥난방+수도배관)공사</span>
                       </label>
                       <div>
                         <div className="flex items-center flex-wrap gap-2">
@@ -743,36 +755,76 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       가구 공사 범위
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['공용부만', '주방가구와 방에 붙박이장 일부', '전체 커스텀 가구'].map(item => (
-                        <label key={item} className="flex items-center text-xs md:text-sm">
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
                           <input
                             type="checkbox"
-                            checked={form.furnitureWork.includes(item)}
-                            onChange={() => handleMaterialCheckbox('furnitureWork', item)}
+                            checked={form.furnitureWork.includes('공용부만')}
+                            onChange={() => handleMaterialCheckbox('furnitureWork', '공용부만')}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
+                          <span className="text-gray-700">공용부만</span>
                         </label>
-                      ))}
+                        <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={form.furnitureWork.includes('전체 커스텀 가구')}
+                            onChange={() => handleMaterialCheckbox('furnitureWork', '전체 커스텀 가구')}
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                          />
+                          <span className="text-gray-700">전체 커스텀 가구</span>
+                        </label>
+                      </div>
+                      <div className="grid grid-cols-1">
+                        <label className="flex items-center text-xs md:text-sm">
+                          <input
+                            type="checkbox"
+                            checked={form.furnitureWork.includes('주방가구와 방에 붙박이장 일부')}
+                            onChange={() => handleMaterialCheckbox('furnitureWork', '주방가구와 방에 붙박이장 일부')}
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                          />
+                          <span className="text-gray-700 break-keep">주방가구와 방에 붙박이장 일부</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       하드웨어 등급
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['전체 BLUM(블룸)', '경첩 BLUM(블룸)+서랍(일반)', '경첩(일반)+서랍(일반)'].map(item => (
-                        <label key={item} className="flex items-center text-xs md:text-sm">
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
                           <input
                             type="checkbox"
-                            checked={form.furnitureHardwareGrade.includes(item)}
-                            onChange={() => handleMaterialCheckbox('furnitureHardwareGrade', item)}
+                            checked={form.furnitureHardwareGrade.includes('전체 BLUM(블룸)')}
+                            onChange={() => handleMaterialCheckbox('furnitureHardwareGrade', '전체 BLUM(블룸)')}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
+                          <span className="text-gray-700">전체 BLUM(블룸)</span>
                         </label>
-                      ))}
+                        <label className="flex items-center text-xs md:text-sm">
+                          <input
+                            type="checkbox"
+                            checked={form.furnitureHardwareGrade.includes('경첩(일반)+서랍(일반)')}
+                            onChange={() => handleMaterialCheckbox('furnitureHardwareGrade', '경첩(일반)+서랍(일반)')}
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                          />
+                          <span className="text-gray-700 break-keep">경첩(일반)+서랍(일반)</span>
+                        </label>
+                      </div>
+                      <div className="grid grid-cols-1">
+                        <label className="flex items-center text-xs md:text-sm">
+                          <input
+                            type="checkbox"
+                            checked={form.furnitureHardwareGrade.includes('경첩 BLUM(블룸)+서랍(일반)')}
+                            onChange={() => handleMaterialCheckbox('furnitureHardwareGrade', '경첩 BLUM(블룸)+서랍(일반)')}
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                          />
+                          <span className="text-gray-700 break-keep">경첩 BLUM(블룸)+서랍(일반)</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -937,7 +989,7 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       몰딩 (공용부)
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                       {['무걸레받이+마이너스몰딩', '무걸레받이+무몰딩', '걸레받이+무몰딩', '걸레받이+천장몰딩'].map(item => (
                         <label key={item} className="flex items-center text-xs md:text-sm">
                           <input
@@ -946,7 +998,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('moldingPublic', item)}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
+                          <span className="text-gray-700 break-keep">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -955,7 +1007,7 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       몰딩 (방)
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                       {['무걸레받이+마이너스몰딩', '무걸레받이+무몰딩', '걸레받이+무몰딩', '걸레받이+천장몰딩'].map(item => (
                         <label key={item} className="flex items-center text-xs md:text-sm">
                           <input
@@ -964,7 +1016,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('moldingRoom', item)}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
+                          <span className="text-gray-700 break-keep">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -1039,25 +1091,41 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       화장실 타일
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        '300x600(벽)+300각(바닥)',
-                        '600각(덧방)',
-                        '600각(올철거)',
-                        '600x1200 or 800각(올철거)',
-                        '750x1500',
-                        '박판타일'
-                      ].map(item => (
-                        <label key={item} className="flex items-center text-xs md:text-sm">
-                          <input
-                            type="checkbox"
-                            checked={form.bathroomTile.includes(item)}
-                            onChange={() => handleMaterialCheckbox('bathroomTile', item)}
-                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
-                          />
-                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
-                        </label>
-                      ))}
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          '600각(덧방)',
+                          '600각(올철거)',
+                          '750x1500',
+                          '박판타일'
+                        ].map(item => (
+                          <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={form.bathroomTile.includes(item)}
+                              onChange={() => handleMaterialCheckbox('bathroomTile', item)}
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                            />
+                            <span className="text-gray-700">{item}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-1 gap-2">
+                        {[
+                          '300x600(벽)+300각(바닥)',
+                          '600x1200 or 800각(올철거)'
+                        ].map(item => (
+                          <label key={item} className="flex items-center text-xs md:text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.bathroomTile.includes(item)}
+                              onChange={() => handleMaterialCheckbox('bathroomTile', item)}
+                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                            />
+                            <span className="text-gray-700 break-keep">{item}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -1074,23 +1142,23 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('bathroomGrout', '스트라이크에보(친환경 에폭시)')}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 whitespace-nowrap">스트라이크에보(친환경 에폭시)</span>
+                          <span className="text-gray-700 break-keep">스트라이크에보(친환경 에폭시)</span>
                         </label>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         {['케라폭시(에폭시)', '푸가벨라'].map(item => (
-                          <label key={item} className="flex items-center text-xs md:text-sm">
+                          <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                             <input
                               type="checkbox"
                               checked={form.bathroomGrout.includes(item)}
                               onChange={() => handleMaterialCheckbox('bathroomGrout', item)}
                               className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
-                            <span className="text-gray-700 whitespace-nowrap">{item}</span>
+                            <span className="text-gray-700">{item}</span>
                           </label>
                         ))}
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 gap-2">
                         {['FG8(수입 고탄성 줄눈)', 'FG4(수입 줄눈)'].map(item => (
                           <label key={item} className="flex items-center text-xs md:text-sm">
                             <input
@@ -1099,7 +1167,7 @@ const EstimatePreview: React.FC = () => {
                               onChange={() => handleMaterialCheckbox('bathroomGrout', item)}
                               className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
-                            <span className="text-gray-700 whitespace-nowrap">{item}</span>
+                            <span className="text-gray-700 break-keep">{item}</span>
                           </label>
                         ))}
                       </div>
