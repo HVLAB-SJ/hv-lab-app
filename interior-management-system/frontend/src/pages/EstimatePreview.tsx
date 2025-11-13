@@ -544,7 +544,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('wallMaterial', item)}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 break-keep">{item}</span>
+                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -675,7 +675,7 @@ const EstimatePreview: React.FC = () => {
                           onChange={handleInputChange}
                           className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                         />
-                        <span className="text-gray-700 break-keep">홈파기(바닥난방+수도배관)공사</span>
+                        <span className="text-gray-700 whitespace-nowrap">홈파기(바닥난방+수도배관)공사</span>
                       </label>
                       <label className="flex items-center text-xs md:text-sm">
                         <input
@@ -685,7 +685,7 @@ const EstimatePreview: React.FC = () => {
                           onChange={handleInputChange}
                           className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                         />
-                        <span className="text-gray-700 break-keep">방통(바닥단열+바닥난방+수도배관)공사</span>
+                        <span className="text-gray-700 whitespace-nowrap">방통(바닥단열+바닥난방+수도배관)공사</span>
                       </label>
                       <div>
                         <div className="flex items-center flex-wrap gap-2">
@@ -752,7 +752,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('furnitureWork', item)}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 break-keep">{item}</span>
+                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -770,7 +770,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('furnitureHardwareGrade', item)}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 break-keep">{item}</span>
+                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -816,7 +816,7 @@ const EstimatePreview: React.FC = () => {
                               onChange={() => handleMaterialCheckbox('switchPublic', item)}
                               className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
-                            <span className="text-gray-700 break-keep">{item}</span>
+                            <span className="text-gray-700 whitespace-nowrap">{item}</span>
                           </label>
                         ))}
                       </div>
@@ -834,7 +834,7 @@ const EstimatePreview: React.FC = () => {
                               onChange={() => handleMaterialCheckbox('switchRoom', item)}
                               className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
-                            <span className="text-gray-700 break-keep">{item}</span>
+                            <span className="text-gray-700 whitespace-nowrap">{item}</span>
                           </label>
                         ))}
                       </div>
@@ -946,7 +946,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('moldingPublic', item)}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 break-keep">{item}</span>
+                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -964,7 +964,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('moldingRoom', item)}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 break-keep">{item}</span>
+                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -1055,7 +1055,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('bathroomTile', item)}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 break-keep">{item}</span>
+                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
                         </label>
                       ))}
                     </div>
@@ -1074,7 +1074,7 @@ const EstimatePreview: React.FC = () => {
                             onChange={() => handleMaterialCheckbox('bathroomGrout', '스트라이크에보(친환경 에폭시)')}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 break-keep">스트라이크에보(친환경 에폭시)</span>
+                          <span className="text-gray-700 whitespace-nowrap">스트라이크에보(친환경 에폭시)</span>
                         </label>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1086,7 +1086,7 @@ const EstimatePreview: React.FC = () => {
                               onChange={() => handleMaterialCheckbox('bathroomGrout', item)}
                               className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
-                            <span className="text-gray-700 break-keep">{item}</span>
+                            <span className="text-gray-700 whitespace-nowrap">{item}</span>
                           </label>
                         ))}
                       </div>
@@ -1099,7 +1099,7 @@ const EstimatePreview: React.FC = () => {
                               onChange={() => handleMaterialCheckbox('bathroomGrout', item)}
                               className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                             />
-                            <span className="text-gray-700 break-keep">{item}</span>
+                            <span className="text-gray-700 whitespace-nowrap">{item}</span>
                           </label>
                         ))}
                       </div>
