@@ -525,7 +525,7 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       벽재 / 천장재
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2">
                       {[
                         '합지도배',
                         '실크도배(일반)',
