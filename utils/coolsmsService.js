@@ -116,12 +116,13 @@ class CoolSMSService {
         // SMS 메시지 생성
         const message = this.createPaymentMessage(data);
 
-        // 각 관리자에게 SMS 발송 (제목 없이)
+        // 각 관리자에게 SMS 발송 (빈 제목 명시적 설정)
         console.log(`📱 [CoolSMS] 총 ${this.adminPhones.length}명의 관리자에게 SMS 발송 시작`);
         for (const phoneNumber of this.adminPhones) {
             try {
                 console.log(`📤 [CoolSMS] ${phoneNumber}로 SMS 발송 시도...`);
-                const result = await this.sendSMS(phoneNumber, message);
+                // 빈 공백 제목으로 자동 제목 생성 방지
+                const result = await this.sendSMS(phoneNumber, message, ' ');
                 results.push({
                     phone: phoneNumber,
                     success: result.success,
