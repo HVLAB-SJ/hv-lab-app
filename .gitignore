@@ -12,3 +12,8 @@ build/
 hvlab-app-backup/
 interior-management-system/nul
 nul
+# 백업 파일들은 무시 (backups 디렉토리는 포함)
+database-backup-*.db
+railway-backup-*.db
+*.sqlite
+*.sqlite3

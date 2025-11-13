@@ -7,6 +7,7 @@ const socketIO = require('socket.io');
 const cron = require('node-cron');
 const { db, initDatabase } = require('./server/config/database');
 const emailService = require('./utils/emailService');
+const { backupDatabase, ensureBackupDirectory } = require('./server/utils/databaseBackup');
 
 const app = express();
 const server = http.createServer(app);
@@ -403,6 +404,36 @@ server.listen(PORT, HOST, async () => {
       console.error('❌ 초기 이메일 확인 중 오류:', error.message);
     }
   }, 5000); // 서버 시작 5초 후 실행
+
+  // ========================================
+  // 데이터베이스 자동 백업 설정
+  // ========================================
+
+  // 백업 디렉토리 초기화
+  ensureBackupDirectory();
+
+  // 매일 자정(00:00)에 자동 백업 실행
+  console.log('💾 데이터베이스 자동 백업 스케줄러를 시작합니다 (매일 00:00 실행)');
+  cron.schedule('0 0 * * *', () => {
+    console.log('⏰ [백업 스케줄러] 데이터베이스 자동 백업 시작...');
+    const success = backupDatabase();
+    if (success) {
+      console.log('✅ [백업 스케줄러] 백업 완료');
+    } else {
+      console.error('❌ [백업 스케줄러] 백업 실패');
+    }
+  });
+
+  // 서버 시작 시 즉시 백업 실행 (초기 백업)
+  setTimeout(() => {
+    console.log('💾 서버 시작 시 초기 백업 수행...');
+    const success = backupDatabase();
+    if (success) {
+      console.log('✅ 초기 백업 완료');
+    } else {
+      console.error('❌ 초기 백업 실패');
+    }
+  }, 3000); // 서버 시작 3초 후 실행
 });
 
 // 우아한 종료 처리
