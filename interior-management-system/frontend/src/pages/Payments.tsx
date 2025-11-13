@@ -224,7 +224,7 @@ const Payments = () => {
   useEffect(() => {
     const handleAutoComplete = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const completeId = urlParams.get('complete');
+      const completeId = urlParams.get('complete') || urlParams.get('c'); // 짧은 파라미터 'c' 지원
 
       if (completeId) {
         console.log('[자동 송금완료] URL 파라미터 확인:', completeId);
