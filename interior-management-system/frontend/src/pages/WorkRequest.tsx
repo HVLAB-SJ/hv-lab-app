@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import clsx from 'clsx';
-import { Trash2, Calendar } from 'lucide-react';
-import WorkRequestModal from '../components/WorkRequestModal';
+import { Trash2, Calendar, AlertCircle } from 'lucide-react';
 import workRequestService from '../services/workRequestService';
 import toast from 'react-hot-toast';
 import { useDataStore } from '../store/dataStore';
+import { useAuth } from '../contexts/AuthContext';
 
 interface WorkRequest {
   id: string;
@@ -25,14 +25,13 @@ interface WorkRequest {
 
 type TabStatus = 'pending' | 'in-progress' | 'completed' | 'all';
 
-const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현'];
+const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '디자인팀', '현장팀'];
 
 const WorkRequest = () => {
   const { addScheduleToAPI, deleteScheduleFromAPI, updateScheduleInAPI, schedules, projects, fetchSchedules } = useDataStore();
+  const { user } = useAuth();
   const [requests, setRequests] = useState<WorkRequest[]>([]);
 
-  const [showModal, setShowModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<WorkRequest | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<TabStatus>('pending');
   const [filterPriority, setFilterPriority] = useState<string>('all');
@@ -46,21 +45,31 @@ const WorkRequest = () => {
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Form state
+  const [formData, setFormData] = useState({
+    project: '',
+    requestType: '',
+    description: '',
+    requestDate: format(new Date(), 'yyyy-MM-dd'),
+    dueDate: format(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+    requestedBy: user?.name || '',
+    assignedTo: ''
+  });
+  const [isUrgent, setIsUrgent] = useState(false);
+  const [customRequestType, setCustomRequestType] = useState('');
+  const [editingRequest, setEditingRequest] = useState<WorkRequest | null>(null);
+
   // Load work requests from API on mount
   useEffect(() => {
     loadWorkRequests();
   }, []);
 
-  // 헤더의 + 버튼 클릭 이벤트 수신
+  // Set default requestedBy when user is loaded
   useEffect(() => {
-    const handleHeaderAddButton = () => {
-      setSelectedRequest(null);
-      setShowModal(true);
-    };
-
-    window.addEventListener('headerAddButtonClick', handleHeaderAddButton);
-    return () => window.removeEventListener('headerAddButtonClick', handleHeaderAddButton);
-  }, []);
+    if (user?.name && !formData.requestedBy) {
+      setFormData(prev => ({ ...prev, requestedBy: user.name }));
+    }
+  }, [user]);
 
   const loadWorkRequests = async () => {
     try {
@@ -108,15 +117,10 @@ const WorkRequest = () => {
   const handleDelete = async (id: string, projectName: string) => {
     if (window.confirm(`"${projectName}" 업무요청을 삭제하시겠습니까?\n\n삭제된 내역은 복구할 수 없습니다.`)) {
       try {
-        // 먼저 업무요청 정보 가져오기 (일정 제목 생성을 위해)
-        const requestToDelete = workRequests.find(r => r.id === id);
-
-        // 업무요청 삭제
+        const requestToDelete = requests.find(r => r.id === id);
         await workRequestService.deleteWorkRequest(id);
 
-        // 연결된 일정 찾기 및 삭제
         if (requestToDelete) {
-          // 제목 생성 로직 (생성 시와 동일)
           let expectedTitle = '';
           if (requestToDelete.project) {
             expectedTitle = requestToDelete.requestType
@@ -126,24 +130,20 @@ const WorkRequest = () => {
             expectedTitle = requestToDelete.description;
           }
 
-          // 제목과 날짜로 일정 찾기
           const relatedSchedules = schedules.filter(s => {
             const isSameDate = s.start && new Date(s.start).toDateString() === requestToDelete.dueDate.toDateString();
             const isSameTitle = s.title === expectedTitle;
             return isSameDate && isSameTitle;
           });
 
-          // 연결된 일정들 모두 삭제
           for (const schedule of relatedSchedules) {
             try {
               await deleteScheduleFromAPI(schedule.id);
-              console.log('✅ Related schedule deleted:', schedule.id);
             } catch (schedError) {
               console.error('Failed to delete related schedule:', schedError);
             }
           }
 
-          // 일정 목록 새로고침
           await fetchSchedules();
         }
 
@@ -157,29 +157,57 @@ const WorkRequest = () => {
   };
 
   const handleEdit = (request: WorkRequest) => {
-    setSelectedRequest(request);
-    setShowModal(true);
+    setEditingRequest(request);
+    setFormData({
+      project: request.project,
+      requestType: request.requestType,
+      description: request.description,
+      requestDate: format(request.requestDate, 'yyyy-MM-dd'),
+      dueDate: format(request.dueDate, 'yyyy-MM-dd'),
+      requestedBy: request.requestedBy,
+      assignedTo: request.assignedTo
+    });
+    setIsUrgent(request.priority === 'high');
   };
 
-  const handleSave = async (data: Partial<WorkRequest>) => {
-    console.log('💾 handleSave called with data:', data);
-    console.log('💾 selectedRequest:', selectedRequest);
+  const resetForm = () => {
+    setEditingRequest(null);
+    setFormData({
+      project: '',
+      requestType: '',
+      description: '',
+      requestDate: format(new Date(), 'yyyy-MM-dd'),
+      dueDate: format(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+      requestedBy: user?.name || '',
+      assignedTo: ''
+    });
+    setIsUrgent(false);
+    setCustomRequestType('');
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.requestedBy || !formData.assignedTo || !formData.requestDate || !formData.dueDate) {
+      toast.error('필수 항목을 모두 입력하세요');
+      return;
+    }
+
     try {
-      if (selectedRequest) {
-        console.log('✏️ Update mode - selectedRequest.id:', selectedRequest.id);
-        // 수정
-        const updated = await workRequestService.updateWorkRequest(selectedRequest.id, {
-          project: data.project,
-          requestType: data.requestType,
-          description: data.description,
-          requestDate: data.requestDate,
-          dueDate: data.dueDate,
-          requestedBy: data.requestedBy,
-          assignedTo: data.assignedTo,
-          status: data.status,
-          priority: data.priority,
-          notes: data.notes,
-          completedDate: data.completedDate
+      const requestType = formData.requestType === '직접입력' ? customRequestType : formData.requestType;
+
+      if (editingRequest) {
+        // Update existing request
+        const updated = await workRequestService.updateWorkRequest(editingRequest.id, {
+          project: formData.project,
+          requestType: requestType,
+          description: formData.description,
+          requestDate: new Date(formData.requestDate),
+          dueDate: new Date(formData.dueDate),
+          requestedBy: formData.requestedBy,
+          assignedTo: formData.assignedTo,
+          status: editingRequest.status,
+          priority: isUrgent ? 'high' : 'medium'
         });
 
         const updatedRequest: WorkRequest = {
@@ -197,41 +225,25 @@ const WorkRequest = () => {
           completedDate: updated.completedDate ? new Date(updated.completedDate) : undefined
         };
 
-        // 관련 일정 찾아서 업데이트
-        // 일정을 제목과 날짜로 찾기 (ID가 숫자 형식이므로)
-        // 제목 생성 로직을 schedule 생성과 동일하게 맞춤
+        // Update related schedule
         let expectedTitle = '';
         if (updated.project) {
-          // 프로젝트가 있는 경우
           expectedTitle = updated.requestType
             ? `[업무요청] ${updated.requestType}`
             : `[업무요청] ${updated.description.substring(0, 20)}`;
         } else {
-          // 프로젝트가 없는 경우 - 요청내용을 제목으로
           expectedTitle = updated.description;
         }
-
-        console.log('🔍 Looking for schedule with title:', expectedTitle);
-        console.log('🔍 Looking for schedule on date:', updated.dueDate);
-        console.log('🔍 All schedules on same date:', schedules.filter(s =>
-          s.start && new Date(s.start).toDateString() === new Date(updated.dueDate).toDateString()
-        ).map(s => ({ id: s.id, title: s.title, start: s.start })));
 
         const relatedSchedule = schedules.find(s => {
           const isSameDate = s.start &&
             new Date(s.start).toDateString() === new Date(updated.dueDate).toDateString();
-          // 제목이 정확히 일치하는지 확인 (부분 일치가 아닌)
           const isSameTitle = s.title === expectedTitle;
-          console.log(`🔍 Checking schedule ${s.id}: date=${isSameDate}, title=${isSameTitle}, s.title="${s.title}", expected="${expectedTitle}"`);
           return isSameDate && isSameTitle;
         });
 
-        console.log('🔍 Found schedule?', relatedSchedule ? `Yes: ${relatedSchedule.id}` : 'No');
-
         if (relatedSchedule) {
-          console.log('✅ Found related schedule:', relatedSchedule.id);
           try {
-            // 프로젝트 ID 찾기
             let projectId = null;
             let scheduleTitle = '';
 
@@ -246,12 +258,9 @@ const WorkRequest = () => {
               projectId = relatedSchedule.project;
             }
 
-            // 담당자 처리: 디자인팀이면 세 명 모두 추가
             const attendees = updated.assignedTo === '디자인팀'
               ? ['신애', '재성', '재현']
               : [updated.assignedTo];
-
-            console.log('📝 Updating schedule with attendees:', attendees);
 
             await updateScheduleInAPI(relatedSchedule.id, {
               title: scheduleTitle,
@@ -261,39 +270,28 @@ const WorkRequest = () => {
               attendees: attendees,
               description: `${updated.description}\n\n담당자: ${updated.assignedTo}\n요청자: ${updated.requestedBy}\n우선순위: ${updated.priority}\n${updated.notes || ''}`
             });
-            console.log('✅ Related schedule updated successfully');
           } catch (schedError) {
-            console.error('❌ Failed to update related schedule:', schedError);
+            console.error('Failed to update related schedule:', schedError);
           }
-        } else {
-          console.warn('⚠️ No related schedule found for work request ID:', updated._id);
-          console.warn('⚠️ Expected title:', expectedTitle);
-          console.warn('⚠️ Expected date:', new Date(updated.dueDate).toDateString());
         }
 
         setRequests(requests.map(req =>
-          req.id === selectedRequest.id ? updatedRequest : req
+          req.id === editingRequest.id ? updatedRequest : req
         ));
         toast.success('업무요청이 수정되었습니다');
       } else {
-        // 추가
-        console.log('🔵 Creating work request with data:', data);
-
+        // Create new request
         const created = await workRequestService.createWorkRequest({
-          project: data.project!,
-          requestType: data.requestType!,
-          description: data.description || '',
-          requestDate: data.requestDate!,
-          dueDate: data.dueDate!,
-          requestedBy: data.requestedBy!,
-          assignedTo: data.assignedTo!,
-          status: data.status || 'pending',
-          priority: data.priority || 'medium',
-          notes: data.notes,
-          completedDate: data.completedDate
+          project: formData.project,
+          requestType: requestType,
+          description: formData.description || '',
+          requestDate: new Date(formData.requestDate),
+          dueDate: new Date(formData.dueDate),
+          requestedBy: formData.requestedBy,
+          assignedTo: formData.assignedTo,
+          status: 'pending',
+          priority: isUrgent ? 'high' : 'medium'
         });
-
-        console.log('🟢 Backend response:', created);
 
         const newRequest: WorkRequest = {
           id: created._id,
@@ -310,32 +308,27 @@ const WorkRequest = () => {
           completedDate: created.completedDate ? new Date(created.completedDate) : undefined
         };
 
-        // 일정관리에 마감일 자동 추가
+        // Create related schedule
         try {
-          // 프로젝트가 있으면 프로젝트 ID 찾기, 없으면 null
           let projectId = null;
           let scheduleTitle = '';
 
           if (created.project) {
-            // 프로젝트가 선택된 경우
             const matchingProject = projects.find(p => p.name === created.project);
             projectId = matchingProject ? matchingProject.id : null;
 
             if (!projectId) {
-              console.warn('⚠️ Project not found for work request:', created.project);
+              console.warn('Project not found for work request:', created.project);
               throw new Error('Project not found');
             }
 
-            // 프로젝트가 있으면 요청유형을 제목으로
             scheduleTitle = created.requestType
               ? `[업무요청] ${created.requestType}`
               : `[업무요청] ${created.description.substring(0, 20)}`;
           } else {
-            // 프로젝트가 없으면 요청내용을 제목으로
             scheduleTitle = created.description;
           }
 
-          // 담당자 처리: 디자인팀이면 세 명 모두 추가
           const attendees = created.assignedTo === '디자인팀'
             ? ['신애', '재성', '재현']
             : [created.assignedTo];
@@ -346,22 +339,19 @@ const WorkRequest = () => {
             start: new Date(created.dueDate),
             end: new Date(created.dueDate),
             type: 'other',
-            project: projectId, // 프로젝트 ID로 전달 (없으면 null)
+            project: projectId,
             location: '',
             attendees: attendees,
             description: `${created.description}\n\n담당자: ${created.assignedTo}\n요청자: ${created.requestedBy}\n우선순위: ${created.priority}\n${created.notes || ''}`
           });
-          console.log('✅ Schedule created:', scheduleTitle, 'with project ID:', projectId);
         } catch (schedError) {
           console.error('Failed to create schedule:', schedError);
-          // 일정 생성 실패해도 업무요청은 생성됨
         }
 
         setRequests([newRequest, ...requests]);
         toast.success('업무요청이 추가되었습니다');
       }
-      setShowModal(false);
-      setSelectedRequest(null);
+      resetForm();
     } catch (error) {
       console.error('Failed to save work request:', error);
       toast.error('업무요청 저장에 실패했습니다');
@@ -443,7 +433,6 @@ const WorkRequest = () => {
           : req
       ));
 
-      // 업무요청이 완료되면 관련 일정 삭제
       if (newStatus === 'completed') {
         const requestToComplete = requests.find(r => r.id === requestId);
         if (requestToComplete) {
@@ -455,7 +444,6 @@ const WorkRequest = () => {
           if (relatedSchedule) {
             try {
               await deleteScheduleFromAPI(relatedSchedule.id);
-              console.log('✅ Related schedule deleted on completion:', relatedSchedule.id);
             } catch (schedError) {
               console.error('Failed to delete related schedule:', schedError);
             }
@@ -555,16 +543,13 @@ const WorkRequest = () => {
     }
   };
 
-  // 탭별 필터링
   const getFilteredRequests = () => {
     let filtered = requests;
 
-    // 탭 필터
     if (activeTab !== 'all') {
       filtered = filtered.filter(r => r.status === activeTab);
     }
 
-    // 검색 필터
     if (searchTerm) {
       filtered = filtered.filter(req =>
         req.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -573,7 +558,6 @@ const WorkRequest = () => {
       );
     }
 
-    // 우선순위 필터
     if (filterPriority !== 'all') {
       filtered = filtered.filter(req => req.priority === filterPriority);
     }
@@ -592,71 +576,477 @@ const WorkRequest = () => {
 
   return (
     <div className="space-y-3 md:space-y-4">
-      {/* Tabs and Add Button */}
-      <div className="border-b border-gray-200 flex items-center justify-between">
-        <nav className="flex space-x-4 md:space-x-8 overflow-x-auto">
-          {[
-            { id: 'pending' as TabStatus, label: '대기', count: stats.pending, color: 'text-gray-700' },
-            { id: 'in-progress' as TabStatus, label: '진행중', count: stats.inProgress, color: 'text-gray-700' },
-            { id: 'completed' as TabStatus, label: '완료', count: stats.completed, color: 'text-gray-700' },
-            { id: 'all' as TabStatus, label: '전체', count: stats.total, color: 'text-gray-600' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={clsx(
-                'py-3 md:py-4 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap',
-                activeTab === tab.id
-                  ? `border-gray-700 ${tab.color}`
-                  : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+      {/* 데스크톱 2열 레이아웃 */}
+      <div className="hidden md:grid md:grid-cols-[400px_1fr] gap-4">
+        {/* 왼쪽: 업무요청 폼 */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 h-fit sticky top-4">
+          <h2 className="text-xl font-semibold mb-4">
+            {editingRequest ? '업무요청 수정' : '새 업무요청'}
+          </h2>
+
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            {/* Project */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                프로젝트
+              </label>
+              <select
+                value={formData.project}
+                onChange={(e) => setFormData({ ...formData, project: e.target.value })}
+                className="input w-full"
+              >
+                <option value=""></option>
+                {projects
+                  .filter(project => project.status !== 'completed')
+                  .map((project) => (
+                    <option key={project.id} value={project.name}>
+                      {project.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {/* Request Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                요청유형
+              </label>
+              <select
+                value={formData.requestType}
+                onChange={(e) => setFormData({ ...formData, requestType: e.target.value })}
+                className="input w-full"
+              >
+                <option value=""></option>
+                <option value="3D모델링">3D모델링</option>
+                <option value="철거도면">철거도면</option>
+                <option value="설비도면">설비도면</option>
+                <option value="에어컨 배치도">에어컨 배치도</option>
+                <option value="디퓨저 배치도">디퓨저 배치도</option>
+                <option value="스프링클러 배치도">스프링클러 배치도</option>
+                <option value="전기도면">전기도면</option>
+                <option value="목공도면">목공도면</option>
+                <option value="디테일도면">디테일도면</option>
+                <option value="금속도면">금속도면</option>
+                <option value="가구도면">가구도면</option>
+                <option value="세라믹도면">세라믹도면</option>
+                <option value="트렌치유가">트렌치유가</option>
+                <option value="욕실장">욕실장</option>
+                <option value="발주">발주</option>
+                <option value="마감">마감</option>
+                <option value="직접입력">직접입력</option>
+              </select>
+
+              {formData.requestType === '직접입력' && (
+                <input
+                  type="text"
+                  value={customRequestType}
+                  onChange={(e) => setCustomRequestType(e.target.value)}
+                  placeholder="요청유형을 직접 입력하세요"
+                  className="input w-full mt-2"
+                />
               )}
-            >
-              {tab.label}
-              {tab.count > 0 && (
-                <span className={clsx(
-                  'ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold',
-                  activeTab === tab.id ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
-                )}>
-                  {tab.count}
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                요청내용
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={4}
+                className="input w-full"
+                placeholder="상세한 요청 내용을 입력하세요"
+              />
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  요청일 *
+                </label>
+                <input
+                  type="date"
+                  value={formData.requestDate}
+                  onChange={(e) => setFormData({ ...formData, requestDate: e.target.value })}
+                  required
+                  className="input w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  마감일 *
+                </label>
+                <input
+                  type="date"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                  required
+                  className="input w-full"
+                />
+              </div>
+            </div>
+
+            {/* People */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  요청자 *
+                </label>
+                <select
+                  value={formData.requestedBy}
+                  onChange={(e) => setFormData({ ...formData, requestedBy: e.target.value })}
+                  required
+                  className="input w-full"
+                >
+                  <option value="">선택하세요</option>
+                  {TEAM_MEMBERS.map((member) => (
+                    <option key={member} value={member}>
+                      {member}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  담당자 *
+                </label>
+                <select
+                  value={formData.assignedTo}
+                  onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                  required
+                  className="input w-full"
+                >
+                  <option value="">선택하세요</option>
+                  {TEAM_MEMBERS.map((member) => (
+                    <option key={member} value={member}>
+                      {member}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Urgent Toggle */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setIsUrgent(!isUrgent)}
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all w-full ${
+                  isUrgent
+                    ? 'bg-rose-50 border-rose-500 text-rose-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <AlertCircle className={`h-5 w-5 ${isUrgent ? 'text-rose-600' : 'text-gray-400'}`} />
+                <span className="font-medium">
+                  {isUrgent ? '긴급 업무입니다' : '긴급 업무로 표시'}
                 </span>
+              </button>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-4 border-t">
+              {editingRequest && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="flex-1 btn btn-outline"
+                >
+                  취소
+                </button>
               )}
-            </button>
-          ))}
-        </nav>
-        <button
-          onClick={() => {
-            setSelectedRequest(null);
-            setShowModal(true);
-          }}
-          className="btn btn-primary px-4 py-2 whitespace-nowrap"
-        >
-          +새 업무요청
-        </button>
+              <button type="submit" className="flex-1 btn btn-primary">
+                {editingRequest ? '수정' : '추가'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* 오른쪽: 업무요청 목록 */}
+        <div className="space-y-4">
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8">
+              {[
+                { id: 'pending' as TabStatus, label: '대기', count: stats.pending, color: 'text-gray-700' },
+                { id: 'in-progress' as TabStatus, label: '진행중', count: stats.inProgress, color: 'text-gray-700' },
+                { id: 'completed' as TabStatus, label: '완료', count: stats.completed, color: 'text-gray-700' },
+                { id: 'all' as TabStatus, label: '전체', count: stats.total, color: 'text-gray-600' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={clsx(
+                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap',
+                    activeTab === tab.id
+                      ? `border-gray-700 ${tab.color}`
+                      : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+                  )}
+                >
+                  {tab.label}
+                  {tab.count > 0 && (
+                    <span className={clsx(
+                      'ml-2 py-0.5 px-2 rounded-full text-xs font-semibold',
+                      activeTab === tab.id ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+                    )}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Filters */}
+          <div className="flex items-center space-x-4">
+            <input
+              type="text"
+              placeholder="검색..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
+            />
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
+            >
+              <option value="all">모든 우선순위</option>
+              <option value="high">긴급</option>
+              <option value="medium">보통</option>
+              <option value="low">낮음</option>
+            </select>
+          </div>
+
+          {/* Table */}
+          <div className="bg-white border border-gray-200 overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">프로젝트</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">요청유형</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">내용</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">요청자</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">담당자</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">요청일</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">마감일</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">D-day</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">우선순위</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">상태</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">액션</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200" style={{ overflow: 'visible' }}>
+                {filteredRequests.map((request) => (
+                  <tr
+                    key={request.id}
+                    className={`hover:bg-gray-50 ${
+                      request.priority === 'high' ? 'bg-rose-50/30' : ''
+                    }`}
+                    style={{ overflow: 'visible' }}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="font-medium text-gray-900">{request.project}</p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="text-sm text-gray-900">{request.requestType}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-gray-900">{request.description}</p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap" style={{ overflow: 'visible' }}>
+                      <div className="relative inline-block">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePersonClick(request.id, 'requestedBy');
+                          }}
+                          className="text-sm text-gray-900 hover:text-gray-600 hover:underline transition-colors"
+                        >
+                          {request.requestedBy}
+                        </button>
+                        {editingPerson?.requestId === request.id && editingPerson?.field === 'requestedBy' && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute left-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[100px]"
+                          >
+                            {TEAM_MEMBERS.map((member) => (
+                              <button
+                                key={member}
+                                onClick={() => handlePersonSelect(member)}
+                                className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                                  member === request.requestedBy ? 'bg-gray-50 font-medium' : ''
+                                }`}
+                              >
+                                {member}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap" style={{ overflow: 'visible' }}>
+                      <div className="relative inline-block">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePersonClick(request.id, 'assignedTo');
+                          }}
+                          className="text-sm text-gray-900 hover:text-gray-600 hover:underline transition-colors"
+                        >
+                          {request.assignedTo}
+                        </button>
+                        {editingPerson?.requestId === request.id && editingPerson?.field === 'assignedTo' && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute left-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[100px]"
+                          >
+                            {TEAM_MEMBERS.map((member) => (
+                              <button
+                                key={member}
+                                onClick={() => handlePersonSelect(member)}
+                                className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                                  member === request.assignedTo ? 'bg-gray-50 font-medium' : ''
+                                }`}
+                              >
+                                {member}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="relative inline-block">
+                        {editingDate?.requestId === request.id && editingDate?.field === 'requestDate' && (
+                          <input
+                            ref={inputRef}
+                            type="date"
+                            defaultValue={format(request.requestDate, 'yyyy-MM-dd')}
+                            onChange={(e) => handleDateChange(e.target.value)}
+                            onBlur={() => setEditingDate(null)}
+                            className="absolute left-0 top-0 w-auto h-auto opacity-0 z-50"
+                            style={{ pointerEvents: 'auto' }}
+                          />
+                        )}
+                        <button
+                          onClick={() => handleDateClick(request.id, 'requestDate')}
+                          className="flex items-center space-x-2 text-sm text-gray-900 hover:text-gray-600 transition-colors"
+                        >
+                          <Calendar className="h-4 w-4" />
+                          <span>{format(request.requestDate, 'yyyy.MM.dd (eee)', { locale: ko })}</span>
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="relative inline-block">
+                        {editingDate?.requestId === request.id && editingDate?.field === 'dueDate' && (
+                          <input
+                            ref={inputRef}
+                            type="date"
+                            defaultValue={format(request.dueDate, 'yyyy-MM-dd')}
+                            onChange={(e) => handleDateChange(e.target.value)}
+                            onBlur={() => setEditingDate(null)}
+                            className="absolute left-0 top-0 w-auto h-auto opacity-0 z-50"
+                            style={{ pointerEvents: 'auto' }}
+                          />
+                        )}
+                        <button
+                          onClick={() => handleDateClick(request.id, 'dueDate')}
+                          className="flex items-center space-x-2 text-sm text-gray-900 hover:text-gray-600 transition-colors"
+                        >
+                          <Calendar className="h-4 w-4" />
+                          <span>{format(request.dueDate, 'yyyy.MM.dd (eee)', { locale: ko })}</span>
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getDdayBadge(request.dueDate)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getPriorityBadge(request.priority)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(request.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center justify-center space-x-2">
+                        {request.status === 'pending' && (
+                          <button
+                            onClick={() => handleStatusChange(request.id, 'in-progress')}
+                            className="px-3 py-1 text-xs font-semibold text-white rounded transition-colors bg-gray-600 hover:bg-gray-700"
+                          >
+                            수락
+                          </button>
+                        )}
+                        {request.status === 'in-progress' && (
+                          <button
+                            onClick={() => handleStatusChange(request.id, 'completed')}
+                            className="px-3 py-1 text-xs font-semibold bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors"
+                          >
+                            완료
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleEdit(request)}
+                          className="text-xs text-gray-600 hover:text-gray-900"
+                        >
+                          수정
+                        </button>
+                        <button
+                          onClick={() => handleDelete(request.id, request.project)}
+                          className="text-gray-600 hover:text-gray-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      {/* Filters - Desktop only */}
-      <div className="hidden md:flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 md:space-x-4">
-        <input
-          type="text"
-          placeholder="검색..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-        />
-        <select
-          value={filterPriority}
-          onChange={(e) => setFilterPriority(e.target.value)}
-          className="px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-        >
-          <option value="all">모든 우선순위</option>
-          <option value="high">긴급</option>
-          <option value="medium">보통</option>
-          <option value="low">낮음</option>
-        </select>
-      </div>
-
-      {/* Mobile Card View */}
+      {/* 모바일 뷰 (기존과 동일) */}
       <div className="md:hidden space-y-3">
+        {/* Tabs and Add Button */}
+        <div className="border-b border-gray-200 flex items-center justify-between">
+          <nav className="flex space-x-4 overflow-x-auto">
+            {[
+              { id: 'pending' as TabStatus, label: '대기', count: stats.pending, color: 'text-gray-700' },
+              { id: 'in-progress' as TabStatus, label: '진행중', count: stats.inProgress, color: 'text-gray-700' },
+              { id: 'completed' as TabStatus, label: '완료', count: stats.completed, color: 'text-gray-700' },
+              { id: 'all' as TabStatus, label: '전체', count: stats.total, color: 'text-gray-600' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={clsx(
+                  'py-3 px-1 border-b-2 font-medium text-xs transition-colors whitespace-nowrap',
+                  activeTab === tab.id
+                    ? `border-gray-700 ${tab.color}`
+                    : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+                )}
+              >
+                {tab.label}
+                {tab.count > 0 && (
+                  <span className={clsx(
+                    'ml-1 py-0.5 px-1.5 rounded-full text-[10px] font-semibold',
+                    activeTab === tab.id ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+                  )}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
+
         {filteredRequests.map((request) => (
           <div
             key={request.id}
@@ -757,207 +1147,6 @@ const WorkRequest = () => {
           </div>
         ))}
       </div>
-
-      {/* Desktop Table View */}
-      <div className="hidden md:block bg-white border border-gray-200 overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">프로젝트</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">요청유형</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">내용</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">요청자</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">담당자</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">요청일</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">마감일</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">D-day</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">우선순위</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">상태</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">액션</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200" style={{ overflow: 'visible' }}>
-            {filteredRequests.map((request) => (
-              <tr
-                key={request.id}
-                className={`hover:bg-gray-50 ${
-                  request.priority === 'high' ? 'bg-rose-50/30' : ''
-                }`}
-                style={{ overflow: 'visible' }}
-              >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <p className="font-medium text-gray-900">{request.project}</p>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <p className="text-sm text-gray-900">{request.requestType}</p>
-                </td>
-                <td className="px-6 py-4">
-                  <p className="text-sm text-gray-900">{request.description}</p>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap" style={{ overflow: 'visible' }}>
-                  <div className="relative inline-block">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePersonClick(request.id, 'requestedBy');
-                      }}
-                      className="text-sm text-gray-900 hover:text-gray-600 hover:underline transition-colors"
-                    >
-                      {request.requestedBy}
-                    </button>
-                    {editingPerson?.requestId === request.id && editingPerson?.field === 'requestedBy' && (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute left-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[100px]"
-                      >
-                        {TEAM_MEMBERS.map((member) => (
-                          <button
-                            key={member}
-                            onClick={() => handlePersonSelect(member)}
-                            className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                              member === request.requestedBy ? 'bg-gray-50 font-medium' : ''
-                            }`}
-                          >
-                            {member}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap" style={{ overflow: 'visible' }}>
-                  <div className="relative inline-block">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePersonClick(request.id, 'assignedTo');
-                      }}
-                      className="text-sm text-gray-900 hover:text-gray-600 hover:underline transition-colors"
-                    >
-                      {request.assignedTo}
-                    </button>
-                    {editingPerson?.requestId === request.id && editingPerson?.field === 'assignedTo' && (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute left-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[100px]"
-                      >
-                        {TEAM_MEMBERS.map((member) => (
-                          <button
-                            key={member}
-                            onClick={() => handlePersonSelect(member)}
-                            className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                              member === request.assignedTo ? 'bg-gray-50 font-medium' : ''
-                            }`}
-                          >
-                            {member}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="relative inline-block">
-                    {editingDate?.requestId === request.id && editingDate?.field === 'requestDate' && (
-                      <input
-                        ref={inputRef}
-                        type="date"
-                        defaultValue={format(request.requestDate, 'yyyy-MM-dd')}
-                        onChange={(e) => handleDateChange(e.target.value)}
-                        onBlur={() => setEditingDate(null)}
-                        className="absolute left-0 top-0 w-auto h-auto opacity-0 z-50"
-                        style={{ pointerEvents: 'auto' }}
-                      />
-                    )}
-                    <button
-                      onClick={() => handleDateClick(request.id, 'requestDate')}
-                      className="flex items-center space-x-2 text-sm text-gray-900 hover:text-gray-600 transition-colors"
-                    >
-                      <Calendar className="h-4 w-4" />
-                      <span>{format(request.requestDate, 'yyyy.MM.dd (eee)', { locale: ko })}</span>
-                    </button>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="relative inline-block">
-                    {editingDate?.requestId === request.id && editingDate?.field === 'dueDate' && (
-                      <input
-                        ref={inputRef}
-                        type="date"
-                        defaultValue={format(request.dueDate, 'yyyy-MM-dd')}
-                        onChange={(e) => handleDateChange(e.target.value)}
-                        onBlur={() => setEditingDate(null)}
-                        className="absolute left-0 top-0 w-auto h-auto opacity-0 z-50"
-                        style={{ pointerEvents: 'auto' }}
-                      />
-                    )}
-                    <button
-                      onClick={() => handleDateClick(request.id, 'dueDate')}
-                      className="flex items-center space-x-2 text-sm text-gray-900 hover:text-gray-600 transition-colors"
-                    >
-                      <Calendar className="h-4 w-4" />
-                      <span>{format(request.dueDate, 'yyyy.MM.dd (eee)', { locale: ko })}</span>
-                    </button>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {getDdayBadge(request.dueDate)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {getPriorityBadge(request.priority)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {getStatusBadge(request.status)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center justify-center space-x-2">
-                    {request.status === 'pending' && (
-                      <button
-                        onClick={() => handleStatusChange(request.id, 'in-progress')}
-                        className="px-3 py-1 text-xs font-semibold text-white rounded transition-colors bg-gray-600 hover:bg-gray-700"
-                      >
-                        수락
-                      </button>
-                    )}
-                    {request.status === 'in-progress' && (
-                      <button
-                        onClick={() => handleStatusChange(request.id, 'completed')}
-                        className="px-3 py-1 text-xs font-semibold bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors"
-                      >
-                        완료
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleEdit(request)}
-                      className="text-xs text-gray-600 hover:text-gray-900"
-                    >
-                      수정
-                    </button>
-                    <button
-                      onClick={() => handleDelete(request.id, request.project)}
-                      className="text-gray-600 hover:text-gray-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <WorkRequestModal
-          request={selectedRequest}
-          onClose={() => {
-            setShowModal(false);
-            setSelectedRequest(null);
-          }}
-          onSave={handleSave}
-        />
-      )}
     </div>
   );
 };
