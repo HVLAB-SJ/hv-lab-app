@@ -432,15 +432,17 @@ const ConstructionPayment = () => {
   };
 
   // 미수금 계산용 총 금액 (공사금액 + 추가내역 + 부가세)
+  // 부가세는 공사금액에만 적용되고, 추가내역에는 적용되지 않음
   const calculateTotalAmountWithAdditional = (record: PaymentRecord) => {
     const additionalWorkAmount = calculateAdditionalWorkTotal(record.project);
-    const baseAmount = record.totalAmount + additionalWorkAmount;
 
     if (record.vatType === 'amount') {
-      return baseAmount + (record.vatAmount || 0);
+      // 직접 입력된 부가세 금액
+      return record.totalAmount + (record.vatAmount || 0) + additionalWorkAmount;
     } else {
-      const vatAmount = baseAmount * ((record.vatPercentage ?? 100) / 100) * 0.1;
-      return baseAmount + vatAmount;
+      // 부가세율 적용 (공사금액에만 적용)
+      const vatAmount = record.totalAmount * ((record.vatPercentage ?? 100) / 100) * 0.1;
+      return record.totalAmount + vatAmount + additionalWorkAmount;
     }
   };
 
