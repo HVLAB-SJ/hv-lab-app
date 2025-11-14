@@ -636,6 +636,9 @@ const ConstructionPayment = () => {
                     <button
                       onClick={() => {
                         const record = filteredRecords[filteredRecords.length - 1];
+                        const received = calculateReceived(record);
+                        const totalContract = calculateTotalContractAmount(record);
+                        const remainingWithoutAdditional = totalContract - received;
                         const projectInfo = projects.find(p => p.name === record.project);
                         setCashReceiptData({
                           project: record.project,
