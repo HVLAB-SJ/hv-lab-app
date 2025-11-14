@@ -148,11 +148,11 @@ router.post('/calculate', authenticateToken, async (req, res) => {
     const ceilingCost = calculateItemCost('wall', ceilingMaterial); // 천장재도 wall 카테고리 사용
     const furnitureCost = calculateItemCost('furniture', furnitureWork);
     const countertopCost = calculateItemCost('countertop', kitchenCountertop, 1); // 주방 상판은 평수 곱하지 않음
-    const switchPublicCost = calculateItemCost('switch', switchPublic, 1);
-    const switchRoomCost = calculateItemCost('switch', switchRoom, 1);
-    const lightingCost = calculateItemCost('lighting', lightingType, 1);
-    const indirectPublicCost = calculateItemCost('indirectLighting', indirectLightingPublic, 1);
-    const indirectRoomCost = calculateItemCost('indirectLighting', indirectLightingRoom, 1);
+    const switchPublicCost = calculateItemCost('switch', switchPublic); // 평당 계산
+    const switchRoomCost = calculateItemCost('switch', switchRoom); // 평당 계산
+    const lightingCost = calculateItemCost('lighting', lightingType); // 평당 계산
+    const indirectPublicCost = calculateItemCost('indirectLighting', indirectLightingPublic); // 평당 계산
+    const indirectRoomCost = calculateItemCost('indirectLighting', indirectLightingRoom); // 평당 계산
     const moldingPublicCost = calculateItemCost('molding', moldingPublic);
     const moldingRoomCost = calculateItemCost('molding', moldingRoom);
 
