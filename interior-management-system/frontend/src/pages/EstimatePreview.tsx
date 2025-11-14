@@ -1371,14 +1371,15 @@ const EstimatePreview: React.FC = () => {
             {/* 바닥재 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">바닥재 (평당)</h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {['장판', '데코타일', '강마루', '원목마루', '600각 타일', '800-900각 타일', '1200각 타일'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-32 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                  <div key={item} className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">{item}</label>
+                    <div className="flex items-center gap-2">
+                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <span className="text-gray-500 text-sm">~</span>
+                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1387,14 +1388,15 @@ const EstimatePreview: React.FC = () => {
             {/* 벽재/천장재 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">벽재/천장재 (평당)</h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {['합지도배', '실크도배(일반)', '실크도배(고급)', '도장(전체)', '필름', '대형타일', '박판타일', '무늬목', '도장(공용부)+실크도배(방)'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-48 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                  <div key={item} className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">{item}</label>
+                    <div className="flex items-center gap-2">
+                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <span className="text-gray-500 text-sm">~</span>
+                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1403,23 +1405,25 @@ const EstimatePreview: React.FC = () => {
             {/* 가구 공사 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">가구 공사</h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {['전체', '공용부'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-32 text-sm text-gray-700">가구({item})</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                  <div key={item} className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">가구({item})</label>
+                    <div className="flex items-center gap-2">
+                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <span className="text-gray-500 text-sm">~</span>
+                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    </div>
                   </div>
                 ))}
                 {['전체 BLUM(블룸)', '경첩(일반)+서랍(일반)', '경첩 BLUM(블룸)+서랍(일반)'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-48 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                  <div key={item} className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">{item}</label>
+                    <div className="flex items-center gap-2">
+                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <span className="text-gray-500 text-sm">~</span>
+                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1428,14 +1432,15 @@ const EstimatePreview: React.FC = () => {
             {/* 주방 상판 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">주방 상판</h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {['세라믹', '칸스톤', '천연대리석', '인조대리석', '스테인리스'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-32 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                  <div key={item} className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">{item}</label>
+                    <div className="flex items-center gap-2">
+                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <span className="text-gray-500 text-sm">~</span>
+                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1444,14 +1449,15 @@ const EstimatePreview: React.FC = () => {
             {/* 스위치/콘센트 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">스위치/콘센트 (개당)</h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오', '르그랑 아펠라'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-40 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                  <div key={item} className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">{item}</label>
+                    <div className="flex items-center gap-2">
+                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <span className="text-gray-500 text-sm">~</span>
+                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1460,14 +1466,15 @@ const EstimatePreview: React.FC = () => {
             {/* 조명 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">조명 (개당)</h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {['마그네틱조명', '라인조명', '매입조명(일반)', '매입조명(고급)', '매입조명(하이엔드)'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-40 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                  <div key={item} className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">{item}</label>
+                    <div className="flex items-center gap-2">
+                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <span className="text-gray-500 text-sm">~</span>
+                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1476,14 +1483,15 @@ const EstimatePreview: React.FC = () => {
             {/* 간접조명 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">간접조명 (미터당)</h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {['LED', 'T3 조명'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-32 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                  <div key={item} className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">{item}</label>
+                    <div className="flex items-center gap-2">
+                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <span className="text-gray-500 text-sm">~</span>
+                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1492,14 +1500,15 @@ const EstimatePreview: React.FC = () => {
             {/* 몰딩 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">몰딩 (미터당)</h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {['무걸레받이+마이너스몰딩', '무걸레받이+무몰딩', '걸레받이+무몰딩', '걸레받이+천장몰딩'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-52 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                  <div key={item} className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">{item}</label>
+                    <div className="flex items-center gap-2">
+                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <span className="text-gray-500 text-sm">~</span>
+                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1508,64 +1517,89 @@ const EstimatePreview: React.FC = () => {
             {/* 화장실 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">화장실</h3>
-              <div className="space-y-3">
-                <div className="mb-3"><strong className="text-sm">천장</strong></div>
-                {['SMC', '도장', '이노솔'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-32 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3">천장</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {['SMC', '도장', '이노솔'].map(item => (
+                      <div key={item} className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-700">{item}</label>
+                        <div className="flex items-center gap-2">
+                          <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <span className="text-gray-500 text-sm">~</span>
+                          <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                <div className="mb-3 mt-4"><strong className="text-sm">수전</strong></div>
-                {['일반수전', '매립수전'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-32 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3">수전</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {['일반수전', '매립수전'].map(item => (
+                      <div key={item} className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-700">{item}</label>
+                        <div className="flex items-center gap-2">
+                          <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <span className="text-gray-500 text-sm">~</span>
+                          <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                <div className="mb-3 mt-4"><strong className="text-sm">타일 등급</strong></div>
-                {['유럽산(고급)', '중국산(중급)', '중국산(기본)'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-32 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3">타일 등급</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {['유럽산(고급)', '중국산(중급)', '중국산(기본)'].map(item => (
+                      <div key={item} className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-700">{item}</label>
+                        <div className="flex items-center gap-2">
+                          <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <span className="text-gray-500 text-sm">~</span>
+                          <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                <div className="mb-3 mt-4"><strong className="text-sm">타일 규격</strong></div>
-                {['600각(덧방)', '600각(올철거)', '750x1500', '박판타일', '300x600(벽)+300각(바닥)', '600x1200 or 800각(올철거)'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-56 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3">타일 규격</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {['600각(덧방)', '600각(올철거)', '750x1500', '박판타일', '300x600(벽)+300각(바닥)', '600x1200 or 800각(올철거)'].map(item => (
+                      <div key={item} className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-700">{item}</label>
+                        <div className="flex items-center gap-2">
+                          <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <span className="text-gray-500 text-sm">~</span>
+                          <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                <div className="mb-3 mt-4"><strong className="text-sm">줄눈</strong></div>
-                {['스트라이크에보(친환경 에폭시)', '케라폭시(에폭시)', '푸가벨라'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <label className="w-56 text-sm text-gray-700">{item}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3">줄눈</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {['스트라이크에보(친환경 에폭시)', '케라폭시(에폭시)', '푸가벨라'].map(item => (
+                      <div key={item} className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-700">{item}</label>
+                        <div className="flex items-center gap-2">
+                          <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <span className="text-gray-500 text-sm">~</span>
+                          <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
 
             {/* 확장 및 기타 공사 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">확장 및 기타 공사</h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   { label: '거실 확장 (평당)', key: 'livingRoom' },
                   { label: '주방 확장 (평당)', key: 'kitchen' },
@@ -1576,12 +1610,13 @@ const EstimatePreview: React.FC = () => {
                   { label: '에어컨 (2 in 1) - 1대', key: 'aircon2in1' },
                   { label: '에어컨 (시스템) - 1대', key: 'airconSystem' }
                 ].map(item => (
-                  <div key={item.key} className="flex items-center gap-3">
-                    <label className="w-48 text-sm text-gray-700">{item.label}</label>
-                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-gray-500">~</span>
-                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
-                    <span className="text-sm text-gray-500 w-8">원</span>
+                  <div key={item.key} className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">{item.label}</label>
+                    <div className="flex items-center gap-2">
+                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <span className="text-gray-500 text-sm">~</span>
+                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    </div>
                   </div>
                 ))}
               </div>
