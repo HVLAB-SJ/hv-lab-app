@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -25,6 +25,11 @@ const Layout = () => {
   const [pendingWorkRequestCount, setPendingWorkRequestCount] = useState(0);
   const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
   const [inProgressASCount, setInProgressASCount] = useState(0);
+
+  // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const navigation: NavigationItem[] = [
     { name: '담당업무', href: '/dashboard' },
