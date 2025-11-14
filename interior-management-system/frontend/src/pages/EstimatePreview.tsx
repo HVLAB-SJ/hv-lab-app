@@ -594,7 +594,7 @@ const EstimatePreview: React.FC = () => {
                       <label className="block text-sm font-bold text-gray-700 mb-2">
                         층고
                       </label>
-                      <div className="grid grid-cols-1 md:flex md:flex-col gap-2">
+                      <div className="flex gap-2 md:gap-3">
                         {['2400이하', '2400~2600', '2600이상'].map(item => (
                           <label key={item} className="flex items-center text-xs md:text-sm whitespace-nowrap">
                             <input
@@ -769,22 +769,22 @@ const EstimatePreview: React.FC = () => {
                         <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
                           <input
                             type="checkbox"
-                            checked={form.furnitureWork.includes('전체 커스텀 가구')}
-                            onChange={() => handleMaterialCheckbox('furnitureWork', '전체 커스텀 가구')}
+                            checked={form.furnitureWork.includes('전체')}
+                            onChange={() => handleMaterialCheckbox('furnitureWork', '전체')}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700">전체 커스텀 가구</span>
+                          <span className="text-gray-700">전체</span>
                         </label>
                       </div>
                       <div className="grid grid-cols-1">
                         <label className="flex items-center text-xs md:text-sm">
                           <input
                             type="checkbox"
-                            checked={form.furnitureWork.includes('주방가구와 방에 붙박이장 일부')}
-                            onChange={() => handleMaterialCheckbox('furnitureWork', '주방가구와 방에 붙박이장 일부')}
+                            checked={form.furnitureWork.includes('주방가구와 방 붙박이장')}
+                            onChange={() => handleMaterialCheckbox('furnitureWork', '주방가구와 방 붙박이장')}
                             className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
                           />
-                          <span className="text-gray-700 break-keep">주방가구와 방에 붙박이장 일부</span>
+                          <span className="text-gray-700 break-keep">주방가구와 방 붙박이장</span>
                         </label>
                       </div>
                     </div>
@@ -854,42 +854,40 @@ const EstimatePreview: React.FC = () => {
                   전기/조명
                 </h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1">
-                        스위치/콘센트 (공용부)
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오(고급)', '르그랑 아펠라(일반)'].map(item => (
-                          <label key={item} className="flex items-center text-xs md:text-sm">
-                            <input
-                              type="checkbox"
-                              checked={form.switchPublic.includes(item)}
-                              onChange={() => handleMaterialCheckbox('switchPublic', item)}
-                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
-                            />
-                            <span className="text-gray-700 whitespace-nowrap">{item}</span>
-                          </label>
-                        ))}
-                      </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                      스위치/콘센트 (공용부)
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오(고급)', '르그랑 아펠라(일반)'].map(item => (
+                        <label key={item} className="flex items-center text-xs md:text-sm">
+                          <input
+                            type="checkbox"
+                            checked={form.switchPublic.includes(item)}
+                            onChange={() => handleMaterialCheckbox('switchPublic', item)}
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                          />
+                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
+                        </label>
+                      ))}
                     </div>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1">
-                        스위치/콘센트 (방)
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오(고급)', '르그랑 아펠라(일반)'].map(item => (
-                          <label key={item} className="flex items-center text-xs md:text-sm">
-                            <input
-                              type="checkbox"
-                              checked={form.switchRoom.includes(item)}
-                              onChange={() => handleMaterialCheckbox('switchRoom', item)}
-                              className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
-                            />
-                            <span className="text-gray-700 whitespace-nowrap">{item}</span>
-                          </label>
-                        ))}
-                      </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                      스위치/콘센트 (방)
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오(고급)', '르그랑 아펠라(일반)'].map(item => (
+                        <label key={item} className="flex items-center text-xs md:text-sm">
+                          <input
+                            type="checkbox"
+                            checked={form.switchRoom.includes(item)}
+                            onChange={() => handleMaterialCheckbox('switchRoom', item)}
+                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                          />
+                          <span className="text-gray-700 whitespace-nowrap">{item}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
 
