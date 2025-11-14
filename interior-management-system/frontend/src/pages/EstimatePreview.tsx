@@ -151,8 +151,9 @@ const EstimatePreview: React.FC = () => {
   // 가격 설정 변경 시 자동 저장 (debounce 적용)
   useEffect(() => {
     // 초기 로드 시에는 저장하지 않음
-    const isEmpty = Object.keys(priceSettings.floor).length === 0;
-    if (isEmpty) return;
+    if (!priceSettings.floor || Object.keys(priceSettings.floor).length === 0) {
+      return;
+    }
 
     const timeoutId = setTimeout(() => {
       savePriceSettings();
@@ -173,7 +174,7 @@ const EstimatePreview: React.FC = () => {
   const loadPriceSettings = async () => {
     try {
       const response = await api.get('/estimate-preview/settings/prices');
-      if (response.data && response.data.settings) {
+      if (response.data && response.data.settings && Object.keys(response.data.settings).length > 0) {
         setPriceSettings(response.data.settings);
       }
     } catch (error) {
