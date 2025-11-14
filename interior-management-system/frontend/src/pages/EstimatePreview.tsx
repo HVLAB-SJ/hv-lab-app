@@ -1358,185 +1358,232 @@ const EstimatePreview: React.FC = () => {
       {activeTab === 'settings' && (
         <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
           <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-6">
-            항목별 단가 및 계산식 설정
+            항목별 단가 범위 설정
           </h2>
 
           <div className="space-y-6">
-            {/* 기본 공사비 설정 */}
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
+              <p className="text-sm text-gray-700">
+                <strong>💡 참고:</strong> 각 항목의 최소~최대 가격 범위를 설정하세요. 견적 계산 시 이 범위 내에서 자동 계산됩니다.
+              </p>
+            </div>
+
+            {/* 바닥재 */}
             <div className="border-b pb-6">
-              <h3 className="text-md font-semibold text-gray-700 mb-4">기본 공사비</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    평당 기본 단가 (일반)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 250,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    평당 기본 단가 (고급)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 350,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    평당 기본 단가 (특급)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 450,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
+              <h3 className="text-md font-semibold text-gray-700 mb-4">바닥재 (평당)</h3>
+              <div className="space-y-3">
+                {['장판', '데코타일', '강마루', '원목마루', '600각 타일', '800-900각 타일', '1200각 타일'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-32 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* 자재비 설정 */}
+            {/* 벽재/천장재 */}
             <div className="border-b pb-6">
-              <h3 className="text-md font-semibold text-gray-700 mb-4">자재별 단가</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    마루 (강화마루) - 평당
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 50,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    마루 (강마루) - 평당
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 80,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    벽지 (실크) - 평당
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 30,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    벽지 (합지) - 평당
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 25,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
+              <h3 className="text-md font-semibold text-gray-700 mb-4">벽재/천장재 (평당)</h3>
+              <div className="space-y-3">
+                {['합지도배', '실크도배(일반)', '실크도배(고급)', '도장(전체)', '필름', '대형타일', '박판타일', '무늬목', '도장(공용부)+실크도배(방)'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-48 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* 설비 단가 */}
+            {/* 가구 공사 */}
             <div className="border-b pb-6">
-              <h3 className="text-md font-semibold text-gray-700 mb-4">설비 및 기타</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    욕실 당 기본 단가
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 3,000,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    확장 공사 - 평당
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 200,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    에어컨 (시스템) - 1대
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 2,500,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    에어컨 (스탠드/벽걸이) - 1대
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 1,500,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
+              <h3 className="text-md font-semibold text-gray-700 mb-4">가구 공사</h3>
+              <div className="space-y-3">
+                {['전체', '공용부'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-32 text-sm text-gray-700">가구({item})</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+                {['전체 BLUM(블룸)', '경첩(일반)+서랍(일반)', '경첩 BLUM(블룸)+서랍(일반)'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-48 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* 가구 및 마감재 */}
+            {/* 주방 상판 */}
             <div className="border-b pb-6">
-              <h3 className="text-md font-semibold text-gray-700 mb-4">가구 및 마감재</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    주방 상판 (인조대리석)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 800,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    주방 상판 (엔지니어드스톤)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 1,200,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    몰딩 - 미터당
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 15,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    간접조명 - 미터당
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 80,000원"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                </div>
+              <h3 className="text-md font-semibold text-gray-700 mb-4">주방 상판</h3>
+              <div className="space-y-3">
+                {['세라믹', '칸스톤', '천연대리석', '인조대리석', '스테인리스'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-32 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 스위치/콘센트 */}
+            <div className="border-b pb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-4">스위치/콘센트 (개당)</h3>
+              <div className="space-y-3">
+                {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오', '르그랑 아펠라'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-40 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 조명 */}
+            <div className="border-b pb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-4">조명 (개당)</h3>
+              <div className="space-y-3">
+                {['마그네틱조명', '라인조명', '매입조명(일반)', '매입조명(고급)', '매입조명(하이엔드)'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-40 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 간접조명 */}
+            <div className="border-b pb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-4">간접조명 (미터당)</h3>
+              <div className="space-y-3">
+                {['LED', 'T3 조명'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-32 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 몰딩 */}
+            <div className="border-b pb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-4">몰딩 (미터당)</h3>
+              <div className="space-y-3">
+                {['무걸레받이+마이너스몰딩', '무걸레받이+무몰딩', '걸레받이+무몰딩', '걸레받이+천장몰딩'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-52 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 화장실 */}
+            <div className="border-b pb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-4">화장실</h3>
+              <div className="space-y-3">
+                <div className="mb-3"><strong className="text-sm">천장</strong></div>
+                {['SMC', '도장', '이노솔'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-32 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+                <div className="mb-3 mt-4"><strong className="text-sm">수전</strong></div>
+                {['일반수전', '매립수전'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-32 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+                <div className="mb-3 mt-4"><strong className="text-sm">타일 등급</strong></div>
+                {['유럽산(고급)', '중국산(중급)', '중국산(기본)'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-32 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+                <div className="mb-3 mt-4"><strong className="text-sm">타일 규격</strong></div>
+                {['600각(덧방)', '600각(올철거)', '750x1500', '박판타일', '300x600(벽)+300각(바닥)', '600x1200 or 800각(올철거)'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-56 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+                <div className="mb-3 mt-4"><strong className="text-sm">줄눈</strong></div>
+                {['스트라이크에보(친환경 에폭시)', '케라폭시(에폭시)', '푸가벨라'].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <label className="w-56 text-sm text-gray-700">{item}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 확장 및 기타 공사 */}
+            <div className="border-b pb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-4">확장 및 기타 공사</h3>
+              <div className="space-y-3">
+                {[
+                  { label: '거실 확장 (평당)', key: 'livingRoom' },
+                  { label: '주방 확장 (평당)', key: 'kitchen' },
+                  { label: '방 확장 (개당)', key: 'room' },
+                  { label: '샤시 공사 (평당)', key: 'sash' },
+                  { label: '홈파기 공사 (평당)', key: 'grooving' },
+                  { label: '방통 공사 (평당)', key: 'bangtong' },
+                  { label: '에어컨 (2 in 1) - 1대', key: 'aircon2in1' },
+                  { label: '에어컨 (시스템) - 1대', key: 'airconSystem' }
+                ].map(item => (
+                  <div key={item.key} className="flex items-center gap-3">
+                    <label className="w-48 text-sm text-gray-700">{item.label}</label>
+                    <input type="text" placeholder="최소" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-gray-500">~</span>
+                    <input type="text" placeholder="최대" className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <span className="text-sm text-gray-500 w-8">원</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -1549,13 +1596,6 @@ const EstimatePreview: React.FC = () => {
                 <Save className="h-4 w-4" />
                 설정 저장
               </button>
-            </div>
-
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-gray-700">
-                <strong>💡 참고:</strong> 여기서 설정한 단가들은 견적 계산 시 기본값으로 사용됩니다.
-                실제 견적 작성 시 개별적으로 조정할 수 있습니다.
-              </p>
             </div>
           </div>
         </div>
