@@ -54,11 +54,35 @@ router.post('/calculate', authenticateToken, async (req, res) => {
     ceilingHeight,
     includeSash,
     includeFloorHeating,
-    includeAircon
+    includeAircon,
+    floorMaterial,
+    wallMaterial,
+    ceilingMaterial,
+    furnitureWork,
+    kitchenCountertop,
+    switchPublic,
+    switchRoom,
+    lightingType,
+    indirectLightingPublic,
+    indirectLightingRoom,
+    moldingPublic,
+    moldingRoom,
+    bathroomCeiling,
+    bathroomFaucet,
+    bathroomTile,
+    bathroomGrout
   } = req.body;
 
   try {
     const areaRange = getAreaRange(areaSize);
+
+    // 가격 설정 조회
+    const priceSettings = await new Promise((resolve, reject) => {
+      db.get('SELECT settings FROM estimate_price_settings ORDER BY id DESC LIMIT 1', (err, row) => {
+        if (err) reject(err);
+        else resolve(row ? JSON.parse(row.settings) : {});
+      });
+    });
 
     // grade가 배열인 경우 첫 번째 값 사용
     const gradeArr = JSON.parse(grade || '[]');
@@ -78,7 +102,75 @@ router.post('/calculate', authenticateToken, async (req, res) => {
     const additionalBathroomCost = selectedBathroomCount > 1 ? (selectedBathroomCount - 1) * 3000000 : 0;
     baseConstructionCost += additionalBathroomCost;
 
-    // 스펙북에서 해당 등급 아이템들의 가격 조회
+    // 항목별 비용 계산 함수
+    const calculateItemCost = (category, items, multiplier = areaSize) => {
+      if (!items || !priceSettings[category]) return 0;
+
+      const itemArr = JSON.parse(items || '[]');
+      let totalCost = 0;
+
+      itemArr.forEach(item => {
+        if (priceSettings[category][item]) {
+          const { min, max } = priceSettings[category][item];
+          const minPrice = parseFloat(min) || 0;
+          const maxPrice = parseFloat(max) || 0;
+          const avgPrice = (minPrice + maxPrice) / 2;
+          totalCost += avgPrice * multiplier;
+        }
+      });
+
+      return Math.floor(totalCost);
+    };
+
+    // 화장실 항목별 비용 계산
+    const calculateBathroomItemCost = (subCategory, items) => {
+      if (!items || !priceSettings.bathroom || !priceSettings.bathroom[subCategory]) return 0;
+
+      const itemArr = JSON.parse(items || '[]');
+      let totalCost = 0;
+
+      itemArr.forEach(item => {
+        if (priceSettings.bathroom[subCategory][item]) {
+          const { min, max } = priceSettings.bathroom[subCategory][item];
+          const minPrice = parseFloat(min) || 0;
+          const maxPrice = parseFloat(max) || 0;
+          const avgPrice = (minPrice + maxPrice) / 2;
+          totalCost += avgPrice * selectedBathroomCount; // 화장실 개수만큼 곱하기
+        }
+      });
+
+      return Math.floor(totalCost);
+    };
+
+    // 설정 기반 항목별 비용 계산
+    const floorCost = calculateItemCost('floor', floorMaterial);
+    const wallCost = calculateItemCost('wall', wallMaterial);
+    const ceilingCost = calculateItemCost('wall', ceilingMaterial); // 천장재도 wall 카테고리 사용
+    const furnitureCost = calculateItemCost('furniture', furnitureWork);
+    const countertopCost = calculateItemCost('countertop', kitchenCountertop, 1); // 주방 상판은 평수 곱하지 않음
+    const switchPublicCost = calculateItemCost('switch', switchPublic, 1);
+    const switchRoomCost = calculateItemCost('switch', switchRoom, 1);
+    const lightingCost = calculateItemCost('lighting', lightingType, 1);
+    const indirectPublicCost = calculateItemCost('indirectLighting', indirectLightingPublic, 1);
+    const indirectRoomCost = calculateItemCost('indirectLighting', indirectLightingRoom, 1);
+    const moldingPublicCost = calculateItemCost('molding', moldingPublic);
+    const moldingRoomCost = calculateItemCost('molding', moldingRoom);
+
+    // 화장실 항목별 비용
+    const bathroomCeilingCost = calculateBathroomItemCost('ceiling', bathroomCeiling);
+    const bathroomFaucetCost = calculateBathroomItemCost('faucet', bathroomFaucet);
+    const bathroomTileCost = calculateBathroomItemCost('tile', bathroomTile);
+    const bathroomGroutCost = calculateBathroomItemCost('grout', bathroomGrout);
+
+    // 총 설정 기반 비용
+    const settingsBasedCost = floorCost + wallCost + ceilingCost + furnitureCost +
+                              countertopCost + switchPublicCost + switchRoomCost +
+                              lightingCost + indirectPublicCost + indirectRoomCost +
+                              moldingPublicCost + moldingRoomCost +
+                              bathroomCeilingCost + bathroomFaucetCost +
+                              bathroomTileCost + bathroomGroutCost;
+
+    // 스펙북에서 해당 등급 아이템들의 가격 조회 (기존 로직 유지)
     const fixtureQuery = `
       SELECT category, COUNT(*) as count, AVG(CAST(REPLACE(price, ',', '') AS INTEGER)) as avg_price
       FROM specbook_items
@@ -127,7 +219,7 @@ router.post('/calculate', authenticateToken, async (req, res) => {
     }
 
     // 총 비용 계산 (±15% 범위)
-    const totalCost = baseConstructionCost + fixtureCost + sashCost + heatingCost + airconCost;
+    const totalCost = baseConstructionCost + fixtureCost + settingsBasedCost + sashCost + heatingCost + airconCost;
     const totalMinCost = Math.floor(totalCost * 0.85);
     const totalMaxCost = Math.floor(totalCost * 1.15);
 
@@ -136,6 +228,25 @@ router.post('/calculate', authenticateToken, async (req, res) => {
       baseConstruction: baseConstructionCost,
       fixtures: fixtureCost,
       additionalBathrooms: additionalBathroomCost,
+      settingsBasedCost: settingsBasedCost,
+      itemDetails: {
+        floor: floorCost,
+        wall: wallCost,
+        ceiling: ceilingCost,
+        furniture: furnitureCost,
+        countertop: countertopCost,
+        switchPublic: switchPublicCost,
+        switchRoom: switchRoomCost,
+        lighting: lightingCost,
+        indirectPublic: indirectPublicCost,
+        indirectRoom: indirectRoomCost,
+        moldingPublic: moldingPublicCost,
+        moldingRoom: moldingRoomCost,
+        bathroomCeiling: bathroomCeilingCost,
+        bathroomFaucet: bathroomFaucetCost,
+        bathroomTile: bathroomTileCost,
+        bathroomGrout: bathroomGroutCost
+      },
       sash: sashCost,
       floorHeating: heatingCost,
       aircon: airconCost,
@@ -146,6 +257,7 @@ router.post('/calculate', authenticateToken, async (req, res) => {
     res.json({
       baseConstructionCost,
       fixtureCost,
+      settingsBasedCost,
       sashCost,
       heatingCost,
       airconCost,
