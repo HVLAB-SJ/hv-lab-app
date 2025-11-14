@@ -416,12 +416,14 @@ const AfterService = () => {
                 <p className="text-gray-900 mt-0.5">{request.description}</p>
               </div>
 
-              {request.assignedTo && request.assignedTo.length > 0 && (
-                <div>
-                  <p className="text-xs text-gray-500">담당자</p>
-                  <p className="text-gray-900 mt-0.5">{request.assignedTo.join(', ')}</p>
-                </div>
-              )}
+              <div>
+                <p className="text-xs text-gray-500">담당자</p>
+                <p className="text-gray-900 mt-0.5">
+                  {request.assignedTo && request.assignedTo.length > 0
+                    ? request.assignedTo.join(', ')
+                    : '\u00A0'}
+                </p>
+              </div>
 
               <div className="grid grid-cols-2 gap-2 pt-2">
                 <div>
@@ -684,12 +686,14 @@ const AfterService = () => {
                         <p className="text-gray-900 mt-0.5">{request.description}</p>
                       </div>
 
-                      {request.assignedTo && request.assignedTo.length > 0 && (
-                        <div>
-                          <p className="text-xs text-gray-500">담당자</p>
-                          <p className="text-gray-900 mt-0.5">{request.assignedTo.join(', ')}</p>
-                        </div>
-                      )}
+                      <div>
+                        <p className="text-xs text-gray-500">담당자</p>
+                        <p className="text-gray-900 mt-0.5">
+                          {request.assignedTo && request.assignedTo.length > 0
+                            ? request.assignedTo.join(', ')
+                            : '\u00A0'}
+                        </p>
+                      </div>
 
                       <div className="grid grid-cols-2 gap-2 pt-2">
                         <div>
@@ -929,12 +933,14 @@ const AfterService = () => {
                         <p className="text-gray-900 mt-0.5">{request.description}</p>
                       </div>
 
-                      {request.assignedTo && request.assignedTo.length > 0 && (
-                        <div>
-                          <p className="text-xs text-gray-500">담당자</p>
-                          <p className="text-gray-900 mt-0.5">{request.assignedTo.join(', ')}</p>
-                        </div>
-                      )}
+                      <div>
+                        <p className="text-xs text-gray-500">담당자</p>
+                        <p className="text-gray-900 mt-0.5">
+                          {request.assignedTo && request.assignedTo.length > 0
+                            ? request.assignedTo.join(', ')
+                            : '\u00A0'}
+                        </p>
+                      </div>
 
                       <div className="grid grid-cols-2 gap-2 pt-2">
                         <div>
