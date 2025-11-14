@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Save, FileText, Plus, Trash2, Eye, Clock } from 'lucide-react';
+import { Download, Save, FileText, Plus, Trash2, Eye, Clock, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import api from '../services/api';
@@ -61,7 +61,7 @@ interface SavedEstimate extends EstimateForm, EstimateResult {
   created_by_name?: string;
 }
 
-type TabView = 'form' | 'history';
+type TabView = 'form' | 'history' | 'settings';
 
 const EstimatePreview: React.FC = () => {
   const [form, setForm] = useState<EstimateForm>({
@@ -349,7 +349,8 @@ const EstimatePreview: React.FC = () => {
         <nav className="flex space-x-4 md:space-x-8">
           {[
             { id: 'form' as TabView, label: '견적 작성' },
-            { id: 'history' as TabView, label: '저장된 견적', count: stats.total, icon: Clock }
+            { id: 'history' as TabView, label: '저장된 견적', count: stats.total, icon: Clock },
+            { id: 'settings' as TabView, label: '항목별 설정', icon: Settings }
           ].map(tab => (
             <button
               key={tab.id}
@@ -383,7 +384,7 @@ const EstimatePreview: React.FC = () => {
         </button>
       </div>
 
-      {activeTab === 'form' ? (
+      {activeTab === 'form' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {/* 입력 폼 */}
           <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
@@ -1276,7 +1277,9 @@ const EstimatePreview: React.FC = () => {
             )}
           </div>
         </div>
-      ) : (
+      )}
+
+      {activeTab === 'history' && (
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="p-4 md:p-6 border-b border-gray-200">
             <h2 className="text-base md:text-lg font-semibold text-gray-800">저장된 가견적서 ({stats.total})</h2>
@@ -1348,6 +1351,212 @@ const EstimatePreview: React.FC = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'settings' && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+          <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-6">
+            항목별 단가 및 계산식 설정
+          </h2>
+
+          <div className="space-y-6">
+            {/* 기본 공사비 설정 */}
+            <div className="border-b pb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-4">기본 공사비</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    평당 기본 단가 (일반)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 250,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    평당 기본 단가 (고급)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 350,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    평당 기본 단가 (특급)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 450,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 자재비 설정 */}
+            <div className="border-b pb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-4">자재별 단가</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    마루 (강화마루) - 평당
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 50,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    마루 (강마루) - 평당
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 80,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    벽지 (실크) - 평당
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 30,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    벽지 (합지) - 평당
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 25,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 설비 단가 */}
+            <div className="border-b pb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-4">설비 및 기타</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    욕실 당 기본 단가
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 3,000,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    확장 공사 - 평당
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 200,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    에어컨 (시스템) - 1대
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 2,500,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    에어컨 (스탠드/벽걸이) - 1대
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 1,500,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 가구 및 마감재 */}
+            <div className="border-b pb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-4">가구 및 마감재</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    주방 상판 (인조대리석)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 800,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    주방 상판 (엔지니어드스톤)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 1,200,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    몰딩 - 미터당
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 15,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    간접조명 - 미터당
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="예: 80,000원"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 저장 버튼 */}
+            <div className="flex justify-end gap-3 pt-4">
+              <button className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                초기화
+              </button>
+              <button className="px-6 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors flex items-center gap-2">
+                <Save className="h-4 w-4" />
+                설정 저장
+              </button>
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-gray-700">
+                <strong>💡 참고:</strong> 여기서 설정한 단가들은 견적 계산 시 기본값으로 사용됩니다.
+                실제 견적 작성 시 개별적으로 조정할 수 있습니다.
+              </p>
+            </div>
           </div>
         </div>
       )}
