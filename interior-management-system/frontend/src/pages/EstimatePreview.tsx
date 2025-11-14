@@ -755,38 +755,25 @@ const EstimatePreview: React.FC = () => {
                     <label className="block text-sm font-bold text-gray-700 mb-1">
                       가구 공사 범위
                     </label>
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            checked={form.furnitureWork.includes('공용부만')}
-                            onChange={() => handleMaterialCheckbox('furnitureWork', '공용부만')}
-                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
-                          />
-                          <span className="text-gray-700">공용부만</span>
-                        </label>
-                        <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            checked={form.furnitureWork.includes('전체')}
-                            onChange={() => handleMaterialCheckbox('furnitureWork', '전체')}
-                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
-                          />
-                          <span className="text-gray-700">전체</span>
-                        </label>
-                      </div>
-                      <div className="grid grid-cols-1">
-                        <label className="flex items-center text-xs md:text-sm">
-                          <input
-                            type="checkbox"
-                            checked={form.furnitureWork.includes('주방가구와 방 붙박이장')}
-                            onChange={() => handleMaterialCheckbox('furnitureWork', '주방가구와 방 붙박이장')}
-                            className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
-                          />
-                          <span className="text-gray-700 break-keep">주방가구와 방 붙박이장</span>
-                        </label>
-                      </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={form.furnitureWork.includes('전체')}
+                          onChange={() => handleMaterialCheckbox('furnitureWork', '전체')}
+                          className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                        />
+                        <span className="text-gray-700">전체</span>
+                      </label>
+                      <label className="flex items-center text-xs md:text-sm whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={form.furnitureWork.includes('공용부')}
+                          onChange={() => handleMaterialCheckbox('furnitureWork', '공용부')}
+                          className="mr-1.5 md:mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-400 flex-shrink-0"
+                        />
+                        <span className="text-gray-700">공용부</span>
+                      </label>
                     </div>
                   </div>
                   <div>
@@ -1156,8 +1143,8 @@ const EstimatePreview: React.FC = () => {
                           </label>
                         ))}
                       </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        {['FG8(수입 고탄성 줄눈)', 'FG4(수입 줄눈)'].map(item => (
+                      <div className="grid grid-cols-2 gap-2">
+                        {['FG8(수입 고탄성 줄눈)', 'FG4(아덱스 줄눈)'].map(item => (
                           <label key={item} className="flex items-center text-xs md:text-sm">
                             <input
                               type="checkbox"
