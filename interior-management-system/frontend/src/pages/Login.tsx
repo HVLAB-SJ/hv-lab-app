@@ -29,7 +29,6 @@ const Login = () => {
 
   const handleQuickLogin = (username: string) => {
     setValue('username', username);
-    setValue('password', '0109');
   };
 
   return (

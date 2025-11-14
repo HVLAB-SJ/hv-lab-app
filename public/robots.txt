@@ -1,0 +1,15 @@
+# 모든 검색 엔진 크롤러 차단
+User-agent: *
+Disallow: /
+
+# Google 크롤러 차단
+User-agent: Googlebot
+Disallow: /
+
+# Bing 크롤러 차단
+User-agent: Bingbot
+Disallow: /
+
+# Naver 크롤러 차단
+User-agent: Yeti
+Disallow: /
