@@ -287,6 +287,10 @@ const SpecBook = () => {
   const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [isDraggingSubImage, setIsDraggingSubImage] = useState(false);
   const [isSavingSubImages, setIsSavingSubImages] = useState(false);
+  const [imageZoom, setImageZoom] = useState(1);
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
   const subImagesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1619,23 +1623,125 @@ const SpecBook = () => {
         </div>
       )}
 
-      {/* 원본 사이즈 이미지 뷰어 */}
+      {/* 원본 사이즈 이미지 뷰어 (확대/축소 기능 포함) */}
       {viewingImage && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[60] p-4"
-          onClick={() => setViewingImage(null)}
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[60] overflow-hidden"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setViewingImage(null);
+              setImageZoom(1);
+              setImagePosition({ x: 0, y: 0 });
+            }
+          }}
+          onWheel={(e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            setImageZoom(prev => Math.max(0.5, Math.min(5, prev + delta)));
+          }}
         >
-          <button
-            onClick={() => setViewingImage(null)}
-            className="absolute top-4 right-4 p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition-colors"
+          {/* 컨트롤 버튼들 */}
+          <div className="absolute top-4 right-4 flex flex-col gap-2">
+            <button
+              onClick={() => setViewingImage(null)}
+              className="p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition-colors"
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setImageZoom(prev => Math.min(5, prev + 0.5));
+              }}
+              className="p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition-colors"
+              title="확대 (+)"
+            >
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setImageZoom(prev => Math.max(0.5, prev - 0.5));
+              }}
+              className="p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition-colors"
+              title="축소 (-)"
+            >
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setImageZoom(1);
+                setImagePosition({ x: 0, y: 0 });
+              }}
+              className="p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition-colors"
+              title="초기화"
+            >
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+
+          {/* 줌 레벨 표시 */}
+          <div className="absolute top-4 left-4 bg-white bg-opacity-10 text-white px-3 py-2 rounded-lg text-sm">
+            {Math.round(imageZoom * 100)}%
+          </div>
+
+          {/* 이미지 */}
+          <div
+            className="w-full h-full flex items-center justify-center overflow-hidden"
+            onMouseDown={(e) => {
+              if (imageZoom > 1) {
+                setIsDraggingImage(true);
+                setDragStart({ x: e.clientX - imagePosition.x, y: e.clientY - imagePosition.y });
+              }
+            }}
+            onMouseMove={(e) => {
+              if (isDraggingImage && imageZoom > 1) {
+                setImagePosition({
+                  x: e.clientX - dragStart.x,
+                  y: e.clientY - dragStart.y
+                });
+              }
+            }}
+            onMouseUp={() => setIsDraggingImage(false)}
+            onMouseLeave={() => setIsDraggingImage(false)}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              if (imageZoom === 1) {
+                setImageZoom(2);
+              } else {
+                setImageZoom(1);
+                setImagePosition({ x: 0, y: 0 });
+              }
+            }}
           >
-            <X className="h-8 w-8 text-white" />
-          </button>
-          <img
-            src={viewingImage}
-            alt="원본 이미지"
-            className="max-w-full max-h-full object-contain cursor-pointer"
-          />
+            <img
+              src={viewingImage}
+              alt="원본 이미지"
+              style={{
+                transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
+                transformOrigin: 'center center',
+                transition: isDraggingImage ? 'none' : 'transform 0.1s ease-out',
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                cursor: imageZoom > 1 ? (isDraggingImage ? 'grabbing' : 'grab') : 'pointer',
+                userSelect: 'none'
+              }}
+              draggable={false}
+            />
+          </div>
+
+          {/* 사용 안내 */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 text-white px-4 py-2 rounded-lg text-xs text-center">
+            마우스 휠로 확대/축소 | 드래그로 이동 | 더블클릭으로 2배 확대/초기화
+          </div>
         </div>
       )}
     </div>
