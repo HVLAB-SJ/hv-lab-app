@@ -595,7 +595,7 @@ const ConstructionPayment = () => {
                         setReceiptType('transfer');
                         setShowCashReceiptModal(true);
                       }}
-                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                      className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
                     >
                       이체확인증
                     </button>
