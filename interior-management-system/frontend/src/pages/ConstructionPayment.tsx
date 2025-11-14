@@ -636,7 +636,7 @@ const ConstructionPayment = () => {
                     <button
                       onClick={() => {
                         const record = filteredRecords[filteredRecords.length - 1];
-                        const projectInfo = projectsData.find(p => p.name === record.project);
+                        const projectInfo = projects.find(p => p.name === record.project);
                         setCashReceiptData({
                           project: record.project,
                           client: record.client,
