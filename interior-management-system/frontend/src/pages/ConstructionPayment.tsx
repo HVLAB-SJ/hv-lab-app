@@ -39,6 +39,7 @@ const ConstructionPayment = () => {
   const [records, setRecords] = useState<PaymentRecord[]>(constructionPayments);
   const [additionalWorks, setAdditionalWorks] = useState<Array<{ _id: string; project: string; amount: number }>>([]);
   const [showCashReceiptModal, setShowCashReceiptModal] = useState(false);
+  const [receiptType, setReceiptType] = useState<'cash' | 'transfer'>('cash');
   const [cashReceiptData, setCashReceiptData] = useState({
     project: '',
     client: '',
@@ -591,6 +592,30 @@ const ConstructionPayment = () => {
                           startDate: projectInfo?.startDate ? format(new Date(projectInfo.startDate), 'yyyy-MM-dd') : '',
                           endDate: projectInfo?.endDate ? format(new Date(projectInfo.endDate), 'yyyy-MM-dd') : ''
                         });
+                        setReceiptType('transfer');
+                        setShowCashReceiptModal(true);
+                      }}
+                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    >
+                      이체확인증
+                    </button>
+                    <button
+                      onClick={() => {
+                        const record = filteredRecords[filteredRecords.length - 1];
+                        const projectInfo = projectsData.find(p => p.name === record.project);
+                        setCashReceiptData({
+                          project: record.project,
+                          client: record.client,
+                          amount: '',
+                          date: format(new Date(), 'yyyy-MM-dd'),
+                          clientSignature: '',
+                          totalContractAmount: totalContract,
+                          previousAmount: received,
+                          remainingAmount: remainingWithoutAdditional,
+                          startDate: projectInfo?.startDate ? format(new Date(projectInfo.startDate), 'yyyy-MM-dd') : '',
+                          endDate: projectInfo?.endDate ? format(new Date(projectInfo.endDate), 'yyyy-MM-dd') : ''
+                        });
+                        setReceiptType('cash');
                         setShowCashReceiptModal(true);
                       }}
                       className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
@@ -1588,7 +1613,9 @@ const ConstructionPayment = () => {
                 <div className="border border-black p-8 bg-white print:border print:p-12">
                   {/* 제목 */}
                   <div className="p-3 mb-8">
-                    <h3 className="text-center text-2xl font-bold">현금수령증</h3>
+                    <h3 className="text-center text-2xl font-bold">
+                      {receiptType === 'cash' ? '현금수령증' : '이체확인증'}
+                    </h3>
                   </div>
 
                   {/* 테이블 형식의 정보 */}
@@ -1665,7 +1692,11 @@ const ConstructionPayment = () => {
 
                   {/* 확인 문구 */}
                   <div className="text-center mb-12">
-                    <p className="text-base">* 위와 같이 현금으로 지급 받았음을 확인 합니다.</p>
+                    <p className="text-base">
+                      * {receiptType === 'cash'
+                          ? '위와 같이 현금으로 지급 받았음을 확인 합니다.'
+                          : '위와 같이 계좌이체로 지급 받았음을 확인 합니다.'}
+                    </p>
                   </div>
 
                   {/* 날짜 */}

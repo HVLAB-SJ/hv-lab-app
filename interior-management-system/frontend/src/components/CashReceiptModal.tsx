@@ -6,9 +6,15 @@ import { ko } from 'date-fns/locale';
 interface CashReceiptModalProps {
   projectName: string;
   onClose: () => void;
+  type?: 'cash' | 'transfer'; // 'cash' = 현금수령증, 'transfer' = 이체확인증
 }
 
-const CashReceiptModal = ({ projectName, onClose }: CashReceiptModalProps) => {
+const CashReceiptModal = ({ projectName, onClose, type = 'cash' }: CashReceiptModalProps) => {
+  const isCash = type === 'cash';
+  const title = isCash ? '현금수령증' : '이체확인증';
+  const confirmText = isCash
+    ? '위와 같이 현금으로 지급 받았음을 확인 합니다.'
+    : '위와 같이 계좌이체로 지급 받았음을 확인 합니다.';
   const [formData, setFormData] = useState({
     receiptDate: format(new Date(), 'yyyy-MM-dd'),
     customerName: '',
@@ -67,7 +73,7 @@ const CashReceiptModal = ({ projectName, onClose }: CashReceiptModalProps) => {
         <div className="bg-white rounded-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto print:max-h-none print:mx-0 print:rounded-none">
           {/* 헤더 - 인쇄 시 숨김 */}
           <div className="flex items-center justify-between p-4 border-b print:hidden">
-            <h2 className="text-lg font-bold text-gray-900">현금수령증</h2>
+            <h2 className="text-lg font-bold text-gray-900">{title}</h2>
             <button
               onClick={onClose}
               className="p-1 hover:bg-gray-100 rounded-full"
@@ -151,10 +157,12 @@ const CashReceiptModal = ({ projectName, onClose }: CashReceiptModalProps) => {
             </button>
           </div>
 
-          {/* 현금수령증 출력 양식 - 인쇄 시만 표시 */}
+          {/* 현금수령증/이체확인증 출력 양식 - 인쇄 시만 표시 */}
           <div className="hidden print:block p-12">
             <div className="border-4 border-double border-gray-900 p-8">
-              <h1 className="text-center text-3xl font-bold mb-8">현 금 수 령 증</h1>
+              <h1 className="text-center text-3xl font-bold mb-8">
+                {isCash ? '현 금 수 령 증' : '이 체 확 인 증'}
+              </h1>
 
               <div className="space-y-6 text-lg">
                 <div className="flex items-baseline border-b border-gray-300 pb-2">
@@ -191,7 +199,7 @@ const CashReceiptModal = ({ projectName, onClose }: CashReceiptModalProps) => {
               </div>
 
               <div className="mt-12 text-center">
-                <p className="text-lg mb-8">위 금액을 정히 수령하였습니다.</p>
+                <p className="text-lg mb-8">{confirmText}</p>
 
                 <div className="space-y-2">
                   <p className="text-lg receipt-date">{format(new Date(formData.receiptDate), 'yyyy년 MM월 dd일', { locale: ko })}</p>
