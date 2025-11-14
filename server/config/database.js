@@ -691,6 +691,21 @@ const initDatabase = () => {
     }
   });
 
+  // 가견적서 설정 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS estimate_price_settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      settings TEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('❌ 가견적서 설정 테이블 생성 실패:', err);
+    } else {
+      console.log('✓ 가견적서 설정 테이블 생성 완료');
+    }
+  });
+
   // 기본 계정 생성 (테이블 생성 후 즉시 실행)
   // Use serialize to ensure tables are created before inserting users
   db.serialize(() => {

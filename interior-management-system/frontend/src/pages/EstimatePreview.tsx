@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Save, FileText, Plus, Trash2, Eye, Clock, Settings } from 'lucide-react';
+import { Download, FileText, Plus, Trash2, Eye, Clock, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import api from '../services/api';
@@ -109,9 +109,27 @@ const EstimatePreview: React.FC = () => {
   const [savedEstimates, setSavedEstimates] = useState<SavedEstimate[]>([]);
   const [activeTab, setActiveTab] = useState<TabView>('form');
   const [selectedEstimate, setSelectedEstimate] = useState<SavedEstimate | null>(null);
+  const [priceSettings, setPriceSettings] = useState<any>({
+    floor: {},
+    wall: {},
+    furniture: {},
+    countertop: {},
+    switch: {},
+    lighting: {},
+    indirectLighting: {},
+    molding: {},
+    bathroom: {
+      ceiling: {},
+      faucet: {},
+      tile: {},
+      grout: {}
+    },
+    expansion: {}
+  });
 
   useEffect(() => {
     loadEstimateHistory();
+    loadPriceSettings();
   }, []);
 
   // 폼 변경 시 자동으로 견적 계산 (debounce 적용)
@@ -130,6 +148,19 @@ const EstimatePreview: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [form]);
 
+  // 가격 설정 변경 시 자동 저장 (debounce 적용)
+  useEffect(() => {
+    // 초기 로드 시에는 저장하지 않음
+    const isEmpty = Object.keys(priceSettings.floor).length === 0;
+    if (isEmpty) return;
+
+    const timeoutId = setTimeout(() => {
+      savePriceSettings();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [priceSettings]);
+
   const loadEstimateHistory = async () => {
     try {
       const response = await api.get('/estimate-preview/list');
@@ -137,6 +168,54 @@ const EstimatePreview: React.FC = () => {
     } catch (error) {
       console.error('가견적서 목록 로드 실패:', error);
     }
+  };
+
+  const loadPriceSettings = async () => {
+    try {
+      const response = await api.get('/estimate-preview/settings/prices');
+      if (response.data && response.data.settings) {
+        setPriceSettings(response.data.settings);
+      }
+    } catch (error) {
+      console.error('가격 설정 로드 실패:', error);
+    }
+  };
+
+  const savePriceSettings = async () => {
+    try {
+      await api.post('/estimate-preview/settings/prices', { settings: priceSettings });
+      // 조용히 저장 (toast 없이)
+    } catch (error) {
+      console.error('가격 설정 저장 실패:', error);
+    }
+  };
+
+  const handlePriceChange = (category: string, item: string, type: 'min' | 'max', value: string) => {
+    setPriceSettings((prev: any) => {
+      const newSettings = { ...prev };
+      if (!newSettings[category]) {
+        newSettings[category] = {};
+      }
+      if (!newSettings[category][item]) {
+        newSettings[category][item] = { min: '', max: '' };
+      }
+      newSettings[category][item][type] = value;
+      return newSettings;
+    });
+  };
+
+  const handleBathroomPriceChange = (subCategory: string, item: string, type: 'min' | 'max', value: string) => {
+    setPriceSettings((prev: any) => {
+      const newSettings = { ...prev };
+      if (!newSettings.bathroom[subCategory]) {
+        newSettings.bathroom[subCategory] = {};
+      }
+      if (!newSettings.bathroom[subCategory][item]) {
+        newSettings.bathroom[subCategory][item] = { min: '', max: '' };
+      }
+      newSettings.bathroom[subCategory][item][type] = value;
+      return newSettings;
+    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -1438,9 +1517,21 @@ const EstimatePreview: React.FC = () => {
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">{item}</label>
                       <div className="flex items-center gap-2">
-                        <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최소"
+                          value={priceSettings.floor[item]?.min || ''}
+                          onChange={(e) => handlePriceChange('floor', item, 'min', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                         <span className="text-gray-500 text-sm">~</span>
-                        <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최대"
+                          value={priceSettings.floor[item]?.max || ''}
+                          onChange={(e) => handlePriceChange('floor', item, 'max', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                       </div>
                     </div>
                   ))}
@@ -1455,9 +1546,21 @@ const EstimatePreview: React.FC = () => {
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">{item}</label>
                       <div className="flex items-center gap-2">
-                        <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최소"
+                          value={priceSettings.wall[item]?.min || ''}
+                          onChange={(e) => handlePriceChange('wall', item, 'min', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                         <span className="text-gray-500 text-sm">~</span>
-                        <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최대"
+                          value={priceSettings.wall[item]?.max || ''}
+                          onChange={(e) => handlePriceChange('wall', item, 'max', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                       </div>
                     </div>
                   ))}
@@ -1472,9 +1575,21 @@ const EstimatePreview: React.FC = () => {
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">가구({item})</label>
                       <div className="flex items-center gap-2">
-                        <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최소"
+                          value={priceSettings.furniture[`가구(${item})`]?.min || ''}
+                          onChange={(e) => handlePriceChange('furniture', `가구(${item})`, 'min', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                         <span className="text-gray-500 text-sm">~</span>
-                        <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최대"
+                          value={priceSettings.furniture[`가구(${item})`]?.max || ''}
+                          onChange={(e) => handlePriceChange('furniture', `가구(${item})`, 'max', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                       </div>
                     </div>
                   ))}
@@ -1482,9 +1597,21 @@ const EstimatePreview: React.FC = () => {
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">{item}</label>
                       <div className="flex items-center gap-2">
-                        <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최소"
+                          value={priceSettings.furniture[item]?.min || ''}
+                          onChange={(e) => handlePriceChange('furniture', item, 'min', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                         <span className="text-gray-500 text-sm">~</span>
-                        <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최대"
+                          value={priceSettings.furniture[item]?.max || ''}
+                          onChange={(e) => handlePriceChange('furniture', item, 'max', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                       </div>
                     </div>
                   ))}
@@ -1499,9 +1626,21 @@ const EstimatePreview: React.FC = () => {
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">{item}</label>
                       <div className="flex items-center gap-2">
-                        <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최소"
+                          value={priceSettings.countertop[item]?.min || ''}
+                          onChange={(e) => handlePriceChange('countertop', item, 'min', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                         <span className="text-gray-500 text-sm">~</span>
-                        <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최대"
+                          value={priceSettings.countertop[item]?.max || ''}
+                          onChange={(e) => handlePriceChange('countertop', item, 'max', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                       </div>
                     </div>
                   ))}
@@ -1516,9 +1655,21 @@ const EstimatePreview: React.FC = () => {
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">{item}</label>
                       <div className="flex items-center gap-2">
-                        <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최소"
+                          value={priceSettings.switch[item]?.min || ''}
+                          onChange={(e) => handlePriceChange('switch', item, 'min', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                         <span className="text-gray-500 text-sm">~</span>
-                        <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최대"
+                          value={priceSettings.switch[item]?.max || ''}
+                          onChange={(e) => handlePriceChange('switch', item, 'max', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                       </div>
                     </div>
                   ))}
@@ -1536,9 +1687,21 @@ const EstimatePreview: React.FC = () => {
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">{item}</label>
                       <div className="flex items-center gap-2">
-                        <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최소"
+                          value={priceSettings.lighting[item]?.min || ''}
+                          onChange={(e) => handlePriceChange('lighting', item, 'min', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                         <span className="text-gray-500 text-sm">~</span>
-                        <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최대"
+                          value={priceSettings.lighting[item]?.max || ''}
+                          onChange={(e) => handlePriceChange('lighting', item, 'max', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                       </div>
                     </div>
                   ))}
@@ -1553,9 +1716,21 @@ const EstimatePreview: React.FC = () => {
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">{item}</label>
                       <div className="flex items-center gap-2">
-                        <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최소"
+                          value={priceSettings.indirectLighting[item]?.min || ''}
+                          onChange={(e) => handlePriceChange('indirectLighting', item, 'min', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                         <span className="text-gray-500 text-sm">~</span>
-                        <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최대"
+                          value={priceSettings.indirectLighting[item]?.max || ''}
+                          onChange={(e) => handlePriceChange('indirectLighting', item, 'max', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                       </div>
                     </div>
                   ))}
@@ -1570,9 +1745,21 @@ const EstimatePreview: React.FC = () => {
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">{item}</label>
                       <div className="flex items-center gap-2">
-                        <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최소"
+                          value={priceSettings.molding[item]?.min || ''}
+                          onChange={(e) => handlePriceChange('molding', item, 'min', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                         <span className="text-gray-500 text-sm">~</span>
-                        <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                        <input
+                          type="number"
+                          placeholder="최대"
+                          value={priceSettings.molding[item]?.max || ''}
+                          onChange={(e) => handlePriceChange('molding', item, 'max', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
                       </div>
                     </div>
                   ))}
@@ -1594,9 +1781,21 @@ const EstimatePreview: React.FC = () => {
                       <div key={item} className="space-y-1">
                         <label className="block text-sm font-medium text-gray-700">{item}</label>
                         <div className="flex items-center gap-2">
-                          <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <input
+                            type="number"
+                            placeholder="최소"
+                            value={priceSettings.bathroom.ceiling[item]?.min || ''}
+                            onChange={(e) => handleBathroomPriceChange('ceiling', item, 'min', e.target.value)}
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
                           <span className="text-gray-500 text-sm">~</span>
-                          <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <input
+                            type="number"
+                            placeholder="최대"
+                            value={priceSettings.bathroom.ceiling[item]?.max || ''}
+                            onChange={(e) => handleBathroomPriceChange('ceiling', item, 'max', e.target.value)}
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
                         </div>
                       </div>
                     ))}
@@ -1609,9 +1808,21 @@ const EstimatePreview: React.FC = () => {
                       <div key={item} className="space-y-1">
                         <label className="block text-sm font-medium text-gray-700">{item}</label>
                         <div className="flex items-center gap-2">
-                          <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <input
+                            type="number"
+                            placeholder="최소"
+                            value={priceSettings.bathroom.faucet[item]?.min || ''}
+                            onChange={(e) => handleBathroomPriceChange('faucet', item, 'min', e.target.value)}
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
                           <span className="text-gray-500 text-sm">~</span>
-                          <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <input
+                            type="number"
+                            placeholder="최대"
+                            value={priceSettings.bathroom.faucet[item]?.max || ''}
+                            onChange={(e) => handleBathroomPriceChange('faucet', item, 'max', e.target.value)}
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
                         </div>
                       </div>
                     ))}
@@ -1624,9 +1835,21 @@ const EstimatePreview: React.FC = () => {
                       <div key={item} className="space-y-1">
                         <label className="block text-sm font-medium text-gray-700">{item}</label>
                         <div className="flex items-center gap-2">
-                          <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <input
+                            type="number"
+                            placeholder="최소"
+                            value={priceSettings.bathroom.tile[item]?.min || ''}
+                            onChange={(e) => handleBathroomPriceChange('tile', item, 'min', e.target.value)}
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
                           <span className="text-gray-500 text-sm">~</span>
-                          <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <input
+                            type="number"
+                            placeholder="최대"
+                            value={priceSettings.bathroom.tile[item]?.max || ''}
+                            onChange={(e) => handleBathroomPriceChange('tile', item, 'max', e.target.value)}
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
                         </div>
                       </div>
                     ))}
@@ -1639,9 +1862,21 @@ const EstimatePreview: React.FC = () => {
                       <div key={item} className="space-y-1">
                         <label className="block text-sm font-medium text-gray-700">{item}</label>
                         <div className="flex items-center gap-2">
-                          <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <input
+                            type="number"
+                            placeholder="최소"
+                            value={priceSettings.bathroom.tile[item]?.min || ''}
+                            onChange={(e) => handleBathroomPriceChange('tile', item, 'min', e.target.value)}
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
                           <span className="text-gray-500 text-sm">~</span>
-                          <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <input
+                            type="number"
+                            placeholder="최대"
+                            value={priceSettings.bathroom.tile[item]?.max || ''}
+                            onChange={(e) => handleBathroomPriceChange('tile', item, 'max', e.target.value)}
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
                         </div>
                       </div>
                     ))}
@@ -1654,9 +1889,21 @@ const EstimatePreview: React.FC = () => {
                       <div key={item} className="space-y-1">
                         <label className="block text-sm font-medium text-gray-700">{item}</label>
                         <div className="flex items-center gap-2">
-                          <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <input
+                            type="number"
+                            placeholder="최소"
+                            value={priceSettings.bathroom.grout[item]?.min || ''}
+                            onChange={(e) => handleBathroomPriceChange('grout', item, 'min', e.target.value)}
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
                           <span className="text-gray-500 text-sm">~</span>
-                          <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                          <input
+                            type="number"
+                            placeholder="최대"
+                            value={priceSettings.bathroom.grout[item]?.max || ''}
+                            onChange={(e) => handleBathroomPriceChange('grout', item, 'max', e.target.value)}
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
                         </div>
                       </div>
                     ))}
@@ -1666,7 +1913,7 @@ const EstimatePreview: React.FC = () => {
             </div>
 
             {/* 확장 및 기타 공사 - 단독 섹션 */}
-            <div className="border-b pb-6">
+            <div>
               <h3 className="text-md font-semibold text-gray-700 mb-4">확장 및 기타 공사</h3>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-x-6 gap-y-3">
                 {[
@@ -1682,24 +1929,25 @@ const EstimatePreview: React.FC = () => {
                   <div key={item.key} className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">{item.label}</label>
                     <div className="flex items-center gap-2">
-                      <input type="text" placeholder="최소" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <input
+                        type="number"
+                        placeholder="최소"
+                        value={priceSettings.expansion[item.key]?.min || ''}
+                        onChange={(e) => handlePriceChange('expansion', item.key, 'min', e.target.value)}
+                        className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                      />
                       <span className="text-gray-500 text-sm">~</span>
-                      <input type="text" placeholder="최대" className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                      <input
+                        type="number"
+                        placeholder="최대"
+                        value={priceSettings.expansion[item.key]?.max || ''}
+                        onChange={(e) => handlePriceChange('expansion', item.key, 'max', e.target.value)}
+                        className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                      />
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* 저장 버튼 */}
-            <div className="flex justify-end gap-3 pt-4">
-              <button className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
-                초기화
-              </button>
-              <button className="px-6 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors flex items-center gap-2">
-                <Save className="h-4 w-4" />
-                설정 저장
-              </button>
             </div>
           </div>
         </div>

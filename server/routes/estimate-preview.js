@@ -414,4 +414,70 @@ router.get('/costs/additional', authenticateToken, (req, res) => {
   });
 });
 
+// 가격 설정 조회
+router.get('/settings/prices', authenticateToken, (req, res) => {
+  const query = 'SELECT settings FROM estimate_price_settings ORDER BY id DESC LIMIT 1';
+
+  db.get(query, (err, row) => {
+    if (err) {
+      console.error('가격 설정 조회 실패:', err);
+      return res.status(500).json({ error: '가격 설정 조회에 실패했습니다.' });
+    }
+
+    if (!row) {
+      // 설정이 없으면 빈 객체 반환
+      return res.json({ settings: {} });
+    }
+
+    res.json({ settings: JSON.parse(row.settings) });
+  });
+});
+
+// 가격 설정 저장
+router.post('/settings/prices', authenticateToken, (req, res) => {
+  const { settings } = req.body;
+
+  if (!settings) {
+    return res.status(400).json({ error: '설정 데이터가 필요합니다.' });
+  }
+
+  const settingsJson = JSON.stringify(settings);
+
+  // 기존 설정이 있는지 확인
+  db.get('SELECT id FROM estimate_price_settings LIMIT 1', (err, row) => {
+    if (err) {
+      console.error('설정 확인 실패:', err);
+      return res.status(500).json({ error: '설정 저장에 실패했습니다.' });
+    }
+
+    if (row) {
+      // 업데이트
+      db.run(
+        'UPDATE estimate_price_settings SET settings = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [settingsJson, row.id],
+        (err) => {
+          if (err) {
+            console.error('설정 업데이트 실패:', err);
+            return res.status(500).json({ error: '설정 저장에 실패했습니다.' });
+          }
+          res.json({ message: '설정이 저장되었습니다.' });
+        }
+      );
+    } else {
+      // 새로 생성
+      db.run(
+        'INSERT INTO estimate_price_settings (settings) VALUES (?)',
+        [settingsJson],
+        (err) => {
+          if (err) {
+            console.error('설정 생성 실패:', err);
+            return res.status(500).json({ error: '설정 저장에 실패했습니다.' });
+          }
+          res.json({ message: '설정이 저장되었습니다.' });
+        }
+      );
+    }
+  });
+});
+
 module.exports = router;
