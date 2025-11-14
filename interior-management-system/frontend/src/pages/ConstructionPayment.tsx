@@ -135,7 +135,8 @@ const ConstructionPayment = () => {
     amount: 0,
     date: '',
     method: '계좌이체',
-    notes: ''
+    notes: '',
+    quickText: '' // 빠른 입력을 위한 텍스트
   });
 
   // 각 구분별 기본 비율
@@ -152,6 +153,38 @@ const ConstructionPayment = () => {
     return selectedTypes.reduce((sum, type) => {
       return sum + (DEFAULT_PERCENTAGES[type as keyof typeof DEFAULT_PERCENTAGES] || 0);
     }, 0);
+  };
+
+  // 텍스트에서 금액 파싱 (예: "40만원" -> 400000)
+  const parseAmountFromText = (text: string): number => {
+    // "숫자+만원" 패턴 찾기
+    const match = text.match(/(\d+(?:,\d+)*)\s*만\s*원/);
+    if (match) {
+      const number = parseInt(match[1].replace(/,/g, ''));
+      return number * 10000;
+    }
+
+    // "숫자원" 패턴 찾기 (예: "400000원")
+    const directMatch = text.match(/(\d+(?:,\d+)*)\s*원/);
+    if (directMatch) {
+      return parseInt(directMatch[1].replace(/,/g, ''));
+    }
+
+    return 0;
+  };
+
+  // 빠른 입력 텍스트 파싱
+  const handleQuickTextParse = () => {
+    const text = newPayment.quickText;
+    if (!text.trim()) return;
+
+    const amount = parseAmountFromText(text);
+
+    setNewPayment({
+      ...newPayment,
+      amount: amount,
+      notes: text.trim() // 전체 텍스트를 비고에 저장
+    });
   };
 
   // 공사 날짜 기반으로 자동 날짜 계산 (우선순위: 계약금 > 착수금 > 중도금 > 잔금 > 추가금)
@@ -329,7 +362,8 @@ const ConstructionPayment = () => {
       amount: 0,
       date: '',
       method: '계좌이체',
-      notes: ''
+      notes: '',
+      quickText: ''
     });
     setShowPaymentModal(true);
   };
@@ -1321,6 +1355,30 @@ const ConstructionPayment = () => {
             </div>
 
             <div className="p-6 space-y-4">
+              {/* 빠른 입력 */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  💡 빠른 입력 (텍스트 붙여넣기)
+                </label>
+                <textarea
+                  value={newPayment.quickText}
+                  onChange={(e) => setNewPayment({ ...newPayment, quickText: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="예시: [703호 준공청소]&#10;청소비용 40만원입니다. 신한 110 432 160269 박지연. 입금 부탁드립니다."
+                />
+                <button
+                  type="button"
+                  onClick={handleQuickTextParse}
+                  className="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  자동으로 항목 채우기
+                </button>
+                <p className="mt-2 text-xs text-gray-600">
+                  * 텍스트에서 금액을 자동으로 인식하여 입력합니다 (예: "40만원", "400000원")
+                </p>
+              </div>
+
               {/* 구분 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
