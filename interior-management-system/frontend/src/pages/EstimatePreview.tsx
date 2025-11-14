@@ -1368,8 +1368,8 @@ const EstimatePreview: React.FC = () => {
               </p>
             </div>
 
-            {/* 바닥재, 벽재/천장재, 가구 공사 - 3열 배치 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-b pb-6">
+            {/* 바닥재, 벽재/천장재, 가구 공사, 주방 상판, 스위치/콘센트 - 5열 배치 */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 border-b pb-6">
               {/* 바닥재 */}
               <div>
                 <h3 className="text-md font-semibold text-gray-700 mb-4">바닥재 (평당)</h3>
@@ -1430,10 +1430,7 @@ const EstimatePreview: React.FC = () => {
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* 주방 상판, 스위치/콘센트, 조명 - 3열 배치 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-b pb-6">
               {/* 주방 상판 */}
               <div>
                 <h3 className="text-md font-semibold text-gray-700 mb-4">주방 상판</h3>
@@ -1467,7 +1464,10 @@ const EstimatePreview: React.FC = () => {
                   ))}
                 </div>
               </div>
+            </div>
 
+            {/* 조명, 간접조명, 몰딩 - 5열 배치 (처음 3열만 사용) */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 border-b pb-6">
               {/* 조명 */}
               <div>
                 <h3 className="text-md font-semibold text-gray-700 mb-4">조명 (개당)</h3>
@@ -1484,10 +1484,7 @@ const EstimatePreview: React.FC = () => {
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* 간접조명, 몰딩 - 처음 2열만 사용 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-b pb-6">
               {/* 간접조명 */}
               <div>
                 <h3 className="text-md font-semibold text-gray-700 mb-4">간접조명 (미터당)</h3>
@@ -1523,12 +1520,13 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               <div></div> {/* 빈 공간 */}
+              <div></div> {/* 빈 공간 */}
             </div>
 
             {/* 화장실 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">화장실</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                 <div>
                   <h4 className="text-sm font-semibold text-gray-600 mb-3">천장</h4>
                   <div className="space-y-3">
@@ -1610,7 +1608,7 @@ const EstimatePreview: React.FC = () => {
             {/* 확장 및 기타 공사 - 단독 섹션 */}
             <div className="border-b pb-6">
               <h3 className="text-md font-semibold text-gray-700 mb-4">확장 및 기타 공사</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-x-6 gap-y-3">
                 {[
                   { label: '거실 확장 (평당)', key: 'livingRoom' },
                   { label: '주방 확장 (평당)', key: 'kitchen' },
