@@ -66,6 +66,56 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
   const [laborAmount, setLaborAmount] = useState<number>(0);
   const [originalLaborAmount, setOriginalLaborAmount] = useState<number>(0);
   const [originalMaterialAmount, setOriginalMaterialAmount] = useState<number>(0);
+  const [quickText, setQuickText] = useState(''); // 빠른 입력 텍스트
+
+  // 텍스트에서 정보 파싱
+  const parseQuickText = (text: string) => {
+    if (!text.trim()) return;
+
+    // 은행명 추출 (예: "하나은행", "신한은행")
+    const bankMatch = text.match(/(KB국민은행|신한은행|우리은행|하나은행|NH농협은행|IBK기업은행|KEB하나은행|SC제일은행|한국씨티은행|부산은행|대구은행|경남은행|광주은행|전북은행|제주은행|산업은행|수협은행|우체국|새마을금고|신협|저축은행|카카오뱅크|케이뱅크|토스뱅크|NH투자증권|미래에셋증권|한국투자증권|키움증권|삼성증권|KB증권|신한투자증권|하이투자증권)/);
+    if (bankMatch) {
+      setValue('bankName', bankMatch[1]);
+    }
+
+    // 계좌번호 추출 (예: "362-910277-07207" 또는 "3629102770720")
+    const accountMatch = text.match(/(\d{2,4}[-\s]?\d{2,6}[-\s]?\d{2,8})/);
+    if (accountMatch) {
+      setValue('accountNumber', accountMatch[1]);
+    }
+
+    // 예금주 추출 (계좌번호 다음에 나오는 한글 이름)
+    if (accountMatch) {
+      const afterAccount = text.substring(text.indexOf(accountMatch[0]) + accountMatch[0].length);
+      const nameMatch = afterAccount.match(/([가-힣\s]+)/);
+      if (nameMatch) {
+        const cleanName = nameMatch[1].trim().split(/\s+/)[0]; // 첫 번째 단어만
+        setValue('accountHolder', cleanName);
+      }
+    }
+
+    // 금액 추출 ("1,178,100원" 또는 "40만원")
+    const amountMatch = text.match(/(\d+(?:,\d+)*)\s*만?\s*원/);
+    if (amountMatch) {
+      const amountStr = amountMatch[1].replace(/,/g, '');
+      let amount = parseInt(amountStr);
+
+      // "만원" 패턴인 경우
+      if (text.includes(amountMatch[0]) && amountMatch[0].includes('만')) {
+        amount = amount * 10000;
+      }
+
+      setOriginalMaterialAmount(amount);
+      setMaterialAmount(amount);
+      setValue('materialAmount', amount);
+    }
+
+    // 항목명 추출 (대괄호 안의 텍스트 또는 "대금" 앞의 텍스트)
+    const itemMatch = text.match(/\[([^\]]+)\]/) || text.match(/([가-힣]+)대금/);
+    if (itemMatch) {
+      setValue('itemName', itemMatch[1]);
+    }
+  };
 
   // Load contractors from MongoDB
   useEffect(() => {
@@ -714,8 +764,34 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
             </div>
           )}
 
-          {/* Bank Info */}
+          {/* Quick Text Input */}
           <div className="w-full border-t pt-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                💡 빠른 입력 (텍스트 붙여넣기)
+              </label>
+              <textarea
+                value={quickText}
+                onChange={(e) => setQuickText(e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="예시:&#10;[목자재]&#10;➖&#10;하나은행&#10;362-910277-07207&#10;이창훈 창원목재&#10;목재대금 : 1,178,100원&#10;(부가세포함)"
+              />
+              <button
+                type="button"
+                onClick={() => parseQuickText(quickText)}
+                className="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                자동으로 항목 채우기
+              </button>
+              <p className="mt-2 text-xs text-gray-600">
+                * 텍스트에서 은행명, 계좌번호, 예금주, 금액, 항목명을 자동으로 인식합니다
+              </p>
+            </div>
+          </div>
+
+          {/* Bank Info */}
+          <div className="w-full">
             <h3 className="text-lg font-medium mb-4">계좌 정보</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
