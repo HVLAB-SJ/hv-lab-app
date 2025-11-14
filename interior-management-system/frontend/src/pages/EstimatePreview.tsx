@@ -114,6 +114,22 @@ const EstimatePreview: React.FC = () => {
     loadEstimateHistory();
   }, []);
 
+  // 폼 변경 시 자동으로 견적 계산 (debounce 적용)
+  useEffect(() => {
+    // 필수 항목이 모두 입력되었는지 확인
+    if (!form.areaSize || form.areaSize <= 0 || form.grade.length === 0) {
+      setResult(null); // 필수 항목이 없으면 결과 초기화
+      return;
+    }
+
+    // debounce: 500ms 후에 계산 실행
+    const timeoutId = setTimeout(() => {
+      calculateEstimateAuto();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [form]);
+
   const loadEstimateHistory = async () => {
     try {
       const response = await api.get('/estimate-preview/list');
@@ -197,6 +213,50 @@ const EstimatePreview: React.FC = () => {
     } catch (error) {
       console.error('견적 계산 실패:', error);
       toast.error('견적 계산에 실패했습니다');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 자동 계산 함수 (저장하지 않고 미리보기만)
+  const calculateEstimateAuto = async () => {
+    setLoading(true);
+    try {
+      // 배열 필드들을 JSON 문자열로 변환
+      const formData = {
+        ...form,
+        projectName: form.projectName || '미리보기',
+        clientName: form.clientName || '미리보기',
+        residenceType: JSON.stringify(form.residenceType),
+        grade: JSON.stringify(form.grade),
+        bathroomCount: JSON.stringify(form.bathroomCount),
+        ceilingHeight: JSON.stringify(form.ceilingHeight),
+        expansionWork: JSON.stringify(form.expansionWork),
+        floorMaterial: JSON.stringify(form.floorMaterial),
+        wallMaterial: JSON.stringify(form.wallMaterial),
+        ceilingMaterial: JSON.stringify(form.ceilingMaterial),
+        furnitureWork: JSON.stringify(form.furnitureWork),
+        furnitureHardwareGrade: JSON.stringify(form.furnitureHardwareGrade),
+        kitchenCountertop: JSON.stringify(form.kitchenCountertop),
+        switchPublic: JSON.stringify(form.switchPublic),
+        switchRoom: JSON.stringify(form.switchRoom),
+        lightingType: JSON.stringify(form.lightingType),
+        indirectLightingPublic: JSON.stringify(form.indirectLightingPublic),
+        indirectLightingRoom: JSON.stringify(form.indirectLightingRoom),
+        bathroomCeiling: JSON.stringify(form.bathroomCeiling),
+        bathroomTileGrade: JSON.stringify(form.bathroomTileGrade),
+        bathroomFaucet: JSON.stringify(form.bathroomFaucet),
+        bathroomTile: JSON.stringify(form.bathroomTile),
+        bathroomGrout: JSON.stringify(form.bathroomGrout),
+        moldingPublic: JSON.stringify(form.moldingPublic),
+        moldingRoom: JSON.stringify(form.moldingRoom)
+      };
+
+      const response = await api.post('/estimate-preview/calculate', formData);
+      setResult(response.data);
+    } catch (error) {
+      console.error('자동 견적 계산 실패:', error);
+      setResult(null);
     } finally {
       setLoading(false);
     }

@@ -45,6 +45,121 @@ function getAreaRange(area) {
   return '40+';
 }
 
+// 가견적서 계산 (저장하지 않고 미리보기만)
+router.post('/calculate', authenticateToken, async (req, res) => {
+  const {
+    areaSize,
+    grade,
+    bathroomCount,
+    ceilingHeight,
+    includeSash,
+    includeFloorHeating,
+    includeAircon
+  } = req.body;
+
+  try {
+    const areaRange = getAreaRange(areaSize);
+
+    // grade가 배열인 경우 첫 번째 값 사용
+    const gradeArr = JSON.parse(grade || '[]');
+    const selectedGrade = gradeArr[0] || '기본';
+
+    // 기본 공사비 계산
+    let baseConstructionCost = Math.floor(BASE_CONSTRUCTION[selectedGrade] * areaSize);
+
+    // 층고에 따른 추가 비용
+    const ceilingHeightArr = JSON.parse(ceilingHeight || '[]');
+    const selectedCeilingHeight = ceilingHeightArr[0] || '2400~2600';
+    baseConstructionCost = Math.floor(baseConstructionCost * CEILING_HEIGHT_MULTIPLIER[selectedCeilingHeight]);
+
+    // 화장실 개수에 따른 추가 비용
+    const bathroomCountArr = JSON.parse(bathroomCount || '[]');
+    const selectedBathroomCount = parseInt(bathroomCountArr[0]) || 1;
+    const additionalBathroomCost = selectedBathroomCount > 1 ? (selectedBathroomCount - 1) * 3000000 : 0;
+    baseConstructionCost += additionalBathroomCost;
+
+    // 스펙북에서 해당 등급 아이템들의 가격 조회
+    const fixtureQuery = `
+      SELECT category, COUNT(*) as count, AVG(CAST(REPLACE(price, ',', '') AS INTEGER)) as avg_price
+      FROM specbook_items
+      WHERE is_library = 1
+      AND price IS NOT NULL
+      AND price != ''
+      AND (grade LIKE ? OR grade LIKE ? OR grade LIKE ? OR grade = ?)
+      GROUP BY category
+    `;
+
+    const fixtures = await new Promise((resolve, reject) => {
+      db.all(fixtureQuery, [`%${selectedGrade}%`, `%${selectedGrade},%`, `%,${selectedGrade}%`, selectedGrade], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+
+    // 집기류 비용 계산
+    let fixtureCost = 0;
+    fixtures.forEach(fixture => {
+      let quantity = 1;
+      if (['변기', '세면대', '수전', '샤워수전'].includes(fixture.category)) {
+        quantity = selectedBathroomCount;
+      } else if (['타일', '마루', '벽지'].includes(fixture.category)) {
+        quantity = Math.ceil(areaSize / 10);
+      }
+      fixtureCost += fixture.avg_price * quantity;
+    });
+
+    // 추가 공사 비용 계산
+    let sashCost = 0;
+    if (includeSash) {
+      const cost = ADDITIONAL_COSTS.sash[areaRange];
+      sashCost = Math.floor((cost.min + cost.max) / 2);
+    }
+
+    let heatingCost = 0;
+    if (includeFloorHeating) {
+      heatingCost = Math.floor(ADDITIONAL_COSTS.floorHeating.perPyeong * areaSize);
+    }
+
+    let airconCost = 0;
+    if (includeAircon) {
+      const cost = ADDITIONAL_COSTS.aircon[areaRange];
+      airconCost = Math.floor((cost.min + cost.max) / 2);
+    }
+
+    // 총 비용 계산 (±15% 범위)
+    const totalCost = baseConstructionCost + fixtureCost + sashCost + heatingCost + airconCost;
+    const totalMinCost = Math.floor(totalCost * 0.85);
+    const totalMaxCost = Math.floor(totalCost * 1.15);
+
+    // 상세 내역 JSON 생성
+    const detailBreakdown = {
+      baseConstruction: baseConstructionCost,
+      fixtures: fixtureCost,
+      additionalBathrooms: additionalBathroomCost,
+      sash: sashCost,
+      floorHeating: heatingCost,
+      aircon: airconCost,
+      fixtureDetails: fixtures
+    };
+
+    // 결과 반환 (DB 저장 없음)
+    res.json({
+      baseConstructionCost,
+      fixtureCost,
+      sashCost,
+      heatingCost,
+      airconCost,
+      totalMinCost,
+      totalMaxCost,
+      detailBreakdown
+    });
+
+  } catch (error) {
+    console.error('가견적서 계산 실패:', error);
+    res.status(500).json({ error: '가견적서 계산에 실패했습니다.' });
+  }
+});
+
 // 가견적서 생성
 router.post('/create', authenticateToken, async (req, res) => {
   const {
