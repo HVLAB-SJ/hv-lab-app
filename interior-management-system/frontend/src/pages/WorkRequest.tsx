@@ -118,40 +118,51 @@ const WorkRequest = () => {
     if (window.confirm(`"${projectName}" 업무요청을 삭제하시겠습니까?\n\n삭제된 내역은 복구할 수 없습니다.`)) {
       try {
         const requestToDelete = requests.find(r => r.id === id);
+
+        // 먼저 업무요청 삭제
         await workRequestService.deleteWorkRequest(id);
 
-        if (requestToDelete) {
-          let expectedTitle = '';
-          if (requestToDelete.project) {
-            expectedTitle = requestToDelete.requestType
-              ? `[업무요청] ${requestToDelete.requestType}`
-              : `[업무요청] ${requestToDelete.description.substring(0, 20)}`;
-          } else {
-            expectedTitle = requestToDelete.description;
-          }
-
-          const relatedSchedules = schedules.filter(s => {
-            const isSameDate = s.start && new Date(s.start).toDateString() === requestToDelete.dueDate.toDateString();
-            const isSameTitle = s.title === expectedTitle;
-            return isSameDate && isSameTitle;
-          });
-
-          for (const schedule of relatedSchedules) {
-            try {
-              await deleteScheduleFromAPI(schedule.id);
-            } catch (schedError) {
-              console.error('Failed to delete related schedule:', schedError);
-            }
-          }
-
-          await fetchSchedules();
-        }
-
+        // UI 즉시 업데이트
         setRequests(requests.filter(req => req.id !== id));
         toast.success('업무요청이 삭제되었습니다');
+
+        // 관련 일정 삭제는 백그라운드에서 처리
+        if (requestToDelete) {
+          try {
+            let expectedTitle = '';
+            if (requestToDelete.project) {
+              expectedTitle = requestToDelete.requestType
+                ? `[업무요청] ${requestToDelete.requestType}`
+                : `[업무요청] ${requestToDelete.description.substring(0, 20)}`;
+            } else {
+              expectedTitle = requestToDelete.description;
+            }
+
+            const relatedSchedules = schedules.filter(s => {
+              const isSameDate = s.start && new Date(s.start).toDateString() === requestToDelete.dueDate.toDateString();
+              const isSameTitle = s.title === expectedTitle;
+              return isSameDate && isSameTitle;
+            });
+
+            for (const schedule of relatedSchedules) {
+              try {
+                await deleteScheduleFromAPI(schedule.id);
+              } catch (schedError) {
+                console.error('Failed to delete related schedule:', schedError);
+              }
+            }
+
+            await fetchSchedules();
+          } catch (scheduleError) {
+            console.error('Failed to handle related schedules:', scheduleError);
+            // 일정 삭제 실패는 무시 (업무요청은 이미 삭제됨)
+          }
+        }
       } catch (error) {
         console.error('Failed to delete work request:', error);
         toast.error('업무요청 삭제에 실패했습니다');
+        // 실패 시 데이터 다시 로드
+        await loadWorkRequests();
       }
     }
   };
