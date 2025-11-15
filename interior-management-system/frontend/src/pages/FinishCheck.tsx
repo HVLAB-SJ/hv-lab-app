@@ -689,7 +689,9 @@ const FinishCheck = () => {
 
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
               {spaces.map((space) => {
-                const incompleteItems = space.items.filter(item => !item.is_completed);
+                const incompleteItems = space.items
+                  .filter(item => !item.is_completed)
+                  .sort((a, b) => (b.is_priority || 0) - (a.is_priority || 0));
                 const completedItems = space.items.filter(item => item.is_completed);
 
                 if (space.items.length === 0) return null;
@@ -720,6 +722,17 @@ const FinishCheck = () => {
                                 className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
                               />
                               <span className="flex-1 text-sm text-gray-900">{item.content}</span>
+                              <button
+                                onClick={() => handleTogglePriority(item.id)}
+                                className={`p-1 transition-colors ${
+                                  item.is_priority
+                                    ? 'text-yellow-500 hover:text-yellow-600'
+                                    : 'text-gray-300 hover:text-gray-400'
+                                }`}
+                                title="우선순위"
+                              >
+                                <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
+                              </button>
                             </div>
                           ))}
                         </div>
@@ -746,6 +759,17 @@ const FinishCheck = () => {
                                 className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
                               />
                               <span className="flex-1 text-sm text-gray-500 line-through">{item.content}</span>
+                              <button
+                                onClick={() => handleTogglePriority(item.id)}
+                                className={`p-1 transition-colors ${
+                                  item.is_priority
+                                    ? 'text-yellow-500 hover:text-yellow-600'
+                                    : 'text-gray-300 hover:text-gray-400'
+                                }`}
+                                title="우선순위"
+                              >
+                                <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
+                              </button>
                             </div>
                           ))}
                         </div>
