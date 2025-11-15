@@ -280,10 +280,7 @@ const FinishCheck = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900">📋 전체 보기</h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      모든 공간의 항목 표시
-                    </p>
+                    <h3 className="font-medium text-gray-900">전체 보기</h3>
                   </div>
                 </div>
               </div>
