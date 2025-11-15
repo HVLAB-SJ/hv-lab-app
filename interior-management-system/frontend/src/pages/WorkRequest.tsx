@@ -1028,9 +1028,42 @@ const WorkRequest = () => {
 
       {/* 모바일 뷰 */}
       <div className="md:hidden space-y-3">
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-4 overflow-x-auto">
+            {[
+              { id: 'pending' as TabStatus, label: '대기', count: stats.pending, color: 'text-gray-700' },
+              { id: 'in-progress' as TabStatus, label: '진행중', count: stats.inProgress, color: 'text-gray-700' },
+              { id: 'completed' as TabStatus, label: '완료', count: stats.completed, color: 'text-gray-700' },
+              { id: 'all' as TabStatus, label: '전체', count: stats.total, color: 'text-gray-600' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={clsx(
+                  'py-3 px-1 border-b-2 font-medium text-xs transition-colors whitespace-nowrap',
+                  activeTab === tab.id
+                    ? `border-gray-700 ${tab.color}`
+                    : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+                )}
+              >
+                {tab.label}
+                {tab.count > 0 && (
+                  <span className={clsx(
+                    'ml-1 py-0.5 px-1.5 rounded-full text-[10px] font-semibold',
+                    activeTab === tab.id ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+                  )}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
+
         {/* 업무요청 입력 폼 */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-base font-semibold text-gray-900 mb-3">
             {editingRequest ? '업무요청 수정' : '새 업무요청'}
           </h2>
 
@@ -1184,9 +1217,9 @@ const WorkRequest = () => {
                   <button
                     type="button"
                     onClick={() => setIsUrgent(!isUrgent)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all w-full text-sm ${
+                    className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border transition-all w-full text-sm ${
                       isUrgent
-                        ? 'bg-rose-50 border-rose-500 text-rose-700'
+                        ? 'bg-rose-50 border-rose-300 text-rose-700'
                         : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -1203,14 +1236,14 @@ const WorkRequest = () => {
                     <button
                       type="button"
                       onClick={resetForm}
-                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       취소
                     </button>
                   )}
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     {editingRequest ? '수정' : '추가'}
                   </button>
@@ -1218,39 +1251,7 @@ const WorkRequest = () => {
               </form>
         </div>
 
-        {/* Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-4 overflow-x-auto">
-            {[
-              { id: 'pending' as TabStatus, label: '대기', count: stats.pending, color: 'text-gray-700' },
-              { id: 'in-progress' as TabStatus, label: '진행중', count: stats.inProgress, color: 'text-gray-700' },
-              { id: 'completed' as TabStatus, label: '완료', count: stats.completed, color: 'text-gray-700' },
-              { id: 'all' as TabStatus, label: '전체', count: stats.total, color: 'text-gray-600' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={clsx(
-                  'py-3 px-1 border-b-2 font-medium text-xs transition-colors whitespace-nowrap',
-                  activeTab === tab.id
-                    ? `border-gray-700 ${tab.color}`
-                    : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
-                )}
-              >
-                {tab.label}
-                {tab.count > 0 && (
-                  <span className={clsx(
-                    'ml-1 py-0.5 px-1.5 rounded-full text-[10px] font-semibold',
-                    activeTab === tab.id ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
-                  )}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </nav>
-        </div>
-
+        {/* 업무요청 목록 */}
         {filteredRequests.map((request) => (
           <div
             key={request.id}
