@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Edit2, Check, X, ChevronLeft, Image as ImageIcon, Upload, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface FinishCheckItemImage {
   id: number;
@@ -39,6 +40,7 @@ interface Project {
 }
 
 const FinishCheck = () => {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [spaces, setSpaces] = useState<FinishCheckSpace[]>([]);
@@ -75,6 +77,13 @@ const FinishCheck = () => {
     }
   }, [selectedProjectId]);
 
+  // 프로젝트 선택 시 localStorage에 저장
+  useEffect(() => {
+    if (selectedProjectId !== null && user?.id) {
+      localStorage.setItem(`finishCheck_selectedProject_${user.id}`, selectedProjectId.toString());
+    }
+  }, [selectedProjectId, user?.id]);
+
   useEffect(() => {
     if (!isMobile && selectedItemForImages) {
       const handlePaste = async (e: ClipboardEvent) => {
@@ -102,8 +111,16 @@ const FinishCheck = () => {
       const response = await api.get('/specbook/projects');
       setProjects(response.data);
 
-      // 첫 번째 프로젝트를 자동으로 선택
-      if (response.data.length > 0) {
+      // localStorage에서 사용자별 마지막 선택 프로젝트 불러오기
+      const savedProjectId = user?.id
+        ? localStorage.getItem(`finishCheck_selectedProject_${user.id}`)
+        : null;
+
+      if (savedProjectId && response.data.some((p: Project) => p.id === Number(savedProjectId))) {
+        // 저장된 프로젝트가 목록에 있으면 선택
+        setSelectedProjectId(Number(savedProjectId));
+      } else if (response.data.length > 0) {
+        // 저장된 프로젝트가 없거나 유효하지 않으면 첫 번째 프로젝트 선택
         setSelectedProjectId(response.data[0].id);
       }
     } catch (error) {
