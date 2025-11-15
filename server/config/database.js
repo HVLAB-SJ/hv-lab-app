@@ -746,6 +746,19 @@ const initDatabase = () => {
     }
   });
 
+  // Add is_priority column to finish_check_items table if it doesn't exist
+  db.run(`ALTER TABLE finish_check_items ADD COLUMN is_priority INTEGER DEFAULT 0`, (err) => {
+    if (err) {
+      if (err.message.includes('duplicate column name')) {
+        console.log('✓ is_priority column already exists in finish_check_items');
+      } else {
+        console.error('❌ Error adding is_priority column to finish_check_items:', err);
+      }
+    } else {
+      console.log('✓ is_priority column added successfully to finish_check_items');
+    }
+  });
+
   // 마감체크 항목 이미지 테이블
   db.run(`
     CREATE TABLE IF NOT EXISTS finish_check_item_images (

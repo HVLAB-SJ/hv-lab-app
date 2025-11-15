@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Edit2, Check, X, ChevronLeft, Image as ImageIcon, Upload, XCircle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, ChevronLeft, Image as ImageIcon, Upload, XCircle, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,6 +17,7 @@ interface FinishCheckItem {
   space_id: number;
   content: string;
   is_completed: number;
+  is_priority?: number;
   completed_at: string | null;
   display_order: number;
   created_at: string;
@@ -301,6 +302,22 @@ const FinishCheck = () => {
     }
   };
 
+  const handleTogglePriority = async (itemId: number) => {
+    try {
+      const response = await api.put(`/finish-check/items/${itemId}/toggle-priority`);
+
+      setSpaces(spaces.map(space => ({
+        ...space,
+        items: space.items.map(item =>
+          item.id === itemId ? { ...item, is_priority: response.data.is_priority } : item
+        )
+      })));
+    } catch (error) {
+      console.error('Failed to toggle priority:', error);
+      toast.error('우선순위 변경에 실패했습니다');
+    }
+  };
+
   const handleUpdateItem = async (itemId: number, newContent: string) => {
     if (!newContent.trim()) {
       toast.error('항목 내용을 입력하세요');
@@ -466,7 +483,8 @@ const FinishCheck = () => {
   };
 
   const selectedSpace = spaces.find(space => space.id === selectedSpaceId);
-  const incompleteItems = selectedSpace?.items.filter(item => !item.is_completed) || [];
+  const incompleteItems = (selectedSpace?.items.filter(item => !item.is_completed) || [])
+    .sort((a, b) => (b.is_priority || 0) - (a.is_priority || 0));
   const completedItems = selectedSpace?.items.filter(item => item.is_completed) || [];
 
   if (loading) {
@@ -850,16 +868,33 @@ const FinishCheck = () => {
                             </span>
                             <div className="flex items-center gap-1">
                               {isMobile && (
-                                <button
-                                  onClick={() => {
-                                    setSelectedItemForImages(item.id);
-                                    setShowMobileImageModal(true);
-                                  }}
-                                  className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
-                                  title="이미지"
-                                >
-                                  <ImageIcon className="w-4 h-4" />
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => handleTogglePriority(item.id)}
+                                    className={`p-1 transition-colors ${
+                                      item.is_priority
+                                        ? 'text-yellow-500 hover:text-yellow-600'
+                                        : 'text-gray-300 hover:text-gray-400'
+                                    }`}
+                                    title="우선순위"
+                                  >
+                                    <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedItemForImages(item.id);
+                                      setShowMobileImageModal(true);
+                                    }}
+                                    className={`p-1 transition-colors ${
+                                      item.images.length > 0
+                                        ? 'text-blue-600 hover:text-blue-800'
+                                        : 'text-gray-300 hover:text-gray-400'
+                                    }`}
+                                    title="이미지"
+                                  >
+                                    <ImageIcon className="w-4 h-4" />
+                                  </button>
+                                </>
                               )}
                               <button
                                 onClick={() => {
@@ -956,16 +991,33 @@ const FinishCheck = () => {
                             </span>
                             <div className="flex items-center gap-1">
                               {isMobile && (
-                                <button
-                                  onClick={() => {
-                                    setSelectedItemForImages(item.id);
-                                    setShowMobileImageModal(true);
-                                  }}
-                                  className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
-                                  title="이미지"
-                                >
-                                  <ImageIcon className="w-4 h-4" />
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => handleTogglePriority(item.id)}
+                                    className={`p-1 transition-colors ${
+                                      item.is_priority
+                                        ? 'text-yellow-500 hover:text-yellow-600'
+                                        : 'text-gray-300 hover:text-gray-400'
+                                    }`}
+                                    title="우선순위"
+                                  >
+                                    <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedItemForImages(item.id);
+                                      setShowMobileImageModal(true);
+                                    }}
+                                    className={`p-1 transition-colors ${
+                                      item.images.length > 0
+                                        ? 'text-blue-600 hover:text-blue-800'
+                                        : 'text-gray-300 hover:text-gray-400'
+                                    }`}
+                                    title="이미지"
+                                  >
+                                    <ImageIcon className="w-4 h-4" />
+                                  </button>
+                                </>
                               )}
                               <button
                                 onClick={() => {

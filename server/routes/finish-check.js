@@ -237,6 +237,38 @@ router.put('/items/:id/toggle', authenticateToken, (req, res) => {
   });
 });
 
+// 항목 우선순위 토글
+router.put('/items/:id/toggle-priority', authenticateToken, (req, res) => {
+  // 현재 상태 조회
+  db.get('SELECT is_priority FROM finish_check_items WHERE id = ?', [req.params.id], (err, row) => {
+    if (err) {
+      console.error('항목 조회 실패:', err);
+      return res.status(500).json({ error: '항목 조회에 실패했습니다.' });
+    }
+
+    if (!row) {
+      return res.status(404).json({ error: '항목을 찾을 수 없습니다.' });
+    }
+
+    const newPriority = row.is_priority ? 0 : 1;
+
+    db.run(
+      'UPDATE finish_check_items SET is_priority = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [newPriority, req.params.id],
+      function(err) {
+        if (err) {
+          console.error('우선순위 변경 실패:', err);
+          return res.status(500).json({ error: '우선순위 변경에 실패했습니다.' });
+        }
+
+        res.json({
+          is_priority: newPriority
+        });
+      }
+    );
+  });
+});
+
 // 항목 수정
 router.put('/items/:id', authenticateToken, (req, res) => {
   const { content } = req.body;
