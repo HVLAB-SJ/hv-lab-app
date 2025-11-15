@@ -162,7 +162,7 @@ const FinishCheck = () => {
       setSpaces(spaces.map(space => ({
         ...space,
         items: space.items.map(item =>
-          item.id === itemId ? response.data : item
+          item.id === itemId ? { ...item, ...response.data } : item
         )
       })));
     } catch (error) {
