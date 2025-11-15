@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
@@ -34,6 +34,7 @@ const FinishCheck = () => {
   const [editingSpaceName, setEditingSpaceName] = useState('');
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editingItemContent, setEditingItemContent] = useState('');
+  const [showMobileItems, setShowMobileItems] = useState(false);
 
   useEffect(() => {
     loadSpaces();
@@ -231,7 +232,7 @@ const FinishCheck = () => {
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col md:flex-row gap-4 overflow-hidden">
       {/* 좌측: 공간 목록 */}
-      <div className="w-full md:w-64 lg:w-80 flex-shrink-0 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col">
+      <div className={`w-full md:w-64 lg:w-80 flex-shrink-0 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col ${showMobileItems ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-gray-200">
           <h2 className="text-lg font-bold text-gray-900 mb-3">공간 목록</h2>
 
@@ -273,7 +274,10 @@ const FinishCheck = () => {
                   className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
                     selectedSpaceId === space.id ? 'bg-gray-100 border-l-4 border-gray-800' : ''
                   }`}
-                  onClick={() => setSelectedSpaceId(space.id)}
+                  onClick={() => {
+                    setSelectedSpaceId(space.id);
+                    setShowMobileItems(true);
+                  }}
                 >
                   {editingSpaceId === space.id ? (
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
@@ -345,11 +349,19 @@ const FinishCheck = () => {
       </div>
 
       {/* 우측: 마감 항목 목록 */}
-      <div className="flex-1 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col">
+      <div className={`flex-1 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col ${!showMobileItems ? 'hidden md:flex' : 'flex'}`}>
         {selectedSpace ? (
           <>
             <div className="p-4 border-b border-gray-200">
-              <h2 className="text-lg font-bold text-gray-900 mb-3">{selectedSpace.name} - 마감체크</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <button
+                  onClick={() => setShowMobileItems(false)}
+                  className="md:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <h2 className="text-lg font-bold text-gray-900">{selectedSpace.name} - 마감체크</h2>
+              </div>
 
               {/* 항목 추가 입력 */}
               <div className="flex gap-2">
