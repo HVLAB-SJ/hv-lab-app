@@ -1042,7 +1042,7 @@ const Payments = () => {
     <div className="space-y-3 md:space-y-4">
       {/* 모바일에서 프로젝트 선택 */}
       <div className="lg:hidden mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트</label>
         <select
           value={formData.project}
           onChange={(e) => {
@@ -1051,7 +1051,7 @@ const Payments = () => {
               localStorage.setItem('lastSelectedProject', e.target.value);
             }
           }}
-          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+          className="w-full px-3 py-2.5 md:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
         >
           <option value="">프로젝트 선택</option>
           {projects.filter(p => p.status !== 'completed').map(project => (
@@ -1106,7 +1106,7 @@ const Payments = () => {
           <div className="space-y-4">
             {/* 프로젝트 - 데스크톱에서만 표시 */}
             <div className="hidden lg:block">
-              <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트 *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트 *</label>
               <select
                 value={formData.project}
                 onChange={(e) => {
@@ -1115,7 +1115,7 @@ const Payments = () => {
                     localStorage.setItem('lastSelectedProject', e.target.value);
                   }
                 }}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
               >
                 <option value="">프로젝트 선택</option>
                 {projects.filter(p => p.status !== 'completed').map(project => (
