@@ -1363,6 +1363,134 @@ const EstimatePreview: React.FC = () => {
                           {formatCurrency(result.fixtureCost)}
                         </td>
                       </tr>
+                      {result.detailBreakdown?.itemDetails?.floor > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">바닥재</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.floor)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.wall > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">벽재</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.wall)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.ceiling > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">천장재</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.ceiling)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.furniture > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">가구 공사</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.furniture)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.countertop > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">주방 상판</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.countertop)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.switchPublic > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">스위치/콘센트 (공용부)</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.switchPublic)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.switchRoom > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">스위치/콘센트 (방)</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.switchRoom)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.lighting > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">조명</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.lighting)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.indirectPublic > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">간접조명 (공용부)</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.indirectPublic)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.indirectRoom > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">간접조명 (방)</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.indirectRoom)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.moldingPublic > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">몰딩 (공용부)</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.moldingPublic)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.moldingRoom > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">몰딩 (방)</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.moldingRoom)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.bathroomCeiling > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">화장실 천장</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.bathroomCeiling)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.bathroomFaucet > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">화장실 수전</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.bathroomFaucet)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.bathroomTile > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">화장실 타일</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.bathroomTile)}
+                          </td>
+                        </tr>
+                      )}
+                      {result.detailBreakdown?.itemDetails?.bathroomGrout > 0 && (
+                        <tr>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900">화장실 줄눈</td>
+                          <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(result.detailBreakdown.itemDetails.bathroomGrout)}
+                          </td>
+                        </tr>
+                      )}
                       {result.sashCost > 0 && (
                         <tr>
                           <td className="px-4 py-2 text-xs md:text-sm text-gray-900">샤시 공사</td>
@@ -1395,6 +1523,7 @@ const EstimatePreview: React.FC = () => {
                           {formatCurrency(
                             result.baseConstructionCost +
                             result.fixtureCost +
+                            (result.settingsBasedCost || 0) +
                             result.sashCost +
                             result.heatingCost +
                             result.airconCost
