@@ -268,6 +268,26 @@ const FinishCheck = () => {
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
+              {/* 전체 보기 옵션 */}
+              <div
+                className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
+                  selectedSpaceId === -1 ? 'bg-gray-100 border-l-4 border-gray-800' : ''
+                }`}
+                onClick={() => {
+                  setSelectedSpaceId(-1);
+                  setShowMobileItems(true);
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900">📋 전체 보기</h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      모든 공간의 항목 표시
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {spaces.map((space) => (
                 <div
                   key={space.id}
@@ -350,7 +370,97 @@ const FinishCheck = () => {
 
       {/* 우측: 마감 항목 목록 */}
       <div className={`flex-1 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col ${!showMobileItems ? 'hidden md:flex' : 'flex'}`}>
-        {selectedSpace ? (
+        {selectedSpaceId === -1 ? (
+          /* 전체 보기 */
+          <>
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowMobileItems(false)}
+                  className="md:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <h2 className="text-lg font-bold text-gray-900">전체 마감체크</h2>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {spaces.map((space) => {
+                const incompleteItems = space.items.filter(item => !item.is_completed);
+                const completedItems = space.items.filter(item => item.is_completed);
+
+                if (space.items.length === 0) return null;
+
+                return (
+                  <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h3 className="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-300">
+                      {space.name}
+                    </h3>
+
+                    {/* 미완료 항목 */}
+                    {incompleteItems.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          미완료 ({incompleteItems.length})
+                        </h4>
+                        <div className="space-y-2">
+                          {incompleteItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={false}
+                                onChange={() => handleToggleItem(item.id)}
+                                className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
+                              />
+                              <span className="flex-1 text-sm text-gray-900">{item.content}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 완료 항목 */}
+                    {completedItems.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          완료 ({completedItems.length})
+                        </h4>
+                        <div className="space-y-2">
+                          {completedItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={true}
+                                onChange={() => handleToggleItem(item.id)}
+                                className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
+                              />
+                              <span className="flex-1 text-sm text-gray-500 line-through">{item.content}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {spaces.every(space => space.items.length === 0) && (
+                <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                  등록된 마감 항목이 없습니다
+                </div>
+              )}
+            </div>
+          </>
+        ) : selectedSpace ? (
           <>
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center gap-2 mb-3">
