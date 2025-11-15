@@ -12,6 +12,7 @@ import AdditionalWork from './pages/AdditionalWork';
 import ConstructionPayment from './pages/ConstructionPayment';
 import Contractors from './pages/Contractors';
 import WorkRequest from './pages/WorkRequest';
+import FinishCheck from './pages/FinishCheck';
 import SpecBook from './pages/SpecBook';
 import EstimatePreview from './pages/EstimatePreview';
 import ExecutionHistory from './pages/ExecutionHistory';
@@ -83,6 +84,7 @@ function App() {
               <Route path="construction-payment" element={<ConstructionPayment />} />
               <Route path="contractors" element={<Contractors />} />
               <Route path="work-request" element={<WorkRequest />} />
+              <Route path="finish-check" element={<FinishCheck />} />
               <Route path="specbook" element={<SpecBook />} />
               <Route path="estimate-preview" element={<EstimatePreview />} />
               <Route path="execution-history" element={<ExecutionHistory />} />

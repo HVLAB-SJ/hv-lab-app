@@ -40,6 +40,7 @@ const Layout = () => {
     { name: '공사대금', href: '/construction-payment', roles: ['admin', 'manager'] },
     { name: '협력업체', href: '/contractors' },
     { name: '업무요청', href: '/work-request', ...(pendingWorkRequestCount > 0 && { badge: pendingWorkRequestCount }) },
+    { name: '마감체크', href: '/finish-check' },
     { name: '스펙북', href: '/specbook' },
     { name: '가견적서', href: '/estimate-preview' },
     { name: '실행내역', href: '/execution-history' },

@@ -706,6 +706,46 @@ const initDatabase = () => {
     }
   });
 
+  // 마감체크 공간 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finish_check_spaces (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      project_id INTEGER,
+      display_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    )
+  `, (err) => {
+    if (err) {
+      console.error('❌ 마감체크 공간 테이블 생성 실패:', err);
+    } else {
+      console.log('✓ 마감체크 공간 테이블 생성 완료');
+    }
+  });
+
+  // 마감체크 항목 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finish_check_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      space_id INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      is_completed INTEGER DEFAULT 0,
+      completed_at DATETIME,
+      display_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (space_id) REFERENCES finish_check_spaces(id) ON DELETE CASCADE
+    )
+  `, (err) => {
+    if (err) {
+      console.error('❌ 마감체크 항목 테이블 생성 실패:', err);
+    } else {
+      console.log('✓ 마감체크 항목 테이블 생성 완료');
+    }
+  });
+
   // 기본 계정 생성 (테이블 생성 후 즉시 실행)
   // Use serialize to ensure tables are created before inserting users
   db.serialize(() => {

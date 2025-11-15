@@ -121,6 +121,7 @@ const quoteInquiriesRoutes = require('./server/routes/quoteInquiries');
 const adminRoutes = require('./server/routes/admin');
 const specbookRoutes = require('./server/routes/specbook');
 const estimatePreviewRoutes = require('./server/routes/estimate-preview');
+const finishCheckRoutes = require('./server/routes/finish-check');
 
 // API 라우트 설정
 app.use('/api/auth', authRoutes);
@@ -139,6 +140,7 @@ app.use('/api/test', testRoutes); // 테스트 라우트 추가
 app.use('/api/quote-inquiries', quoteInquiriesRoutes);
 app.use('/api/admin', adminRoutes); // 관리자 라우트 추가
 app.use('/api/specbook', specbookRoutes); // 스펙북 라우트 추가
+app.use('/api/finish-check', finishCheckRoutes); // 마감체크 라우트 추가
 app.use('/api/estimate-preview', estimatePreviewRoutes); // 가견적서 라우트 추가
 
 
