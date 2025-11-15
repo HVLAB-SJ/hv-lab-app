@@ -41,12 +41,41 @@ router.get('/spaces', authenticateToken, (req, res) => {
         return res.status(500).json({ error: '항목 조회에 실패했습니다.' });
       }
 
-      const spacesWithItems = spaces.map(space => ({
-        ...space,
-        items: items.filter(item => item.space_id === space.id)
-      }));
+      // 각 항목의 이미지도 조회
+      const itemIds = items.map(item => item.id);
+      if (itemIds.length === 0) {
+        const spacesWithItems = spaces.map(space => ({
+          ...space,
+          items: []
+        }));
+        return res.json(spacesWithItems);
+      }
 
-      res.json(spacesWithItems);
+      const imagesQuery = `
+        SELECT * FROM finish_check_item_images
+        WHERE item_id IN (${itemIds.map(() => '?').join(',')})
+        ORDER BY created_at ASC
+      `;
+
+      db.all(imagesQuery, itemIds, (err, images) => {
+        if (err) {
+          console.error('이미지 조회 실패:', err);
+          return res.status(500).json({ error: '이미지 조회에 실패했습니다.' });
+        }
+
+        // 항목에 이미지 추가
+        const itemsWithImages = items.map(item => ({
+          ...item,
+          images: images.filter(img => img.item_id === item.id)
+        }));
+
+        const spacesWithItems = spaces.map(space => ({
+          ...space,
+          items: itemsWithImages.filter(item => item.space_id === space.id)
+        }));
+
+        res.json(spacesWithItems);
+      });
     });
   });
 });
@@ -247,6 +276,114 @@ router.delete('/items/:id', authenticateToken, (req, res) => {
     }
 
     res.json({ message: '항목이 삭제되었습니다.' });
+  });
+});
+
+// 항목의 이미지 업로드
+router.post('/items/:id/images', authenticateToken, (req, res) => {
+  const { image_data, filename } = req.body;
+  const itemId = req.params.id;
+
+  if (!image_data) {
+    return res.status(400).json({ error: '이미지 데이터를 전송해주세요.' });
+  }
+
+  // 이미지 크기 체크 (base64 디코딩 후 약 5MB 이하)
+  const imageSizeInBytes = (image_data.length * 3) / 4;
+  const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+
+  if (imageSizeInBytes > maxSizeInBytes) {
+    return res.status(400).json({ error: '이미지 크기는 5MB 이하여야 합니다.' });
+  }
+
+  db.run(
+    'INSERT INTO finish_check_item_images (item_id, image_data, filename) VALUES (?, ?, ?)',
+    [itemId, image_data, filename || null],
+    function(err) {
+      if (err) {
+        console.error('이미지 업로드 실패:', err);
+        return res.status(500).json({ error: '이미지 업로드에 실패했습니다.' });
+      }
+
+      res.json({
+        id: this.lastID,
+        item_id: itemId,
+        image_data,
+        filename,
+        created_at: new Date().toISOString()
+      });
+    }
+  );
+});
+
+// 항목의 이미지 조회
+router.get('/items/:id/images', authenticateToken, (req, res) => {
+  const itemId = req.params.id;
+
+  db.all(
+    'SELECT * FROM finish_check_item_images WHERE item_id = ? ORDER BY created_at ASC',
+    [itemId],
+    (err, images) => {
+      if (err) {
+        console.error('이미지 조회 실패:', err);
+        return res.status(500).json({ error: '이미지 조회에 실패했습니다.' });
+      }
+
+      res.json(images);
+    }
+  );
+});
+
+// 이미지 삭제
+router.delete('/images/:id', authenticateToken, (req, res) => {
+  db.run('DELETE FROM finish_check_item_images WHERE id = ?', [req.params.id], function(err) {
+    if (err) {
+      console.error('이미지 삭제 실패:', err);
+      return res.status(500).json({ error: '이미지 삭제에 실패했습니다.' });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ error: '이미지를 찾을 수 없습니다.' });
+    }
+
+    res.json({ message: '이미지가 삭제되었습니다.' });
+  });
+});
+
+// 마이그레이션: 모든 finish_check_spaces를 특정 프로젝트로 이동
+router.post('/migrate-to-project/:projectId', authenticateToken, (req, res) => {
+  const projectId = req.params.projectId;
+
+  // 먼저 프로젝트가 존재하는지 확인
+  db.get('SELECT id, name FROM projects WHERE id = ?', [projectId], (err, project) => {
+    if (err) {
+      console.error('프로젝트 조회 실패:', err);
+      return res.status(500).json({ error: '프로젝트 조회에 실패했습니다.' });
+    }
+
+    if (!project) {
+      return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
+    }
+
+    // project_id가 NULL인 모든 finish_check_spaces 업데이트
+    db.run(
+      'UPDATE finish_check_spaces SET project_id = ? WHERE project_id IS NULL',
+      [projectId],
+      function(err) {
+        if (err) {
+          console.error('마감체크 공간 마이그레이션 실패:', err);
+          return res.status(500).json({ error: '마이그레이션에 실패했습니다.' });
+        }
+
+        console.log(`✓ ${this.changes}개의 공간이 "${project.name}" 프로젝트로 이동되었습니다.`);
+        res.json({
+          message: `${this.changes}개의 공간이 "${project.name}" 프로젝트로 이동되었습니다.`,
+          updated_count: this.changes,
+          project_name: project.name,
+          project_id: projectId
+        });
+      }
+    );
   });
 });
 

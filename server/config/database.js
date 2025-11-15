@@ -746,6 +746,24 @@ const initDatabase = () => {
     }
   });
 
+  // 마감체크 항목 이미지 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finish_check_item_images (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_id INTEGER NOT NULL,
+      image_data TEXT NOT NULL,
+      filename TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (item_id) REFERENCES finish_check_items(id) ON DELETE CASCADE
+    )
+  `, (err) => {
+    if (err) {
+      console.error('❌ 마감체크 이미지 테이블 생성 실패:', err);
+    } else {
+      console.log('✓ 마감체크 이미지 테이블 생성 완료');
+    }
+  });
+
   // 기본 계정 생성 (테이블 생성 후 즉시 실행)
   // Use serialize to ensure tables are created before inserting users
   db.serialize(() => {

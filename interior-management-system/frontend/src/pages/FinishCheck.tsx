@@ -1,7 +1,15 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Check, X, ChevronLeft } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Trash2, Edit2, Check, X, ChevronLeft, Image as ImageIcon, Upload, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+
+interface FinishCheckItemImage {
+  id: number;
+  item_id: number;
+  image_data: string;
+  filename: string | null;
+  created_at: string;
+}
 
 interface FinishCheckItem {
   id: number;
@@ -12,6 +20,7 @@ interface FinishCheckItem {
   display_order: number;
   created_at: string;
   updated_at: string;
+  images: FinishCheckItemImage[];
 }
 
 interface FinishCheckSpace {
@@ -24,7 +33,14 @@ interface FinishCheckSpace {
   items: FinishCheckItem[];
 }
 
+interface Project {
+  id: number;
+  title: string;
+}
+
 const FinishCheck = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [spaces, setSpaces] = useState<FinishCheckSpace[]>([]);
   const [selectedSpaceId, setSelectedSpaceId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,20 +51,89 @@ const FinishCheck = () => {
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editingItemContent, setEditingItemContent] = useState('');
   const [showMobileItems, setShowMobileItems] = useState(false);
+  const [selectedItemForImages, setSelectedItemForImages] = useState<number | null>(null);
+  const [uploadingImages, setUploadingImages] = useState<Set<number>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showMobileImageModal, setShowMobileImageModal] = useState(false);
 
   useEffect(() => {
+    loadProjects();
     loadSpaces();
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (selectedProjectId !== null) {
+      loadSpaces();
+    }
+  }, [selectedProjectId]);
+
+  useEffect(() => {
+    if (!isMobile && selectedItemForImages) {
+      const handlePaste = async (e: ClipboardEvent) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            e.preventDefault();
+            const file = items[i].getAsFile();
+            if (file) {
+              await handleImageUpload(selectedItemForImages, file);
+            }
+          }
+        }
+      };
+
+      document.addEventListener('paste', handlePaste);
+      return () => document.removeEventListener('paste', handlePaste);
+    }
+  }, [selectedItemForImages, isMobile]);
+
+  const loadProjects = async () => {
+    try {
+      const response = await api.get('/specbook/projects');
+      setProjects(response.data);
+
+      // 첫 번째 프로젝트를 자동으로 선택
+      if (response.data.length > 0) {
+        setSelectedProjectId(response.data[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+      toast.error('프로젝트 목록을 불러오는데 실패했습니다');
+    }
+  };
 
   const loadSpaces = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/finish-check/spaces');
-      setSpaces(response.data);
+      const url = selectedProjectId
+        ? `/finish-check/spaces?project_id=${selectedProjectId}`
+        : '/finish-check/spaces';
+      const response = await api.get(url);
+
+      // Ensure all items have an images array
+      const spacesWithImages = response.data.map((space: FinishCheckSpace) => ({
+        ...space,
+        items: space.items.map(item => ({
+          ...item,
+          images: item.images || []
+        }))
+      }));
+
+      setSpaces(spacesWithImages);
 
       // 첫 번째 공간을 자동으로 선택
-      if (response.data.length > 0 && !selectedSpaceId) {
-        setSelectedSpaceId(response.data[0].id);
+      if (spacesWithImages.length > 0 && !selectedSpaceId) {
+        setSelectedSpaceId(spacesWithImages[0].id);
       }
     } catch (error) {
       console.error('Failed to load spaces:', error);
@@ -64,9 +149,15 @@ const FinishCheck = () => {
       return;
     }
 
+    if (!selectedProjectId) {
+      toast.error('프로젝트를 선택하세요');
+      return;
+    }
+
     try {
       const response = await api.post('/finish-check/spaces', {
-        name: newSpaceName.trim()
+        name: newSpaceName.trim(),
+        project_id: selectedProjectId
       });
       setSpaces([...spaces, response.data]);
       setNewSpaceName('');
@@ -145,7 +236,7 @@ const FinishCheck = () => {
 
       setSpaces(spaces.map(space =>
         space.id === selectedSpaceId
-          ? { ...space, items: [...space.items, response.data] }
+          ? { ...space, items: [...space.items, { ...response.data, images: [] }] }
           : space
       ));
       setNewItemContent('');
@@ -210,11 +301,130 @@ const FinishCheck = () => {
         ...space,
         items: space.items.filter(item => item.id !== itemId)
       })));
+
+      // 선택된 항목이 삭제된 경우 선택 해제
+      if (selectedItemForImages === itemId) {
+        setSelectedItemForImages(null);
+      }
+
       toast.success('항목이 삭제되었습니다');
     } catch (error) {
       console.error('Failed to delete item:', error);
       toast.error('항목 삭제에 실패했습니다');
     }
+  };
+
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleImageUpload = async (itemId: number, file: File) => {
+    // 파일 형식 체크
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('JPEG, PNG, WebP 형식의 이미지만 업로드 가능합니다');
+      return;
+    }
+
+    // 파일 크기 체크 (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('이미지 크기는 5MB 이하여야 합니다');
+      return;
+    }
+
+    try {
+      setUploadingImages(prev => new Set([...prev, itemId]));
+
+      const base64 = await convertFileToBase64(file);
+      const response = await api.post(`/finish-check/items/${itemId}/images`, {
+        image_data: base64,
+        filename: file.name
+      });
+
+      // 로컬 상태 업데이트
+      setSpaces(spaces.map(space => ({
+        ...space,
+        items: space.items.map(item =>
+          item.id === itemId
+            ? { ...item, images: [...item.images, response.data] }
+            : item
+        )
+      })));
+
+      toast.success('이미지가 업로드되었습니다');
+    } catch (error: any) {
+      console.error('Failed to upload image:', error);
+      toast.error(error.response?.data?.error || '이미지 업로드에 실패했습니다');
+    } finally {
+      setUploadingImages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleFileSelect = async (itemId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    for (let i = 0; i < files.length; i++) {
+      await handleImageUpload(itemId, files[i]);
+    }
+
+    // 파일 입력 초기화
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleImageDelete = async (itemId: number, imageId: number) => {
+    if (!confirm('이 이미지를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/finish-check/images/${imageId}`);
+
+      setSpaces(spaces.map(space => ({
+        ...space,
+        items: space.items.map(item =>
+          item.id === itemId
+            ? { ...item, images: item.images.filter(img => img.id !== imageId) }
+            : item
+        )
+      })));
+
+      toast.success('이미지가 삭제되었습니다');
+    } catch (error) {
+      console.error('Failed to delete image:', error);
+      toast.error('이미지 삭제에 실패했습니다');
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, itemId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].type.startsWith('image/')) {
+        await handleImageUpload(itemId, files[i]);
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const selectedSpace = spaces.find(space => space.id === selectedSpaceId);
@@ -229,11 +439,50 @@ const FinishCheck = () => {
     );
   }
 
+  const selectedItem = selectedItemForImages
+    ? spaces.flatMap(s => s.items).find(item => item.id === selectedItemForImages)
+    : null;
+
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col md:flex-row gap-4 overflow-hidden">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          if (selectedItemForImages) {
+            handleFileSelect(selectedItemForImages, e);
+          }
+        }}
+      />
+
       {/* 좌측: 공간 목록 */}
       <div className={`w-full md:w-64 lg:w-80 flex-shrink-0 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col ${showMobileItems ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-gray-200">
+          {/* 프로젝트 선택 */}
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트</label>
+            <select
+              value={selectedProjectId || ''}
+              onChange={(e) => {
+                const projectId = e.target.value ? Number(e.target.value) : null;
+                setSelectedProjectId(projectId);
+                setSelectedSpaceId(null); // 프로젝트 변경 시 공간 선택 초기화
+              }}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              <option value="">프로젝트 선택</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <h2 className="text-lg font-bold text-gray-900 mb-3">공간 목록</h2>
 
           {/* 공간 추가 입력 */}
@@ -549,8 +798,31 @@ const FinishCheck = () => {
                           </div>
                         ) : (
                           <>
-                            <span className="flex-1 text-sm text-gray-900">{item.content}</span>
+                            <span
+                              className={`flex-1 text-sm text-gray-900 ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
+                              onClick={() => !isMobile && setSelectedItemForImages(item.id)}
+                              style={{ cursor: !isMobile ? 'pointer' : 'default' }}
+                            >
+                              {item.content}
+                              {item.images.length > 0 && (
+                                <span className="ml-2 text-xs text-gray-500">
+                                  ({item.images.length})
+                                </span>
+                              )}
+                            </span>
                             <div className="flex items-center gap-1">
+                              {isMobile && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedItemForImages(item.id);
+                                    setShowMobileImageModal(true);
+                                  }}
+                                  className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
+                                  title="이미지"
+                                >
+                                  <ImageIcon className="w-4 h-4" />
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
                                   setEditingItemId(item.id);
@@ -632,8 +904,31 @@ const FinishCheck = () => {
                           </div>
                         ) : (
                           <>
-                            <span className="flex-1 text-sm text-gray-500 line-through">{item.content}</span>
+                            <span
+                              className={`flex-1 text-sm text-gray-500 line-through ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
+                              onClick={() => !isMobile && setSelectedItemForImages(item.id)}
+                              style={{ cursor: !isMobile ? 'pointer' : 'default' }}
+                            >
+                              {item.content}
+                              {item.images.length > 0 && (
+                                <span className="ml-2 text-xs text-gray-500">
+                                  ({item.images.length})
+                                </span>
+                              )}
+                            </span>
                             <div className="flex items-center gap-1">
+                              {isMobile && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedItemForImages(item.id);
+                                    setShowMobileImageModal(true);
+                                  }}
+                                  className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
+                                  title="이미지"
+                                >
+                                  <ImageIcon className="w-4 h-4" />
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
                                   setEditingItemId(item.id);
@@ -674,6 +969,136 @@ const FinishCheck = () => {
           </div>
         )}
       </div>
+
+      {/* 우측: 이미지 패널 (데스크톱만) */}
+      {!isMobile && selectedItemForImages && selectedItem && (
+        <div className="w-80 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-900">이미지</h3>
+              <button
+                onClick={() => setSelectedItemForImages(null)}
+                className="p-1 text-gray-600 hover:text-gray-900 transition-colors"
+                title="닫기"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{selectedItem.content}</p>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImages.has(selectedItemForImages)}
+              className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Upload className="w-4 h-4" />
+              {uploadingImages.has(selectedItemForImages) ? '업로드 중...' : '이미지 업로드'}
+            </button>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              클릭 또는 드래그 앤 드롭, Ctrl+V로 붙여넣기
+            </p>
+          </div>
+
+          <div
+            className="flex-1 overflow-y-auto p-4"
+            onDrop={(e) => handleDrop(e, selectedItemForImages)}
+            onDragOver={handleDragOver}
+          >
+            {selectedItem.images.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm">
+                <ImageIcon className="w-12 h-12 mb-2" />
+                <p>이미지가 없습니다</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {selectedItem.images.map((image) => (
+                  <div key={image.id} className="relative group">
+                    <img
+                      src={image.image_data}
+                      alt={image.filename || '이미지'}
+                      className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      onClick={() => handleImageDelete(selectedItemForImages, image.id)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      title="삭제"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                    {image.filename && (
+                      <p className="text-xs text-gray-500 mt-1 truncate" title={image.filename}>
+                        {image.filename}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 모바일 이미지 모달 */}
+      {isMobile && showMobileImageModal && selectedItemForImages && selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
+          <div className="bg-white rounded-t-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-gray-900">이미지</h3>
+                <button
+                  onClick={() => {
+                    setShowMobileImageModal(false);
+                    setSelectedItemForImages(null);
+                  }}
+                  className="p-1 text-gray-600 hover:text-gray-900"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">{selectedItem.content}</p>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImages.has(selectedItemForImages)}
+                className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Upload className="w-4 h-4" />
+                {uploadingImages.has(selectedItemForImages) ? '업로드 중...' : '이미지 업로드'}
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              {selectedItem.images.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <ImageIcon className="w-16 h-16 mb-2" />
+                  <p className="text-sm">이미지가 없습니다</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {selectedItem.images.map((image) => (
+                    <div key={image.id} className="relative">
+                      <img
+                        src={image.image_data}
+                        alt={image.filename || '이미지'}
+                        className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                      />
+                      <button
+                        onClick={() => handleImageDelete(selectedItemForImages, image.id)}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                      {image.filename && (
+                        <p className="text-xs text-gray-500 mt-1 truncate" title={image.filename}>
+                          {image.filename}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
