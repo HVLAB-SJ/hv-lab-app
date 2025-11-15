@@ -601,9 +601,9 @@ const ConstructionPayment = () => {
               return (
                 <div key={record.id} className="card hover:border-gray-400 transition-colors">
               <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-lg text-gray-900">{record.project}</h3>
-                  <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
+                  <h3 className="font-bold text-lg text-gray-900 flex-shrink-0">{record.project}</h3>
+                  <div className="flex gap-1.5 flex-wrap">
                     <button
                       onClick={() => {
                         const received = calculateReceived(record);
@@ -629,7 +629,7 @@ const ConstructionPayment = () => {
                         setReceiptType('transfer');
                         setShowCashReceiptModal(true);
                       }}
-                      className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+                      className="px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors whitespace-nowrap"
                     >
                       이체확인증
                     </button>
@@ -655,13 +655,13 @@ const ConstructionPayment = () => {
                         setReceiptType('cash');
                         setShowCashReceiptModal(true);
                       }}
-                      className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+                      className="px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors whitespace-nowrap"
                     >
                       현금수령증
                     </button>
                     <button
                       onClick={() => setSelectedRecord(record)}
-                      className="text-sm text-gray-600 hover:text-gray-800"
+                      className="px-2 py-1 text-xs sm:text-sm text-gray-600 hover:text-gray-800 whitespace-nowrap"
                     >
                       상세보기
                     </button>
@@ -710,7 +710,7 @@ const ConstructionPayment = () => {
 
               {/* Received, Execution Total, Additional Work & Remaining */}
               <div className="mb-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
                     <p className="text-xs text-gray-700 mb-1">수령금액</p>
                     <p className="text-base font-bold text-gray-800">
