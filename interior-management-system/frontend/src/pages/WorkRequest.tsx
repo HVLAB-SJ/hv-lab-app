@@ -58,7 +58,7 @@ const WorkRequest = () => {
   const [isUrgent, setIsUrgent] = useState(false);
   const [customRequestType, setCustomRequestType] = useState('');
   const [editingRequest, setEditingRequest] = useState<WorkRequest | null>(null);
-  const [showMobileForm, setShowMobileForm] = useState(false);
+  const [showMobileForm, setShowMobileForm] = useState(true);
 
   // Load work requests from API on mount
   useEffect(() => {
@@ -196,7 +196,7 @@ const WorkRequest = () => {
     });
     setIsUrgent(false);
     setCustomRequestType('');
-    setShowMobileForm(false);
+    // Keep mobile form open for easy consecutive entries
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
