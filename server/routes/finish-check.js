@@ -351,8 +351,7 @@ router.delete('/images/:id', authenticateToken, (req, res) => {
 });
 
 // 마이그레이션: 모든 finish_check_spaces를 특정 프로젝트로 이동
-// TEMPORARY: No auth required for this one-time migration
-router.post('/migrate-to-project/:projectId', (req, res) => {
+router.post('/migrate-to-project/:projectId', authenticateToken, (req, res) => {
   const projectId = req.params.projectId;
 
   // 먼저 프로젝트가 존재하는지 확인
