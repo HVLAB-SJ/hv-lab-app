@@ -58,6 +58,7 @@ const WorkRequest = () => {
   const [isUrgent, setIsUrgent] = useState(false);
   const [customRequestType, setCustomRequestType] = useState('');
   const [editingRequest, setEditingRequest] = useState<WorkRequest | null>(null);
+  const [showMobileForm, setShowMobileForm] = useState(false);
 
   // Load work requests from API on mount
   useEffect(() => {
@@ -179,6 +180,7 @@ const WorkRequest = () => {
       assignedTo: request.assignedTo
     });
     setIsUrgent(request.priority === 'high');
+    setShowMobileForm(true); // Show form in mobile mode when editing
   };
 
   const resetForm = () => {
@@ -194,6 +196,7 @@ const WorkRequest = () => {
     });
     setIsUrgent(false);
     setCustomRequestType('');
+    setShowMobileForm(false);
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -1023,10 +1026,217 @@ const WorkRequest = () => {
         </div>
       </div>
 
-      {/* 모바일 뷰 (기존과 동일) */}
+      {/* 모바일 뷰 */}
       <div className="md:hidden space-y-3">
-        {/* Tabs and Add Button */}
-        <div className="border-b border-gray-200 flex items-center justify-between">
+        {/* 업무요청 입력 폼 */}
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowMobileForm(!showMobileForm)}
+            className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+          >
+            <span className="font-semibold text-gray-900">
+              {editingRequest ? '업무요청 수정' : '새 업무요청'}
+            </span>
+            <svg
+              className={`w-5 h-5 text-gray-600 transition-transform ${showMobileForm ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {showMobileForm && (
+            <div className="p-4">
+              <form onSubmit={handleFormSubmit} className="space-y-3">
+                {/* Project */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    프로젝트
+                  </label>
+                  <select
+                    value={formData.project}
+                    onChange={(e) => setFormData({ ...formData, project: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  >
+                    <option value=""></option>
+                    {projects
+                      .filter(project => project.status !== 'completed')
+                      .map((project) => (
+                        <option key={project.id} value={project.name}>
+                          {project.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* Request Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    요청유형
+                  </label>
+                  <select
+                    value={formData.requestType}
+                    onChange={(e) => setFormData({ ...formData, requestType: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  >
+                    <option value=""></option>
+                    <option value="3D모델링">3D모델링</option>
+                    <option value="철거도면">철거도면</option>
+                    <option value="설비도면">설비도면</option>
+                    <option value="에어컨 배치도">에어컨 배치도</option>
+                    <option value="디퓨저 배치도">디퓨저 배치도</option>
+                    <option value="스프링클러 배치도">스프링클러 배치도</option>
+                    <option value="전기도면">전기도면</option>
+                    <option value="목공도면">목공도면</option>
+                    <option value="디테일도면">디테일도면</option>
+                    <option value="금속도면">금속도면</option>
+                    <option value="가구도면">가구도면</option>
+                    <option value="세라믹도면">세라믹도면</option>
+                    <option value="트렌치유가">트렌치유가</option>
+                    <option value="욕실장">욕실장</option>
+                    <option value="발주">발주</option>
+                    <option value="마감">마감</option>
+                    <option value="직접입력">직접입력</option>
+                  </select>
+
+                  {formData.requestType === '직접입력' && (
+                    <input
+                      type="text"
+                      value={customRequestType}
+                      onChange={(e) => setCustomRequestType(e.target.value)}
+                      placeholder="요청유형을 직접 입력하세요"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 mt-2"
+                    />
+                  )}
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    요청내용
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    placeholder="상세한 요청 내용을 입력하세요"
+                  />
+                </div>
+
+                {/* Dates */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      요청일 *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.requestDate}
+                      onChange={(e) => setFormData({ ...formData, requestDate: e.target.value })}
+                      required
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      마감일 *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.dueDate}
+                      onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                      required
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    />
+                  </div>
+                </div>
+
+                {/* People */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      요청자 *
+                    </label>
+                    <select
+                      value={formData.requestedBy}
+                      onChange={(e) => setFormData({ ...formData, requestedBy: e.target.value })}
+                      required
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    >
+                      <option value="">선택하세요</option>
+                      {TEAM_MEMBERS.map((member) => (
+                        <option key={member} value={member}>
+                          {member}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      담당자 *
+                    </label>
+                    <select
+                      value={formData.assignedTo}
+                      onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                      required
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    >
+                      <option value="">선택하세요</option>
+                      {TEAM_MEMBERS.map((member) => (
+                        <option key={member} value={member}>
+                          {member}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Urgent Toggle */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsUrgent(!isUrgent)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all w-full text-sm ${
+                      isUrgent
+                        ? 'bg-rose-50 border-rose-500 text-rose-700'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <AlertCircle className={`h-4 w-4 ${isUrgent ? 'text-rose-600' : 'text-gray-400'}`} />
+                    <span className="font-medium">
+                      {isUrgent ? '긴급 업무입니다' : '긴급 업무로 표시'}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-2">
+                  {editingRequest && (
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      취소
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    {editingRequest ? '수정' : '추가'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
           <nav className="flex space-x-4 overflow-x-auto">
             {[
               { id: 'pending' as TabStatus, label: '대기', count: stats.pending, color: 'text-gray-700' },
