@@ -84,6 +84,13 @@ const FinishCheck = () => {
     }
   }, [selectedProjectId, user?.id]);
 
+  // 공간 선택 시 localStorage에 저장
+  useEffect(() => {
+    if (selectedSpaceId !== null && user?.id) {
+      localStorage.setItem(`finishCheck_selectedSpace_${user.id}`, selectedSpaceId.toString());
+    }
+  }, [selectedSpaceId, user?.id]);
+
   useEffect(() => {
     if (!isMobile && selectedItemForImages) {
       const handlePaste = async (e: ClipboardEvent) => {
@@ -148,8 +155,22 @@ const FinishCheck = () => {
 
       setSpaces(spacesWithImages);
 
-      // 첫 번째 공간을 자동으로 선택
-      if (spacesWithImages.length > 0 && !selectedSpaceId) {
+      // localStorage에서 사용자별 마지막 선택 공간 불러오기
+      const savedSpaceId = user?.id
+        ? localStorage.getItem(`finishCheck_selectedSpace_${user.id}`)
+        : null;
+
+      if (savedSpaceId) {
+        const spaceId = Number(savedSpaceId);
+        // 전체 보기(-1) 또는 목록에 있는 공간이면 선택
+        if (spaceId === -1 || spacesWithImages.some(s => s.id === spaceId)) {
+          setSelectedSpaceId(spaceId);
+          return;
+        }
+      }
+
+      // 저장된 공간이 없거나 유효하지 않으면 첫 번째 공간을 자동으로 선택
+      if (spacesWithImages.length > 0 && selectedSpaceId === null) {
         setSelectedSpaceId(spacesWithImages[0].id);
       }
     } catch (error) {
