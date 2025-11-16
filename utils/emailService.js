@@ -61,9 +61,10 @@ class EmailService {
             return;
           }
 
-          // 제목에 "[HV LAB] 견적상담문의에 새 응답이 접수되었습니다." 포함된 모든 메일 검색
+          // 제목에 "[HV LAB] 견적상담문의에 새 응답이 접수되었습니다." 포함된 읽지 않은 메일만 검색
           // 최근 30일 이내의 메일만 검색
           const searchCriteria = [
+            'UNSEEN', // 읽지 않은 메일만
             ['SINCE', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)], // 최근 30일
             ['SUBJECT', '[HV LAB] 견적상담문의에 새 응답이 접수되었습니다.']
           ];
@@ -87,7 +88,7 @@ class EmailService {
 
             const fetch = this.imap.fetch(results, {
               bodies: '',
-              markSeen: false  // 읽음 처리하지 않음 (중복 체크는 DB에서 처리)
+              markSeen: true  // 읽음 처리하여 다음 체크 시 중복 방지
             });
 
             const emails = [];
@@ -262,10 +263,11 @@ class EmailService {
       // 콘텐츠 해시 생성 (이름 + 전화번호 + 이메일)
       const contentHash = this.generateContentHash(inquiry);
 
-      // 1차 중복 체크: 동일한 콘텐츠 해시가 있는지 확인 (영구적 중복 방지)
+      // 1차 중복 체크: email_message_id 또는 동일한 콘텐츠 해시가 있는지 확인 (영구적 중복 방지)
       db.get(
-        `SELECT id, created_at FROM quote_inquiries WHERE content_hash = ?`,
-        [contentHash],
+        `SELECT id, created_at FROM quote_inquiries
+         WHERE content_hash = ? OR (email_message_id IS NOT NULL AND email_message_id = ?)`,
+        [contentHash, inquiry.emailMessageId],
         (err, existing) => {
           if (err) {
             reject(err);
@@ -273,13 +275,13 @@ class EmailService {
           }
 
           if (existing) {
-            console.log('⚠️ 중복된 견적문의 (동일한 메일 내용):', {
+            console.log('⚠️ 중복된 견적문의 (이미 저장됨):', {
               name: inquiry.name,
               phone: inquiry.phone,
               email: inquiry.email,
               existingId: existing.id,
               firstSubmitted: existing.created_at,
-              note: '같은 메일이 반복해서 전송됨'
+              note: '같은 메일이 이미 데이터베이스에 존재함'
             });
             resolve(existing.id);
             return;
