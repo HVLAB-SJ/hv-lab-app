@@ -551,42 +551,68 @@ const Payments = () => {
         }
       }
 
-      // 3. 한글 이름 추정 (2-5글자)
+      // 3. 한글 이름 추정 (2-5글자) - 같은 줄에 계좌번호가 있으면 최우선
       const namePattern = /[가-힣]{2,5}/g;
       const names = line.match(namePattern);
       if (names) {
+        // 같은 줄에 계좌번호가 있는지 확인
+        const hasAccountInSameLine = line.match(/\d{10,}/);
+
         names.forEach(name => {
           // 금액 관련 단어, 은행 키워드, 공정명이 아닌 경우 예금주로 추정
-          const isMoneyRelated = name === '만원' || name === '천원' || name === '백원' || name === '원';
+          const isMoneyRelated = name === '만원' || name === '천원' || name === '백원' || name === '원' || name.includes('부가세');
           const isBankKeyword = Object.keys(knownBanks).includes(name);
           const isNotBankOrProcess = !isMoneyRelated && !isBankKeyword && !name.includes('은행') && !name.includes('뱅크') &&
-            !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장'].some(p => name.includes(p));
+            !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장', '아크로텔', '자재'].some(p => name.includes(p));
 
-          if (isNotBankOrProcess && !result.bankInfo.accountHolder) {
-            // 계좌번호나 은행명 근처에 있는 이름을 예금주로 추정
-            const hasNearbyBankInfo = (index > 0 && (lines[index - 1].match(/\d{10,}/) || lines[index - 1].match(/은행|뱅크/))) ||
-              (index < lines.length - 1 && (lines[index + 1].match(/\d{10,}/) || lines[index + 1].match(/은행|뱅크/))) ||
-              line.match(/\d{10,}/) || line.match(/은행|뱅크/);
+          if (isNotBankOrProcess) {
+            // 같은 줄에 계좌번호가 있으면 이 이름을 우선적으로 예금주로 설정
+            if (hasAccountInSameLine) {
+              result.bankInfo.accountHolder = name; // 덮어쓰기 허용
+            }
+            // 계좌번호가 없는 줄이면 기존 예금주가 없을 때만 설정
+            else if (!result.bankInfo.accountHolder) {
+              // 계좌번호나 은행명 근처에 있는 이름을 예금주로 추정
+              const hasNearbyBankInfo = (index > 0 && (lines[index - 1].match(/\d{10,}/) || lines[index - 1].match(/은행|뱅크/))) ||
+                (index < lines.length - 1 && (lines[index + 1].match(/\d{10,}/) || lines[index + 1].match(/은행|뱅크/))) ||
+                line.match(/은행|뱅크/);
 
-            if (hasNearbyBankInfo) {
-              result.bankInfo.accountHolder = name;
+              if (hasNearbyBankInfo) {
+                result.bankInfo.accountHolder = name;
+              }
             }
           }
         });
       }
 
-      // 4. 공정/작업 추정
-      const workKeywords = [
-        '목공', '타일', '도배', '전기', '설비', '샤시', '유리', '방수', '철거',
-        '청소', '준공', '입주', '미장', '석공', '도장', '페인트', '필름',
-        '바닥', '마루', '장판', '가구', '주방', '욕실', '화장실', '간판',
-        '인테리어', '리모델링', '공사', '시공', '작업'
-      ];
+      // 4. 공정/작업 추정 (복합어 포함)
+      const workMappings: { [key: string]: string } = {
+        '목공': '목공', '목재': '목공', '나무': '목공',
+        '타일': '타일', '타일공사': '타일',
+        '도배': '도배', '도배지': '도배', '벽지': '도배',
+        '전기': '전기', '전기자재': '전기', '전등': '전기', '조명': '전기', '스위치': '전기', '콘센트': '전기',
+        '설비': '설비', '배관': '설비', '수도': '설비', '하수': '설비',
+        '샤시': '샤시', '창문': '샤시', '창호': '샤시',
+        '유리': '유리', '거울': '유리',
+        '방수': '방수', '방수공사': '방수',
+        '철거': '철거', '철거공사': '철거', '해체': '철거',
+        '청소': '청소', '준공청소': '청소', '입주청소': '청소',
+        '미장': '미장', '몰탈': '미장', '시멘트': '미장',
+        '석공': '석공', '대리석': '석공', '화강석': '석공',
+        '도장': '도장', '페인트': '도장', '도색': '도장',
+        '필름': '필름', '시트지': '필름', '썬팅': '필름',
+        '바닥': '바닥', '마루': '바닥', '장판': '바닥', '데코타일': '바닥',
+        '가구': '가구', '붙박이장': '가구', '수납장': '가구',
+        '주방': '주방', '싱크대': '주방', '주방가구': '주방',
+        '욕실': '욕실', '화장실': '욕실', '변기': '욕실', '세면대': '욕실', '양변기': '욕실',
+        '간판': '간판', '사인물': '간판', '현수막': '간판'
+      };
 
-      for (const keyword of workKeywords) {
+      // 각 줄에서 공정 키워드 찾기
+      for (const [keyword, process] of Object.entries(workMappings)) {
         if (line.includes(keyword)) {
-          result.vendor = keyword;
-          break;
+          result.vendor = process;
+          break;  // 첫 번째 매칭된 공정만 사용
         }
       }
 
