@@ -687,7 +687,8 @@ const FinishCheck = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {spaces.map((space) => {
                 const incompleteItems = space.items
                   .filter(item => !item.is_completed)
@@ -778,6 +779,7 @@ const FinishCheck = () => {
                   </div>
                 );
               })}
+              </div>
 
               {spaces.every(space => space.items.length === 0) && (
                 <div className="flex items-center justify-center h-full text-gray-500 text-sm">
