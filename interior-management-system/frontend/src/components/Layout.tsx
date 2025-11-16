@@ -26,40 +26,6 @@ const Layout = () => {
   const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
   const [inProgressASCount, setInProgressASCount] = useState(0);
 
-  // 인증 확인 중일 때 로딩 표시
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">로딩 중...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const navigation: NavigationItem[] = [
-    { name: '담당업무', href: '/dashboard' },
-    { name: '프로젝트', href: '/projects' },
-    { name: '일정관리', href: '/schedule' },
-    { name: 'AS 관리', href: '/after-service', ...(inProgressASCount > 0 && { badge: inProgressASCount }) },
-    { name: '추가내역', href: '/additional-work' },
-    { name: '공사대금', href: '/construction-payment', roles: ['admin', 'manager'] },
-    { name: '협력업체', href: '/contractors' },
-    { name: '업무요청', href: '/work-request', ...(pendingWorkRequestCount > 0 && { badge: pendingWorkRequestCount }) },
-    { name: '마감체크', href: '/finish-check' },
-    { name: '스펙북', href: '/specbook' },
-    { name: '가견적서', href: '/estimate-preview' },
-    { name: '실행내역', href: '/execution-history' },
-    { name: '결제요청', href: '/payments', ...(pendingPaymentCount > 0 && { badge: pendingPaymentCount }) },
-    { name: '견적문의', href: '/quote-inquiry', roles: ['admin', 'manager'] },
-  ];
-
   // Load pending work requests count for current user
   useEffect(() => {
     const loadPendingWorkRequests = async () => {
@@ -128,6 +94,40 @@ const Layout = () => {
     const interval = setInterval(loadInProgressAS, 30000);
     return () => clearInterval(interval);
   }, [user]);
+
+  // 인증 확인 중일 때 로딩 표시
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-600">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const navigation: NavigationItem[] = [
+    { name: '담당업무', href: '/dashboard' },
+    { name: '프로젝트', href: '/projects' },
+    { name: '일정관리', href: '/schedule' },
+    { name: 'AS 관리', href: '/after-service', ...(inProgressASCount > 0 && { badge: inProgressASCount }) },
+    { name: '추가내역', href: '/additional-work' },
+    { name: '공사대금', href: '/construction-payment', roles: ['admin', 'manager'] },
+    { name: '협력업체', href: '/contractors' },
+    { name: '업무요청', href: '/work-request', ...(pendingWorkRequestCount > 0 && { badge: pendingWorkRequestCount }) },
+    { name: '마감체크', href: '/finish-check' },
+    { name: '스펙북', href: '/specbook' },
+    { name: '가견적서', href: '/estimate-preview' },
+    { name: '실행내역', href: '/execution-history' },
+    { name: '결제요청', href: '/payments', ...(pendingPaymentCount > 0 && { badge: pendingPaymentCount }) },
+    { name: '견적문의', href: '/quote-inquiry', roles: ['admin', 'manager'] },
+  ];
 
   // 사용자 권한에 따라 메뉴 필터링
   const filteredNavigation = navigation.filter(item =>
