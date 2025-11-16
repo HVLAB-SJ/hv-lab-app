@@ -451,18 +451,25 @@ const Payments = () => {
     bankInfo: { bankName?: string; accountNumber?: string; accountHolder?: string };
     vendor?: string | null;
     itemName?: string;
+    includeVat?: boolean;
   } => {
     const lines = text.split('\n').map(line => line.trim()).filter(line => line);
     const result = {
       amounts: {} as { material?: number; labor?: number; total?: number },
       bankInfo: {} as { bankName?: string; accountNumber?: string; accountHolder?: string },
       vendor: null as string | null,
-      itemName: undefined as string | undefined
+      itemName: undefined as string | undefined,
+      includeVat: false
     };
 
     // 각 줄을 분석하여 역할 추정
     lines.forEach((line, index) => {
-      // 0. "만원" 단위 우선 처리
+      // 0-1. 부가세 포함 체크
+      if (line.includes('부가세포함') || line.includes('부가세 포함') || line.includes('(부가세포함)')) {
+        result.includeVat = true;
+      }
+
+      // 0-2. "만원" 단위 우선 처리
       const manwonMatch = line.match(/(\d+)\s*만\s*원/);
       if (manwonMatch) {
         const amount = parseInt(manwonMatch[1]) * 10000;
@@ -579,48 +586,51 @@ const Payments = () => {
         }
       }
 
-      // 2-1. 괄호 안 이름 추출 (예: "레브(최승혁)")
+      // 2-1. 괄호 안 이름 추출 (예: "레브(최승혁)") - 최우선 처리
       const bracketNameMatch = line.match(/\(([가-힣]{2,5})\)/);
-      if (bracketNameMatch && !result.bankInfo.accountHolder) {
-        result.bankInfo.accountHolder = bracketNameMatch[1];
+      if (bracketNameMatch) {
+        result.bankInfo.accountHolder = bracketNameMatch[1]; // 무조건 덮어쓰기
       }
 
-      // 3. 한글 이름 추정 (2-5글자) - 같은 줄에 계좌번호가 있으면 최우선
-      const namePattern = /[가-힣]{2,5}/g;
-      const names = line.match(namePattern);
-      if (names) {
-        // 같은 줄에 계좌번호가 있는지 확인
-        const hasAccountInSameLine = line.match(/\d{10,}/) || line.match(/\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/);
+      // 3. 한글 이름 추정 (2-5글자) - 괄호 이름이 없을 때만 처리
+      if (!bracketNameMatch) {
+        const namePattern = /[가-힣]{2,5}/g;
+        const names = line.match(namePattern);
+        if (names) {
+          // 같은 줄에 계좌번호가 있는지 확인
+          const hasAccountInSameLine = line.match(/\d{10,}/) || line.match(/\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/);
 
-        names.forEach(name => {
-          // 금액 관련 단어, 은행 키워드, 공정명이 아닌 경우 예금주로 추정
-          const isMoneyRelated = name === '만원' || name === '천원' || name === '백원' || name === '원' || name.includes('부가세');
-          const isBankKeyword = Object.keys(knownBanks).includes(name);
-          const isNotBankOrProcess = !isMoneyRelated && !isBankKeyword && !name.includes('은행') && !name.includes('뱅크') &&
-            !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장', '아크로텔', '자재', '레브'].some(p => name.includes(p));
+          names.forEach(name => {
+            // 금액 관련 단어, 은행 키워드, 공정명이 아닌 경우 예금주로 추정
+            const isMoneyRelated = name === '만원' || name === '천원' || name === '백원' || name === '원' ||
+                                   name === '부가세포함' || name.includes('부가세') || name.includes('포함');
+            const isBankKeyword = Object.keys(knownBanks).includes(name);
+            const isNotBankOrProcess = !isMoneyRelated && !isBankKeyword && !name.includes('은행') && !name.includes('뱅크') &&
+              !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장', '아크로텔', '자재', '레브', '필름'].some(p => name.includes(p));
 
-          if (isNotBankOrProcess) {
-            // 괄호로 명시된 이름이 있으면 건너뛰기
-            if (bracketNameMatch && name === bracketNameMatch[1]) {
-              return; // 이미 처리됨
-            }
-            // 같은 줄에 계좌번호가 있으면 이 이름을 우선적으로 예금주로 설정 (괄호 이름이 없을 때만)
-            if (hasAccountInSameLine && !bracketNameMatch) {
-              result.bankInfo.accountHolder = name; // 덮어쓰기 허용
-            }
-            // 계좌번호가 없는 줄이면 기존 예금주가 없을 때만 설정
-            else if (!result.bankInfo.accountHolder) {
-              // 계좌번호나 은행명 근처에 있는 이름을 예금주로 추정
-              const hasNearbyBankInfo = (index > 0 && (lines[index - 1].match(/\d{10,}/) || lines[index - 1].match(/은행|뱅크/))) ||
-                (index < lines.length - 1 && (lines[index + 1].match(/\d{10,}/) || lines[index + 1].match(/은행|뱅크/))) ||
-                line.match(/은행|뱅크/);
+            if (isNotBankOrProcess) {
+              // 괄호로 명시된 이름이 있으면 건너뛰기
+              if (bracketNameMatch && name === bracketNameMatch[1]) {
+                return; // 이미 처리됨
+              }
+              // 같은 줄에 계좌번호가 있으면 이 이름을 우선적으로 예금주로 설정 (괄호 이름이 없을 때만)
+              if (hasAccountInSameLine && !bracketNameMatch) {
+                result.bankInfo.accountHolder = name; // 덮어쓰기 허용
+              }
+              // 계좌번호가 없는 줄이면 기존 예금주가 없을 때만 설정
+              else if (!result.bankInfo.accountHolder) {
+                // 계좌번호나 은행명 근처에 있는 이름을 예금주로 추정
+                const hasNearbyBankInfo = (index > 0 && (lines[index - 1].match(/\d{10,}/) || lines[index - 1].match(/은행|뱅크/))) ||
+                  (index < lines.length - 1 && (lines[index + 1].match(/\d{10,}/) || lines[index + 1].match(/은행|뱅크/))) ||
+                  line.match(/은행|뱅크/);
 
-              if (hasNearbyBankInfo) {
-                result.bankInfo.accountHolder = name;
+                if (hasNearbyBankInfo) {
+                  result.bankInfo.accountHolder = name;
+                }
               }
             }
-          }
-        });
+          });
+        }
       }
 
       // 4. 공정/작업 추정 (복합어 포함)
@@ -750,6 +760,12 @@ const Payments = () => {
 
     setFormData(updatedFormData);
 
+    // 부가세 포함 체크박스 설정
+    if (analysis.includeVat) {
+      setIncludeVat(true);
+      setIncludeTaxDeduction(false); // 부가세 포함 시 세액공제 해제
+    }
+
     // 파싱 결과 상세 메시지
     let successDetails = [];
     if (analysis.amounts.material || analysis.amounts.labor || analysis.amounts.total) {
@@ -774,6 +790,10 @@ const Payments = () => {
 
     if (analysis.vendor) {
       successDetails.push(`공정: ${analysis.vendor}`);
+    }
+
+    if (analysis.includeVat) {
+      successDetails.push(`부가세 포함 설정됨`);
     }
 
     if (successDetails.length > 0) {
