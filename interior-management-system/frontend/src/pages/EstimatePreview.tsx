@@ -243,8 +243,8 @@ const EstimatePreview: React.FC = () => {
 
   const calculateEstimate = async () => {
     // 유효성 검사
-    if (!form.projectName || !form.clientName) {
-      toast.error('프로젝트명과 고객명을 입력해주세요');
+    if (!form.projectName) {
+      toast.error('프로젝트명을 입력해주세요');
       return;
     }
     if (!form.areaSize || form.areaSize <= 0) {
@@ -539,7 +539,7 @@ const EstimatePreview: React.FC = () => {
                   기본 정보
                 </h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1">
                         프로젝트명 <span className="text-red-500">*</span>
@@ -551,19 +551,6 @@ const EstimatePreview: React.FC = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                         placeholder="예: 강남 오피스텔"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1">
-                        고객명 <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="clientName"
-                        value={form.clientName}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                        placeholder="예: 홍길동"
                       />
                     </div>
                     <div>
@@ -581,7 +568,7 @@ const EstimatePreview: React.FC = () => {
                       />
                     </div>
                   </div>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1">
                         주거 형태
@@ -1558,7 +1545,6 @@ const EstimatePreview: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">프로젝트명</th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">고객명</th>
                   <th className="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">평수</th>
                   <th className="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">등급</th>
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">예상 금액</th>
@@ -1571,9 +1557,6 @@ const EstimatePreview: React.FC = () => {
                   <tr key={estimate.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {estimate.project_name}
-                    </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {estimate.client_name}
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">
                       {estimate.area_size}평
