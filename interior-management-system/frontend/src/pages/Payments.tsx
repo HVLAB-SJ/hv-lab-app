@@ -466,25 +466,58 @@ const Payments = () => {
       { pattern: /(?:신협)/i, name: '신협' }
     ];
 
+    let bankMatchIndex = -1;
     for (const bank of bankPatterns) {
-      if (bank.pattern.test(text)) {
+      const match = text.match(bank.pattern);
+      if (match) {
         result.bankName = bank.name;
+        bankMatchIndex = match.index || -1;
         break;
       }
     }
 
-    // 계좌번호 패턴 (숫자와 하이픈/공백으로 구성, 최소 10자리)
-    const accountMatch = text.match(/(\d{3,6}[-\s]?\d{2,6}[-\s]?\d{4,8})/);
-    if (accountMatch) {
-      result.accountNumber = accountMatch[1].replace(/\s/g, '-');
+    // 계좌번호 패턴 개선 (여러 공백 허용, 더 유연한 패턴)
+    // 패턴 1: 연속된 숫자들 (공백/하이픈으로 구분)
+    const accountPattern1 = /(\d{3,6}[\s\-]+\d{2,6}[\s\-]+\d{2,6}[\s\-]*\d{0,6})/;
+    // 패턴 2: 붙어있는 숫자들 (최소 10자리)
+    const accountPattern2 = /(\d{10,16})/;
+
+    let accountMatch = text.match(accountPattern1);
+    if (!accountMatch) {
+      accountMatch = text.match(accountPattern2);
     }
 
-    // 예금주명 추출 (계좌번호 뒤에 오는 한글 이름)
     if (accountMatch) {
-      const afterAccount = text.slice(text.indexOf(accountMatch[0]) + accountMatch[0].length);
-      const holderMatch = afterAccount.match(/^\s*([가-힣]+(?:\s+[가-힣]+)*)/);
-      if (holderMatch) {
-        result.accountHolder = holderMatch[1].trim();
+      // 공백을 하이픈으로 통일
+      result.accountNumber = accountMatch[1].replace(/\s+/g, '-');
+    }
+
+    // 예금주명 추출 개선
+    // 방법 1: 은행명 뒤에 오는 한글 이름
+    if (bankMatchIndex !== -1) {
+      const afterBank = text.slice(bankMatchIndex);
+      // 은행명 바로 뒤의 한글 이름 찾기
+      const holderAfterBank = afterBank.match(/(?:은행|뱅크|금고|신협)?\s*([가-힣]{2,5})/);
+      if (holderAfterBank && holderAfterBank[1]) {
+        result.accountHolder = holderAfterBank[1].trim();
+      }
+    }
+
+    // 방법 2: 계좌번호 뒤에 오는 한글 이름
+    if (!result.accountHolder && accountMatch && accountMatch.index) {
+      const afterAccount = text.slice(accountMatch.index + accountMatch[0].length);
+      const holderAfterAccount = afterAccount.match(/^\s*([가-힣]{2,5})/);
+      if (holderAfterAccount && holderAfterAccount[1]) {
+        result.accountHolder = holderAfterAccount[1].trim();
+      }
+    }
+
+    // 방법 3: 계좌번호 앞에 있는 한글 이름 (은행명 뒤)
+    if (!result.accountHolder && accountMatch && accountMatch.index && bankMatchIndex !== -1) {
+      const betweenBankAndAccount = text.slice(bankMatchIndex, accountMatch.index);
+      const holderBetween = betweenBankAndAccount.match(/([가-힣]{2,5})\s*$/);
+      if (holderBetween && holderBetween[1]) {
+        result.accountHolder = holderBetween[1].trim();
       }
     }
 
