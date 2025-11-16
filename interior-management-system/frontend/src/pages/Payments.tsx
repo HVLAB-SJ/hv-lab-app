@@ -410,22 +410,113 @@ const Payments = () => {
     }
   }, [formData.itemName, payments, isItemNameFocused]);
 
-  // 텍스트에서 금액 파싱 (예: "40만원" -> 400000)
-  const parseAmountFromText = (text: string): number => {
-    // "숫자+만원" 패턴 찾기
-    const match = text.match(/(\d+(?:,\d+)*)\s*만\s*원/);
-    if (match) {
-      const number = parseInt(match[1].replace(/,/g, ''));
-      return number * 10000;
+  // 텍스트에서 금액 파싱 (자재비/인건비 구분)
+  const parseAmountFromText = (text: string): { material?: number; labor?: number; total?: number } => {
+    const result: { material?: number; labor?: number; total?: number } = {};
+
+    // 자재비 패턴 찾기
+    const materialMatch = text.match(/자재비?\s*[:：]?\s*(\d+(?:,\d+)*)\s*만?\s*원/i);
+    if (materialMatch) {
+      const number = parseInt(materialMatch[1].replace(/,/g, ''));
+      result.material = materialMatch[0].includes('만') ? number * 10000 : number;
     }
 
-    // "숫자원" 패턴 찾기 (예: "400000원")
-    const directMatch = text.match(/(\d+(?:,\d+)*)\s*원/);
-    if (directMatch) {
-      return parseInt(directMatch[1].replace(/,/g, ''));
+    // 인건비 패턴 찾기
+    const laborMatch = text.match(/(?:인건비?|노무비?)\s*[:：]?\s*(\d+(?:,\d+)*)\s*만?\s*원/i);
+    if (laborMatch) {
+      const number = parseInt(laborMatch[1].replace(/,/g, ''));
+      result.labor = laborMatch[0].includes('만') ? number * 10000 : number;
     }
 
-    return 0;
+    // 둘 다 없으면 일반 금액 찾기
+    if (!result.material && !result.labor) {
+      // "숫자+만원" 패턴 찾기
+      const match = text.match(/(\d+(?:,\d+)*)\s*만\s*원/);
+      if (match) {
+        const number = parseInt(match[1].replace(/,/g, ''));
+        result.total = number * 10000;
+      } else {
+        // "숫자원" 패턴 찾기
+        const directMatch = text.match(/(\d+(?:,\d+)*)\s*원/);
+        if (directMatch) {
+          result.total = parseInt(directMatch[1].replace(/,/g, ''));
+        }
+      }
+    }
+
+    return result;
+  };
+
+  // 텍스트에서 은행 정보 파싱
+  const parseBankInfoFromText = (text: string): { bankName?: string; accountNumber?: string; accountHolder?: string } => {
+    const result: { bankName?: string; accountNumber?: string; accountHolder?: string } = {};
+
+    // 은행명 패턴
+    const bankPatterns = [
+      { pattern: /(?:국민|KB)/i, name: '국민은행' },
+      { pattern: /(?:신한|shinhan)/i, name: '신한은행' },
+      { pattern: /(?:하나|hana|KEB)/i, name: '하나은행' },
+      { pattern: /(?:우리|woori)/i, name: '우리은행' },
+      { pattern: /(?:기업|IBK)/i, name: '기업은행' },
+      { pattern: /(?:농협|NH|농협은행)/i, name: '농협' },
+      { pattern: /(?:카카오)/i, name: '카카오뱅크' },
+      { pattern: /(?:토스)/i, name: '토스뱅크' },
+      { pattern: /(?:케이뱅크|K뱅크)/i, name: '케이뱅크' },
+      { pattern: /(?:새마을)/i, name: '새마을금고' },
+      { pattern: /(?:신협)/i, name: '신협' }
+    ];
+
+    for (const bank of bankPatterns) {
+      if (bank.pattern.test(text)) {
+        result.bankName = bank.name;
+        break;
+      }
+    }
+
+    // 계좌번호 패턴 (숫자와 하이픈/공백으로 구성, 최소 10자리)
+    const accountMatch = text.match(/(\d{3,6}[-\s]?\d{2,6}[-\s]?\d{4,8})/);
+    if (accountMatch) {
+      result.accountNumber = accountMatch[1].replace(/\s/g, '-');
+    }
+
+    // 예금주명 추출 (계좌번호 뒤에 오는 한글 이름)
+    if (accountMatch) {
+      const afterAccount = text.slice(text.indexOf(accountMatch[0]) + accountMatch[0].length);
+      const holderMatch = afterAccount.match(/^\s*([가-힣]+(?:\s+[가-힣]+)*)/);
+      if (holderMatch) {
+        result.accountHolder = holderMatch[1].trim();
+      }
+    }
+
+    return result;
+  };
+
+  // 텍스트에서 공정(업체) 추출
+  const parseVendorFromText = (text: string): string | null => {
+    // 공정 키워드
+    const processKeywords = [
+      '목공', '타일', '도배', '전기', '설비', '샤시', '유리', '방수', '철거',
+      '청소', '준공청소', '입주청소', '미장', '석공', '도장', '페인트', '필름',
+      '바닥', '마루', '장판', '가구', '주방', '욕실', '화장실'
+    ];
+
+    // 텍스트에서 공정 키워드 찾기
+    for (const keyword of processKeywords) {
+      if (text.includes(keyword)) {
+        // 협력업체 목록에서 해당 공정 찾기
+        const contractor = contractors.find((c: Contractor) =>
+          c.process?.includes(keyword) ||
+          c.companyName?.includes(keyword)
+        );
+        if (contractor) {
+          return contractor.process || contractor.companyName;
+        }
+        // 협력업체를 찾지 못해도 키워드 자체를 반환
+        return keyword;
+      }
+    }
+
+    return null;
   };
 
   // 빠른 입력 텍스트 파싱
@@ -433,15 +524,79 @@ const Payments = () => {
     const text = formData.quickText;
     if (!text.trim()) return;
 
-    const amount = parseAmountFromText(text);
+    // 금액 파싱 (자재비/인건비 구분)
+    const amounts = parseAmountFromText(text);
 
-    setFormData({
-      ...formData,
-      materialCost: amount,
-      itemName: formData.itemName || text.trim() // 항목명이 비어있으면 텍스트 전체를 항목명으로
-    });
+    // 은행 정보 파싱
+    const bankInfo = parseBankInfoFromText(text);
 
-    toast.success('금액이 자동으로 입력되었습니다');
+    // 공정(업체) 파싱
+    const vendor = parseVendorFromText(text);
+
+    // 항목명 추출 (대괄호 [] 안의 내용 우선)
+    let itemName = formData.itemName;
+    const itemMatch = text.match(/\[([^\]]+)\]/);
+    if (itemMatch) {
+      itemName = itemMatch[1];
+    } else if (!itemName) {
+      // 항목명이 없으면 첫 줄이나 짧은 설명 추출
+      const lines = text.split('\n');
+      itemName = lines[0].substring(0, 50); // 첫 줄의 50자까지
+    }
+
+    // 파싱된 정보로 폼 업데이트
+    const updatedFormData: any = { ...formData };
+
+    // 금액 설정
+    if (amounts.material) {
+      updatedFormData.materialCost = amounts.material;
+    }
+    if (amounts.labor) {
+      updatedFormData.laborCost = amounts.labor;
+    }
+    if (amounts.total && !amounts.material && !amounts.labor) {
+      // 자재비/인건비 구분이 없으면 자재비로 설정
+      updatedFormData.materialCost = amounts.total;
+    }
+
+    // 은행 정보 설정
+    if (bankInfo.bankName) {
+      updatedFormData.bankName = bankInfo.bankName;
+    }
+    if (bankInfo.accountNumber) {
+      updatedFormData.accountNumber = bankInfo.accountNumber;
+    }
+    if (bankInfo.accountHolder) {
+      updatedFormData.accountHolder = bankInfo.accountHolder;
+    }
+
+    // 공정(업체) 설정
+    if (vendor) {
+      updatedFormData.vendorName = vendor;
+    }
+
+    // 항목명 설정
+    updatedFormData.itemName = itemName;
+
+    setFormData(updatedFormData);
+
+    // 파싱 결과 메시지
+    let successMessages = [];
+    if (amounts.material || amounts.labor || amounts.total) {
+      successMessages.push('금액');
+    }
+    if (bankInfo.bankName || bankInfo.accountNumber || bankInfo.accountHolder) {
+      successMessages.push('계좌정보');
+    }
+    if (vendor) {
+      successMessages.push('공정');
+    }
+
+    if (successMessages.length > 0) {
+      toast.success(`${successMessages.join(', ')}이(가) 자동으로 입력되었습니다`);
+    } else {
+      toast.info('인식된 정보가 없습니다. 텍스트를 확인해주세요.');
+    }
   };
 
   // 예금주 입력칸 포커스 시 모든 이전 송금내역 표시
@@ -1163,14 +1318,14 @@ const Payments = () => {
             {/* 빠른 입력 */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                💡 빠른 입력 (텍스트 붙여넣기)
+                💡 빠른 입력 (스마트 자동 인식)
               </label>
               <textarea
                 value={formData.quickText}
                 onChange={(e) => setFormData({ ...formData, quickText: e.target.value })}
-                rows={3}
+                rows={4}
                 className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="예시: [703호 준공청소]&#10;청소비용 40만원입니다. 신한 110 432 160269 박지연. 입금 부탁드립니다."
+                placeholder="예시: [703호 타일공사]&#10;자재비: 120만원&#10;인건비: 80만원&#10;신한 110-432-160269 박지연&#10;&#10;은행명, 계좌번호, 예금주, 공정, 자재비/인건비를 자동으로 인식합니다."
               />
               <button
                 type="button"
@@ -1180,7 +1335,11 @@ const Payments = () => {
                 자동으로 항목 채우기
               </button>
               <p className="mt-2 text-xs text-gray-600">
-                * 텍스트에서 금액을 자동으로 인식하여 입력합니다 (예: "40만원", "400000원")
+                ✨ 스마트 인식: 금액(자재비/인건비), 은행명, 계좌번호, 예금주, 공정을 자동 인식합니다<br/>
+                • 항목명: [대괄호] 안에 작성<br/>
+                • 금액: "40만원", "400000원" 형식<br/>
+                • 은행: 국민, 신한, 하나, 우리, 기업, 농협 등<br/>
+                • 공정: 목공, 타일, 도배, 전기, 설비 등
               </p>
             </div>
 
