@@ -97,7 +97,7 @@ const Login = () => {
           <div className="mt-6 border-t pt-6">
             <p className="text-sm text-gray-600 text-center mb-4">빠른 로그인</p>
             <div className="grid grid-cols-3 gap-2">
-              {['상준', '신애', '재천', '민기', '재성', '재현'].map((name) => (
+              {['상준', '신애', '재천', '민기', '재성', '재현', '안팀'].map((name) => (
                 <button
                   key={name}
                   onClick={() => handleQuickLogin(name)}

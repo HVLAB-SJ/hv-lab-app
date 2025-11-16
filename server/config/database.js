@@ -782,6 +782,7 @@ const initDatabase = () => {
   db.serialize(() => {
     const bcrypt = require('bcryptjs');
     const password = bcrypt.hashSync('0109', 10);
+    const ahnPassword = bcrypt.hashSync('0000', 10);
 
     const users = [
       ['상준', password, '상준', 'manager', '관리부'],
@@ -789,7 +790,8 @@ const initDatabase = () => {
       ['재천', password, '재천', 'worker', '시공부'],
       ['민기', password, '민기', 'worker', '시공부'],
       ['재성', password, '재성', 'worker', '시공부'],
-      ['재현', password, '재현', 'worker', '시공부']
+      ['재현', password, '재현', 'worker', '시공부'],
+      ['안팀', ahnPassword, '안팀', 'worker', '시공부']
     ];
 
     users.forEach(([username, pwd, name, role, dept]) => {
