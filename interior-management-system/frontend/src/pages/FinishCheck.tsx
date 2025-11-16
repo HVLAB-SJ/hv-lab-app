@@ -684,12 +684,15 @@ const FinishCheck = () => {
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <h2 className="text-lg font-bold text-gray-900">전체 마감체크</h2>
+                <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full">
+                  {spaces.reduce((sum, space) => sum + space.items.filter(item => item.is_completed).length, 0)} / {spaces.reduce((sum, space) => sum + space.items.length, 0)} 완료
+                </span>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
               <div className="columns-1 md:columns-4 gap-4">
-              {spaces.map((space) => {
+              {spaces.map((space, spaceIndex) => {
                 const incompleteItems = space.items
                   .filter(item => !item.is_completed)
                   .sort((a, b) => (b.is_priority || 0) - (a.is_priority || 0));
@@ -698,8 +701,11 @@ const FinishCheck = () => {
                 if (space.items.length === 0) return null;
 
                 return (
-                  <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-4 break-inside-avoid">
-                    <h3 className="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-300">
+                  <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-2 break-inside-avoid">
+                    <h3 className="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-300 flex items-center gap-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-800 text-white text-xs font-bold rounded-full">
+                        {spaceIndex + 1}
+                      </span>
                       {space.name}
                     </h3>
 
