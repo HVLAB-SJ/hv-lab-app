@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Pencil, Trash2, Upload, Settings, X, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import {
   DndContext,
   closestCenter,
@@ -258,6 +259,7 @@ const SortableCategoryItem = ({
 };
 
 const SpecBook = () => {
+  const filteredProjects = useFilteredProjects();
   const [view, setView] = useState<'library' | 'project'>('library');
   const [items, setItems] = useState<SpecBookItem[]>([]);
   const [allLibraryItems, setAllLibraryItems] = useState<SpecBookItem[]>([]); // 전체 라이브러리 아이템 (수량 계산용)
@@ -306,9 +308,13 @@ const SpecBook = () => {
 
   useEffect(() => {
     loadCategories();
-    loadProjects();
     loadAllLibraryItems(); // 전체 라이브러리 아이템 로드
   }, []);
+
+  // filteredProjects가 변경될 때 프로젝트 다시 로드
+  useEffect(() => {
+    loadProjects();
+  }, [filteredProjects]);
 
   useEffect(() => {
     loadItems();
@@ -332,9 +338,13 @@ const SpecBook = () => {
 
   const loadProjects = async () => {
     try {
-      const response = await api.get('/specbook/projects');
-      console.log('프로젝트 목록 로드됨:', response.data.length, '개', response.data);
-      setProjects(response.data);
+      // filteredProjects를 Project 형식으로 변환
+      const mappedProjects = filteredProjects.map(p => ({
+        id: p.id,
+        title: p.name
+      }));
+      console.log('프로젝트 목록 로드됨:', mappedProjects.length, '개', mappedProjects);
+      setProjects(mappedProjects);
       // 자동 선택 제거 - 사용자가 직접 선택하도록 함
     } catch (error) {
       console.error('프로젝트 로드 실패:', error);

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { X, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
-import { useDataStore } from '../store/dataStore';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import toast from 'react-hot-toast';
 
 interface AdditionalWork {
@@ -32,7 +32,7 @@ interface AdditionalWorkModalProps {
 
 const AdditionalWorkModal = ({ work, onClose, onSave, initialProject }: AdditionalWorkModalProps) => {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
-  const { projects } = useDataStore();
+  const projects = useFilteredProjects();
   const [isDragging, setIsDragging] = useState(false);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);

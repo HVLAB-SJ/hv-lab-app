@@ -3,6 +3,7 @@ import { Plus, Trash2, Edit2, Check, X, ChevronLeft, Image as ImageIcon, Upload,
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 
 interface FinishCheckItemImage {
   id: number;
@@ -42,6 +43,7 @@ interface Project {
 
 const FinishCheck = () => {
   const { user } = useAuth();
+  const filteredProjects = useFilteredProjects();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [spaces, setSpaces] = useState<FinishCheckSpace[]>([]);
@@ -61,7 +63,6 @@ const FinishCheck = () => {
   const [showMobileImageModal, setShowMobileImageModal] = useState(false);
 
   useEffect(() => {
-    loadProjects();
     loadSpaces();
 
     const handleResize = () => {
@@ -71,6 +72,11 @@ const FinishCheck = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // filteredProjects가 변경될 때 프로젝트 다시 로드
+  useEffect(() => {
+    loadProjects();
+  }, [filteredProjects]);
 
   useEffect(() => {
     if (selectedProjectId !== null) {
@@ -116,20 +122,24 @@ const FinishCheck = () => {
 
   const loadProjects = async () => {
     try {
-      const response = await api.get('/specbook/projects');
-      setProjects(response.data);
+      // filteredProjects를 Project 형식으로 변환
+      const mappedProjects = filteredProjects.map(p => ({
+        id: p.id,
+        title: p.name
+      }));
+      setProjects(mappedProjects);
 
       // localStorage에서 사용자별 마지막 선택 프로젝트 불러오기
       const savedProjectId = user?.id
         ? localStorage.getItem(`finishCheck_selectedProject_${user.id}`)
         : null;
 
-      if (savedProjectId && response.data.some((p: Project) => p.id === Number(savedProjectId))) {
+      if (savedProjectId && mappedProjects.some((p: Project) => p.id === Number(savedProjectId))) {
         // 저장된 프로젝트가 목록에 있으면 선택
         setSelectedProjectId(Number(savedProjectId));
-      } else if (response.data.length > 0) {
+      } else if (mappedProjects.length > 0) {
         // 저장된 프로젝트가 없거나 유효하지 않으면 첫 번째 프로젝트 선택
-        setSelectedProjectId(response.data[0].id);
+        setSelectedProjectId(mappedProjects[0].id);
       }
     } catch (error) {
       console.error('Failed to load projects:', error);

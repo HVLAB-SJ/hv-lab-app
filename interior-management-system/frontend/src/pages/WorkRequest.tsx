@@ -7,6 +7,7 @@ import workRequestService from '../services/workRequestService';
 import toast from 'react-hot-toast';
 import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 
 interface WorkRequest {
   id: string;
@@ -28,8 +29,9 @@ type TabStatus = 'pending' | 'in-progress' | 'completed' | 'all';
 const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '안팀', '디자인팀', '현장팀'];
 
 const WorkRequest = () => {
-  const { addScheduleToAPI, deleteScheduleFromAPI, updateScheduleInAPI, schedules, projects, fetchSchedules } = useDataStore();
+  const { addScheduleToAPI, deleteScheduleFromAPI, updateScheduleInAPI, schedules, fetchSchedules } = useDataStore();
   const { user } = useAuth();
+  const projects = useFilteredProjects();
   const [requests, setRequests] = useState<WorkRequest[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');

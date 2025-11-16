@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { X } from 'lucide-react';
-import { useDataStore } from '../store/dataStore';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 
 interface ASRequest {
   id: string;
@@ -40,7 +40,7 @@ const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현'
 
 const ASRequestModal = ({ request, onClose, onSave }: ASRequestModalProps) => {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
-  const { projects } = useDataStore();
+  const projects = useFilteredProjects();
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [customMember, setCustomMember] = useState('');
   const [visitTimePeriod, setVisitTimePeriod] = useState<'오전' | '오후'>('오전');
