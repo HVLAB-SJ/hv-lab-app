@@ -521,10 +521,17 @@ const Payments = () => {
         '케이': '케이뱅크', 'K뱅크': '케이뱅크'
       };
 
-      // 알려진 은행 찾기
+      // 알려진 은행 찾기 (특별 처리: 은행명 + 이름 패턴)
       for (const [key, value] of Object.entries(knownBanks)) {
         if (line.includes(key)) {
           result.bankInfo.bankName = value;
+
+          // "은행키워드 이름" 패턴 체크 (예: "기업 조민호")
+          const bankNamePattern = new RegExp(`${key}\\s+([가-힣]{2,5})`);
+          const bankNameMatch = line.match(bankNamePattern);
+          if (bankNameMatch) {
+            result.bankInfo.accountHolder = bankNameMatch[1];
+          }
           break;
         }
       }
@@ -542,9 +549,10 @@ const Payments = () => {
       const names = line.match(namePattern);
       if (names) {
         names.forEach(name => {
-          // 금액 관련 단어, 은행명, 공정명이 아닌 경우 예금주로 추정
+          // 금액 관련 단어, 은행 키워드, 공정명이 아닌 경우 예금주로 추정
           const isMoneyRelated = name === '만원' || name === '천원' || name === '백원' || name === '원';
-          const isNotBankOrProcess = !isMoneyRelated && !name.includes('은행') && !name.includes('뱅크') &&
+          const isBankKeyword = Object.keys(knownBanks).includes(name);
+          const isNotBankOrProcess = !isMoneyRelated && !isBankKeyword && !name.includes('은행') && !name.includes('뱅크') &&
             !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장'].some(p => name.includes(p));
 
           if (isNotBankOrProcess && !result.bankInfo.accountHolder) {
