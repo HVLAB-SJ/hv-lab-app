@@ -124,7 +124,7 @@ const Layout = () => {
     { name: '마감체크', href: '/finish-check' },
     { name: '스펙북', href: '/specbook' },
     { name: '가견적서', href: '/estimate-preview', roles: ['admin', 'manager'] },
-    { name: '실행내역', href: '/execution-history', roles: ['admin', 'manager'] },
+    { name: '실행내역', href: '/execution-history' },
     { name: '결제요청', href: '/payments', ...(pendingPaymentCount > 0 && { badge: pendingPaymentCount }) },
     { name: '견적문의', href: '/quote-inquiry', roles: ['admin', 'manager'] },
   ];
