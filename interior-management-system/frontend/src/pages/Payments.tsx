@@ -524,10 +524,29 @@ const Payments = () => {
         /\d{10,}/ // 연속된 숫자
       ];
 
+      let accountNumberText = ''; // 계좌번호로 인식된 텍스트 저장
+      let accountNumberIndex = -1; // 계좌번호의 위치 저장
       for (const pattern of accountPatterns) {
         const accountMatch = line.match(pattern);
         if (accountMatch && !result.bankInfo.accountNumber) {
+          accountNumberText = accountMatch[0]; // 원본 텍스트 저장
+          accountNumberIndex = accountMatch.index || -1; // 계좌번호 시작 위치
           result.bankInfo.accountNumber = accountMatch[0].trim().replace(/\s+/g, '-');
+
+          // 계좌번호 바로 뒤에 나오는 이름 패턴 찾기
+          const afterAccountText = line.substring(accountNumberIndex + accountNumberText.length);
+          const afterNameMatch = afterAccountText.match(/^\s*([가-힣]{2,}(?:\s*[가-힣]{2,})?)/);
+          if (afterNameMatch) {
+            const potentialName = afterNameMatch[1].trim();
+            // 은행명이나 제외 단어가 아닌 경우 예금주로 설정
+            const excludedWords = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
+            const isBankName = potentialName.includes('은행') || potentialName.includes('뱅크') ||
+                              potentialName.includes('금고') || potentialName.includes('신협');
+
+            if (!excludedWords.includes(potentialName) && !isBankName) {
+              result.bankInfo.accountHolder = potentialName; // 계좌번호 뒤 이름을 최우선 예금주로 설정
+            }
+          }
           break;
         }
       }
@@ -537,13 +556,18 @@ const Payments = () => {
       if (numberPatterns) {
         numberPatterns.forEach(numStr => {
           const num = parseInt(numStr.replace(/,/g, ''));
+          const numStrClean = numStr.replace(/,/g, '');
+
+          // 계좌번호에 포함된 숫자인지 확인
+          const isPartOfAccountNumber = accountNumberText && accountNumberText.includes(numStrClean);
 
           // 계좌번호 가능성 (연속된 10자리 이상 숫자)
-          if (!result.bankInfo.accountNumber && numStr.replace(/,/g, '').length >= 10 && numStr.replace(/,/g, '').length <= 20) {
-            result.bankInfo.accountNumber = numStr.replace(/,/g, '');
+          if (!result.bankInfo.accountNumber && numStrClean.length >= 10 && numStrClean.length <= 20) {
+            result.bankInfo.accountNumber = numStrClean;
+            accountNumberText = numStrClean; // 나중에 참조할 수 있도록 저장
           }
-          // 금액 가능성 (1000 이상)
-          else if (num >= 1000 && !manwonMatch) {  // 만원 처리된 경우 제외
+          // 금액 가능성 (1000 이상, 계좌번호 부분이 아닌 경우)
+          else if (num >= 1000 && !manwonMatch && !isPartOfAccountNumber) {  // 만원 처리된 경우와 계좌번호 부분 제외
             // 자재비/인건비 키워드 확인
             if (line.includes('자재') || line.includes('재료')) {
               result.amounts.material = num;
@@ -597,13 +621,14 @@ const Payments = () => {
         }
       }
 
-      // 2-1. 괄호 안 이름 추출 (예: "레브(최승혁)") - 최우선 처리
+      // 2-1. 괄호 안 이름 추출 (예: "레브(최승혁)") - 계좌번호 뒤 이름보다 우선순위 높음
       const bracketNameMatch = line.match(/\(([가-힣]{2,5})\)/);
       if (bracketNameMatch) {
         // 부가세포함 등은 절대 예금주가 아님
         const excludedWords = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
         if (!excludedWords.includes(bracketNameMatch[1])) {
-          result.bankInfo.accountHolder = bracketNameMatch[1]; // 무조건 덮어쓰기
+          // 괄호 안 이름은 계좌번호 뒤 이름보다 우선순위가 높음
+          result.bankInfo.accountHolder = bracketNameMatch[1];
         }
       }
 
