@@ -1722,13 +1722,20 @@ const Payments = () => {
             <div className="space-y-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">공사비</label>
-                <input
-                  type="number"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  placeholder="금액을 입력하세요"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.amount ? Number(formData.amount).toLocaleString() : ''}
+                    onChange={(e) => {
+                      // 숫자와 콤마를 제외한 문자 제거
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      setFormData({ ...formData, amount: value });
+                    }}
+                    className="w-full px-3 py-2 pr-8 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    placeholder="금액을 입력하세요"
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">원</span>
+                </div>
               </div>
 
               {/* 부가세 체크박스 */}
@@ -1921,8 +1928,13 @@ const Payments = () => {
                     )}
                     <span className="font-semibold">
                       {(() => {
-                        const baseAmount = (Number(formData.materialCost) || 0) + (Number(formData.laborCost) || 0);
-                        const finalAmount = includeTaxDeduction ? Math.round(baseAmount * 0.967) : baseAmount;
+                        const baseAmount = Number(formData.amount) || 0;
+                        let finalAmount = baseAmount;
+                        if (includeVat) {
+                          finalAmount = Math.round(baseAmount * 1.1);
+                        } else if (includeTaxDeduction) {
+                          finalAmount = Math.round(baseAmount * 0.967);
+                        }
                         return finalAmount.toLocaleString();
                       })()}원
                     </span>
