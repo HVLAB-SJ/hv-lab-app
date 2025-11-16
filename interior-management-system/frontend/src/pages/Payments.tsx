@@ -497,11 +497,20 @@ const Payments = () => {
               result.bankInfo.accountNumber = trimmedPart;
             }
           }
-          // 한글 이름 패턴 (예금주) - 부가세포함 등 제외
-          else if (/^[가-힣]{2,5}$/.test(trimmedPart)) {
-            // 절대 예금주가 될 수 없는 단어들
+          // 한글 이름 패턴 (예금주) - 부가세포함, 은행명 등 제외
+          else if (/^[가-힣]{2,}$/.test(trimmedPart)) {
+            // 절대 예금주가 될 수 없는 단어들 (금액 단위, 은행명 포함)
             const excludedWords = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
-            if (!excludedWords.includes(trimmedPart) && !result.bankInfo.accountHolder) {
+            // 은행 관련 단어는 예금주가 될 수 없음
+            const isBankName = trimmedPart.includes('은행') || trimmedPart.includes('뱅크') ||
+                              trimmedPart.includes('금고') || trimmedPart.includes('신협') ||
+                              ['국민', '신한', '하나', '우리', '기업', '농협', '카카오', '토스', '케이',
+                               '산업', '수협', '대구', '부산', '경남', '광주', '전북', '제일', '씨티',
+                               '우체국', '새마을', '카뱅', 'KB', 'IBK', 'NH', 'KDB', 'SC', 'K뱅크'].includes(trimmedPart) ||
+                              ['우리은행', '국민은행', '신한은행', '하나은행', '기업은행', '농협은행',
+                               '카카오뱅크', '토스뱅크', '케이뱅크', '산업은행', '수협은행'].includes(trimmedPart);
+
+            if (!excludedWords.includes(trimmedPart) && !isBankName && !result.bankInfo.accountHolder) {
               result.bankInfo.accountHolder = trimmedPart;
             }
           }
@@ -611,6 +620,18 @@ const Payments = () => {
             const absoluteExcluded = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
             if (absoluteExcluded.includes(name)) {
               return; // 즉시 건너뛰기
+            }
+
+            // 은행명은 절대 예금주가 될 수 없음
+            const isBankName = name.includes('은행') || name.includes('뱅크') ||
+                              name.includes('금고') || name.includes('신협') ||
+                              ['우리은행', '국민은행', '신한은행', '하나은행', '기업은행', '농협은행',
+                               'IBK기업은행', 'KB국민은행', 'NH농협은행', 'KDB산업은행', 'SC제일은행',
+                               '카카오뱅크', '토스뱅크', '케이뱅크', '수협은행', '대구은행', '부산은행',
+                               '경남은행', '광주은행', '전북은행', '한국씨티은행', '우체국', '새마을금고'].includes(name);
+
+            if (isBankName) {
+              return; // 은행명은 건너뛰기
             }
 
             // 금액 관련 단어, 은행 키워드, 공정명이 아닌 경우 예금주로 추정
