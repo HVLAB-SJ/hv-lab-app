@@ -455,7 +455,6 @@ const AdditionalWork = () => {
       <div className="hidden md:grid gap-4" style={{ gridTemplateColumns: '400px 1fr' }}>
         {/* 왼쪽: 추가내역 등록 폼 (400px 고정 너비) */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 h-fit sticky top-4" style={{ maxWidth: '400px' }}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">추가내역 등록</h3>
 
           <div className="space-y-4">
             {/* 프로젝트 선택 */}
@@ -712,7 +711,6 @@ const AdditionalWork = () => {
       <div className="md:hidden space-y-4">
         {/* 모바일 입력 폼 */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">추가내역 등록</h3>
 
           <div className="space-y-4">
             <div>

@@ -610,9 +610,11 @@ const WorkRequest = () => {
       <div className="hidden md:grid md:grid-cols-[400px_1fr] gap-4">
         {/* 왼쪽: 업무요청 폼 */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 h-fit sticky top-4">
-          <h2 className="text-xl font-semibold mb-4">
-            {editingRequest ? '업무요청 수정' : '새 업무요청'}
-          </h2>
+          {editingRequest && (
+            <h2 className="text-xl font-semibold mb-4">
+              업무요청 수정
+            </h2>
+          )}
 
           <form onSubmit={handleFormSubmit} className="space-y-4">
             {/* Project */}
@@ -1079,9 +1081,11 @@ const WorkRequest = () => {
 
         {/* 업무요청 입력 폼 */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <h2 className="text-base font-semibold text-gray-900 mb-3">
-            {editingRequest ? '업무요청 수정' : '새 업무요청'}
-          </h2>
+          {editingRequest && (
+            <h2 className="text-base font-semibold text-gray-900 mb-3">
+              업무요청 수정
+            </h2>
+          )}
 
           <form onSubmit={handleFormSubmit} className="space-y-3">
                 {/* Project */}

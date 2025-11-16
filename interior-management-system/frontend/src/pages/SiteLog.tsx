@@ -246,10 +246,6 @@ const SiteLog = () => {
       {/* 헤더 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Camera className="h-6 w-6 text-gray-600" />
-            현장일지
-          </h1>
 
           {/* 프로젝트 선택 */}
           <select
