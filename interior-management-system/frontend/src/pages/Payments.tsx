@@ -464,19 +464,21 @@ const Payments = () => {
 
     // 각 줄을 분석하여 역할 추정
     lines.forEach((line, index) => {
-      // 1. 숫자 패턴 분석
+      // 1-1. 계좌번호 패턴 우선 체크 (공백/하이픈으로 구분된 숫자들)
+      const accountPattern = line.match(/\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/);
+      if (accountPattern && !result.bankInfo.accountNumber) {
+        result.bankInfo.accountNumber = accountPattern[0].trim().replace(/\s+/g, '-');
+      }
+
+      // 1-2. 숫자 패턴 분석 (금액 인식)
       const numberPatterns = line.match(/[\d,]+/g);
       if (numberPatterns) {
         numberPatterns.forEach(numStr => {
           const num = parseInt(numStr.replace(/,/g, ''));
 
-          // 계좌번호 가능성 (10자리 이상)
-          if (numStr.replace(/,/g, '').length >= 10 && numStr.replace(/,/g, '').length <= 20) {
-            // 공백이나 하이픈으로 구분된 패턴도 확인
-            const accountPattern = line.match(/(\d[\d\s\-]{9,20})/);
-            if (accountPattern) {
-              result.bankInfo.accountNumber = accountPattern[1].trim().replace(/\s+/g, '-');
-            }
+          // 계좌번호 가능성 (연속된 10자리 이상 숫자)
+          if (!result.bankInfo.accountNumber && numStr.replace(/,/g, '').length >= 10 && numStr.replace(/,/g, '').length <= 20) {
+            result.bankInfo.accountNumber = numStr.replace(/,/g, '');
           }
           // 금액 가능성 (1000 이상)
           else if (num >= 1000) {
