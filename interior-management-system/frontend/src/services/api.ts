@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = '/api'; // 하드코딩으로 수정
 
 const api = axios.create({
   baseURL: API_URL,

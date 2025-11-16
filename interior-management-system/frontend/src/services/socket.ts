@@ -8,7 +8,7 @@ import type {
   ActiveUser
 } from '../types/socket';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+const SOCKET_URL = window.location.origin; // 하드코딩으로 수정
 
 class SocketService {
   private socket: Socket | null = null;
