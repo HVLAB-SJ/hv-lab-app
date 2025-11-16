@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDataStore, type ExecutionRecord } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { Navigate } from 'react-router-dom';
 import { Search, Trash2, ImageIcon, X, Upload } from 'lucide-react';
 import { format } from 'date-fns';
@@ -34,10 +35,10 @@ const ExecutionHistory = () => {
     loadPaymentsFromAPI,
     addExecutionRecord,
     deleteExecutionRecord,
-    updateExecutionRecord,
-    projects
+    updateExecutionRecord
   } = useDataStore();
   const { user } = useAuth();
+  const projects = useFilteredProjects(); // 안팀 사용자는 담당 프로젝트만 표시
 
   // 로그인 체크만 수행 (모든 로그인 사용자 접근 가능)
   if (!user) {
@@ -198,12 +199,20 @@ const ExecutionHistory = () => {
     return () => document.removeEventListener('paste', handlePaste);
   }, [handlePaste]);
 
+  // 안팀 사용자인 경우 담당 프로젝트 목록 가져오기
+  const filteredProjectNames = projects.map(p => p.name);
+
   // 승인된 결제요청을 실행내역 형식으로 변환
   // 이미 executionRecord가 생성된 payment와 숨긴 payment는 제외
+  // 안팀 사용자인 경우 담당 프로젝트만 필터링
   const paymentRecords = payments
-    .filter(p => (p.status === 'approved' || p.status === 'completed') &&
-            !executionRecords.some(r => r.paymentId === p.id) &&
-            !hiddenPaymentIds.includes(p.id))
+    .filter(p => {
+      const statusMatch = (p.status === 'approved' || p.status === 'completed');
+      const notDuplicated = !executionRecords.some(r => r.paymentId === p.id);
+      const notHidden = !hiddenPaymentIds.includes(p.id);
+      const projectMatch = user?.name !== '안팀' || filteredProjectNames.includes(p.project);
+      return statusMatch && notDuplicated && notHidden && projectMatch;
+    })
     .map(payment => {
       // 결제요청에서 자재비와 인건비 가져오기
       const materialCost = payment.materialAmount || 0;
@@ -259,10 +268,13 @@ const ExecutionHistory = () => {
     });
 
   // 실행내역 레코드 변환
-  const manualRecords = executionRecords.map(record => ({
-    ...record,
-    type: 'manual' as const
-  }));
+  // 안팀 사용자인 경우 담당 프로젝트만 필터링
+  const manualRecords = executionRecords
+    .filter(record => user?.name !== '안팀' || filteredProjectNames.includes(record.project))
+    .map(record => ({
+      ...record,
+      type: 'manual' as const
+    }));
 
   // 모든 레코드 합치기
   const allRecords = [...paymentRecords, ...manualRecords].sort((a, b) =>
