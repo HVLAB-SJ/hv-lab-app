@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDataStore, type ExecutionRecord } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
 import { Search, Trash2, ImageIcon, X, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -37,6 +38,11 @@ const ExecutionHistory = () => {
     projects
   } = useDataStore();
   const { user } = useAuth();
+
+  // 권한 체크 - admin 또는 manager만 접근 가능
+  if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<string | null>(null);

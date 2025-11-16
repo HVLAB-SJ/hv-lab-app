@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Download, FileText, Plus, Trash2, Eye, Clock, Settings } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface EstimateForm {
   projectName: string;
@@ -64,6 +66,13 @@ interface SavedEstimate extends EstimateForm, EstimateResult {
 type TabView = 'form' | 'history' | 'settings';
 
 const EstimatePreview: React.FC = () => {
+  const { user } = useAuth();
+
+  // 권한 체크 - admin 또는 manager만 접근 가능
+  if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const [form, setForm] = useState<EstimateForm>({
     projectName: '',
     clientName: '',
