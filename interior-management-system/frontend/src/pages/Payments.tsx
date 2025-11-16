@@ -1145,9 +1145,7 @@ const Payments = () => {
       return;
     }
 
-    const materialCost = Number(formData.materialCost) || 0;
-    const laborCost = Number(formData.laborCost) || 0;
-    const baseAmount = materialCost + laborCost;
+    const baseAmount = Number(formData.amount) || 0;
 
     if (baseAmount === 0) {
       toast.error('금액을 입력해주세요');
@@ -1155,10 +1153,8 @@ const Payments = () => {
     }
 
     try {
-      // 3.3% 세금공제 시 각 금액에 0.967 적용
-      const finalMaterialCost = includeTaxDeduction ? Math.round(materialCost * 0.967) : materialCost;
-      const finalLaborCost = includeTaxDeduction ? Math.round(laborCost * 0.967) : laborCost;
-      const totalAmount = finalMaterialCost + finalLaborCost;
+      // 3.3% 세금공제 시 금액에 0.967 적용
+      const totalAmount = includeTaxDeduction ? Math.round(baseAmount * 0.967) : baseAmount;
 
       const now = new Date();
 
@@ -1175,9 +1171,9 @@ const Payments = () => {
           itemName: formData.itemName,
           includesVAT: includeVat,
           applyTaxDeduction: includeTaxDeduction,
-          materialAmount: finalMaterialCost,
-          laborAmount: finalLaborCost,
-          originalLaborAmount: laborCost,
+          materialAmount: totalAmount,
+          laborAmount: 0,
+          originalLaborAmount: 0,
           accountHolder: formData.accountHolder,
           bank: formData.bankName,
           accountNumber: formData.accountNumber,
@@ -1211,9 +1207,9 @@ const Payments = () => {
           itemName: formData.itemName,
           includesVAT: includeVat,
           applyTaxDeduction: includeTaxDeduction,
-          materialAmount: finalMaterialCost,
-          laborAmount: finalLaborCost,
-          originalLaborAmount: laborCost,
+          materialAmount: totalAmount,
+          laborAmount: 0,
+          originalLaborAmount: 0,
           accountHolder: formData.accountHolder,
           bank: formData.bankName,
           accountNumber: formData.accountNumber,
