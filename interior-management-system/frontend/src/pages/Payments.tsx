@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDataStore, type Payment } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 
 type PaymentRequest = Payment;
 import { Search, Trash2, ImageIcon, X, Upload, FileText } from 'lucide-react';
@@ -80,10 +81,10 @@ const Payments = () => {
     loadPaymentsFromAPI,
     addPaymentToAPI,
     deletePaymentFromAPI,
-    updatePaymentInAPI,
-    projects
+    updatePaymentInAPI
   } = useDataStore();
   const { user } = useAuth();
+  const projects = useFilteredProjects();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<string | null>(null);

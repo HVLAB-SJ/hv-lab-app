@@ -6,6 +6,7 @@ import ScheduleModal from '../components/ScheduleModal';
 import toast from 'react-hot-toast';
 import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 
 // Moment 한국어 로케일 설정
 moment.updateLocale('ko', {
@@ -395,7 +396,6 @@ const Schedule = () => {
     addScheduleToAPI,
     updateScheduleInAPI,
     deleteScheduleFromAPI,
-    projects,
     asRequests,
     updateASRequestInAPI,
     loadASRequestsFromAPI,
@@ -403,6 +403,7 @@ const Schedule = () => {
     updateConstructionPaymentInAPI
   } = useDataStore();
   const { user } = useAuth();
+  const projects = useFilteredProjects();
 
   // 사용자 이름에서 성 제거 (마지막 2글자만 사용)
   const userNameWithoutSurname = user?.name ? user.name.slice(-2) : null;

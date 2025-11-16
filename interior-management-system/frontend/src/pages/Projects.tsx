@@ -4,6 +4,7 @@ import { ko } from 'date-fns/locale';
 import clsx from 'clsx';
 import { useDataStore, type Project } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import ProjectModal from '../components/ProjectModal';
 import MeetingNotesModal from '../components/MeetingNotesModal';
 import CustomerRequestsModal from '../components/CustomerRequestsModal';
@@ -14,13 +15,13 @@ type TabStatus = 'planning' | 'in-progress' | 'completed' | 'all';
 
 const Projects = () => {
   const {
-    projects,
     loadProjectsFromAPI,
     addProjectToAPI,
     updateProjectInAPI,
     deleteProjectFromAPI
   } = useDataStore();
   const { user } = useAuth();
+  const projects = useFilteredProjects();
   const [activeTab, setActiveTab] = useState<TabStatus>('in-progress');
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
   const [showModal, setShowModal] = useState(false);
