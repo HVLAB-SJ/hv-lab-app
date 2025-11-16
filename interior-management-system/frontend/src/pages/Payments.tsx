@@ -462,6 +462,9 @@ const Payments = () => {
       includeVat: false
     };
 
+    // 계좌번호가 발견된 줄 인덱스 추적
+    let accountNumberFoundAtIndex = -1;
+
     // 각 줄을 분석하여 역할 추정
     lines.forEach((line, index) => {
       // 0-1. 부가세 포함 체크
@@ -532,6 +535,7 @@ const Payments = () => {
           accountNumberText = accountMatch[0]; // 원본 텍스트 저장
           accountNumberIndex = accountMatch.index || -1; // 계좌번호 시작 위치
           result.bankInfo.accountNumber = accountMatch[0].trim().replace(/\s+/g, '-');
+          accountNumberFoundAtIndex = index; // 계좌번호가 발견된 줄 인덱스 저장
 
           // 계좌번호 바로 뒤에 나오는 이름 패턴 찾기
           const afterAccountText = line.substring(accountNumberIndex + accountNumberText.length);
@@ -545,6 +549,23 @@ const Payments = () => {
 
             if (!excludedWords.includes(potentialName) && !isBankName) {
               result.bankInfo.accountHolder = potentialName; // 계좌번호 뒤 이름을 최우선 예금주로 설정
+            }
+          }
+
+          // 계좌번호 다음 줄에서 예금주 찾기 (같은 줄에서 못 찾았을 때)
+          if (!result.bankInfo.accountHolder && index + 1 < lines.length) {
+            const nextLine = lines[index + 1];
+            const nextLineNameMatch = nextLine.match(/^([가-힣]{2,})/);
+            if (nextLineNameMatch) {
+              const potentialName = nextLineNameMatch[1].trim();
+              // 은행명이나 제외 단어가 아닌 경우 예금주로 설정
+              const excludedWords = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원', '목재대금', '공사비', '자재비', '인건비'];
+              const isBankName = potentialName.includes('은행') || potentialName.includes('뱅크') ||
+                                potentialName.includes('금고') || potentialName.includes('신협');
+
+              if (!excludedWords.includes(potentialName) && !isBankName && potentialName.length <= 5) {
+                result.bankInfo.accountHolder = potentialName;
+              }
             }
           }
           break;
@@ -800,8 +821,33 @@ const Payments = () => {
     }
     if (analysis.bankInfo.accountNumber) {
       updatedFormData.accountNumber = analysis.bankInfo.accountNumber;
-    }
-    if (analysis.bankInfo.accountHolder) {
+
+      // 추천 협력업체에서 같은 계좌번호 찾기
+      const matchingContractor = contractors.find((contractor: Contractor) => {
+        // 계좌번호 비교 (하이픈 제거하고 비교)
+        const cleanAccountNumber = analysis.bankInfo.accountNumber?.replace(/-/g, '');
+        const contractorAccountNumber = contractor.accountNumber?.replace(/-/g, '');
+        return contractorAccountNumber === cleanAccountNumber;
+      });
+
+      // 일치하는 협력업체가 있으면 정보 자동 채우기
+      if (matchingContractor) {
+        updatedFormData.accountHolder = matchingContractor.name || analysis.bankInfo.accountHolder;
+        updatedFormData.bankName = matchingContractor.bankName || analysis.bankInfo.bankName;
+        updatedFormData.accountNumber = matchingContractor.accountNumber || analysis.bankInfo.accountNumber;
+
+        // 협력업체 선택 상태도 업데이트
+        setSelectedContractorId(matchingContractor.id || matchingContractor._id || null);
+
+        // 공정 정보도 있으면 설정
+        if (matchingContractor.process) {
+          updatedFormData.process = matchingContractor.process;
+        }
+      } else if (analysis.bankInfo.accountHolder) {
+        // 일치하는 협력업체가 없으면 분석된 예금주만 설정
+        updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
+      }
+    } else if (analysis.bankInfo.accountHolder) {
       updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
     }
 
