@@ -1930,9 +1930,9 @@ const Payments = () => {
                       {(() => {
                         const baseAmount = Number(formData.amount) || 0;
                         let finalAmount = baseAmount;
-                        if (includeVat) {
-                          finalAmount = Math.round(baseAmount * 1.1);
-                        } else if (includeTaxDeduction) {
+                        // 부가세포함은 이미 포함된 금액이므로 그대로 표시
+                        // 3.3% 세금공제만 계산
+                        if (includeTaxDeduction) {
                           finalAmount = Math.round(baseAmount * 0.967);
                         }
                         return finalAmount.toLocaleString();
