@@ -150,8 +150,6 @@ const Payments = () => {
     date: format(new Date(), 'yyyy-MM-dd'),
     process: '',
     itemName: '',
-    materialCost: '' as number | string,
-    laborCost: '' as number | string,
     amount: '' as number | string,
     accountHolder: '',
     bankName: '',
@@ -480,10 +478,40 @@ const Payments = () => {
         line = line.replace(/(\d+)\s*만\s*원/g, '');
       }
 
-      // 1-1. 계좌번호 패턴 우선 체크 (공백/하이픈으로 구분된 숫자들)
-      const accountPattern = line.match(/\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/);
-      if (accountPattern && !result.bankInfo.accountNumber) {
-        result.bankInfo.accountNumber = accountPattern[0].trim().replace(/\s+/g, '-');
+      // 1-1. 계좌번호 패턴 우선 체크 (더 유연한 패턴)
+      // 슬래시로 구분된 정보에서 계좌번호와 예금주 추출
+      if (line.includes('/')) {
+        const parts = line.split('/');
+        parts.forEach(part => {
+          const trimmedPart = part.trim();
+          // 숫자와 하이픈만 있는 패턴 (계좌번호)
+          if (/^[\d\-]+$/.test(trimmedPart) && trimmedPart.replace(/\-/g, '').length >= 10) {
+            if (!result.bankInfo.accountNumber) {
+              result.bankInfo.accountNumber = trimmedPart;
+            }
+          }
+          // 한글 이름 패턴 (예금주)
+          else if (/^[가-힣]{2,5}$/.test(trimmedPart)) {
+            if (!result.bankInfo.accountHolder) {
+              result.bankInfo.accountHolder = trimmedPart;
+            }
+          }
+        });
+      }
+
+      // 다양한 계좌번호 패턴 (4-3-6, 3-6-5, 4-4-5 등)
+      const accountPatterns = [
+        /\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/, // 기존 패턴
+        /\d{3,4}[\s\-]+\d{2,6}[\s\-]+\d{4,7}/, // 더 유연한 패턴
+        /\d{10,}/ // 연속된 숫자
+      ];
+
+      for (const pattern of accountPatterns) {
+        const accountMatch = line.match(pattern);
+        if (accountMatch && !result.bankInfo.accountNumber) {
+          result.bankInfo.accountNumber = accountMatch[0].trim().replace(/\s+/g, '-');
+          break;
+        }
       }
 
       // 1-2. 숫자 패턴 분석 (금액 인식)
@@ -517,7 +545,7 @@ const Payments = () => {
         '신한': '신한은행', '하나': '하나은행',
         '우리': '우리은행', '기업': 'IBK기업은행', 'IBK': 'IBK기업은행',
         '농협': 'NH농협은행', 'NH': 'NH농협은행',
-        '카카오': '카카오뱅크', '토스': '토스뱅크',
+        '카카오': '카카오뱅크', '카뱅': '카카오뱅크', '토스': '토스뱅크',
         '케이': '케이뱅크', 'K뱅크': '케이뱅크',
         '산업': 'KDB산업은행', 'KDB': 'KDB산업은행',
         '수협': '수협은행', '대구': '대구은행',
@@ -551,23 +579,33 @@ const Payments = () => {
         }
       }
 
+      // 2-1. 괄호 안 이름 추출 (예: "레브(최승혁)")
+      const bracketNameMatch = line.match(/\(([가-힣]{2,5})\)/);
+      if (bracketNameMatch && !result.bankInfo.accountHolder) {
+        result.bankInfo.accountHolder = bracketNameMatch[1];
+      }
+
       // 3. 한글 이름 추정 (2-5글자) - 같은 줄에 계좌번호가 있으면 최우선
       const namePattern = /[가-힣]{2,5}/g;
       const names = line.match(namePattern);
       if (names) {
         // 같은 줄에 계좌번호가 있는지 확인
-        const hasAccountInSameLine = line.match(/\d{10,}/);
+        const hasAccountInSameLine = line.match(/\d{10,}/) || line.match(/\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/);
 
         names.forEach(name => {
           // 금액 관련 단어, 은행 키워드, 공정명이 아닌 경우 예금주로 추정
           const isMoneyRelated = name === '만원' || name === '천원' || name === '백원' || name === '원' || name.includes('부가세');
           const isBankKeyword = Object.keys(knownBanks).includes(name);
           const isNotBankOrProcess = !isMoneyRelated && !isBankKeyword && !name.includes('은행') && !name.includes('뱅크') &&
-            !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장', '아크로텔', '자재'].some(p => name.includes(p));
+            !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장', '아크로텔', '자재', '레브'].some(p => name.includes(p));
 
           if (isNotBankOrProcess) {
-            // 같은 줄에 계좌번호가 있으면 이 이름을 우선적으로 예금주로 설정
-            if (hasAccountInSameLine) {
+            // 괄호로 명시된 이름이 있으면 건너뛰기
+            if (bracketNameMatch && name === bracketNameMatch[1]) {
+              return; // 이미 처리됨
+            }
+            // 같은 줄에 계좌번호가 있으면 이 이름을 우선적으로 예금주로 설정 (괄호 이름이 없을 때만)
+            if (hasAccountInSameLine && !bracketNameMatch) {
               result.bankInfo.accountHolder = name; // 덮어쓰기 허용
             }
             // 계좌번호가 없는 줄이면 기존 예금주가 없을 때만 설정
@@ -674,16 +712,19 @@ const Payments = () => {
     // 파싱된 정보로 폼 업데이트
     const updatedFormData: any = { ...formData };
 
-    // 금액 설정
+    // 금액 설정 - 모든 금액을 합쳐서 공사비로 설정
+    let totalAmount = 0;
     if (analysis.amounts.material) {
-      updatedFormData.materialCost = analysis.amounts.material;
+      totalAmount += analysis.amounts.material;
     }
     if (analysis.amounts.labor) {
-      updatedFormData.laborCost = analysis.amounts.labor;
+      totalAmount += analysis.amounts.labor;
     }
     if (analysis.amounts.total && !analysis.amounts.material && !analysis.amounts.labor) {
-      // 자재비/인건비 구분이 없으면 자재비로 설정
-      updatedFormData.materialCost = analysis.amounts.total;
+      totalAmount = analysis.amounts.total;
+    }
+    if (totalAmount > 0) {
+      updatedFormData.amount = totalAmount;
     }
 
     // 은행 정보 설정
@@ -1557,22 +1598,13 @@ const Payments = () => {
             {/* 금액 입력 */}
             <div className="space-y-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">자재비</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">공사비</label>
                 <input
                   type="number"
-                  value={formData.materialCost}
-                  onChange={(e) => setFormData({ ...formData, materialCost: e.target.value })}
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">인건비</label>
-                <input
-                  type="number"
-                  value={formData.laborCost}
-                  onChange={(e) => setFormData({ ...formData, laborCost: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  placeholder="금액을 입력하세요"
                 />
               </div>
 
