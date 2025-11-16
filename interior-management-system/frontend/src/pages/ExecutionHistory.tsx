@@ -39,9 +39,9 @@ const ExecutionHistory = () => {
   } = useDataStore();
   const { user } = useAuth();
 
-  // 권한 체크 - admin 또는 manager만 접근 가능
-  if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-    return <Navigate to="/dashboard" replace />;
+  // 로그인 체크만 수행 (모든 로그인 사용자 접근 가능)
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   const [searchTerm, setSearchTerm] = useState('');
