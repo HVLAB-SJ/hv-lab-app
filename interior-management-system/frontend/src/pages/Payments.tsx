@@ -464,6 +464,22 @@ const Payments = () => {
 
     // 각 줄을 분석하여 역할 추정
     lines.forEach((line, index) => {
+      // 0. "만원" 단위 우선 처리
+      const manwonMatch = line.match(/(\d+)\s*만\s*원/);
+      if (manwonMatch) {
+        const amount = parseInt(manwonMatch[1]) * 10000;
+        // 자재비/인건비 키워드 확인
+        if (line.includes('자재') || line.includes('재료')) {
+          result.amounts.material = amount;
+        } else if (line.includes('인건') || line.includes('노무')) {
+          result.amounts.labor = amount;
+        } else if (!result.amounts.total) {
+          result.amounts.total = amount;
+        }
+        // "만원" 처리된 라인은 이후 처리에서 제외하기 위해 표시
+        line = line.replace(/(\d+)\s*만\s*원/g, '');
+      }
+
       // 1-1. 계좌번호 패턴 우선 체크 (공백/하이픈으로 구분된 숫자들)
       const accountPattern = line.match(/\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/);
       if (accountPattern && !result.bankInfo.accountNumber) {
@@ -481,7 +497,7 @@ const Payments = () => {
             result.bankInfo.accountNumber = numStr.replace(/,/g, '');
           }
           // 금액 가능성 (1000 이상)
-          else if (num >= 1000) {
+          else if (num >= 1000 && !manwonMatch) {  // 만원 처리된 경우 제외
             // 자재비/인건비 키워드 확인
             if (line.includes('자재') || line.includes('재료')) {
               result.amounts.material = num;
@@ -526,8 +542,9 @@ const Payments = () => {
       const names = line.match(namePattern);
       if (names) {
         names.forEach(name => {
-          // 은행명, 공정명이 아닌 경우 예금주로 추정
-          const isNotBankOrProcess = !name.includes('은행') && !name.includes('뱅크') &&
+          // 금액 관련 단어, 은행명, 공정명이 아닌 경우 예금주로 추정
+          const isMoneyRelated = name === '만원' || name === '천원' || name === '백원' || name === '원';
+          const isNotBankOrProcess = !isMoneyRelated && !name.includes('은행') && !name.includes('뱅크') &&
             !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장'].some(p => name.includes(p));
 
           if (isNotBankOrProcess && !result.bankInfo.accountHolder) {
@@ -566,15 +583,6 @@ const Payments = () => {
       if (bracketMatch) {
         result.itemName = bracketMatch[1];
       }
-    });
-
-    // "만원" 단위 처리
-    text.replace(/(\d+)\s*만\s*원/g, (_, num) => {
-      const amount = parseInt(num) * 10000;
-      if (!result.amounts.total && !result.amounts.material && !result.amounts.labor) {
-        result.amounts.total = amount;
-      }
-      return '';
     });
 
     return result;
