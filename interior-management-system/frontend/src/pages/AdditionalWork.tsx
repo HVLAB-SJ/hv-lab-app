@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Trash2, Edit, ChevronDown, ChevronUp, Upload, ImageIcon, X, Plus } from 'lucide-react';
+import { Trash2, Edit, ChevronDown, ChevronUp, Upload, ImageIcon, X, Plus, Image as ImageIcon2 } from 'lucide-react';
 import AdditionalWorkModal from '../components/AdditionalWorkModal';
 import additionalWorkService from '../services/additionalWorkService';
 import toast from 'react-hot-toast';
@@ -34,6 +34,18 @@ const AdditionalWork = () => {
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [initialProject, setInitialProject] = useState<string | undefined>(undefined);
 
+  // 입력 폼 상태
+  const [formData, setFormData] = useState({
+    project: '',
+    description: '',
+    amount: '',
+    date: format(new Date(), 'yyyy-MM-dd'),
+    notes: ''
+  });
+  const [formImages, setFormImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDraggingForm, setIsDraggingForm] = useState(false);
+
   // 이미지 관련 상태
   const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
   const [workImages, setWorkImages] = useState<Record<string, string[]>>(() => {
@@ -48,6 +60,16 @@ const AdditionalWork = () => {
   useEffect(() => {
     loadAdditionalWorks();
   }, []);
+
+  // 안팀 사용자에게 프로젝트 자동 선택
+  useEffect(() => {
+    if (user?.name === '안팀' && filteredProjects.length > 0 && !formData.project) {
+      setFormData(prev => ({
+        ...prev,
+        project: filteredProjects[0].name
+      }));
+    }
+  }, [user, filteredProjects]);
 
   // 헤더의 + 버튼 클릭 이벤트 수신
   useEffect(() => {
@@ -64,31 +86,46 @@ const AdditionalWork = () => {
     localStorage.setItem('additionalWorkImages', JSON.stringify(workImages));
   }, [workImages]);
 
-  // 클립보드 붙여넣기 처리
+  // 클립보드 붙여넣기 통합 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
-    if (!selectedWorkId) {
-      toast.error('먼저 추가내역을 선택해주세요');
-      return;
-    }
-
     const items = e.clipboardData?.items;
     if (!items) return;
 
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== -1) {
-        e.preventDefault();
-        const blob = items[i].getAsFile();
-        if (blob) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const base64 = event.target?.result as string;
-            setWorkImages(prev => ({
-              ...prev,
-              [selectedWorkId]: [...(prev[selectedWorkId] || []), base64]
-            }));
-            toast.success('이미지가 추가되었습니다');
-          };
-          reader.readAsDataURL(blob);
+    // 선택된 추가내역이 있으면 그쪽으로, 없으면 폼으로
+    if (selectedWorkId) {
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          e.preventDefault();
+          const blob = items[i].getAsFile();
+          if (blob) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const base64 = event.target?.result as string;
+              setWorkImages(prev => ({
+                ...prev,
+                [selectedWorkId]: [...(prev[selectedWorkId] || []), base64]
+              }));
+              toast.success('이미지가 추가되었습니다');
+            };
+            reader.readAsDataURL(blob);
+          }
+        }
+      }
+    } else {
+      // 폼에 이미지 추가
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          e.preventDefault();
+          const blob = items[i].getAsFile();
+          if (blob) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const base64 = event.target?.result as string;
+              setFormImages(prev => [...prev, base64]);
+              toast.success('등록 폼에 이미지가 추가되었습니다');
+            };
+            reader.readAsDataURL(blob);
+          }
         }
       }
     }
@@ -175,6 +212,66 @@ const AdditionalWork = () => {
     toast.success('이미지가 삭제되었습니다');
   };
 
+  // 폼 이미지 처리 함수들
+  const handleFormDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingForm(true);
+  };
+
+  const handleFormDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingForm(false);
+  };
+
+  const handleFormDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingForm(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const base64 = event.target?.result as string;
+          setFormImages(prev => [...prev, base64]);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    if (files.some(f => f.type.startsWith('image/'))) {
+      toast.success(`${files.filter(f => f.type.startsWith('image/')).length}개의 이미지가 추가되었습니다`);
+    }
+  };
+
+  const handleFormFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const base64 = event.target?.result as string;
+          setFormImages(prev => [...prev, base64]);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    if (files.length > 0) {
+      toast.success(`${files.length}개의 이미지가 추가되었습니다`);
+    }
+
+    // 파일 입력 초기화
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFormImage = (index: number) => {
+    setFormImages(prev => prev.filter((_, i) => i !== index));
+    toast.success('이미지가 삭제되었습니다');
+  };
+
   // 이미지 클릭 시 모달 열기
   const handleImageClick = (imageUrl: string) => {
     setModalImage(imageUrl);
@@ -253,6 +350,57 @@ const AdditionalWork = () => {
     }
   };
 
+  // 폼 제출 처리
+  const handleSubmitForm = async () => {
+    // 유효성 검사
+    if (!formData.project) {
+      toast.error('프로젝트를 선택하세요');
+      return;
+    }
+    if (!formData.description.trim()) {
+      toast.error('내용을 입력하세요');
+      return;
+    }
+    if (!formData.amount || Number(formData.amount) <= 0) {
+      toast.error('금액을 입력하세요');
+      return;
+    }
+    if (!formData.date) {
+      toast.error('일자를 선택하세요');
+      return;
+    }
+
+    try {
+      const data = {
+        project: formData.project,
+        description: formData.description.trim(),
+        amount: Number(formData.amount),
+        date: new Date(formData.date),
+        notes: formData.notes.trim(),
+        images: formImages
+      };
+
+      await additionalWorkService.createAdditionalWork(data);
+      toast.success('추가내역이 등록되었습니다');
+
+      // 폼 초기화 (프로젝트는 유지)
+      setFormData(prev => ({
+        ...prev,
+        description: '',
+        amount: '',
+        date: format(new Date(), 'yyyy-MM-dd'),
+        notes: ''
+      }));
+      setFormImages([]);
+
+      // 목록 새로고침
+      await loadAdditionalWorks();
+    } catch (error) {
+      console.error('Failed to submit additional work:', error);
+      toast.error('추가내역 등록에 실패했습니다');
+    }
+  };
+
   const filteredWorks = additionalWorks.filter(work => {
     const matchesSearch = (work.project?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                           (work.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
@@ -303,18 +451,167 @@ const AdditionalWork = () => {
 
   return (
     <div className="space-y-3 md:space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-end">
-        <button onClick={handleAddWork} className="hidden lg:inline-flex btn btn-primary px-4 py-2">
-          + 추가내역
-        </button>
+      {/* 입력 폼 */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">추가내역 등록</h3>
+
+        <div className="space-y-4">
+          {/* 첫째 줄: 프로젝트, 날짜 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                프로젝트 *
+              </label>
+              <select
+                value={formData.project}
+                onChange={(e) => setFormData(prev => ({ ...prev, project: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                {user?.name !== '안팀' && <option value="">선택하세요</option>}
+                {filteredProjects.map((project) => (
+                  <option key={project.id} value={project.name}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                일자 *
+              </label>
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+              />
+            </div>
+          </div>
+
+          {/* 둘째 줄: 내용 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              내용 *
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+              placeholder="추가 공사 내용을 입력하세요"
+            />
+          </div>
+
+          {/* 셋째 줄: 금액, 비고 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                금액 (원) *
+              </label>
+              <input
+                type="number"
+                value={formData.amount}
+                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                placeholder="예: 500000"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                비고
+              </label>
+              <input
+                type="text"
+                value={formData.notes}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                placeholder="추가 메모 (선택사항)"
+              />
+            </div>
+          </div>
+
+          {/* 이미지 업로드 영역 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              증빙 이미지 (Ctrl+V로 붙여넣기 가능)
+            </label>
+
+            {/* 이미지 미리보기 */}
+            {formImages.length > 0 && (
+              <div className="mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                {formImages.map((img, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={img}
+                      alt={`증빙 ${index + 1}`}
+                      className="w-full h-24 md:h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => handleImageClick(img)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeFormImage(index)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div
+              className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
+                isDraggingForm ? 'border-gray-500 bg-gray-50' : 'border-gray-300'
+              }`}
+              onDragOver={handleFormDragOver}
+              onDragLeave={handleFormDragLeave}
+              onDrop={handleFormDrop}
+            >
+              <div className="text-center">
+                <ImageIcon className="mx-auto h-10 w-10 text-gray-400 mb-2" />
+                <p className="text-sm text-gray-600">
+                  이미지를 드래그하여 놓거나 클릭하여 선택하세요
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  또는 Ctrl+V로 클립보드 이미지 붙여넣기
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFormFileSelect}
+                  className="hidden"
+                  id="form-file-upload"
+                />
+                <label
+                  htmlFor="form-file-upload"
+                  className="mt-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  파일 선택
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* 등록 버튼 */}
+          <div className="flex justify-end">
+            <button
+              onClick={handleSubmitForm}
+              className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium"
+            >
+              추가내역 등록
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
       <div>
         <input
           type="text"
-          placeholder="검색..."
+          placeholder="기존 추가내역 검색..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
