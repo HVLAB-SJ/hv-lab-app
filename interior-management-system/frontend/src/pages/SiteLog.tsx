@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useAuth } from '../contexts/AuthContext';
-import { Camera, Calendar, Upload, X, ChevronLeft, ChevronRight, Trash2, List, Maximize2 } from 'lucide-react';
+import { Camera, Upload, X, ChevronLeft, ChevronRight, Trash2, Maximize2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import siteLogService from '../services/siteLogService';
 
@@ -29,12 +29,11 @@ const SiteLog = () => {
   const [logs, setLogs] = useState<SiteLog[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
   const [isDragging, setIsDragging] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [imageModal, setImageModal] = useState<{ show: boolean; url: string | null; images?: string[] }>({ show: false, url: null });
   const [isUploading, setIsUploading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -183,8 +182,8 @@ const SiteLog = () => {
 
   // 캘린더 데이터 생성
   const getCalendarDays = (): DayData[] => {
-    const year = selectedDate.getFullYear();
-    const month = selectedDate.getMonth();
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
@@ -211,9 +210,9 @@ const SiteLog = () => {
 
   // 월 변경
   const changeMonth = (direction: number) => {
-    const newDate = new Date(selectedDate);
+    const newDate = new Date(calendarMonth);
     newDate.setMonth(newDate.getMonth() + direction);
-    setSelectedDate(newDate);
+    setCalendarMonth(newDate);
   };
 
   // 날짜별 그룹화된 로그
@@ -252,298 +251,260 @@ const SiteLog = () => {
             현장일지
           </h1>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* 프로젝트 선택 */}
-            <select
-              value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              {projects.map(project => (
-                <option key={project.id} value={project.name}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-
-            {/* 보기 모드 전환 */}
-            <div className="flex rounded-lg border border-gray-300">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-2 flex items-center gap-2 ${
-                  viewMode === 'list'
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <List className="h-4 w-4" />
-                목록
-              </button>
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={`px-3 py-2 flex items-center gap-2 border-l ${
-                  viewMode === 'calendar'
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Calendar className="h-4 w-4" />
-                캘린더
-              </button>
-            </div>
-          </div>
+          {/* 프로젝트 선택 */}
+          <select
+            value={selectedProject}
+            onChange={(e) => setSelectedProject(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            {projects.map(project => (
+              <option key={project.id} value={project.name}>
+                {project.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
-        {/* 입력 폼 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-fit">
-          <h2 className="text-lg font-semibold mb-4">일지 작성</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* 왼쪽: 입력 폼 + 미니 캘린더 */}
+        <div className="lg:col-span-3 space-y-4">
+          {/* 입력 폼 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 className="text-lg font-semibold mb-4">일지 작성</h2>
 
-          <div className="space-y-4">
-            {/* 날짜 선택 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                날짜
-              </label>
-              <input
-                type="date"
-                value={format(selectedDate, 'yyyy-MM-dd')}
-                onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-              />
-            </div>
-
-            {/* 작업 내용 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                작업 내용
-              </label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                placeholder="오늘 진행한 작업 내용을 입력하세요"
-              />
-            </div>
-
-            {/* 이미지 업로드 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                현장 사진 (필수)
-              </label>
-
-              <div
-                className={`border-2 border-dashed rounded-lg p-4 text-center ${
-                  isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300'
-                }`}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-              >
-                <Camera className="mx-auto h-8 w-8 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-600">
-                  이미지를 드래그하거나 클릭하여 업로드
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Ctrl+V로 붙여넣기 가능
-                </p>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className="mt-3 inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  파일 선택
+            <div className="space-y-4">
+              {/* 날짜 선택 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  날짜
                 </label>
+                <input
+                  type="date"
+                  value={format(selectedDate, 'yyyy-MM-dd')}
+                  onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                />
               </div>
 
-              {/* 이미지 미리보기 */}
-              {formData.images.length > 0 && (
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {formData.images.map((img, idx) => (
-                    <div key={idx} className="relative group">
-                      <img
-                        src={img}
-                        alt={`현장사진 ${idx + 1}`}
-                        className="w-full h-24 object-cover rounded-lg cursor-pointer"
-                        onClick={() => openImageGallery(formData.images, idx)}
-                      />
-                      <button
-                        onClick={() => setFormData(prev => ({
-                          ...prev,
-                          images: prev.images.filter((_, i) => i !== idx)
-                        }))}
-                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
+              {/* 작업 내용 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  작업 내용
+                </label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  placeholder="오늘 진행한 작업 내용을 입력하세요"
+                />
+              </div>
+
+              {/* 이미지 업로드 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  현장 사진 (필수)
+                </label>
+
+                <div
+                  className={`border-2 border-dashed rounded-lg p-4 text-center ${
+                    isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300'
+                  }`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                >
+                  <Camera className="mx-auto h-6 w-6 text-gray-400" />
+                  <p className="mt-1 text-xs text-gray-600">
+                    이미지를 드래그하거나 클릭하여 업로드
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Ctrl+V로 붙여넣기 가능
+                  </p>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="mt-2 inline-flex items-center px-2 py-1 border border-gray-300 rounded text-xs text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                  >
+                    <Upload className="h-3 w-3 mr-1" />
+                    파일 선택
+                  </label>
                 </div>
-              )}
-            </div>
 
-            {/* 저장 버튼 */}
-            <button
-              onClick={handleSave}
-              disabled={isUploading || formData.images.length === 0}
-              className={`w-full py-2.5 rounded-lg font-medium transition-colors ${
-                isUploading || formData.images.length === 0
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gray-900 text-white hover:bg-gray-800'
-              }`}
-            >
-              {isUploading ? '저장 중...' : '현장일지 저장'}
-            </button>
-          </div>
-        </div>
-
-        {/* 캘린더 뷰 / 리스트 뷰 */}
-        <div className="xl:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          {viewMode === 'calendar' ? (
-            <>
-              {/* 캘린더 헤더 */}
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={() => changeMonth(-1)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <h2 className="text-lg font-semibold">
-                  {format(selectedDate, 'yyyy년 M월')}
-                </h2>
-                <button
-                  onClick={() => changeMonth(1)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* 캘린더 그리드 - 더 작게 */}
-              <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden">
-                {['일', '월', '화', '수', '목', '금', '토'].map(day => (
-                  <div key={day} className="bg-gray-50 p-1.5 text-center text-xs font-medium text-gray-700">
-                    {day}
-                  </div>
-                ))}
-                {getCalendarDays().map((day, idx) => {
-                  const isCurrentMonth = day.date.getMonth() === selectedDate.getMonth();
-                  const isToday = format(day.date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
-                  const isSelected = format(day.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => setSelectedDate(day.date)}
-                      className={`bg-white p-1.5 min-h-[60px] cursor-pointer transition-colors ${
-                        !isCurrentMonth ? 'text-gray-400' : 'text-gray-900'
-                      } ${isToday ? 'bg-blue-50' : ''} ${
-                        isSelected ? 'ring-2 ring-gray-900' : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-xs font-medium">
-                          {format(day.date, 'd')}
-                        </span>
-                        {day.hasImages && (
-                          <Camera className="h-3 w-3 text-green-600" />
-                        )}
+                {/* 이미지 미리보기 */}
+                {formData.images.length > 0 && (
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {formData.images.map((img, idx) => (
+                      <div key={idx} className="relative group">
+                        <img
+                          src={img}
+                          alt={`현장사진 ${idx + 1}`}
+                          className="w-full h-20 object-cover rounded cursor-pointer"
+                          onClick={() => openImageGallery(formData.images, idx)}
+                        />
+                        <button
+                          onClick={() => setFormData(prev => ({
+                            ...prev,
+                            images: prev.images.filter((_, i) => i !== idx)
+                          }))}
+                          className="absolute top-1 right-1 p-0.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </div>
-                      {day.logs.length > 0 && (
-                        <div className="text-[10px] text-gray-500">
-                          {day.logs.reduce((total, log) => total + log.images.length, 0)}장
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <>
-              {/* 리스트 뷰 - 사진 크게 보기 */}
-              <h2 className="text-lg font-semibold mb-4">현장일지 목록</h2>
-
-              <div className="space-y-6 max-h-[800px] overflow-y-auto">
-                {sortedDates.length > 0 ? (
-                  sortedDates.map(dateKey => (
-                    <div key={dateKey} className="border-l-4 border-gray-300 pl-4">
-                      <h3 className="font-medium text-gray-900 mb-3">
-                        {format(new Date(dateKey), 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
-                      </h3>
-                      <div className="space-y-4">
-                        {groupedLogs[dateKey].map(log => (
-                          <div key={log.id} className="bg-gray-50 rounded-lg p-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                  <span>작성자: {log.createdBy}</span>
-                                  <span>• {format(new Date(log.createdAt), 'HH:mm')}</span>
-                                </div>
-                                {log.notes && (
-                                  <p className="text-sm text-gray-700">{log.notes}</p>
-                                )}
-                              </div>
-                              <button
-                                onClick={() => handleDelete(log.id)}
-                                className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </button>
-                            </div>
-
-                            {/* 이미지 갤러리 - 크게 보기 */}
-                            {log.images && log.images.length > 0 && (
-                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                {log.images.map((img, idx) => (
-                                  <div key={idx} className="relative group">
-                                    <img
-                                      src={img}
-                                      alt={`현장사진 ${idx + 1}`}
-                                      className="w-full h-40 lg:h-48 object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
-                                      onClick={() => openImageGallery(log.images, idx)}
-                                    />
-                                    <button
-                                      onClick={() => openImageGallery(log.images, idx)}
-                                      className="absolute top-2 right-2 p-1.5 bg-black bg-opacity-50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                      <Maximize2 className="h-4 w-4" />
-                                    </button>
-                                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                                      {idx + 1} / {log.images.length}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12 text-gray-500">
-                    <Camera className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                    <p>아직 작성된 현장일지가 없습니다</p>
+                    ))}
                   </div>
                 )}
               </div>
-            </>
-          )}
+
+              {/* 저장 버튼 */}
+              <button
+                onClick={handleSave}
+                disabled={isUploading || formData.images.length === 0}
+                className={`w-full py-2 rounded-lg font-medium text-sm transition-colors ${
+                  isUploading || formData.images.length === 0
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                }`}
+              >
+                {isUploading ? '저장 중...' : '현장일지 저장'}
+              </button>
+            </div>
+          </div>
+
+          {/* 미니 캘린더 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+            {/* 캘린더 헤더 */}
+            <div className="flex items-center justify-between mb-2">
+              <button
+                onClick={() => changeMonth(-1)}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <h3 className="text-sm font-semibold">
+                {format(calendarMonth, 'yyyy년 M월')}
+              </h3>
+              <button
+                onClick={() => changeMonth(1)}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* 캘린더 그리드 - 매우 작게 */}
+            <div className="grid grid-cols-7 gap-0.5">
+              {['일', '월', '화', '수', '목', '금', '토'].map(day => (
+                <div key={day} className="text-center text-[10px] font-medium text-gray-500 py-0.5">
+                  {day}
+                </div>
+              ))}
+              {getCalendarDays().map((day, idx) => {
+                const isCurrentMonth = day.date.getMonth() === calendarMonth.getMonth();
+                const isToday = format(day.date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+                const isSelected = format(day.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => setSelectedDate(day.date)}
+                    className={`text-center p-1 text-[11px] cursor-pointer rounded ${
+                      !isCurrentMonth ? 'text-gray-300' : 'text-gray-700'
+                    } ${isToday ? 'bg-blue-100' : ''} ${
+                      isSelected ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                    } ${day.hasImages ? 'font-bold' : ''}`}
+                  >
+                    {format(day.date, 'd')}
+                    {day.hasImages && (
+                      <div className="w-1 h-1 bg-green-500 rounded-full mx-auto mt-0.5"></div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* 오른쪽: 사진 목록 */}
+        <div className="lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h2 className="text-lg font-semibold mb-4">현장일지 목록</h2>
+
+          <div className="space-y-6 max-h-[800px] overflow-y-auto">
+            {sortedDates.length > 0 ? (
+              sortedDates.map(dateKey => (
+                <div key={dateKey} className="border-l-4 border-gray-300 pl-4">
+                  <h3 className="font-medium text-gray-900 mb-3">
+                    {format(new Date(dateKey), 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
+                  </h3>
+                  <div className="space-y-4">
+                    {groupedLogs[dateKey].map(log => (
+                      <div key={log.id} className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                              <span>작성자: {log.createdBy}</span>
+                              <span>• {format(new Date(log.createdAt), 'HH:mm')}</span>
+                            </div>
+                            {log.notes && (
+                              <p className="text-sm text-gray-700">{log.notes}</p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleDelete(log.id)}
+                            className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </button>
+                        </div>
+
+                        {/* 이미지 갤러리 - 크게 보기 */}
+                        {log.images && log.images.length > 0 && (
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                            {log.images.map((img, idx) => (
+                              <div key={idx} className="relative group">
+                                <img
+                                  src={img}
+                                  alt={`현장사진 ${idx + 1}`}
+                                  className="w-full h-36 lg:h-44 object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
+                                  onClick={() => openImageGallery(log.images, idx)}
+                                />
+                                <button
+                                  onClick={() => openImageGallery(log.images, idx)}
+                                  className="absolute top-2 right-2 p-1.5 bg-black bg-opacity-50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <Maximize2 className="h-4 w-4" />
+                                </button>
+                                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                  {idx + 1} / {log.images.length}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <Camera className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                <p>아직 작성된 현장일지가 없습니다</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
