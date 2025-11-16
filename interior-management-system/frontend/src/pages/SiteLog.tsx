@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useAuth } from '../contexts/AuthContext';
-import { Camera, Calendar, Upload, X, ChevronLeft, ChevronRight, Download, Trash2, Grid, List } from 'lucide-react';
+import { Camera, Calendar, Upload, X, ChevronLeft, ChevronRight, Trash2, List, Maximize2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import siteLogService from '../services/siteLogService';
 
@@ -13,8 +13,6 @@ interface SiteLog {
   date: Date;
   images: string[];
   notes?: string;
-  weather?: string;
-  workers?: number;
   createdBy: string;
   createdAt: Date;
 }
@@ -31,17 +29,16 @@ const SiteLog = () => {
   const [logs, setLogs] = useState<SiteLog[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
   const [isDragging, setIsDragging] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [imageModal, setImageModal] = useState<{ show: boolean; url: string | null }>({ show: false, url: null });
+  const [imageModal, setImageModal] = useState<{ show: boolean; url: string | null; images?: string[] }>({ show: false, url: null });
   const [isUploading, setIsUploading] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // 폼 데이터
   const [formData, setFormData] = useState({
     notes: '',
-    weather: '맑음',
-    workers: 0,
     images: [] as string[]
   });
 
@@ -148,8 +145,6 @@ const SiteLog = () => {
         date: selectedDate,
         images: formData.images,
         notes: formData.notes,
-        weather: formData.weather,
-        workers: formData.workers,
         createdBy: user?.name || ''
       };
 
@@ -159,8 +154,6 @@ const SiteLog = () => {
       // 폼 초기화
       setFormData({
         notes: '',
-        weather: '맑음',
-        workers: 0,
         images: []
       });
 
@@ -235,6 +228,20 @@ const SiteLog = () => {
 
   const sortedDates = Object.keys(groupedLogs).sort((a, b) => b.localeCompare(a));
 
+  // 이미지 갤러리 모달 열기
+  const openImageGallery = (images: string[], startIndex: number = 0) => {
+    setImageModal({ show: true, url: images[startIndex], images });
+    setCurrentImageIndex(startIndex);
+  };
+
+  // 다음/이전 이미지
+  const navigateImage = (direction: number) => {
+    if (!imageModal.images) return;
+    const newIndex = (currentImageIndex + direction + imageModal.images.length) % imageModal.images.length;
+    setCurrentImageIndex(newIndex);
+    setImageModal(prev => ({ ...prev, url: imageModal.images![newIndex] }));
+  };
+
   return (
     <div className="space-y-4">
       {/* 헤더 */}
@@ -262,19 +269,8 @@ const SiteLog = () => {
             {/* 보기 모드 전환 */}
             <div className="flex rounded-lg border border-gray-300">
               <button
-                onClick={() => setViewMode('calendar')}
-                className={`px-3 py-2 flex items-center gap-2 ${
-                  viewMode === 'calendar'
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Calendar className="h-4 w-4" />
-                캘린더
-              </button>
-              <button
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-2 flex items-center gap-2 border-l ${
+                className={`px-3 py-2 flex items-center gap-2 ${
                   viewMode === 'list'
                     ? 'bg-gray-900 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -283,14 +279,25 @@ const SiteLog = () => {
                 <List className="h-4 w-4" />
                 목록
               </button>
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`px-3 py-2 flex items-center gap-2 border-l ${
+                  viewMode === 'calendar'
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                캘린더
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
         {/* 입력 폼 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-fit">
           <h2 className="text-lg font-semibold mb-4">일지 작성</h2>
 
           <div className="space-y-4">
@@ -305,39 +312,6 @@ const SiteLog = () => {
                 onChange={(e) => setSelectedDate(new Date(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
-            </div>
-
-            {/* 날씨 & 작업 인원 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  날씨
-                </label>
-                <select
-                  value={formData.weather}
-                  onChange={(e) => setFormData(prev => ({ ...prev, weather: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                >
-                  <option value="맑음">☀️ 맑음</option>
-                  <option value="흐림">☁️ 흐림</option>
-                  <option value="비">🌧️ 비</option>
-                  <option value="눈">❄️ 눈</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  작업 인원
-                </label>
-                <input
-                  type="number"
-                  value={formData.workers}
-                  onChange={(e) => setFormData(prev => ({ ...prev, workers: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  placeholder="0"
-                  min="0"
-                />
-              </div>
             </div>
 
             {/* 작업 내용 */}
@@ -403,7 +377,8 @@ const SiteLog = () => {
                       <img
                         src={img}
                         alt={`현장사진 ${idx + 1}`}
-                        className="w-full h-24 object-cover rounded-lg"
+                        className="w-full h-24 object-cover rounded-lg cursor-pointer"
+                        onClick={() => openImageGallery(formData.images, idx)}
                       />
                       <button
                         onClick={() => setFormData(prev => ({
@@ -436,7 +411,7 @@ const SiteLog = () => {
         </div>
 
         {/* 캘린더 뷰 / 리스트 뷰 */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="xl:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           {viewMode === 'calendar' ? (
             <>
               {/* 캘린더 헤더 */}
@@ -458,10 +433,10 @@ const SiteLog = () => {
                 </button>
               </div>
 
-              {/* 캘린더 그리드 */}
+              {/* 캘린더 그리드 - 더 작게 */}
               <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden">
                 {['일', '월', '화', '수', '목', '금', '토'].map(day => (
-                  <div key={day} className="bg-gray-50 p-2 text-center text-sm font-medium text-gray-700">
+                  <div key={day} className="bg-gray-50 p-1.5 text-center text-xs font-medium text-gray-700">
                     {day}
                   </div>
                 ))}
@@ -474,14 +449,14 @@ const SiteLog = () => {
                     <div
                       key={idx}
                       onClick={() => setSelectedDate(day.date)}
-                      className={`bg-white p-2 min-h-[80px] cursor-pointer transition-colors ${
+                      className={`bg-white p-1.5 min-h-[60px] cursor-pointer transition-colors ${
                         !isCurrentMonth ? 'text-gray-400' : 'text-gray-900'
                       } ${isToday ? 'bg-blue-50' : ''} ${
                         isSelected ? 'ring-2 ring-gray-900' : 'hover:bg-gray-50'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-xs font-medium">
                           {format(day.date, 'd')}
                         </span>
                         {day.hasImages && (
@@ -489,17 +464,8 @@ const SiteLog = () => {
                         )}
                       </div>
                       {day.logs.length > 0 && (
-                        <div className="space-y-1">
-                          {day.logs.slice(0, 2).map((log, i) => (
-                            <div key={i} className="text-xs text-gray-600 truncate">
-                              {log.images.length}장
-                            </div>
-                          ))}
-                          {day.logs.length > 2 && (
-                            <div className="text-xs text-gray-400">
-                              +{day.logs.length - 2}
-                            </div>
-                          )}
+                        <div className="text-[10px] text-gray-500">
+                          {day.logs.reduce((total, log) => total + log.images.length, 0)}장
                         </div>
                       )}
                     </div>
@@ -509,25 +475,24 @@ const SiteLog = () => {
             </>
           ) : (
             <>
-              {/* 리스트 뷰 */}
+              {/* 리스트 뷰 - 사진 크게 보기 */}
               <h2 className="text-lg font-semibold mb-4">현장일지 목록</h2>
 
-              <div className="space-y-4 max-h-[600px] overflow-y-auto">
+              <div className="space-y-6 max-h-[800px] overflow-y-auto">
                 {sortedDates.length > 0 ? (
                   sortedDates.map(dateKey => (
                     <div key={dateKey} className="border-l-4 border-gray-300 pl-4">
-                      <h3 className="font-medium text-gray-900 mb-2">
+                      <h3 className="font-medium text-gray-900 mb-3">
                         {format(new Date(dateKey), 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
                       </h3>
-                      <div className="space-y-2">
+                      <div className="space-y-4">
                         {groupedLogs[dateKey].map(log => (
-                          <div key={log.id} className="bg-gray-50 rounded-lg p-3">
-                            <div className="flex items-start justify-between mb-2">
+                          <div key={log.id} className="bg-gray-50 rounded-lg p-4">
+                            <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                                  <span>{log.weather}</span>
-                                  {log.workers > 0 && <span>• 작업인원 {log.workers}명</span>}
-                                  <span>• {log.createdBy}</span>
+                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                                  <span>작성자: {log.createdBy}</span>
+                                  <span>• {format(new Date(log.createdAt), 'HH:mm')}</span>
                                 </div>
                                 {log.notes && (
                                   <p className="text-sm text-gray-700">{log.notes}</p>
@@ -535,34 +500,34 @@ const SiteLog = () => {
                               </div>
                               <button
                                 onClick={() => handleDelete(log.id)}
-                                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                className="p-1.5 hover:bg-gray-200 rounded transition-colors"
                               >
                                 <Trash2 className="h-4 w-4 text-red-500" />
                               </button>
                             </div>
 
-                            {/* 이미지 갤러리 */}
+                            {/* 이미지 갤러리 - 크게 보기 */}
                             {log.images && log.images.length > 0 && (
-                              <div className="grid grid-cols-4 gap-2 mt-2">
-                                {log.images.slice(0, 3).map((img, idx) => (
-                                  <img
-                                    key={idx}
-                                    src={img}
-                                    alt={`현장사진 ${idx + 1}`}
-                                    className="w-full h-20 object-cover rounded cursor-pointer hover:opacity-90"
-                                    onClick={() => setImageModal({ show: true, url: img })}
-                                  />
-                                ))}
-                                {log.images.length > 3 && (
-                                  <div
-                                    className="w-full h-20 bg-gray-200 rounded flex items-center justify-center cursor-pointer hover:bg-gray-300"
-                                    onClick={() => setSelectedImages(log.images)}
-                                  >
-                                    <span className="text-gray-600 font-medium">
-                                      +{log.images.length - 3}
-                                    </span>
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {log.images.map((img, idx) => (
+                                  <div key={idx} className="relative group">
+                                    <img
+                                      src={img}
+                                      alt={`현장사진 ${idx + 1}`}
+                                      className="w-full h-40 lg:h-48 object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
+                                      onClick={() => openImageGallery(log.images, idx)}
+                                    />
+                                    <button
+                                      onClick={() => openImageGallery(log.images, idx)}
+                                      className="absolute top-2 right-2 p-1.5 bg-black bg-opacity-50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <Maximize2 className="h-4 w-4" />
+                                    </button>
+                                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                      {idx + 1} / {log.images.length}
+                                    </div>
                                   </div>
-                                )}
+                                ))}
                               </div>
                             )}
                           </div>
@@ -582,25 +547,63 @@ const SiteLog = () => {
         </div>
       </div>
 
-      {/* 이미지 모달 */}
+      {/* 이미지 모달 - 갤러리 형식 */}
       {imageModal.show && imageModal.url && (
         <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center"
           onClick={() => setImageModal({ show: false, url: null })}
         >
-          <div className="relative max-w-6xl max-h-full">
+          <div className="relative w-full h-full flex items-center justify-center p-4">
             <button
-              onClick={() => setImageModal({ show: false, url: null })}
-              className="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+                setImageModal({ show: false, url: null });
+              }}
+              className="absolute top-4 right-4 p-2 bg-white bg-opacity-20 backdrop-blur rounded-full hover:bg-opacity-30 z-10"
             >
-              <X className="h-6 w-6" />
+              <X className="h-6 w-6 text-white" />
             </button>
+
+            {/* 이전 버튼 */}
+            {imageModal.images && imageModal.images.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateImage(-1);
+                }}
+                className="absolute left-4 p-3 bg-white bg-opacity-20 backdrop-blur rounded-full hover:bg-opacity-30"
+              >
+                <ChevronLeft className="h-6 w-6 text-white" />
+              </button>
+            )}
+
+            {/* 이미지 */}
             <img
               src={imageModal.url}
               alt="확대 이미지"
-              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              className="max-w-full max-h-[90vh] object-contain"
               onClick={(e) => e.stopPropagation()}
             />
+
+            {/* 다음 버튼 */}
+            {imageModal.images && imageModal.images.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateImage(1);
+                }}
+                className="absolute right-4 p-3 bg-white bg-opacity-20 backdrop-blur rounded-full hover:bg-opacity-30"
+              >
+                <ChevronRight className="h-6 w-6 text-white" />
+              </button>
+            )}
+
+            {/* 페이지 표시 */}
+            {imageModal.images && imageModal.images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full">
+                {currentImageIndex + 1} / {imageModal.images.length}
+              </div>
+            )}
           </div>
         </div>
       )}

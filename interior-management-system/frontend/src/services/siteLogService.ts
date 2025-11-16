@@ -7,8 +7,6 @@ interface SiteLogData {
   date: Date;
   images: string[];
   notes?: string;
-  weather?: string;
-  workers?: number;
   createdBy: string;
 }
 
