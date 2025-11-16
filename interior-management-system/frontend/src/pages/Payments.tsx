@@ -1646,9 +1646,6 @@ const Payments = () => {
 
             {/* 빠른 입력 */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                빠른 입력
-              </label>
               <textarea
                 value={formData.quickText}
                 onChange={(e) => setFormData({ ...formData, quickText: e.target.value })}
