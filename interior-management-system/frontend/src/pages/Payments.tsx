@@ -447,81 +447,141 @@ const Payments = () => {
     return result;
   };
 
-  // 텍스트에서 은행 정보 파싱
-  const parseBankInfoFromText = (text: string): { bankName?: string; accountNumber?: string; accountHolder?: string } => {
-    const result: { bankName?: string; accountNumber?: string; accountHolder?: string } = {};
+  // 스마트 텍스트 분석 함수
+  const smartTextAnalysis = (text: string): {
+    amounts: { material?: number; labor?: number; total?: number };
+    bankInfo: { bankName?: string; accountNumber?: string; accountHolder?: string };
+    vendor?: string | null;
+    itemName?: string;
+  } => {
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+    const result = {
+      amounts: {} as { material?: number; labor?: number; total?: number },
+      bankInfo: {} as { bankName?: string; accountNumber?: string; accountHolder?: string },
+      vendor: null as string | null,
+      itemName: undefined as string | undefined
+    };
 
-    // 은행명 패턴
-    const bankPatterns = [
-      { pattern: /(?:국민|KB)/i, name: '국민은행' },
-      { pattern: /(?:신한|shinhan)/i, name: '신한은행' },
-      { pattern: /(?:하나|hana|KEB)/i, name: '하나은행' },
-      { pattern: /(?:우리|woori)/i, name: '우리은행' },
-      { pattern: /(?:기업|IBK)/i, name: '기업은행' },
-      { pattern: /(?:농협|NH|농협은행)/i, name: '농협' },
-      { pattern: /(?:카카오)/i, name: '카카오뱅크' },
-      { pattern: /(?:토스)/i, name: '토스뱅크' },
-      { pattern: /(?:케이뱅크|K뱅크)/i, name: '케이뱅크' },
-      { pattern: /(?:새마을)/i, name: '새마을금고' },
-      { pattern: /(?:신협)/i, name: '신협' }
-    ];
+    // 각 줄을 분석하여 역할 추정
+    lines.forEach((line, index) => {
+      // 1. 숫자 패턴 분석
+      const numberPatterns = line.match(/[\d,]+/g);
+      if (numberPatterns) {
+        numberPatterns.forEach(numStr => {
+          const num = parseInt(numStr.replace(/,/g, ''));
 
-    let bankMatchIndex = -1;
-    for (const bank of bankPatterns) {
-      const match = text.match(bank.pattern);
-      if (match) {
-        result.bankName = bank.name;
-        bankMatchIndex = match.index || -1;
-        break;
+          // 계좌번호 가능성 (10자리 이상)
+          if (numStr.replace(/,/g, '').length >= 10 && numStr.replace(/,/g, '').length <= 20) {
+            // 공백이나 하이픈으로 구분된 패턴도 확인
+            const accountPattern = line.match(/(\d[\d\s\-]{9,20})/);
+            if (accountPattern) {
+              result.bankInfo.accountNumber = accountPattern[1].trim().replace(/\s+/g, '-');
+            }
+          }
+          // 금액 가능성 (1000 이상)
+          else if (num >= 1000) {
+            // 자재비/인건비 키워드 확인
+            if (line.includes('자재') || line.includes('재료')) {
+              result.amounts.material = num;
+            } else if (line.includes('인건') || line.includes('노무')) {
+              result.amounts.labor = num;
+            } else if (!result.amounts.total) {
+              result.amounts.total = num;
+            }
+          }
+        });
       }
-    }
 
-    // 계좌번호 패턴 개선 (여러 공백 허용, 더 유연한 패턴)
-    // 패턴 1: 연속된 숫자들 (공백/하이픈으로 구분)
-    const accountPattern1 = /(\d{3,6}[\s\-]+\d{2,6}[\s\-]+\d{2,6}[\s\-]*\d{0,6})/;
-    // 패턴 2: 붙어있는 숫자들 (최소 10자리)
-    const accountPattern2 = /(\d{10,16})/;
+      // 2. 은행 추정 (은행/뱅크 키워드 또는 알려진 은행명)
+      const bankKeywords = ['은행', '뱅크', '금고', '신협'];
+      const knownBanks = {
+        '국민': '국민은행', 'KB': '국민은행',
+        '신한': '신한은행', '하나': '하나은행',
+        '우리': '우리은행', '기업': '기업은행',
+        '농협': '농협', 'NH': '농협',
+        '카카오': '카카오뱅크', '토스': '토스뱅크',
+        '케이': '케이뱅크', 'K뱅크': '케이뱅크'
+      };
 
-    let accountMatch = text.match(accountPattern1);
-    if (!accountMatch) {
-      accountMatch = text.match(accountPattern2);
-    }
-
-    if (accountMatch) {
-      // 공백을 하이픈으로 통일
-      result.accountNumber = accountMatch[1].replace(/\s+/g, '-');
-    }
-
-    // 예금주명 추출 개선
-    // 방법 1: 은행명 뒤에 오는 한글 이름
-    if (bankMatchIndex !== -1) {
-      const afterBank = text.slice(bankMatchIndex);
-      // 은행명 바로 뒤의 한글 이름 찾기
-      const holderAfterBank = afterBank.match(/(?:은행|뱅크|금고|신협)?\s*([가-힣]{2,5})/);
-      if (holderAfterBank && holderAfterBank[1]) {
-        result.accountHolder = holderAfterBank[1].trim();
+      // 알려진 은행 찾기
+      for (const [key, value] of Object.entries(knownBanks)) {
+        if (line.includes(key)) {
+          result.bankInfo.bankName = value;
+          break;
+        }
       }
-    }
 
-    // 방법 2: 계좌번호 뒤에 오는 한글 이름
-    if (!result.accountHolder && accountMatch && accountMatch.index) {
-      const afterAccount = text.slice(accountMatch.index + accountMatch[0].length);
-      const holderAfterAccount = afterAccount.match(/^\s*([가-힣]{2,5})/);
-      if (holderAfterAccount && holderAfterAccount[1]) {
-        result.accountHolder = holderAfterAccount[1].trim();
+      // "XX은행" 패턴으로 새로운 은행 찾기
+      if (!result.bankInfo.bankName) {
+        const bankMatch = line.match(/([가-힣]+)(은행|뱅크)/);
+        if (bankMatch) {
+          result.bankInfo.bankName = bankMatch[0];
+        }
       }
-    }
 
-    // 방법 3: 계좌번호 앞에 있는 한글 이름 (은행명 뒤)
-    if (!result.accountHolder && accountMatch && accountMatch.index && bankMatchIndex !== -1) {
-      const betweenBankAndAccount = text.slice(bankMatchIndex, accountMatch.index);
-      const holderBetween = betweenBankAndAccount.match(/([가-힣]{2,5})\s*$/);
-      if (holderBetween && holderBetween[1]) {
-        result.accountHolder = holderBetween[1].trim();
+      // 3. 한글 이름 추정 (2-5글자)
+      const namePattern = /[가-힣]{2,5}/g;
+      const names = line.match(namePattern);
+      if (names) {
+        names.forEach(name => {
+          // 은행명, 공정명이 아닌 경우 예금주로 추정
+          const isNotBankOrProcess = !name.includes('은행') && !name.includes('뱅크') &&
+            !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장'].some(p => name.includes(p));
+
+          if (isNotBankOrProcess && !result.bankInfo.accountHolder) {
+            // 계좌번호나 은행명 근처에 있는 이름을 예금주로 추정
+            const hasNearbyBankInfo = (index > 0 && (lines[index - 1].match(/\d{10,}/) || lines[index - 1].match(/은행|뱅크/))) ||
+              (index < lines.length - 1 && (lines[index + 1].match(/\d{10,}/) || lines[index + 1].match(/은행|뱅크/))) ||
+              line.match(/\d{10,}/) || line.match(/은행|뱅크/);
+
+            if (hasNearbyBankInfo) {
+              result.bankInfo.accountHolder = name;
+            }
+          }
+        });
       }
-    }
+
+      // 4. 공정/작업 추정
+      const workKeywords = [
+        '목공', '타일', '도배', '전기', '설비', '샤시', '유리', '방수', '철거',
+        '청소', '준공', '입주', '미장', '석공', '도장', '페인트', '필름',
+        '바닥', '마루', '장판', '가구', '주방', '욕실', '화장실', '간판',
+        '인테리어', '리모델링', '공사', '시공', '작업'
+      ];
+
+      for (const keyword of workKeywords) {
+        if (line.includes(keyword)) {
+          result.vendor = keyword;
+          break;
+        }
+      }
+
+      // 5. 항목명 추정 (첫 줄 또는 대괄호)
+      if (index === 0 && !result.itemName) {
+        result.itemName = line.substring(0, 50);
+      }
+      const bracketMatch = line.match(/\[([^\]]+)\]/);
+      if (bracketMatch) {
+        result.itemName = bracketMatch[1];
+      }
+    });
+
+    // "만원" 단위 처리
+    text.replace(/(\d+)\s*만\s*원/g, (_, num) => {
+      const amount = parseInt(num) * 10000;
+      if (!result.amounts.total && !result.amounts.material && !result.amounts.labor) {
+        result.amounts.total = amount;
+      }
+      return '';
+    });
 
     return result;
+  };
+
+  // 기존 함수 간소화 (smartTextAnalysis를 활용)
+  const parseBankInfoFromText = (text: string): { bankName?: string; accountNumber?: string; accountHolder?: string } => {
+    const analysis = smartTextAnalysis(text);
+    return analysis.bankInfo;
   };
 
   // 텍스트에서 공정(업체) 추출
@@ -552,83 +612,85 @@ const Payments = () => {
     return null;
   };
 
-  // 빠른 입력 텍스트 파싱
+  // 빠른 입력 텍스트 파싱 (스마트 분석 사용)
   const handleQuickTextParse = () => {
     const text = formData.quickText;
     if (!text.trim()) return;
 
-    // 금액 파싱 (자재비/인건비 구분)
-    const amounts = parseAmountFromText(text);
-
-    // 은행 정보 파싱
-    const bankInfo = parseBankInfoFromText(text);
-
-    // 공정(업체) 파싱
-    const vendor = parseVendorFromText(text);
-
-    // 항목명 추출 (대괄호 [] 안의 내용 우선)
-    let itemName = formData.itemName;
-    const itemMatch = text.match(/\[([^\]]+)\]/);
-    if (itemMatch) {
-      itemName = itemMatch[1];
-    } else if (!itemName) {
-      // 항목명이 없으면 첫 줄이나 짧은 설명 추출
-      const lines = text.split('\n');
-      itemName = lines[0].substring(0, 50); // 첫 줄의 50자까지
-    }
+    // 스마트 텍스트 분석
+    const analysis = smartTextAnalysis(text);
 
     // 파싱된 정보로 폼 업데이트
     const updatedFormData: any = { ...formData };
 
     // 금액 설정
-    if (amounts.material) {
-      updatedFormData.materialCost = amounts.material;
+    if (analysis.amounts.material) {
+      updatedFormData.materialCost = analysis.amounts.material;
     }
-    if (amounts.labor) {
-      updatedFormData.laborCost = amounts.labor;
+    if (analysis.amounts.labor) {
+      updatedFormData.laborCost = analysis.amounts.labor;
     }
-    if (amounts.total && !amounts.material && !amounts.labor) {
+    if (analysis.amounts.total && !analysis.amounts.material && !analysis.amounts.labor) {
       // 자재비/인건비 구분이 없으면 자재비로 설정
-      updatedFormData.materialCost = amounts.total;
+      updatedFormData.materialCost = analysis.amounts.total;
     }
 
     // 은행 정보 설정
-    if (bankInfo.bankName) {
-      updatedFormData.bankName = bankInfo.bankName;
+    if (analysis.bankInfo.bankName) {
+      updatedFormData.bankName = analysis.bankInfo.bankName;
     }
-    if (bankInfo.accountNumber) {
-      updatedFormData.accountNumber = bankInfo.accountNumber;
+    if (analysis.bankInfo.accountNumber) {
+      updatedFormData.accountNumber = analysis.bankInfo.accountNumber;
     }
-    if (bankInfo.accountHolder) {
-      updatedFormData.accountHolder = bankInfo.accountHolder;
+    if (analysis.bankInfo.accountHolder) {
+      updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
     }
 
     // 공정(업체) 설정
-    if (vendor) {
-      updatedFormData.vendorName = vendor;
+    if (analysis.vendor) {
+      updatedFormData.vendorName = analysis.vendor;
     }
 
     // 항목명 설정
-    updatedFormData.itemName = itemName;
+    if (analysis.itemName) {
+      updatedFormData.itemName = analysis.itemName;
+    }
 
     setFormData(updatedFormData);
 
-    // 파싱 결과 메시지
-    let successMessages = [];
-    if (amounts.material || amounts.labor || amounts.total) {
-      successMessages.push('금액');
-    }
-    if (bankInfo.bankName || bankInfo.accountNumber || bankInfo.accountHolder) {
-      successMessages.push('계좌정보');
-    }
-    if (vendor) {
-      successMessages.push('공정');
+    // 파싱 결과 상세 메시지
+    let successDetails = [];
+    if (analysis.amounts.material || analysis.amounts.labor || analysis.amounts.total) {
+      const amountDetails = [];
+      if (analysis.amounts.material) amountDetails.push(`자재비: ${analysis.amounts.material.toLocaleString()}원`);
+      if (analysis.amounts.labor) amountDetails.push(`인건비: ${analysis.amounts.labor.toLocaleString()}원`);
+      if (analysis.amounts.total && !analysis.amounts.material && !analysis.amounts.labor) {
+        amountDetails.push(`금액: ${analysis.amounts.total.toLocaleString()}원`);
+      }
+      successDetails.push(amountDetails.join(', '));
     }
 
-    if (successMessages.length > 0) {
-      toast.success(`${successMessages.join(', ')}이(가) 자동으로 입력되었습니다`);
+    if (analysis.bankInfo.bankName || analysis.bankInfo.accountHolder) {
+      const bankDetails = [];
+      if (analysis.bankInfo.bankName) bankDetails.push(analysis.bankInfo.bankName);
+      if (analysis.bankInfo.accountHolder) bankDetails.push(analysis.bankInfo.accountHolder);
+      if (analysis.bankInfo.accountNumber) bankDetails.push(analysis.bankInfo.accountNumber);
+      if (bankDetails.length > 0) {
+        successDetails.push(`계좌: ${bankDetails.join(' ')}`);
+      }
+    }
+
+    if (analysis.vendor) {
+      successDetails.push(`공정: ${analysis.vendor}`);
+    }
+
+    if (successDetails.length > 0) {
+      toast.success(`자동 인식 완료!\n${successDetails.join('\n')}`, {
+        duration: 4000,
+        style: { whiteSpace: 'pre-line' }
+      });
     } else {
-      toast.info('인식된 정보가 없습니다. 텍스트를 확인해주세요.');
+      toast.info('텍스트를 분석 중... 더 명확한 정보를 입력해주세요.');
     }
   };
 
