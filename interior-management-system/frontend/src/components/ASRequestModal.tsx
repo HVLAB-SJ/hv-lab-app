@@ -36,7 +36,7 @@ interface ASRequestModalProps {
   onSave: (data: ASRequestFormData) => void;
 }
 
-const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현'];
+const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '안팀'];
 
 const ASRequestModal = ({ request, onClose, onSave }: ASRequestModalProps) => {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();

@@ -41,7 +41,7 @@ interface ScheduleModalProps {
   onDelete: (id: string) => void | Promise<void>;
 }
 
-const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현'];
+const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '안팀'];
 
 const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, onDelete }: ScheduleModalProps) => {
   // localStorage에서 마지막 선택한 프로젝트 ID 가져오기

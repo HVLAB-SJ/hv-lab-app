@@ -30,7 +30,7 @@ interface ProjectModalProps {
   onSave: (data: ProjectFormData) => void;
 }
 
-const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현'];
+const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '안팀'];
 
 const ProjectModal = ({ project, onClose, onSave }: ProjectModalProps) => {
   // Set defaultValues properly so form includes all fields even if not touched

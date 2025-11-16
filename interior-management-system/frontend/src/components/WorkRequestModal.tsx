@@ -12,7 +12,7 @@ interface WorkRequestModalProps {
   onSave: (data: WorkRequestFormData) => void;
 }
 
-const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '디자인팀', '현장팀'];
+const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '안팀', '디자인팀', '현장팀'];
 
 const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) => {
   const { projects } = useDataStore();

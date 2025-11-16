@@ -6,7 +6,7 @@ import { Calendar, Clock, Plus } from 'lucide-react';
 import { useState } from 'react';
 import ScheduleModal from '../components/ScheduleModal';
 
-const ALL_TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현'];
+const ALL_TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '안팀'];
 
 interface ScheduleEvent {
   id?: string;
