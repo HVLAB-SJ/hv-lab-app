@@ -1659,7 +1659,7 @@ const Payments = () => {
               <button
                 type="button"
                 onClick={handleQuickTextParse}
-                className="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                className="mt-2 w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
               >
                 자동으로 항목 채우기
               </button>
