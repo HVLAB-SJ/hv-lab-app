@@ -7,6 +7,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import Schedule from './pages/Schedule';
+import SiteLog from './pages/SiteLog';
 import AfterService from './pages/AfterService';
 import AdditionalWork from './pages/AdditionalWork';
 import ConstructionPayment from './pages/ConstructionPayment';
@@ -79,6 +80,7 @@ function App() {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="projects" element={<Projects />} />
               <Route path="schedule" element={<Schedule />} />
+              <Route path="site-log" element={<SiteLog />} />
               <Route path="after-service" element={<AfterService />} />
               <Route path="additional-work" element={<AdditionalWork />} />
               <Route path="construction-payment" element={<ConstructionPayment />} />

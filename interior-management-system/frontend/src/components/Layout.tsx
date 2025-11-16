@@ -115,11 +115,11 @@ const Layout = () => {
   const navigation: NavigationItem[] = [
     { name: '담당업무', href: '/dashboard' },
     { name: '프로젝트', href: '/projects' },
-    { name: '일정관리', href: '/schedule' },
-    { name: 'AS 관리', href: '/after-service', ...(inProgressASCount > 0 && { badge: inProgressASCount }) },
+    { name: '일정표', href: '/schedule' },
+    { name: '현장일지', href: '/site-log' },
     { name: '추가내역', href: '/additional-work' },
     { name: '공사대금', href: '/construction-payment', roles: ['admin', 'manager'] },
-    { name: '협력업체', href: '/contractors' },
+    { name: 'AS 관리', href: '/after-service', ...(inProgressASCount > 0 && { badge: inProgressASCount }) },
     { name: '업무요청', href: '/work-request', ...(pendingWorkRequestCount > 0 && { badge: pendingWorkRequestCount }) },
     { name: '마감체크', href: '/finish-check' },
     { name: '스펙북', href: '/specbook' },
@@ -127,6 +127,7 @@ const Layout = () => {
     { name: '실행내역', href: '/execution-history' },
     { name: '결제요청', href: '/payments', ...(pendingPaymentCount > 0 && { badge: pendingPaymentCount }) },
     { name: '견적문의', href: '/quote-inquiry', roles: ['admin', 'manager'] },
+    { name: '협력업체', href: '/contractors' },
   ];
 
   // 사용자 권한에 따라 메뉴 필터링
