@@ -520,10 +520,15 @@ const Payments = () => {
         });
       }
 
-      // 다양한 계좌번호 패턴 (4-3-6, 3-6-5, 4-4-5 등)
+      // 다양한 계좌번호 패턴 (4-3-6, 3-6-5, 4-4-5, 6-2-6 등)
       const accountPatterns = [
-        /\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/, // 기존 패턴
-        /\d{3,4}[\s\-]+\d{2,6}[\s\-]+\d{4,7}/, // 더 유연한 패턴
+        /\d{6}[\s\-]+\d{2}[\s\-]+\d{6}/, // 6-2-6 패턴 (예: 421013-52-133594)
+        /\d{5,7}[\s\-]+\d{2}[\s\-]+\d{5,7}/, // 더 유연한 6-2-6 패턴
+        /\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/, // 4개 그룹 패턴
+        /\d{3}[\s\-]+\d{2}[\s\-]+\d{6}/, // 3-2-6 패턴
+        /\d{3}[\s\-]+\d{4}[\s\-]+\d{7}/, // 3-4-7 패턴
+        /\d{4}[\s\-]+\d{4}[\s\-]+\d{5}/, // 4-4-5 패턴
+        /\d{3,4}[\s\-]+\d{2,6}[\s\-]+\d{4,7}/, // 3개 그룹 유연한 패턴
         /\d{10,}/ // 연속된 숫자
       ];
 
@@ -797,8 +802,26 @@ const Payments = () => {
     // 스마트 텍스트 분석
     const analysis = smartTextAnalysis(text);
 
-    // 파싱된 정보로 폼 업데이트
-    const updatedFormData: any = { ...formData };
+    // 폼 초기화 후 새로 채우기 (프로젝트, 날짜, quickText만 유지)
+    const updatedFormData: any = {
+      project: formData.project,
+      date: formData.date,
+      quickText: formData.quickText,
+      process: '',
+      itemName: '',
+      amount: '',
+      accountHolder: '',
+      bankName: '',
+      accountNumber: '',
+      images: []
+    };
+
+    // 협력업체 선택 초기화
+    setSelectedContractorId(null);
+
+    // 부가세 체크박스 초기화
+    setIncludeVat(false);
+    setIncludeTaxDeduction(false);
 
     // 금액 설정 - 모든 금액을 합쳐서 공사비로 설정
     let totalAmount = 0;
