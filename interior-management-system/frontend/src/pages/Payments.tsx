@@ -497,9 +497,11 @@ const Payments = () => {
               result.bankInfo.accountNumber = trimmedPart;
             }
           }
-          // 한글 이름 패턴 (예금주)
+          // 한글 이름 패턴 (예금주) - 부가세포함 등 제외
           else if (/^[가-힣]{2,5}$/.test(trimmedPart)) {
-            if (!result.bankInfo.accountHolder) {
+            // 절대 예금주가 될 수 없는 단어들
+            const excludedWords = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
+            if (!excludedWords.includes(trimmedPart) && !result.bankInfo.accountHolder) {
               result.bankInfo.accountHolder = trimmedPart;
             }
           }
@@ -589,11 +591,15 @@ const Payments = () => {
       // 2-1. 괄호 안 이름 추출 (예: "레브(최승혁)") - 최우선 처리
       const bracketNameMatch = line.match(/\(([가-힣]{2,5})\)/);
       if (bracketNameMatch) {
-        result.bankInfo.accountHolder = bracketNameMatch[1]; // 무조건 덮어쓰기
+        // 부가세포함 등은 절대 예금주가 아님
+        const excludedWords = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
+        if (!excludedWords.includes(bracketNameMatch[1])) {
+          result.bankInfo.accountHolder = bracketNameMatch[1]; // 무조건 덮어쓰기
+        }
       }
 
-      // 3. 한글 이름 추정 (2-5글자) - 괄호 이름이 없을 때만 처리
-      if (!bracketNameMatch) {
+      // 3. 한글 이름 추정 (2-5글자) - 괄호 이름이 없고, 슬래시로 처리 안된 경우만
+      if (!bracketNameMatch && !result.bankInfo.accountHolder) {
         const namePattern = /[가-힣]{2,5}/g;
         const names = line.match(namePattern);
         if (names) {
@@ -601,12 +607,17 @@ const Payments = () => {
           const hasAccountInSameLine = line.match(/\d{10,}/) || line.match(/\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/);
 
           names.forEach(name => {
+            // 절대 예금주가 될 수 없는 단어들 체크
+            const absoluteExcluded = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
+            if (absoluteExcluded.includes(name)) {
+              return; // 즉시 건너뛰기
+            }
+
             // 금액 관련 단어, 은행 키워드, 공정명이 아닌 경우 예금주로 추정
-            const isMoneyRelated = name === '만원' || name === '천원' || name === '백원' || name === '원' ||
-                                   name === '부가세포함' || name.includes('부가세') || name.includes('포함');
+            const isMoneyRelated = name.includes('금액') || name.includes('가격') || name.includes('비용');
             const isBankKeyword = Object.keys(knownBanks).includes(name);
             const isNotBankOrProcess = !isMoneyRelated && !isBankKeyword && !name.includes('은행') && !name.includes('뱅크') &&
-              !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장', '아크로텔', '자재', '레브', '필름'].some(p => name.includes(p));
+              !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장', '아크로텔', '자재', '레브', '필름', '라인조명', '조명'].some(p => name.includes(p));
 
             if (isNotBankOrProcess) {
               // 괄호로 명시된 이름이 있으면 건너뛰기
