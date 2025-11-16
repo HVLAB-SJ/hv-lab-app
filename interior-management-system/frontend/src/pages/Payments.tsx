@@ -699,7 +699,7 @@ const Payments = () => {
 
     // 공정(업체) 설정
     if (analysis.vendor) {
-      updatedFormData.vendorName = analysis.vendor;
+      updatedFormData.process = analysis.vendor;
     }
 
     // 항목명 설정
