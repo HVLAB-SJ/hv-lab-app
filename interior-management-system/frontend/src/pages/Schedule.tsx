@@ -443,8 +443,17 @@ const Schedule = () => {
 
   // Store 데이터를 Calendar 이벤트 형식으로 변환
   // AS 요청 관련 일정은 제외 (asVisitEvents에서 별도로 처리)
+  // 안팀 사용자의 경우 담당 프로젝트의 일정만 필터링
+  const filteredProjectNames = projects.map(p => p.name);
   const scheduleEvents: ScheduleEvent[] = schedules
     .filter(schedule => !schedule.asRequestId) // AS 요청 관련 일정 제외
+    .filter(schedule => {
+      // 안팀 사용자는 담당 프로젝트의 일정만 보기
+      if (user?.name === '안팀') {
+        return schedule.project === '비공개' || filteredProjectNames.includes(schedule.project);
+      }
+      return true;
+    })
     .map(schedule => {
       // 비공개 일정은 "[개인일정]"으로 표시
       const displayProjectName = schedule.project === '비공개' ? '[개인일정]' : schedule.project;
@@ -491,6 +500,13 @@ const Schedule = () => {
   // AS 방문 예정일을 캘린더 이벤트로 변환
   const asVisitEvents: ScheduleEvent[] = asRequests
     .filter(req => req.scheduledVisitDate) // 방문예정일이 있는 AS 요청만
+    .filter(req => {
+      // 안팀 사용자는 담당 프로젝트의 AS 요청만 보기
+      if (user?.name === '안팀') {
+        return filteredProjectNames.includes(req.project);
+      }
+      return true;
+    })
     .map(req => {
       const visitTime = req.scheduledVisitTime;
       const timeText = (visitTime && visitTime !== '-') ? ` - ${formatTimeKorean(visitTime)}` : '';
@@ -817,7 +833,13 @@ const Schedule = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
-  const [filterProject, setFilterProject] = useState<string>('all');
+  // 안팀 사용자는 기본적으로 첫 번째 프로젝트를 선택, 다른 사용자는 'all'
+  const [filterProject, setFilterProject] = useState<string>(() => {
+    if (user?.name === '안팀' && projects.length > 0) {
+      return projects[0].name;
+    }
+    return 'all';
+  });
   // 모바일에서는 오늘 날짜를 기본 선택
   const [selectedDate, setSelectedDate] = useState<Date | null>(
     window.innerWidth < 768 ? new Date() : null
@@ -828,6 +850,16 @@ const Schedule = () => {
   const filteredEvents = (filterProject === 'all'
     ? events
     : events.filter(e => e.projectName === filterProject));
+
+  // 안팀 사용자의 경우 프로젝트 목록이 변경되면 필터 업데이트
+  useEffect(() => {
+    if (user?.name === '안팀' && projects.length > 0) {
+      // 현재 선택된 프로젝트가 유효하지 않으면 첫 번째 프로젝트로 변경
+      if (filterProject === 'all' || !projects.find(p => p.name === filterProject)) {
+        setFilterProject(projects[0].name);
+      }
+    }
+  }, [projects, user]);
 
   // 더보기 버튼과 팝업 오버레이 강제 숨김
   useEffect(() => {
@@ -1163,7 +1195,8 @@ const Schedule = () => {
                 paddingRight: '2.5rem'
               }}
             >
-              <option value="all">전체 프로젝트</option>
+              {/* 안팀 사용자는 전체 프로젝트 옵션을 보지 못함 */}
+              {user?.name !== '안팀' && <option value="all">전체 프로젝트</option>}
               {projects
                 .filter(project => project.status !== 'completed')
                 .map((project) => (
