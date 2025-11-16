@@ -1647,14 +1647,14 @@ const Payments = () => {
             {/* 빠른 입력 */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                💡 빠른 입력 (스마트 자동 인식)
+                빠른 입력
               </label>
               <textarea
                 value={formData.quickText}
                 onChange={(e) => setFormData({ ...formData, quickText: e.target.value })}
                 rows={4}
                 className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="예시: [703호 타일공사]&#10;자재비: 120만원&#10;인건비: 80만원&#10;신한 110-432-160269 박지연&#10;&#10;은행명, 계좌번호, 예금주, 공정, 자재비/인건비를 자동으로 인식합니다."
+                placeholder=""
               />
               <button
                 type="button"
@@ -1663,13 +1663,6 @@ const Payments = () => {
               >
                 자동으로 항목 채우기
               </button>
-              <p className="mt-2 text-xs text-gray-600">
-                ✨ 스마트 인식: 금액(자재비/인건비), 은행명, 계좌번호, 예금주, 공정을 자동 인식합니다<br/>
-                • 항목명: [대괄호] 안에 작성<br/>
-                • 금액: "40만원", "400000원" 형식<br/>
-                • 은행: 국민, 신한, 하나, 우리, 기업, 농협 등<br/>
-                • 공정: 목공, 타일, 도배, 전기, 설비 등
-              </p>
             </div>
 
             {/* 날짜 & 공정 */}
