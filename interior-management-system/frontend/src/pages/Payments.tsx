@@ -156,7 +156,8 @@ const Payments = () => {
     accountHolder: '',
     bankName: '',
     accountNumber: '',
-    images: [] as string[]
+    images: [] as string[],
+    quickText: '' // 빠른 입력을 위한 텍스트
   });
 
   // 협력업체 로드
@@ -408,6 +409,40 @@ const Payments = () => {
       setItemNameSuggestions([]);
     }
   }, [formData.itemName, payments, isItemNameFocused]);
+
+  // 텍스트에서 금액 파싱 (예: "40만원" -> 400000)
+  const parseAmountFromText = (text: string): number => {
+    // "숫자+만원" 패턴 찾기
+    const match = text.match(/(\d+(?:,\d+)*)\s*만\s*원/);
+    if (match) {
+      const number = parseInt(match[1].replace(/,/g, ''));
+      return number * 10000;
+    }
+
+    // "숫자원" 패턴 찾기 (예: "400000원")
+    const directMatch = text.match(/(\d+(?:,\d+)*)\s*원/);
+    if (directMatch) {
+      return parseInt(directMatch[1].replace(/,/g, ''));
+    }
+
+    return 0;
+  };
+
+  // 빠른 입력 텍스트 파싱
+  const handleQuickTextParse = () => {
+    const text = formData.quickText;
+    if (!text.trim()) return;
+
+    const amount = parseAmountFromText(text);
+
+    setFormData({
+      ...formData,
+      materialCost: amount,
+      itemName: formData.itemName || text.trim() // 항목명이 비어있으면 텍스트 전체를 항목명으로
+    });
+
+    toast.success('금액이 자동으로 입력되었습니다');
+  };
 
   // 예금주 입력칸 포커스 시 모든 이전 송금내역 표시
   const handleAccountHolderFocus = useCallback(() => {
@@ -721,7 +756,8 @@ const Payments = () => {
         accountHolder: '',
         bankName: '',
         accountNumber: '',
-        images: []
+        images: [],
+        quickText: ''
       }));
       setIncludeVat(false);
       setIncludeTaxDeduction(false);
@@ -1124,6 +1160,30 @@ const Payments = () => {
               </select>
             </div>
 
+            {/* 빠른 입력 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                💡 빠른 입력 (텍스트 붙여넣기)
+              </label>
+              <textarea
+                value={formData.quickText}
+                onChange={(e) => setFormData({ ...formData, quickText: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="예시: [703호 준공청소]&#10;청소비용 40만원입니다. 신한 110 432 160269 박지연. 입금 부탁드립니다."
+              />
+              <button
+                type="button"
+                onClick={handleQuickTextParse}
+                className="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                자동으로 항목 채우기
+              </button>
+              <p className="mt-2 text-xs text-gray-600">
+                * 텍스트에서 금액을 자동으로 인식하여 입력합니다 (예: "40만원", "400000원")
+              </p>
+            </div>
+
             {/* 날짜 & 공정 */}
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -1427,7 +1487,8 @@ const Payments = () => {
                         accountHolder: '',
                         bankName: '',
                         accountNumber: '',
-                        images: []
+                        images: [],
+                        quickText: ''
                       }));
                       setIncludeVat(false);
                       setIncludeTaxDeduction(false);
