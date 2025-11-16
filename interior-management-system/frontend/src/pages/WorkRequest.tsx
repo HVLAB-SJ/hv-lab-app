@@ -67,12 +67,26 @@ const WorkRequest = () => {
     loadWorkRequests();
   }, []);
 
-  // Set default requestedBy when user is loaded
+  // Set default requestedBy and project when user is loaded
   useEffect(() => {
-    if (user?.name && !formData.requestedBy) {
-      setFormData(prev => ({ ...prev, requestedBy: user.name }));
+    if (user?.name) {
+      setFormData(prev => {
+        const updates: any = {};
+
+        // Set requestedBy if not set
+        if (!prev.requestedBy) {
+          updates.requestedBy = user.name;
+        }
+
+        // Set default project for 안팀 user
+        if (user.name === '안팀' && !prev.project && projects.length > 0) {
+          updates.project = projects[0].name;
+        }
+
+        return { ...prev, ...updates };
+      });
     }
-  }, [user]);
+  }, [user, projects]);
 
   const loadWorkRequests = async () => {
     try {
@@ -611,7 +625,7 @@ const WorkRequest = () => {
                 onChange={(e) => setFormData({ ...formData, project: e.target.value })}
                 className="input w-full"
               >
-                <option value=""></option>
+                {user?.name !== '안팀' && <option value="">선택하세요</option>}
                 {projects
                   .filter(project => project.status !== 'completed')
                   .map((project) => (
@@ -1080,7 +1094,7 @@ const WorkRequest = () => {
                     onChange={(e) => setFormData({ ...formData, project: e.target.value })}
                     className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
                   >
-                    <option value=""></option>
+                    {user?.name !== '안팀' && <option value="">선택하세요</option>}
                     {projects
                       .filter(project => project.status !== 'completed')
                       .map((project) => (

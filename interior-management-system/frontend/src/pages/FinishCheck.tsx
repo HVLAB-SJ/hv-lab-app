@@ -63,7 +63,8 @@ const FinishCheck = () => {
   const [showMobileImageModal, setShowMobileImageModal] = useState(false);
 
   useEffect(() => {
-    loadSpaces();
+    // Don't load spaces initially - wait for project to be selected
+    // loadSpaces(); // Removed to prevent loading before project is selected
 
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);

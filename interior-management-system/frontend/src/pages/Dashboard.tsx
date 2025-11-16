@@ -45,9 +45,15 @@ const Dashboard = () => {
   };
 
   // 로그인한 사용자를 맨 앞으로 정렬
-  const TEAM_MEMBERS = userNameWithoutSurname
-    ? [userNameWithoutSurname, ...ALL_TEAM_MEMBERS.filter(member => member !== userNameWithoutSurname)]
-    : ALL_TEAM_MEMBERS;
+  // 안팀 사용자는 자신의 업무만 표시
+  const TEAM_MEMBERS = (() => {
+    if (user?.name === '안팀') {
+      return ['안팀'];
+    }
+    return userNameWithoutSurname
+      ? [userNameWithoutSurname, ...ALL_TEAM_MEMBERS.filter(member => member !== userNameWithoutSurname)]
+      : ALL_TEAM_MEMBERS;
+  })();
 
   // 각 사람별 일정 계산
   const getMemberSchedules = (member: string) => {

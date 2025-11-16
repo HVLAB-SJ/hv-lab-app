@@ -5,6 +5,8 @@ import { Trash2, Calendar, Edit, X, Upload, ImageIcon } from 'lucide-react';
 import ASRequestModal from '../components/ASRequestModal';
 import { useDataStore, type ASRequest } from '../store/dataStore';
 import toast from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 
 // Format time to Korean format (14:00 -> 오후 2시, 02:00 -> 오전 2시)
 const formatTimeKorean = (time: string): string => {
@@ -17,6 +19,8 @@ const formatTimeKorean = (time: string): string => {
 };
 
 const AfterService = () => {
+  const { user } = useAuth();
+  const filteredProjects = useFilteredProjects();
   const {
     asRequests,
     loadASRequestsFromAPI,
@@ -24,7 +28,12 @@ const AfterService = () => {
     updateASRequestInAPI,
     deleteASRequestFromAPI
   } = useDataStore();
-  const requests = asRequests;
+
+  // 안팀 사용자인 경우 필터링
+  const filteredProjectNames = filteredProjects.map(p => p.name);
+  const requests = user?.name === '안팀'
+    ? asRequests.filter(req => filteredProjectNames.includes(req.project))
+    : asRequests;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -353,7 +362,7 @@ const AfterService = () => {
         </nav>
         <button
           onClick={handleAddRequest}
-          className="btn btn-primary px-4 py-2"
+          className="hidden md:block btn btn-primary px-4 py-2"
         >
           +AS 요청
         </button>

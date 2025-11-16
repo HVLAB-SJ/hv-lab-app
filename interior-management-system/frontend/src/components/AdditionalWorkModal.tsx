@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { X, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
+import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 interface AdditionalWork {
@@ -32,6 +33,7 @@ interface AdditionalWorkModalProps {
 
 const AdditionalWorkModal = ({ work, onClose, onSave, initialProject }: AdditionalWorkModalProps) => {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
+  const { user } = useAuth();
   const projects = useFilteredProjects();
   const [isDragging, setIsDragging] = useState(false);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
@@ -52,12 +54,16 @@ const AdditionalWorkModal = ({ work, onClose, onSave, initialProject }: Addition
       setValue('date', today);
       setImages([]);
       setImagePreview([]);
-      // initialProject가 있으면 프로젝트를 미리 선택
-      if (initialProject) {
+
+      // 안팀 사용자인 경우 프로젝트 자동 선택
+      if (user?.name === '안팀' && projects.length > 0) {
+        setValue('project', projects[0].name);
+      } else if (initialProject) {
+        // initialProject가 있으면 프로젝트를 미리 선택
         setValue('project', initialProject);
       }
     }
-  }, [work, setValue, initialProject]);
+  }, [work, setValue, initialProject, user, projects]);
 
   // 클립보드 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
@@ -184,7 +190,7 @@ const AdditionalWorkModal = ({ work, onClose, onSave, initialProject }: Addition
               {...register('project', { required: '프로젝트를 선택하세요' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
-              <option value="">선택하세요</option>
+              {user?.name !== '안팀' && <option value="">선택하세요</option>}
               {projects.map((project) => (
                 <option key={project.id} value={project.name}>
                   {project.name}

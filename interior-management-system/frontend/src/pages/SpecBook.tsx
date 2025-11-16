@@ -3,6 +3,7 @@ import { Pencil, Trash2, Upload, Settings, X, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
+import { useAuth } from '../contexts/AuthContext';
 import {
   DndContext,
   closestCenter,
@@ -259,8 +260,10 @@ const SortableCategoryItem = ({
 };
 
 const SpecBook = () => {
+  const { user } = useAuth();
   const filteredProjects = useFilteredProjects();
-  const [view, setView] = useState<'library' | 'project'>('library');
+  const isAnTeamUser = user?.name === '안팀';
+  const [view, setView] = useState<'library' | 'project'>(isAnTeamUser ? 'project' : 'library');
   const [items, setItems] = useState<SpecBookItem[]>([]);
   const [allLibraryItems, setAllLibraryItems] = useState<SpecBookItem[]>([]); // 전체 라이브러리 아이템 (수량 계산용)
   const [allProjectItems, setAllProjectItems] = useState<SpecBookItem[]>([]); // 전체 프로젝트 아이템 (수량 계산용)
@@ -345,7 +348,12 @@ const SpecBook = () => {
       }));
       console.log('프로젝트 목록 로드됨:', mappedProjects.length, '개', mappedProjects);
       setProjects(mappedProjects);
-      // 자동 선택 제거 - 사용자가 직접 선택하도록 함
+
+      // 안팀 사용자인 경우 첫 번째 프로젝트 자동 선택
+      if (isAnTeamUser && mappedProjects.length > 0 && !selectedProject) {
+        setSelectedProject(mappedProjects[0].id);
+        setView('project');
+      }
     } catch (error) {
       console.error('프로젝트 로드 실패:', error);
     }
@@ -1154,29 +1162,31 @@ const SpecBook = () => {
           {/* 버튼 영역 */}
           <div className="mb-4 px-4">
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 lg:gap-4">
-              <button
-                onClick={() => {
-                  setView('library');
-                  setSelectedProject(null);
-                }}
-                className={`col-span-1 lg:col-span-1 h-9 rounded-lg font-medium transition-colors text-xs md:text-sm flex items-center justify-center ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
-              >
-                스펙 라이브러리
-              </button>
+              {!isAnTeamUser && (
+                <button
+                  onClick={() => {
+                    setView('library');
+                    setSelectedProject(null);
+                  }}
+                  className={`col-span-1 lg:col-span-1 h-9 rounded-lg font-medium transition-colors text-xs md:text-sm flex items-center justify-center ${view === 'library' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}
+                >
+                  스펙 라이브러리
+                </button>
+              )}
               <select
                 value={selectedProject || ''}
                 onChange={(e) => {
                   if (e.target.value) {
                     setView('project');
                     setSelectedProject(Number(e.target.value));
-                  } else {
+                  } else if (!isAnTeamUser) {
                     setView('library');
                     setSelectedProject(null);
                   }
                 }}
-                className="col-span-1 lg:col-span-1 lg:col-start-4 h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
+                className={`col-span-1 lg:col-span-1 ${isAnTeamUser ? '' : 'lg:col-start-4'} h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2`}
               >
-                <option value="">프로젝트 선택</option>
+                {!isAnTeamUser && <option value="">프로젝트 선택</option>}
                 {projects.map(project => (
                   <option key={project.id} value={project.id}>
                     {project.title}
@@ -1242,29 +1252,31 @@ const SpecBook = () => {
             {/* 버튼 영역 */}
             <div className="mb-4 px-4">
               <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 lg:gap-4">
-                <button
-                  onClick={() => {
-                    setView('library');
-                    setSelectedProject(null);
-                  }}
-                  className="col-span-1 lg:col-span-1 h-9 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 text-xs md:text-sm flex items-center justify-center"
-                >
-                  스펙 라이브러리
-                </button>
+                {!isAnTeamUser && (
+                  <button
+                    onClick={() => {
+                      setView('library');
+                      setSelectedProject(null);
+                    }}
+                    className="col-span-1 lg:col-span-1 h-9 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 text-xs md:text-sm flex items-center justify-center"
+                  >
+                    스펙 라이브러리
+                  </button>
+                )}
                 <select
                   value={selectedProject || ''}
                   onChange={(e) => {
                     if (e.target.value) {
                       setView('project');
                       setSelectedProject(Number(e.target.value));
-                    } else {
+                    } else if (!isAnTeamUser) {
                       setView('library');
                       setSelectedProject(null);
                     }
                   }}
-                  className="col-span-1 lg:col-span-1 lg:col-start-4 h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2"
+                  className={`col-span-1 lg:col-span-1 ${isAnTeamUser ? '' : 'lg:col-start-4'} h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2`}
                 >
-                  <option value="">프로젝트 선택</option>
+                  {!isAnTeamUser && <option value="">프로젝트 선택</option>}
                   {projects.map(project => (
                     <option key={project.id} value={project.id}>
                       {project.title}
@@ -1275,8 +1287,9 @@ const SpecBook = () => {
             </div>
 
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden gap-4">
-              {/* 좌측: 스펙 라이브러리 (드래그 소스) - 데스크톱에서만 표시 */}
-              <div className="hidden md:flex md:w-1/2 flex-col overflow-hidden pb-4 md:pr-3">
+              {/* 좌측: 스펙 라이브러리 (드래그 소스) - 데스크톱에서만 표시, 안팀 제외 */}
+              {!isAnTeamUser && (
+                <div className="hidden md:flex md:w-1/2 flex-col overflow-hidden pb-4 md:pr-3">
                 <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
@@ -1342,10 +1355,13 @@ const SpecBook = () => {
                 )}
               </div>
             </div>
-            {/* 중앙 경계선 */}
-            <div className="hidden md:block w-px bg-gray-300 self-stretch"></div>
-            {/* 우측: 프로젝트 아이템 (드롭 타겟) */}
-            <div className="w-full md:w-1/2 flex flex-col overflow-hidden md:pl-3 pb-4">
+              )}
+            {/* 중앙 경계선 - 안팀 제외 */}
+            {!isAnTeamUser && (
+              <div className="hidden md:block w-px bg-gray-300 self-stretch"></div>
+            )}
+            {/* 우측: 프로젝트 아이템 (드롭 타겟) - 안팀은 전체 폭 사용 */}
+            <div className={`w-full ${isAnTeamUser ? '' : 'md:w-1/2'} flex flex-col overflow-hidden ${isAnTeamUser ? '' : 'md:pl-3'} pb-4`}>
                 <div
                   className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4"
                 onDragOver={(e) => {

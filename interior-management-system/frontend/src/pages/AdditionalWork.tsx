@@ -5,6 +5,8 @@ import { Trash2, Edit, ChevronDown, ChevronUp, Upload, ImageIcon, X, Plus } from
 import AdditionalWorkModal from '../components/AdditionalWorkModal';
 import additionalWorkService from '../services/additionalWorkService';
 import toast from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 
 interface AdditionalWork {
   id: string;
@@ -23,6 +25,8 @@ interface ProjectGroup {
 }
 
 const AdditionalWork = () => {
+  const { user } = useAuth();
+  const filteredProjects = useFilteredProjects();
   const [additionalWorks, setAdditionalWorks] = useState<AdditionalWork[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWork, setSelectedWork] = useState<AdditionalWork | null>(null);
@@ -180,7 +184,14 @@ const AdditionalWork = () => {
   const loadAdditionalWorks = async () => {
     try {
       const works = await additionalWorkService.getAllAdditionalWorks();
-      setAdditionalWorks(works.map(work => ({
+
+      // 안팀 사용자인 경우 필터링
+      const filteredProjectNames = filteredProjects.map(p => p.name);
+      const filteredWorks = user?.name === '안팀'
+        ? works.filter(work => filteredProjectNames.includes(work.project))
+        : works;
+
+      setAdditionalWorks(filteredWorks.map(work => ({
         id: work._id,
         project: work.project,
         description: work.description,
