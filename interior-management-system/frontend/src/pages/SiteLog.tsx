@@ -211,6 +211,39 @@ const SiteLog = () => {
     }
   };
 
+  // 이미지 삭제
+  const handleDeleteImage = async (logId: string, imageIndex: number) => {
+    if (!window.confirm('이 사진을 삭제하시겠습니까?')) return;
+
+    const log = logs.find(l => l.id === logId);
+    if (!log) return;
+
+    try {
+      const updatedImages = log.images.filter((_, idx) => idx !== imageIndex);
+
+      if (updatedImages.length === 0 && !log.notes) {
+        // 이미지가 모두 삭제되고 메모도 없으면 일지 자체를 삭제
+        await handleDelete(logId);
+      } else {
+        await siteLogService.updateLog(logId, {
+          project: log.project,
+          date: log.date,
+          images: updatedImages,
+          notes: log.notes
+        });
+
+        // 로컬 상태 업데이트
+        setLogs(prev => prev.map(l =>
+          l.id === logId ? { ...l, images: updatedImages } : l
+        ));
+        toast.success('사진이 삭제되었습니다');
+      }
+    } catch (error) {
+      console.error('Failed to delete image:', error);
+      toast.error('사진 삭제에 실패했습니다');
+    }
+  };
+
   // 캘린더 데이터 생성
   const getCalendarDays = (): DayData[] => {
     const year = calendarMonth.getFullYear();
@@ -480,7 +513,22 @@ const SiteLog = () => {
         </div>
 
         {/* 오른쪽: 선택된 날짜의 일지 */}
-        <div className="lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div
+          className={`lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all ${
+            isDragging ? 'ring-2 ring-blue-400 bg-blue-50' : ''
+          }`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={(e) => {
+            // 자식 요소로 이동할 때는 무시
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setIsDragging(false);
+            }
+          }}
+          onDrop={handleDrop}
+        >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">
               {format(selectedDate, 'yyyy년 M월 d일', { locale: ko })} 현장일지
@@ -586,6 +634,15 @@ const SiteLog = () => {
                                   >
                                     <Maximize2 className="h-4 w-4" />
                                   </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteImage(log.id, idx);
+                                    }}
+                                    className="absolute top-2 left-2 p-1.5 bg-red-600 bg-opacity-80 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-opacity-100"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
                                   <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
                                     {idx + 1} / {log.images.length}
                                   </div>
@@ -603,44 +660,6 @@ const SiteLog = () => {
                         </div>
                       </div>
                     ))}
-
-                    {/* 추가 드래그 영역 - 일지 목록 아래 */}
-                    <div
-                      className={`mt-4 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                        isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setIsDragging(true);
-                      }}
-                      onDragLeave={() => setIsDragging(false)}
-                      onDrop={handleDrop}
-                    >
-                      <Upload className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-                      <p className="text-gray-600 font-medium mb-1">새 사진 추가</p>
-                      <p className="text-sm text-gray-500">
-                        이곳에 사진을 드래그하거나 클릭하여 선택하세요
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                        id="new-photo-input"
-                        onChange={(e) => {
-                          if (e.target.files) {
-                            handleImageUpload(e.target.files);
-                            e.target.value = '';
-                          }
-                        }}
-                      />
-                      <label
-                        htmlFor="new-photo-input"
-                        className="inline-block mt-3 px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 cursor-pointer transition-colors"
-                      >
-                        파일 선택
-                      </label>
-                    </div>
                   </div>
                 );
               } else {
