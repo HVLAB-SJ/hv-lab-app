@@ -79,8 +79,8 @@ const SiteLog = () => {
     }
   };
 
-  // 이미지 업로드 처리
-  const handleImageUpload = useCallback((files: FileList | File[]) => {
+  // 이미지 업로드 처리 - 바로 저장
+  const handleImageUpload = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     const imageFiles = fileArray.filter(f => f.type.startsWith('image/'));
 
@@ -88,6 +88,13 @@ const SiteLog = () => {
       toast.error('이미지 파일만 업로드 가능합니다');
       return;
     }
+
+    if (!selectedProject) {
+      toast.error('프로젝트를 선택하세요');
+      return;
+    }
+
+    setIsUploading(true);
 
     const promises = imageFiles.map(file => {
       return new Promise<string>((resolve) => {
@@ -99,14 +106,29 @@ const SiteLog = () => {
       });
     });
 
-    Promise.all(promises).then(images => {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, ...images]
-      }));
-      toast.success(`${images.length}개의 이미지가 추가되었습니다`);
-    });
-  }, []);
+    try {
+      const images = await Promise.all(promises);
+
+      const logData = {
+        project: selectedProject,
+        date: selectedDate,
+        images: images,
+        notes: '',
+        createdBy: user?.name || ''
+      };
+
+      await siteLogService.createLog(logData);
+      toast.success(`${images.length}개의 사진이 저장되었습니다`);
+
+      // 로그 목록 다시 로드
+      await loadSiteLogs();
+    } catch (error) {
+      console.error('Failed to save images:', error);
+      toast.error('사진 저장에 실패했습니다');
+    } finally {
+      setIsUploading(false);
+    }
+  }, [selectedProject, selectedDate, user, loadSiteLogs]);
 
   // 드래그 앤 드롭
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -463,50 +485,7 @@ const SiteLog = () => {
             <h2 className="text-lg font-semibold">
               {format(selectedDate, 'yyyy년 M월 d일', { locale: ko })} 현장일지
             </h2>
-            {formData.images.length > 0 && (
-              <span className="text-sm text-gray-500">
-                {formData.images.length}개의 사진 대기 중
-              </span>
-            )}
           </div>
-
-          {/* 이미지 업로드 영역 - 새로운 일지 추가할 때 */}
-          {formData.images.length > 0 && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-700">업로드 대기 중인 사진</h3>
-                <button
-                  onClick={() => setFormData(prev => ({ ...prev, images: [] }))}
-                  className="text-xs text-red-600 hover:text-red-800"
-                >
-                  모두 삭제
-                </button>
-              </div>
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {formData.images.map((img, idx) => (
-                  <div key={idx} className="relative group">
-                    <img
-                      src={img}
-                      alt={`대기 ${idx + 1}`}
-                      className="w-full aspect-[4/3] object-cover rounded-lg"
-                    />
-                    <button
-                      onClick={() => setFormData(prev => ({
-                        ...prev,
-                        images: prev.images.filter((_, i) => i !== idx)
-                      }))}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-600 mt-3">
-                왼쪽 폼에서 작업 내용을 입력하고 저장 버튼을 누르면 사진이 함께 저장됩니다.
-              </p>
-            </div>
-          )}
 
           <div className="space-y-6 max-h-[800px] overflow-y-auto">
             {(() => {
@@ -525,7 +504,22 @@ const SiteLog = () => {
                 return (
                   <div className="space-y-4">
                     {selectedDateLogs.map(log => (
-                      <div key={log.id} className="bg-gray-50 rounded-lg p-4">
+                      <div
+                        key={log.id}
+                        className={`bg-gray-50 rounded-lg p-4 transition-all ${
+                          isDraggingOnLog === log.id ? 'ring-2 ring-blue-400 bg-blue-100' : ''
+                        }`}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDraggingOnLog(log.id);
+                        }}
+                        onDragLeave={() => setIsDraggingOnLog(null)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDraggingOnLog(null);
+                          handleLogImageUpload(log.id, e.dataTransfer.files);
+                        }}
+                      >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
@@ -538,60 +532,22 @@ const SiteLog = () => {
                               <p className="text-sm text-gray-700">{log.notes}</p>
                             )}
                           </div>
-                          <button
-                            onClick={() => handleDelete(log.id)}
-                            className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </button>
-                        </div>
-
-                        {/* 이미지 갤러리 - 크게 보기 */}
-                        <div
-                          className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 ${
-                            isDraggingOnLog === log.id ? 'ring-2 ring-blue-400 bg-blue-50 rounded-lg p-2' : ''
-                          }`}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            setIsDraggingOnLog(log.id);
-                          }}
-                          onDragLeave={() => setIsDraggingOnLog(null)}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            setIsDraggingOnLog(null);
-                            handleLogImageUpload(log.id, e.dataTransfer.files);
-                          }}
-                        >
-                          {log.images && log.images.map((img, idx) => (
-                            <div key={idx} className="relative group">
-                              <img
-                                src={img}
-                                alt={`현장사진 ${idx + 1}`}
-                                className="w-full aspect-[4/3] object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
-                                onClick={() => openImageGallery(log.images, idx)}
-                              />
-                              <button
-                                onClick={() => openImageGallery(log.images, idx)}
-                                className="absolute top-2 right-2 p-1.5 bg-black bg-opacity-50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <Maximize2 className="h-4 w-4" />
-                              </button>
-                              <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                                {idx + 1} / {log.images.length}
-                              </div>
-                            </div>
-                          ))}
-                          {/* 사진 추가 버튼 */}
-                          <div>
+                          <div className="flex items-center gap-2">
                             <button
                               onClick={() => {
                                 setEditingLogId(log.id);
                                 logFileInputRef.current?.click();
                               }}
-                              className="w-full aspect-[4/3] border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                              className="p-1.5 hover:bg-gray-200 rounded transition-colors"
                               title="사진 추가"
                             >
-                              <Plus className="h-8 w-8 text-gray-400" />
+                              <Plus className="h-4 w-4 text-gray-600" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(log.id)}
+                              className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
                             </button>
                             {/* 숨겨진 파일 입력 */}
                             {editingLogId === log.id && (
@@ -611,6 +567,31 @@ const SiteLog = () => {
                             )}
                           </div>
                         </div>
+
+                        {/* 이미지 갤러리 - 크게 보기 */}
+                        {log.images && log.images.length > 0 && (
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                            {log.images.map((img, idx) => (
+                              <div key={idx} className="relative group">
+                                <img
+                                  src={img}
+                                  alt={`현장사진 ${idx + 1}`}
+                                  className="w-full aspect-[4/3] object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
+                                  onClick={() => openImageGallery(log.images, idx)}
+                                />
+                                <button
+                                  onClick={() => openImageGallery(log.images, idx)}
+                                  className="absolute top-2 right-2 p-1.5 bg-black bg-opacity-50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <Maximize2 className="h-4 w-4" />
+                                </button>
+                                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                  {idx + 1} / {log.images.length}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
