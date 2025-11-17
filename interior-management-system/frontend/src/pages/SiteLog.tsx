@@ -255,6 +255,35 @@ const SiteLog = () => {
     setImageModal(prev => ({ ...prev, url: imageModal.images![newIndex] }));
   };
 
+  // 키보드 이벤트 처리
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!imageModal.show) return;
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (imageModal.images && imageModal.images.length > 1) {
+            navigateImage(-1);
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          if (imageModal.images && imageModal.images.length > 1) {
+            navigateImage(1);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setImageModal({ show: false, url: null });
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [imageModal.show, imageModal.images, currentImageIndex]);
+
   return (
     <div className="space-y-4">
 
