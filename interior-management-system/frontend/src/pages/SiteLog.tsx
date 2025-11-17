@@ -46,7 +46,6 @@ const SiteLog = () => {
 
   // 수정 중인 로그 추적
   const [editingLogId, setEditingLogId] = useState<string | null>(null);
-  const [isDraggingOnLog, setIsDraggingOnLog] = useState<string | null>(null);
   const logFileInputRef = useRef<HTMLInputElement>(null);
 
   // 프로젝트 초기값 설정
@@ -583,7 +582,24 @@ const SiteLog = () => {
 
         {/* 오른쪽: 선택된 날짜의 일지 */}
         <div
-          className="lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+          className={`lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all ${
+            isDraggingEmpty ? 'ring-2 ring-blue-400 bg-blue-50' : ''
+          }`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDraggingEmpty(true);
+          }}
+          onDragLeave={(e) => {
+            // 자식 요소로 이동할 때는 무시
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setIsDraggingEmpty(false);
+            }
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDraggingEmpty(false);
+            handleDrop(e);
+          }}
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">
@@ -610,20 +626,7 @@ const SiteLog = () => {
                     {selectedDateLogs.map(log => (
                       <div
                         key={log.id}
-                        className={`bg-gray-50 rounded-lg p-4 transition-all ${
-                          isDraggingOnLog === log.id ? 'ring-2 ring-blue-400 bg-blue-100' : ''
-                        }`}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          setIsDraggingOnLog(log.id);
-                        }}
-                        onDragLeave={() => setIsDraggingOnLog(null)}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();  // 이벤트 버블링 방지
-                          setIsDraggingOnLog(null);
-                          handleLogImageUpload(log.id, e.dataTransfer.files);
-                        }}
+                        className="bg-gray-50 rounded-lg p-4"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
@@ -721,24 +724,7 @@ const SiteLog = () => {
                   <div>
                     {/* 큰 드래그 영역 */}
                     <div
-                      className={`rounded-lg p-12 text-center transition-colors ${
-                        isDraggingEmpty ? 'bg-gray-100 ring-2 ring-blue-400' : 'bg-gray-50 hover:bg-gray-100'
-                      }`}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsDraggingEmpty(true);
-                      }}
-                      onDragLeave={(e) => {
-                        e.stopPropagation();
-                        setIsDraggingEmpty(false);
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsDraggingEmpty(false);
-                        handleDrop(e);
-                      }}
+                      className="rounded-lg p-12 text-center bg-gray-50 hover:bg-gray-100 transition-colors"
                     >
                       <Camera className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                       <p className="text-lg font-medium text-gray-700 mb-2">
