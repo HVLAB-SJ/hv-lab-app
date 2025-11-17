@@ -29,7 +29,7 @@ const SiteLog = () => {
   const [logs, setLogs] = useState<SiteLog[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDraggingEmpty, setIsDraggingEmpty] = useState(false);
   const [imageModal, setImageModal] = useState<{ show: boolean; url: string | null; images?: string[] }>({ show: false, url: null });
   const [isUploading, setIsUploading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -179,7 +179,6 @@ const SiteLog = () => {
   // 드래그 앤 드롭
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
     handleImageUpload(e.dataTransfer.files);
   }, [handleImageUpload]);
 
@@ -584,29 +583,7 @@ const SiteLog = () => {
 
         {/* 오른쪽: 선택된 날짜의 일지 */}
         <div
-          className={`lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all ${
-            isDragging ? 'ring-2 ring-blue-400 bg-blue-50' : ''
-          }`}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragLeave={(e) => {
-            // 자식 요소로 이동할 때는 무시
-            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-              setIsDragging(false);
-            }
-          }}
-          onDrop={(e) => {
-            // 로그 영역에서 처리되지 않은 경우에만 처리
-            if (!isDraggingOnLog) {
-              handleDrop(e);
-            } else {
-              e.preventDefault();
-              setIsDragging(false);
-              setIsDraggingOnLog(null);
-            }
-          }}
+          className="lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-4"
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">
@@ -745,14 +722,23 @@ const SiteLog = () => {
                     {/* 큰 드래그 영역 */}
                     <div
                       className={`rounded-lg p-12 text-center transition-colors ${
-                        isDragging ? 'bg-gray-100' : 'bg-gray-50 hover:bg-gray-100'
+                        isDraggingEmpty ? 'bg-gray-100 ring-2 ring-blue-400' : 'bg-gray-50 hover:bg-gray-100'
                       }`}
                       onDragOver={(e) => {
                         e.preventDefault();
-                        setIsDragging(true);
+                        e.stopPropagation();
+                        setIsDraggingEmpty(true);
                       }}
-                      onDragLeave={() => setIsDragging(false)}
-                      onDrop={handleDrop}
+                      onDragLeave={(e) => {
+                        e.stopPropagation();
+                        setIsDraggingEmpty(false);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsDraggingEmpty(false);
+                        handleDrop(e);
+                      }}
                     >
                       <Camera className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                       <p className="text-lg font-medium text-gray-700 mb-2">
