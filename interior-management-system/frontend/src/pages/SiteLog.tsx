@@ -708,7 +708,7 @@ const SiteLog = () => {
             </h2>
           </div>
 
-          <div className="space-y-6 max-h-[900px] overflow-y-auto">
+          <div className="space-y-6 max-h-[1000px] overflow-y-auto">
             {(() => {
               const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
               const selectedDateLogs = logs.filter(log => {
