@@ -427,7 +427,7 @@ const SiteLog = () => {
                     <img
                       src={img}
                       alt={`대기 ${idx + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
+                      className="w-full aspect-[4/3] object-cover rounded-lg"
                     />
                     <button
                       onClick={() => setFormData(prev => ({
@@ -493,7 +493,7 @@ const SiteLog = () => {
                                 <img
                                   src={img}
                                   alt={`현장사진 ${idx + 1}`}
-                                  className="w-full h-36 lg:h-44 object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
+                                  className="w-full aspect-[4/3] object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
                                   onClick={() => openImageGallery(log.images, idx)}
                                 />
                                 <button
