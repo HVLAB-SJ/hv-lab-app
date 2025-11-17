@@ -84,7 +84,8 @@ const paymentService = {
       laborAmount: data.laborAmount || 0,
       originalLaborAmount: data.originalLaborAmount || 0,
       applyTaxDeduction: data.applyTaxDeduction || false,
-      includesVAT: data.includesVAT || false
+      includesVAT: data.includesVAT || false,
+      quickText: (data as any).quickText || ''  // 원본 텍스트 추가
     };
     console.log('[paymentService.createPayment] Sending to backend:', requestData);
     const response = await api.post('/payments', requestData);

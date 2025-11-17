@@ -263,7 +263,8 @@ const ExecutionHistory = () => {
         vatAmount: vatAmount, // 부가세
         totalAmount: totalAmount, // 총액
         images: paymentRecordImages[payment.id] || [],
-        notes: payment.notes
+        notes: payment.notes,
+        quickText: (payment as any).quickText || ''  // 원본 텍스트 추가
       };
     });
 
@@ -1020,6 +1021,58 @@ const ExecutionHistory = () => {
                       ₩{(record.totalAmount || 0).toLocaleString()}
                     </p>
                   </div>
+                  {/* 원본 텍스트 표시 */}
+                  {record.type === 'payment' && (record as any).quickText && (
+                    <div className="mt-3 p-2 bg-blue-50 rounded-lg">
+                      <p className="text-xs font-semibold text-blue-900 mb-1">자동 채우기 원본:</p>
+                      <p className="text-xs text-blue-800 whitespace-pre-wrap mb-2">{(record as any).quickText}</p>
+                      <button
+                        onClick={() => {
+                          // 원본 텍스트를 기반으로 금액 분할 제안
+                          const quickText = (record as any).quickText || '';
+                          const totalAmount = record.totalAmount || 0;
+
+                          // 자재비/인건비 키워드 확인
+                          const hasMaterial = quickText.includes('자재') || quickText.includes('재료');
+                          const hasLabor = quickText.includes('인건') || quickText.includes('노무');
+
+                          // 기본 비율 (자재비 70%, 인건비 30%)
+                          let materialRatio = 0.7;
+                          let laborRatio = 0.3;
+
+                          // 키워드에 따른 비율 조정
+                          if (hasMaterial && !hasLabor) {
+                            materialRatio = 1;
+                            laborRatio = 0;
+                          } else if (!hasMaterial && hasLabor) {
+                            materialRatio = 0;
+                            laborRatio = 1;
+                          }
+
+                          const suggestedMaterial = Math.round(totalAmount * materialRatio);
+                          const suggestedLabor = Math.round(totalAmount * laborRatio);
+
+                          // 폼에 자동 입력
+                          setFormData(prev => ({
+                            ...prev,
+                            project: record.project,
+                            date: format(new Date(record.date), 'yyyy-MM-dd'),
+                            process: record.process || '',
+                            itemName: record.itemName || '',
+                            materialCost: suggestedMaterial,
+                            laborCost: suggestedLabor
+                          }));
+
+                          // 모바일에서는 폼 뷰로 전환
+                          setMobileView('form');
+                          toast.success(`금액 분할 제안: 자재비 ${suggestedMaterial.toLocaleString()}원, 인건비 ${suggestedLabor.toLocaleString()}원`);
+                        }}
+                        className="w-full px-2 py-1.5 text-xs font-medium text-blue-700 bg-white border border-blue-300 rounded hover:bg-blue-50 transition-colors"
+                      >
+                        금액 분할하기
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             }
@@ -1048,11 +1101,69 @@ const ExecutionHistory = () => {
             {/* 선택된 레코드가 있을 때 */}
             {selectedRecord ? (() => {
               const record = executionRecords.find(r => r.id === selectedRecord);
+              const fullRecord = allRecords.find(r => r.id === selectedRecord);
               const images = record?.images || paymentRecordImages[selectedRecord] || [];
 
-              return images.length > 0 ? (
-                // 이미지가 있을 때
-                <div className="grid grid-cols-1 gap-3">
+              return (
+                <div className="h-full flex flex-col">
+                  {/* 데스크톱에서 원본 텍스트 표시 */}
+                  {!isMobileDevice && fullRecord?.type === 'payment' && (fullRecord as any).quickText && (
+                    <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-blue-900 mb-2">자동 채우기 원본:</p>
+                          <p className="text-sm text-blue-800 whitespace-pre-wrap">{(fullRecord as any).quickText}</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            // 원본 텍스트를 기반으로 금액 분할 제안
+                            const quickText = (fullRecord as any).quickText || '';
+                            const totalAmount = fullRecord.totalAmount || 0;
+
+                            // 자재비/인건비 키워드 확인
+                            const hasMaterial = quickText.includes('자재') || quickText.includes('재료');
+                            const hasLabor = quickText.includes('인건') || quickText.includes('노무');
+
+                            // 기본 비율 (자재비 70%, 인건비 30%)
+                            let materialRatio = 0.7;
+                            let laborRatio = 0.3;
+
+                            // 키워드에 따른 비율 조정
+                            if (hasMaterial && !hasLabor) {
+                              materialRatio = 1;
+                              laborRatio = 0;
+                            } else if (!hasMaterial && hasLabor) {
+                              materialRatio = 0;
+                              laborRatio = 1;
+                            }
+
+                            const suggestedMaterial = Math.round(totalAmount * materialRatio);
+                            const suggestedLabor = Math.round(totalAmount * laborRatio);
+
+                            // 폼에 자동 입력
+                            setFormData(prev => ({
+                              ...prev,
+                              project: fullRecord.project,
+                              date: format(new Date(fullRecord.date), 'yyyy-MM-dd'),
+                              process: fullRecord.process || '',
+                              itemName: fullRecord.itemName || '',
+                              materialCost: suggestedMaterial,
+                              laborCost: suggestedLabor
+                            }));
+
+                            toast.success(`금액 분할 제안: 자재비 ${suggestedMaterial.toLocaleString()}원, 인건비 ${suggestedLabor.toLocaleString()}원`);
+                          }}
+                          className="ml-3 px-3 py-1.5 text-xs font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap"
+                        >
+                          금액 분할
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {images.length > 0 ? (
+                    // 이미지가 있을 때
+                    <div className="grid grid-cols-1 gap-3 flex-1">
                   {images.map((img, index) => (
                     <div key={index} className="relative group border rounded-lg overflow-hidden">
                       <img
@@ -1092,6 +1203,8 @@ const ExecutionHistory = () => {
                     <p className="text-xs text-gray-500 mt-1">또는 이미지를 드래그하거나 Ctrl+V로 붙여넣기</p>
                   </div>
                 </label>
+                  )}
+                </div>
               );
             })() : (
               // 선택된 레코드가 없을 때

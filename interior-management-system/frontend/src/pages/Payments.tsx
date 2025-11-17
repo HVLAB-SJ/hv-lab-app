@@ -1300,6 +1300,7 @@ const Payments = () => {
             bankName: formData.bankName,
             accountNumber: formData.accountNumber
           } : undefined,
+          quickText: formData.quickText || '',  // 자동 채우기에 사용된 원본 텍스트 저장
           attachments: [],
           createdAt: now,
           updatedAt: now

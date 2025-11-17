@@ -365,7 +365,8 @@ export const useDataStore = create<DataStore>()(
         laborAmount: payment.laborAmount || 0,
         originalLaborAmount: payment.originalLaborAmount || 0,
         applyTaxDeduction: payment.applyTaxDeduction || false,
-        includesVAT: payment.includesVAT || false
+        includesVAT: payment.includesVAT || false,
+        quickText: (payment as any).quickText || ''  // 원본 텍스트 추가
       };
       console.log('[addPaymentToAPI] Sending payment data:', paymentData);
       await paymentService.createPayment(paymentData);
