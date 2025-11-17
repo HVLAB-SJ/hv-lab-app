@@ -727,7 +727,7 @@ const SiteLog = () => {
                               ))}
                             </div>
                           ) : (
-                            <div className="flex items-center justify-center h-[150px] border-2 border-dashed border-gray-200 rounded-lg">
+                            <div className="flex items-center justify-center h-[150px] bg-gray-50 rounded-lg">
                               <div className="text-center">
                                 <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                                 <p className="text-sm text-gray-500">사진을 드래그하거나 + 버튼을 클릭하세요</p>
@@ -744,8 +744,8 @@ const SiteLog = () => {
                   <div>
                     {/* 큰 드래그 영역 */}
                     <div
-                      className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-                        isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
+                      className={`rounded-lg p-12 text-center transition-colors ${
+                        isDragging ? 'bg-gray-100' : 'bg-gray-50 hover:bg-gray-100'
                       }`}
                       onDragOver={(e) => {
                         e.preventDefault();
