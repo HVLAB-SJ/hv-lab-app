@@ -464,6 +464,57 @@ const Payments = () => {
       includeVat: false
     };
 
+    // 먼저 무통장 입금 안내 형식 체크
+    const isBankTransferNotification = lines.some(line =>
+      line.includes('무통장 입금') || line.includes('무통장입금')
+    );
+
+    // 특정 패턴으로 데이터 추출 (상품명, 예금주, 입금금액 등)
+    lines.forEach((line, index) => {
+      // 상품명 패턴 추출
+      if (line.includes('상품명') && line.includes(':')) {
+        const match = line.match(/상품명\s*:\s*(.+)/);
+        if (match) {
+          result.itemName = match[1].trim();
+        }
+      }
+
+      // 예금주 패턴 추출
+      if (line.includes('예금주') && line.includes(':')) {
+        const match = line.match(/예금주\s*:\s*(.+)/);
+        if (match) {
+          result.bankInfo.accountHolder = match[1].trim();
+        }
+      }
+
+      // 입금은행 패턴 추출
+      if (line.includes('입금은행') && line.includes(':')) {
+        const match = line.match(/입금은행\s*:\s*(.+)/);
+        if (match) {
+          result.bankInfo.bankName = match[1].trim();
+        }
+      }
+
+      // 계좌번호 패턴 추출
+      if (line.includes('계좌번호') && line.includes(':')) {
+        const match = line.match(/계좌번호\s*:\s*(.+)/);
+        if (match) {
+          result.bankInfo.accountNumber = match[1].trim();
+        }
+      }
+
+      // 입금금액 패턴 추출
+      if (line.includes('입금금액') && line.includes(':')) {
+        const match = line.match(/입금금액\s*:\s*([\d,]+)원?/);
+        if (match) {
+          result.amounts.total = parseInt(match[1].replace(/,/g, ''));
+        }
+      }
+    });
+
+    // 무통장 입금 안내가 아닌 경우에만 기존 로직 적용
+    if (!isBankTransferNotification) {
+
     // 계좌번호가 발견된 줄 인덱스 추적
     let accountNumberFoundAtIndex = -1;
 
@@ -738,7 +789,8 @@ const Payments = () => {
         '가구': '가구', '붙박이장': '가구', '수납장': '가구',
         '주방': '주방', '싱크대': '주방', '주방가구': '주방',
         '욕실': '욕실', '화장실': '욕실', '변기': '욕실', '세면대': '욕실', '양변기': '욕실',
-        '간판': '간판', '사인물': '간판', '현수막': '간판'
+        '간판': '간판', '사인물': '간판', '현수막': '간판',
+        '보양': '가설', '가설': '가설'
       };
 
       // 각 줄에서 공정 키워드 찾기
@@ -753,11 +805,17 @@ const Payments = () => {
       if (index === 0 && !result.itemName) {
         // 특수문자 제거하고 텍스트만 추출
         const cleanText = line.replace(/[\[\]{}()<>]/g, '').trim();
-        if (cleanText) {
+        if (cleanText && !cleanText.includes('무통장 입금')) {
           result.itemName = cleanText.substring(0, 50);
         }
       }
     });
+    } // 무통장 입금 안내가 아닌 경우 종료
+
+    // 보양이 포함되면 가설로 설정
+    if (result.itemName && result.itemName.includes('보양')) {
+      result.vendor = '가설';
+    }
 
     return result;
   };
@@ -774,7 +832,7 @@ const Payments = () => {
     const processKeywords = [
       '목공', '타일', '도배', '전기', '설비', '샤시', '유리', '방수', '철거',
       '청소', '준공청소', '입주청소', '미장', '석공', '도장', '페인트', '필름',
-      '바닥', '마루', '장판', '가구', '주방', '욕실', '화장실'
+      '바닥', '마루', '장판', '가구', '주방', '욕실', '화장실', '보양', '가설'
     ];
 
     // 텍스트에서 공정 키워드 찾기
@@ -1571,7 +1629,7 @@ const Payments = () => {
           }}
           className="w-full px-3 py-2.5 md:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
         >
-          <option value="">프로젝트 선택</option>
+          {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
           {projects.filter(p => p.status !== 'completed').map(project => (
             <option key={project.id} value={project.name}>{project.name}</option>
           ))}
@@ -1634,7 +1692,7 @@ const Payments = () => {
                 }}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
               >
-                <option value="">프로젝트 선택</option>
+                {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
                 {projects.filter(p => p.status !== 'completed').map(project => (
                   <option key={project.id} value={project.name}>{project.name}</option>
                 ))}

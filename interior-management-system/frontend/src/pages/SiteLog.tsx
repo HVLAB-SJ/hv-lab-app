@@ -28,6 +28,7 @@ const SiteLog = () => {
   const projects = useFilteredProjects();
   const [logs, setLogs] = useState<SiteLog[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isDraggingEmpty, setIsDraggingEmpty] = useState(false);
   const [imageModal, setImageModal] = useState<{ show: boolean; url: string | null; images?: string[] }>({ show: false, url: null });
@@ -72,6 +73,15 @@ const SiteLog = () => {
       localStorage.setItem(storageKey, selectedProject);
     }
   }, [selectedProject, user]);
+
+  // Cleanup auto-save timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, []);
 
   // 로그 데이터 로드
   useEffect(() => {
@@ -366,6 +376,53 @@ const SiteLog = () => {
     }
   };
 
+  // Auto-save function for notes
+  const handleAutoSave = useCallback(async (notes: string) => {
+    if (!selectedProject || !notes) {
+      return;
+    }
+
+    try {
+      // 같은 날짜와 프로젝트의 기존 로그 확인
+      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+      const existingLog = logs.find(log => {
+        try {
+          const logDate = log.date ? new Date(log.date) : null;
+          return logDate && !isNaN(logDate.getTime()) &&
+                 format(logDate, 'yyyy-MM-dd') === selectedDateStr &&
+                 log.project === selectedProject;
+        } catch {
+          return false;
+        }
+      });
+
+      if (existingLog) {
+        // 기존 로그가 있으면 노트 업데이트
+        await siteLogService.updateLog(existingLog.id, {
+          project: existingLog.project,
+          date: existingLog.date,
+          images: existingLog.images,
+          notes: notes
+        });
+      } else {
+        // 기존 로그가 없으면 새로 생성
+        const logData = {
+          project: selectedProject,
+          date: selectedDate,
+          images: formData.images,
+          notes: notes,
+          createdBy: user?.name || ''
+        };
+        await siteLogService.createLog(logData);
+      }
+
+      // 목록 새로고침
+      await loadSiteLogs();
+    } catch (error) {
+      console.error('Failed to auto-save site log:', error);
+    }
+  }, [selectedProject, selectedDate, logs, formData.images, user, loadSiteLogs]);
+
   // 일지 삭제
   const handleDelete = async (logId: string) => {
     if (!window.confirm('이 현장일지를 삭제하시겠습니까?')) return;
@@ -658,25 +715,25 @@ const SiteLog = () => {
                 </label>
                 <textarea
                   value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  onChange={(e) => {
+                    const newNotes = e.target.value;
+                    setFormData(prev => ({ ...prev, notes: newNotes }));
+
+                    // Clear existing timer
+                    if (autoSaveTimerRef.current) {
+                      clearTimeout(autoSaveTimerRef.current);
+                    }
+
+                    // Set new timer for auto-save (1.5 seconds delay)
+                    autoSaveTimerRef.current = setTimeout(() => {
+                      handleAutoSave(newNotes);
+                    }, 1500);
+                  }}
                   rows={10}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none"
-                  placeholder="오늘 진행한 작업 내용을 입력하세요"
+                  placeholder="오늘 진행한 작업 내용을 입력하세요 (자동 저장됨)"
                 />
               </div>
-
-              {/* 저장 버튼 */}
-              <button
-                onClick={handleSave}
-                disabled={isUploading}
-                className={`w-full py-2 rounded-lg font-medium text-sm transition-colors ${
-                  isUploading
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                }`}
-              >
-                {isUploading ? '저장 중...' : '작업 내용 저장'}
-              </button>
             </div>
           </div>
         </div>
