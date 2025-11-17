@@ -1,8 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import { registerSW } from 'virtual:pwa-register';
+import toast from 'react-hot-toast';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
@@ -33,10 +35,81 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const [needRefresh, setNeedRefresh] = useState(false);
+
   useEffect(() => {
-    // Version 1.0.5 - Updated 2025.10.26
+    // Service Worker 업데이트 감지 및 자동 적용
+    const updateSW = registerSW({
+      immediate: true,
+      onNeedRefresh() {
+        // 새 버전이 감지되면
+        console.log('🔄 새로운 버전이 감지되었습니다.');
+        setNeedRefresh(true);
+
+        // 자동으로 업데이트 적용
+        toast.loading('새로운 버전을 적용하는 중...', { duration: 2000 });
+
+        setTimeout(() => {
+          updateSW(true).then(() => {
+            toast.dismiss();
+            toast.success('업데이트가 완료되었습니다!', {
+              duration: 2000,
+              icon: '🚀'
+            });
+            // 자동으로 페이지 새로고침
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          });
+        }, 1500);
+      },
+      onOfflineReady() {
+        console.log('📱 오프라인 사용 준비 완료');
+      },
+      onRegisteredSW(swUrl, r) {
+        console.log('✅ Service Worker 등록:', swUrl);
+        // 주기적으로 업데이트 확인 (1분마다)
+        r && setInterval(() => {
+          console.log('🔍 업데이트 확인 중...');
+          r.update();
+        }, 60000);
+      },
+      onRegisterError(error) {
+        console.error('❌ Service Worker 등록 실패:', error);
+      },
+    });
+
+    // Version 1.0.6 - Updated 2025.11.17 with auto-update
     // 브라우저 알림 권한 요청
     requestNotificationPermission();
+
+    // 버전 체크 (5초 후 첫 체크, 이후 30초마다)
+    const checkVersion = async () => {
+      try {
+        const response = await fetch('/version.json?t=' + Date.now());
+        const data = await response.json();
+        const currentVersion = localStorage.getItem('app_version');
+
+        if (currentVersion && currentVersion !== data.version) {
+          console.log('🔄 새 버전 감지:', data.version);
+          localStorage.setItem('app_version', data.version);
+
+          // Service Worker 업데이트 트리거
+          if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.ready;
+            registration.update();
+          }
+        } else if (!currentVersion) {
+          localStorage.setItem('app_version', data.version);
+        }
+      } catch (error) {
+        console.error('버전 체크 실패:', error);
+      }
+    };
+
+    // 초기 실행 및 주기적 실행
+    setTimeout(checkVersion, 5000); // 5초 후 첫 체크
+    const versionInterval = setInterval(checkVersion, 30000); // 30초마다 체크
 
     // Socket.IO 연결
     const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
@@ -66,6 +139,7 @@ function App() {
 
     return () => {
       socket.disconnect();
+      clearInterval(versionInterval);
     };
   }, []);
 

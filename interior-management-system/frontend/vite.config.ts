@@ -12,13 +12,15 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt', // 'autoUpdate' 대신 'prompt' 사용
       includeAssets: ['favicon.png', 'icon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: false, // Use the existing manifest.json in public folder
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        navigateFallback: null,
+        directoryIndex: null,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
