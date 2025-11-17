@@ -243,88 +243,83 @@ const SiteLog = () => {
 
   return (
     <div className="space-y-4">
-      {/* 상단 캘린더와 프로젝트 선택 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
-          {/* 프로젝트 선택 */}
-          <select
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-          >
-            {projects.map(project => (
-              <option key={project.id} value={project.name}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-
-          {/* 선택된 날짜 표시 */}
-          <div className="text-lg font-medium">
-            {format(selectedDate, 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
-          </div>
-        </div>
-
-        {/* 큰 캘린더 */}
-        <div>
-          {/* 캘린더 헤더 */}
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => changeMonth(-1)}
-              className="p-2 hover:bg-gray-100 rounded transition-colors"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <h3 className="text-lg font-semibold">
-              {format(calendarMonth, 'yyyy년 M월')}
-            </h3>
-            <button
-              onClick={() => changeMonth(1)}
-              className="p-2 hover:bg-gray-100 rounded transition-colors"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* 캘린더 그리드 */}
-          <div className="grid grid-cols-7 gap-1">
-            {['일', '월', '화', '수', '목', '금', '토'].map(day => (
-              <div key={day} className="text-center text-sm font-medium text-gray-600 py-2">
-                {day}
-              </div>
-            ))}
-            {getCalendarDays().map((day, idx) => {
-              const isCurrentMonth = day.date.getMonth() === calendarMonth.getMonth();
-              const isToday = format(day.date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
-              const isSelected = format(day.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-
-              return (
-                <div
-                  key={idx}
-                  onClick={() => setSelectedDate(day.date)}
-                  className={`text-center p-3 cursor-pointer rounded-lg transition-colors ${
-                    !isCurrentMonth ? 'text-gray-300' : 'text-gray-700'
-                  } ${isToday ? 'bg-blue-100' : ''} ${
-                    isSelected ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
-                  } ${day.hasImages ? 'font-bold' : ''}`}
-                >
-                  {format(day.date, 'd')}
-                  {day.hasImages && (
-                    <div className="w-2 h-2 bg-green-500 rounded-full mx-auto mt-1"></div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* 왼쪽: 입력 폼 */}
+        {/* 왼쪽: 캘린더 + 입력 폼 */}
         <div className="lg:col-span-3 space-y-4">
+          {/* 프로젝트 선택 및 캘린더 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            {/* 프로젝트 선택 */}
+            <div className="mb-4">
+              <select
+                value={selectedProject}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                {projects.map(project => (
+                  <option key={project.id} value={project.name}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 캘린더 헤더 */}
+            <div className="flex items-center justify-between mb-3">
+              <button
+                onClick={() => changeMonth(-1)}
+                className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <h3 className="text-sm font-semibold">
+                {format(calendarMonth, 'yyyy년 M월')}
+              </h3>
+              <button
+                onClick={() => changeMonth(1)}
+                className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* 캘린더 그리드 */}
+            <div className="grid grid-cols-7 gap-0.5">
+              {['일', '월', '화', '수', '목', '금', '토'].map(day => (
+                <div key={day} className="text-center text-xs font-medium text-gray-600 py-1">
+                  {day}
+                </div>
+              ))}
+              {getCalendarDays().map((day, idx) => {
+                const isCurrentMonth = day.date.getMonth() === calendarMonth.getMonth();
+                const isToday = format(day.date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+                const isSelected = format(day.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => setSelectedDate(day.date)}
+                    className={`text-center p-2 text-xs cursor-pointer rounded transition-colors ${
+                      !isCurrentMonth ? 'text-gray-300' : 'text-gray-700'
+                    } ${isToday ? 'bg-blue-100' : ''} ${
+                      isSelected ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                    } ${day.hasImages ? 'font-bold' : ''}`}
+                  >
+                    {format(day.date, 'd')}
+                    {day.hasImages && (
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full mx-auto mt-0.5"></div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* 입력 폼 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h2 className="text-lg font-semibold mb-4">일지 작성</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              {format(selectedDate, 'M월 d일')} 일지 작성
+            </h2>
 
             <div className="space-y-4">
 
