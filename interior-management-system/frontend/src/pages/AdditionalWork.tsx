@@ -389,7 +389,7 @@ const AdditionalWork = () => {
   return (
     <div className="space-y-3 md:space-y-4">
       {/* 데스크톱 3열 레이아웃 */}
-      <div className="hidden lg:grid gap-4" style={{ gridTemplateColumns: '350px 400px 1fr' }}>
+      <div className="hidden lg:grid gap-4" style={{ gridTemplateColumns: '400px 500px 1fr' }}>
         {/* 왼쪽: 추가내역 등록 폼 */}
         <div className="bg-white border border-gray-200 rounded-lg p-4 h-fit sticky top-4">
           <div className="space-y-3">
