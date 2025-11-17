@@ -703,9 +703,52 @@ const SiteLog = () => {
           }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">
-              {format(selectedDate, 'yyyy년 M월 d일', { locale: ko })} 현장일지
+            <h2 className="text-lg font-semibold flex items-center gap-4">
+              <span>{format(selectedDate, 'yyyy년 M월 d일', { locale: ko })} 현장일지</span>
+              <span className="text-sm font-normal text-gray-600">작성자: {user?.name || '알 수 없음'}</span>
             </h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.multiple = true;
+                  input.accept = 'image/*';
+                  input.onchange = (e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (target.files) {
+                      handleImageUpload(target.files);
+                    }
+                  };
+                  input.click();
+                }}
+                className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+                title="사진 추가"
+              >
+                <Plus className="h-5 w-5 text-gray-600" />
+              </button>
+              <button
+                onClick={() => {
+                  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+                  const selectedDateLogs = logs.filter(log => {
+                    try {
+                      const logDate = log.date ? new Date(log.date) : null;
+                      return logDate && !isNaN(logDate.getTime()) &&
+                             format(logDate, 'yyyy-MM-dd') === selectedDateStr;
+                    } catch {
+                      return false;
+                    }
+                  });
+                  if (selectedDateLogs.length > 0 && window.confirm(`${format(selectedDate, 'M월 d일')}의 모든 현장일지를 삭제하시겠습니까?`)) {
+                    selectedDateLogs.forEach(log => handleDelete(log.id));
+                  }
+                }}
+                className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+                title="일지 삭제"
+              >
+                <Trash2 className="h-5 w-5 text-red-500" />
+              </button>
+            </div>
           </div>
 
           <div className="space-y-6 max-h-[1000px] overflow-y-auto">
@@ -729,50 +772,11 @@ const SiteLog = () => {
                         key={log.id}
                         className="bg-white rounded-lg p-4 border border-gray-200"
                       >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                              <span>작성자: {log.createdBy || log.created_by || '알 수 없음'}</span>
-                            </div>
-                            {log.notes && (
-                              <p className="text-sm text-gray-700">{log.notes}</p>
-                            )}
+                        {log.notes && (
+                          <div className="mb-3">
+                            <p className="text-sm text-gray-700">{log.notes}</p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingLogId(log.id);
-                                logFileInputRef.current?.click();
-                              }}
-                              className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                              title="사진 추가"
-                            >
-                              <Plus className="h-4 w-4 text-gray-600" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(log.id)}
-                              className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </button>
-                            {/* 숨겨진 파일 입력 */}
-                            {editingLogId === log.id && (
-                              <input
-                                ref={logFileInputRef}
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                className="hidden"
-                                onChange={(e) => {
-                                  if (e.target.files) {
-                                    handleLogImageUpload(log.id, e.target.files);
-                                    e.target.value = ''; // 입력 초기화
-                                  }
-                                }}
-                              />
-                            )}
-                          </div>
-                        </div>
+                        )}
 
                         {/* 이미지 갤러리 영역 */}
                         <div className="min-h-[600px]">
