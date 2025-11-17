@@ -1106,9 +1106,9 @@ const ExecutionHistory = () => {
 
               return (
                 <div className="h-full flex flex-col">
-                  {/* 데스크톱에서 원본 텍스트 표시 */}
-                  {!isMobileDevice && fullRecord?.type === 'payment' && (fullRecord as any).quickText && (
-                    <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  {/* 결제요청의 자동 채우기 텍스트를 이미지 영역 상단에 표시 */}
+                  {fullRecord?.type === 'payment' && (fullRecord as any).quickText && (
+                    <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-blue-900 mb-2">자동 채우기 원본:</p>
@@ -1163,46 +1163,46 @@ const ExecutionHistory = () => {
 
                   {images.length > 0 ? (
                     // 이미지가 있을 때
-                    <div className="grid grid-cols-1 gap-3 flex-1">
-                  {images.map((img, index) => (
-                    <div key={index} className="relative group border rounded-lg overflow-hidden">
-                      <img
-                        src={img}
-                        alt={`증빙 ${index + 1}`}
-                        className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleImageClick(img);
-                        }}
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeImage(index);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                    <div className="grid grid-cols-1 gap-3 flex-1 overflow-y-auto">
+                      {images.map((img, index) => (
+                        <div key={index} className="relative group border rounded-lg overflow-hidden">
+                          <img
+                            src={img}
+                            alt={`증빙 ${index + 1}`}
+                            className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleImageClick(img);
+                            }}
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeImage(index);
+                            }}
+                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                // 이미지가 없을 때 - 업로드 영역 표시
-                <label
-                  htmlFor="image-file-input"
-                  className="h-full flex items-center justify-center cursor-pointer"
-                >
-                  <div
-                    className={`w-full h-full min-h-[200px] border-2 border-dashed rounded-lg p-6 text-center transition-colors flex flex-col items-center justify-center ${
-                      isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm font-medium text-gray-700">클릭하여 선택</p>
-                    <p className="text-xs text-gray-500 mt-1">또는 이미지를 드래그하거나 Ctrl+V로 붙여넣기</p>
-                  </div>
-                </label>
+                  ) : (
+                    // 이미지가 없을 때 - 업로드 영역 표시
+                    <label
+                      htmlFor="image-file-input"
+                      className="h-full flex items-center justify-center cursor-pointer flex-1"
+                    >
+                      <div
+                        className={`w-full h-full min-h-[200px] border-2 border-dashed rounded-lg p-6 text-center transition-colors flex flex-col items-center justify-center ${
+                          isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm font-medium text-gray-700">클릭하여 선택</p>
+                        <p className="text-xs text-gray-500 mt-1">또는 이미지를 드래그하거나 Ctrl+V로 붙여넣기</p>
+                      </div>
+                    </label>
                   )}
                 </div>
               );
