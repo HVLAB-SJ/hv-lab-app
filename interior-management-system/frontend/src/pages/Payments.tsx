@@ -1055,14 +1055,39 @@ const Payments = () => {
 
   // 클립보드 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
-    if (!selectedRecord) {
-      toast.error('먼저 결제요청을 선택해주세요');
-      return;
-    }
-
     const items = e.clipboardData?.items;
     if (!items) return;
 
+    // 이미지 붙여넣기인지 확인
+    let hasImage = false;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        hasImage = true;
+        break;
+      }
+    }
+
+    // 텍스트 붙여넣기는 처리하지 않음 (폼 입력 허용)
+    if (!hasImage) {
+      return;
+    }
+
+    // 이미지 붙여넣기인 경우에만 selectedRecord 체크
+    if (!selectedRecord) {
+      // 폼 입력 필드에서 붙여넣기 중인지 확인
+      const activeElement = document.activeElement;
+      const isFormInput = activeElement?.tagName === 'INPUT' ||
+                         activeElement?.tagName === 'TEXTAREA' ||
+                         activeElement?.classList.contains('form-input');
+
+      // 폼 입력 중이 아닐 때만 에러 표시
+      if (!isFormInput) {
+        toast.error('먼저 결제요청을 선택해주세요');
+      }
+      return;
+    }
+
+    // 이미지 처리
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
         e.preventDefault();
