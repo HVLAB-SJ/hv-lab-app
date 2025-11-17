@@ -60,8 +60,9 @@ const SiteLog = () => {
       const data = await siteLogService.getProjectLogs(selectedProject);
       setLogs(data.map((log: any) => ({
         ...log,
-        id: log._id,
-        date: new Date(log.date)
+        id: log._id || log.id,
+        date: log.date ? new Date(log.date) : new Date(),
+        createdAt: log.created_at ? new Date(log.created_at) : new Date()
       })));
     } catch (error) {
       console.error('Failed to load site logs:', error);
@@ -193,9 +194,15 @@ const SiteLog = () => {
     const currentDate = new Date(startDate);
 
     for (let i = 0; i < 42; i++) {
-      const dayLogs = logs.filter(log =>
-        format(log.date, 'yyyy-MM-dd') === format(currentDate, 'yyyy-MM-dd')
-      );
+      const dayLogs = logs.filter(log => {
+        try {
+          const logDate = log.date ? new Date(log.date) : null;
+          return logDate && !isNaN(logDate.getTime()) &&
+                 format(logDate, 'yyyy-MM-dd') === format(currentDate, 'yyyy-MM-dd');
+        } catch {
+          return false;
+        }
+      });
 
       days.push({
         date: new Date(currentDate),
@@ -217,11 +224,18 @@ const SiteLog = () => {
 
   // 날짜별 그룹화된 로그
   const groupedLogs = logs.reduce((groups, log) => {
-    const dateKey = format(log.date, 'yyyy-MM-dd');
-    if (!groups[dateKey]) {
-      groups[dateKey] = [];
+    try {
+      const logDate = log.date ? new Date(log.date) : null;
+      if (logDate && !isNaN(logDate.getTime())) {
+        const dateKey = format(logDate, 'yyyy-MM-dd');
+        if (!groups[dateKey]) {
+          groups[dateKey] = [];
+        }
+        groups[dateKey].push(log);
+      }
+    } catch {
+      // 날짜 파싱 실패 시 무시
     }
-    groups[dateKey].push(log);
     return groups;
   }, {} as Record<string, SiteLog[]>);
 
@@ -407,9 +421,15 @@ const SiteLog = () => {
           <div className="space-y-6 max-h-[800px] overflow-y-auto">
             {(() => {
               const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-              const selectedDateLogs = logs.filter(log =>
-                format(log.date, 'yyyy-MM-dd') === selectedDateStr
-              );
+              const selectedDateLogs = logs.filter(log => {
+                try {
+                  const logDate = log.date ? new Date(log.date) : null;
+                  return logDate && !isNaN(logDate.getTime()) &&
+                         format(logDate, 'yyyy-MM-dd') === selectedDateStr;
+                } catch {
+                  return false;
+                }
+              });
 
               if (selectedDateLogs.length > 0) {
                 return (
@@ -419,8 +439,10 @@ const SiteLog = () => {
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                              <span>작성자: {log.createdBy}</span>
-                              <span>• {format(new Date(log.createdAt), 'HH:mm')}</span>
+                              <span>작성자: {log.createdBy || log.created_by || '알 수 없음'}</span>
+                              {log.createdAt && (
+                                <span>• {format(new Date(log.createdAt), 'HH:mm')}</span>
+                              )}
                             </div>
                             {log.notes && (
                               <p className="text-sm text-gray-700">{log.notes}</p>
