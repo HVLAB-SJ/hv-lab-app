@@ -197,13 +197,14 @@ const Payments = () => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
-    if (projects.length > 0 && !formData.project) {
-      const initialProject = getInitialProject();
-      if (initialProject) {
-        setFormData(prev => ({ ...prev, project: initialProject }));
-        localStorage.setItem('lastSelectedProject', initialProject);
-      }
-    }
+    // 프로젝트 자동 선택 제거 - 사용자가 필요시 선택하도록 변경
+    // if (projects.length > 0 && !formData.project) {
+    //   const initialProject = getInitialProject();
+    //   if (initialProject) {
+    //     setFormData(prev => ({ ...prev, project: initialProject }));
+    //     localStorage.setItem('lastSelectedProject', initialProject);
+    //   }
+    // }
 
     return () => window.removeEventListener('resize', checkMobile);
   }, [loadPaymentsFromAPI, projects]);
@@ -1137,10 +1138,7 @@ const Payments = () => {
     console.log('💰 Current user:', user);
     console.log('💰 Form data:', formData);
 
-    if (!formData.project) {
-      toast.error('프로젝트를 선택해주세요');
-      return;
-    }
+    // 프로젝트는 선택사항이므로 체크하지 않음
     if (!formData.itemName) {
       toast.error('항목명을 입력해주세요');
       return;
@@ -1563,7 +1561,7 @@ const Payments = () => {
     <div className="space-y-3 md:space-y-4">
       {/* 모바일에서 프로젝트 선택 */}
       <div className="lg:hidden mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트 (선택)</label>
         <select
           value={formData.project}
           onChange={(e) => {
@@ -1627,7 +1625,7 @@ const Payments = () => {
           <div className="space-y-4">
             {/* 프로젝트 - 데스크톱에서만 표시 */}
             <div className="hidden lg:block">
-              <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트 *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트 (선택)</label>
               <select
                 value={formData.project}
                 onChange={(e) => {
