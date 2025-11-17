@@ -61,6 +61,27 @@ const SiteLog = () => {
     loadSiteLogs();
   }, [selectedProject]);
 
+  // 선택된 날짜의 기존 로그 노트를 폼에 로드
+  useEffect(() => {
+    const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+    const existingLog = logs.find(log => {
+      try {
+        const logDate = log.date ? new Date(log.date) : null;
+        return logDate && !isNaN(logDate.getTime()) &&
+               format(logDate, 'yyyy-MM-dd') === selectedDateStr &&
+               log.project === selectedProject;
+      } catch {
+        return false;
+      }
+    });
+
+    if (existingLog && existingLog.notes) {
+      setFormData(prev => ({ ...prev, notes: existingLog.notes || '' }));
+    } else {
+      setFormData(prev => ({ ...prev, notes: '' }));
+    }
+  }, [selectedDate, selectedProject, logs]);
+
   const loadSiteLogs = async () => {
     if (!selectedProject) return;
 
@@ -79,7 +100,7 @@ const SiteLog = () => {
     }
   };
 
-  // 이미지 업로드 처리 - 바로 저장
+  // 이미지 업로드 처리 - 바로 저장 또는 기존 로그에 추가
   const handleImageUpload = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     const imageFiles = fileArray.filter(f => f.type.startsWith('image/'));
@@ -109,16 +130,41 @@ const SiteLog = () => {
     try {
       const images = await Promise.all(promises);
 
-      const logData = {
-        project: selectedProject,
-        date: selectedDate,
-        images: images,
-        notes: '',
-        createdBy: user?.name || ''
-      };
+      // 같은 날짜와 프로젝트의 기존 로그 확인
+      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+      const existingLog = logs.find(log => {
+        try {
+          const logDate = log.date ? new Date(log.date) : null;
+          return logDate && !isNaN(logDate.getTime()) &&
+                 format(logDate, 'yyyy-MM-dd') === selectedDateStr &&
+                 log.project === selectedProject;
+        } catch {
+          return false;
+        }
+      });
 
-      await siteLogService.createLog(logData);
-      toast.success(`${images.length}개의 사진이 저장되었습니다`);
+      if (existingLog) {
+        // 기존 로그가 있으면 이미지 추가
+        const updatedImages = [...existingLog.images, ...images];
+        await siteLogService.updateLog(existingLog.id, {
+          project: existingLog.project,
+          date: existingLog.date,
+          images: updatedImages,
+          notes: existingLog.notes || ''
+        });
+        toast.success(`${images.length}개의 사진이 추가되었습니다`);
+      } else {
+        // 기존 로그가 없으면 새로 생성
+        const logData = {
+          project: selectedProject,
+          date: selectedDate,
+          images: images,
+          notes: '',
+          createdBy: user?.name || ''
+        };
+        await siteLogService.createLog(logData);
+        toast.success(`${images.length}개의 사진이 저장되었습니다`);
+      }
 
       // 로그 목록 다시 로드
       await loadSiteLogs();
@@ -128,7 +174,7 @@ const SiteLog = () => {
     } finally {
       setIsUploading(false);
     }
-  }, [selectedProject, selectedDate, user, loadSiteLogs]);
+  }, [selectedProject, selectedDate, user, logs, loadSiteLogs]);
 
   // 드래그 앤 드롭
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -156,30 +202,54 @@ const SiteLog = () => {
     return () => document.removeEventListener('paste', handlePaste);
   }, [handleImageUpload]);
 
-  // 일지 저장
+  // 일지 저장 (기존 로그에 노트 추가 또는 새 로그 생성)
   const handleSave = async () => {
     if (!selectedProject) {
       toast.error('프로젝트를 선택하세요');
       return;
     }
 
-    if (!formData.notes && formData.images.length === 0) {
-      toast.error('작업 내용을 입력하거나 사진을 업로드해주세요');
+    if (!formData.notes) {
+      toast.error('작업 내용을 입력해주세요');
       return;
     }
 
     setIsUploading(true);
     try {
-      const logData = {
-        project: selectedProject,
-        date: selectedDate,
-        images: formData.images,
-        notes: formData.notes,
-        createdBy: user?.name || ''
-      };
+      // 같은 날짜와 프로젝트의 기존 로그 확인
+      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+      const existingLog = logs.find(log => {
+        try {
+          const logDate = log.date ? new Date(log.date) : null;
+          return logDate && !isNaN(logDate.getTime()) &&
+                 format(logDate, 'yyyy-MM-dd') === selectedDateStr &&
+                 log.project === selectedProject;
+        } catch {
+          return false;
+        }
+      });
 
-      await siteLogService.createLog(logData);
-      toast.success('현장일지가 저장되었습니다');
+      if (existingLog) {
+        // 기존 로그가 있으면 노트 업데이트
+        await siteLogService.updateLog(existingLog.id, {
+          project: existingLog.project,
+          date: existingLog.date,
+          images: existingLog.images,
+          notes: formData.notes
+        });
+        toast.success('작업 내용이 업데이트되었습니다');
+      } else {
+        // 기존 로그가 없으면 새로 생성
+        const logData = {
+          project: selectedProject,
+          date: selectedDate,
+          images: formData.images,
+          notes: formData.notes,
+          createdBy: user?.name || ''
+        };
+        await siteLogService.createLog(logData);
+        toast.success('현장일지가 저장되었습니다');
+      }
 
       // 폼 초기화
       setFormData({
@@ -582,9 +652,6 @@ const SiteLog = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                               <span>작성자: {log.createdBy || log.created_by || '알 수 없음'}</span>
-                              {log.createdAt && (
-                                <span>• {format(new Date(log.createdAt), 'HH:mm')}</span>
-                              )}
                             </div>
                             {log.notes && (
                               <p className="text-sm text-gray-700">{log.notes}</p>
