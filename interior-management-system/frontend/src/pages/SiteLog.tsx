@@ -527,7 +527,16 @@ const SiteLog = () => {
               setIsDragging(false);
             }
           }}
-          onDrop={handleDrop}
+          onDrop={(e) => {
+            // 로그 영역에서 처리되지 않은 경우에만 처리
+            if (!isDraggingOnLog) {
+              handleDrop(e);
+            } else {
+              e.preventDefault();
+              setIsDragging(false);
+              setIsDraggingOnLog(null);
+            }
+          }}
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">
@@ -564,6 +573,7 @@ const SiteLog = () => {
                         onDragLeave={() => setIsDraggingOnLog(null)}
                         onDrop={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();  // 이벤트 버블링 방지
                           setIsDraggingOnLog(null);
                           handleLogImageUpload(log.id, e.dataTransfer.files);
                         }}
