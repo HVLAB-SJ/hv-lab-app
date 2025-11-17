@@ -626,7 +626,7 @@ const SiteLog = () => {
                     {selectedDateLogs.map(log => (
                       <div
                         key={log.id}
-                        className="bg-gray-50 rounded-lg p-4"
+                        className="bg-white rounded-lg p-4 border border-gray-200"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
@@ -707,10 +707,10 @@ const SiteLog = () => {
                               ))}
                             </div>
                           ) : (
-                            <div className="flex items-center justify-center h-[150px] bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-center h-[150px]">
                               <div className="text-center">
-                                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                <p className="text-sm text-gray-500">사진을 드래그하거나 + 버튼을 클릭하세요</p>
+                                <Upload className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                                <p className="text-sm text-gray-400">사진을 드래그하거나 + 버튼을 클릭하세요</p>
                               </div>
                             </div>
                           )}
@@ -724,7 +724,7 @@ const SiteLog = () => {
                   <div>
                     {/* 큰 드래그 영역 */}
                     <div
-                      className="rounded-lg p-12 text-center bg-gray-50 hover:bg-gray-100 transition-colors"
+                      className="rounded-lg p-12 text-center border border-gray-200 hover:border-gray-300 transition-colors"
                     >
                       <Camera className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                       <p className="text-lg font-medium text-gray-700 mb-2">
