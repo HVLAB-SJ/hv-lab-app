@@ -47,8 +47,6 @@ const AdditionalWork = () => {
     date: format(new Date(), 'yyyy-MM-dd'),
     notes: ''
   });
-  const [formImages, setFormImages] = useState<string[]>([]);
-  const [isDraggingForm, setIsDraggingForm] = useState(false);
 
   useEffect(() => {
     // 모바일에서 접속 시 무한 로딩 방지를 위한 초기 프로젝트 설정
@@ -162,66 +160,6 @@ const AdditionalWork = () => {
     saveImagesToWork(workId, updatedImages);
   };
 
-  // 폼 이미지 처리 함수들
-  const handleFormDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingForm(true);
-  };
-
-  const handleFormDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingForm(false);
-  };
-
-  const handleFormDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingForm(false);
-
-    const files = Array.from(e.dataTransfer.files);
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const base64 = event.target?.result as string;
-          setFormImages(prev => [...prev, base64]);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    if (files.some(f => f.type.startsWith('image/'))) {
-      toast.success(`${files.filter(f => f.type.startsWith('image/')).length}개의 이미지가 추가되었습니다`);
-    }
-  };
-
-  const handleFormFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const base64 = event.target?.result as string;
-          setFormImages(prev => [...prev, base64]);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    if (files.length > 0) {
-      toast.success(`${files.length}개의 이미지가 추가되었습니다`);
-    }
-
-    // 파일 입력 초기화
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const removeFormImage = (index: number) => {
-    setFormImages(prev => prev.filter((_, i) => i !== index));
-    toast.success('이미지가 삭제되었습니다');
-  };
-
   // 이미지 클릭 시 모달 열기
   const handleImageClick = (imageUrl: string) => {
     setModalImage(imageUrl);
@@ -310,9 +248,7 @@ const AdditionalWork = () => {
         project: formData.project,
         description: formData.description,
         amount: parseFloat(formData.amount),
-        date: new Date(formData.date),
-        notes: formData.notes,
-        images: formImages
+        date: new Date(formData.date)
       });
 
       toast.success('추가내역이 등록되었습니다');
@@ -325,7 +261,6 @@ const AdditionalWork = () => {
         date: format(new Date(), 'yyyy-MM-dd'),
         notes: ''
       }));
-      setFormImages([]);
 
       // 목록 새로고침
       await loadAdditionalWorks();
@@ -451,77 +386,6 @@ const AdditionalWork = () => {
                 className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="0"
               />
-            </div>
-
-            {/* 메모 */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                메모
-              </label>
-              <input
-                type="text"
-                value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                placeholder="메모 (선택사항)"
-              />
-            </div>
-
-            {/* 이미지 업로드 (신규 등록용) */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                이미지
-              </label>
-              <div
-                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                  isDraggingForm ? 'border-gray-500 bg-gray-50' : 'border-gray-300'
-                }`}
-                onDragOver={handleFormDragOver}
-                onDragLeave={handleFormDragLeave}
-                onDrop={handleFormDrop}
-              >
-                <ImageIcon className="mx-auto h-8 w-8 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-600">
-                  이미지를 드래그하거나 클릭하여 업로드
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFormFileSelect}
-                  className="hidden"
-                  id="form-image-upload"
-                />
-                <label
-                  htmlFor="form-image-upload"
-                  className="mt-3 inline-block px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 cursor-pointer font-medium"
-                >
-                  파일 선택
-                </label>
-              </div>
-
-              {/* 폼 이미지 미리보기 */}
-              {formImages.length > 0 && (
-                <div className="mt-3 grid grid-cols-3 gap-3">
-                  {formImages.map((image, idx) => (
-                    <div key={idx} className="relative group">
-                      <img
-                        src={image}
-                        alt={`이미지 ${idx + 1}`}
-                        className="w-full h-24 object-cover rounded-lg cursor-pointer"
-                        onClick={() => handleImageClick(image)}
-                      />
-                      <button
-                        onClick={() => removeFormImage(idx)}
-                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* 등록 버튼 */}
