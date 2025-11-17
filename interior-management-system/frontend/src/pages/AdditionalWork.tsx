@@ -387,21 +387,21 @@ const AdditionalWork = () => {
   const totalAmount = projectGroups.reduce((sum, group) => sum + group.totalAmount, 0);
 
   return (
-    <div className="space-y-3 md:space-y-4">
+    <div className="space-y-4 md:space-y-6">
       {/* 데스크톱 3열 레이아웃 */}
-      <div className="hidden lg:grid gap-4" style={{ gridTemplateColumns: '400px 500px 1fr' }}>
+      <div className="hidden lg:grid gap-6" style={{ gridTemplateColumns: '500px 600px 1fr' }}>
         {/* 왼쪽: 추가내역 등록 폼 */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 h-fit sticky top-4">
-          <div className="space-y-3">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 h-fit sticky top-4">
+          <div className="space-y-4">
             {/* 프로젝트 선택 */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 프로젝트 *
               </label>
               <select
                 value={formData.project}
                 onChange={(e) => setFormData(prev => ({ ...prev, project: e.target.value }))}
-                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white"
               >
                 {user?.name !== '안팀' && <option value="">선택하세요</option>}
                 {filteredProjects.map((project) => (
@@ -414,74 +414,74 @@ const AdditionalWork = () => {
 
             {/* 일자 */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 일자 *
               </label>
               <input
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
             </div>
 
             {/* 내용 */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 내용 *
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                rows={3}
-                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                rows={5}
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none"
                 placeholder="추가내역 내용을 입력하세요"
               />
             </div>
 
             {/* 금액 */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 금액 *
               </label>
               <input
                 type="number"
                 value={formData.amount}
                 onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="0"
               />
             </div>
 
             {/* 메모 */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 메모
               </label>
               <input
                 type="text"
                 value={formData.notes}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="메모 (선택사항)"
               />
             </div>
 
             {/* 이미지 업로드 (신규 등록용) */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 이미지
               </label>
               <div
-                className={`border-2 border-dashed rounded-lg p-3 text-center transition-colors ${
+                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
                   isDraggingForm ? 'border-gray-500 bg-gray-50' : 'border-gray-300'
                 }`}
                 onDragOver={handleFormDragOver}
                 onDragLeave={handleFormDragLeave}
                 onDrop={handleFormDrop}
               >
-                <ImageIcon className="mx-auto h-6 w-6 text-gray-400" />
-                <p className="mt-1 text-xs text-gray-600">
+                <ImageIcon className="mx-auto h-8 w-8 text-gray-400" />
+                <p className="mt-2 text-sm text-gray-600">
                   이미지를 드래그하거나 클릭하여 업로드
                 </p>
                 <input
@@ -495,7 +495,7 @@ const AdditionalWork = () => {
                 />
                 <label
                   htmlFor="form-image-upload"
-                  className="mt-2 inline-block px-3 py-1 text-xs border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                  className="mt-3 inline-block px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 cursor-pointer font-medium"
                 >
                   파일 선택
                 </label>
@@ -503,20 +503,20 @@ const AdditionalWork = () => {
 
               {/* 폼 이미지 미리보기 */}
               {formImages.length > 0 && (
-                <div className="mt-2 grid grid-cols-3 gap-2">
+                <div className="mt-3 grid grid-cols-3 gap-3">
                   {formImages.map((image, idx) => (
                     <div key={idx} className="relative group">
                       <img
                         src={image}
                         alt={`이미지 ${idx + 1}`}
-                        className="w-full h-20 object-cover rounded cursor-pointer"
+                        className="w-full h-24 object-cover rounded-lg cursor-pointer"
                         onClick={() => handleImageClick(image)}
                       />
                       <button
                         onClick={() => removeFormImage(idx)}
-                        className="absolute top-1 right-1 p-0.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
@@ -527,7 +527,7 @@ const AdditionalWork = () => {
             {/* 등록 버튼 */}
             <button
               onClick={handleFormSubmit}
-              className="w-full py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+              className="w-full py-3.5 bg-gray-900 text-white text-base font-semibold rounded-lg hover:bg-gray-800 transition-colors"
             >
               추가내역 등록
             </button>
@@ -535,20 +535,20 @@ const AdditionalWork = () => {
         </div>
 
         {/* 중간: 추가내역 목록 */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* 검색 및 총액 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-            <div className="space-y-3">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="space-y-4">
               <input
                 type="text"
                 placeholder="프로젝트명 또는 내용으로 검색"
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <div className="flex justify-between items-center text-sm">
-                <span className="font-medium text-gray-700">전체 합계:</span>
-                <span className="text-base font-bold text-gray-900">
+              <div className="flex justify-between items-center">
+                <span className="text-base font-semibold text-gray-700">전체 합계:</span>
+                <span className="text-lg font-bold text-gray-900">
                   {totalAmount.toLocaleString()}원
                 </span>
               </div>
@@ -556,23 +556,23 @@ const AdditionalWork = () => {
           </div>
 
           {/* 프로젝트별 추가내역 */}
-          <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="space-y-4 max-h-[calc(100vh-240px)] overflow-y-auto">
             {projectGroups.map(group => (
               <div key={group.projectName} className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div
-                  className="px-3 py-2.5 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                  className="px-4 py-3.5 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50"
                   onClick={() => toggleProject(group.projectName)}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     {expandedProjects.has(group.projectName) ? (
-                      <ChevronUp className="h-4 w-4 text-gray-500" />
+                      <ChevronUp className="h-5 w-5 text-gray-500" />
                     ) : (
-                      <ChevronDown className="h-4 w-4 text-gray-500" />
+                      <ChevronDown className="h-5 w-5 text-gray-500" />
                     )}
-                    <h3 className="text-sm font-semibold text-gray-900">{group.projectName}</h3>
-                    <span className="text-xs text-gray-500">({group.works.length})</span>
+                    <h3 className="text-base font-semibold text-gray-900">{group.projectName}</h3>
+                    <span className="text-sm text-gray-500">({group.works.length})</span>
                   </div>
-                  <span className="text-sm font-bold text-gray-900">
+                  <span className="text-base font-bold text-gray-900">
                     {group.totalAmount.toLocaleString()}원
                   </span>
                 </div>
@@ -582,51 +582,51 @@ const AdditionalWork = () => {
                     {group.works.map(work => (
                       <div
                         key={work.id}
-                        className={`px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors ${
-                          selectedWorkId === work.id ? 'bg-blue-50 border-l-2 border-blue-500' : ''
+                        className={`px-4 py-3.5 hover:bg-gray-50 cursor-pointer transition-colors ${
+                          selectedWorkId === work.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
                         }`}
                         onClick={() => setSelectedWorkId(work.id)}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <p className="text-sm text-gray-900 line-clamp-2">{work.description}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-gray-500">
+                            <p className="text-base text-gray-900 line-clamp-2">{work.description}</p>
+                            <div className="flex items-center gap-3 mt-2">
+                              <span className="text-sm text-gray-500">
                                 {format(work.date, 'yyyy.MM.dd')}
                               </span>
                               {workImages[work.id]?.length > 0 && (
-                                <span className="text-xs text-blue-600 flex items-center gap-1">
-                                  <ImageIcon2 className="h-3 w-3" />
+                                <span className="text-sm text-blue-600 flex items-center gap-1">
+                                  <ImageIcon2 className="h-4 w-4" />
                                   {workImages[work.id].length}
                                 </span>
                               )}
                             </div>
                             {work.notes && (
-                              <p className="text-xs text-gray-500 mt-1">{work.notes}</p>
+                              <p className="text-sm text-gray-500 mt-2">{work.notes}</p>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 ml-2">
-                            <span className="text-sm font-semibold text-gray-900">
+                          <div className="flex items-center gap-3 ml-4">
+                            <span className="text-base font-semibold text-gray-900">
                               {work.amount.toLocaleString()}원
                             </span>
-                            <div className="flex gap-1">
+                            <div className="flex gap-2">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEdit(work);
                                 }}
-                                className="p-1 text-gray-500 hover:text-gray-700"
+                                className="p-1.5 text-gray-500 hover:text-gray-700"
                               >
-                                <Edit className="h-3 w-3" />
+                                <Edit className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDelete(work.id);
                                 }}
-                                className="p-1 text-red-500 hover:text-red-700"
+                                className="p-1.5 text-red-500 hover:text-red-700"
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
                           </div>
@@ -641,13 +641,13 @@ const AdditionalWork = () => {
         </div>
 
         {/* 오른쪽: 선택된 항목의 이미지 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           {selectedWorkId ? (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-900">이미지 관리</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-base font-semibold text-gray-900">이미지 관리</h3>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-500">
                     Ctrl+V로 이미지 붙여넣기
                   </span>
                   <input
@@ -660,48 +660,48 @@ const AdditionalWork = () => {
                   />
                   <label
                     htmlFor="work-image-upload"
-                    className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 cursor-pointer flex items-center gap-1"
+                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 cursor-pointer flex items-center gap-2 font-medium"
                   >
-                    <Upload className="h-3 w-3" />
+                    <Upload className="h-4 w-4" />
                     업로드
                   </label>
                 </div>
               </div>
 
               {workImages[selectedWorkId]?.length > 0 ? (
-                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
                   {workImages[selectedWorkId].map((image, idx) => (
                     <div key={idx} className="relative group">
                       <img
                         src={image}
                         alt={`이미지 ${idx + 1}`}
-                        className="w-full h-32 object-cover rounded-lg cursor-pointer"
+                        className="w-full h-40 object-cover rounded-lg cursor-pointer"
                         onClick={() => handleImageClick(image)}
                       />
                       <button
                         onClick={() => handleDeleteImage(selectedWorkId, idx)}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <ImageIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                  <p className="text-sm">이미지가 없습니다</p>
-                  <p className="text-xs mt-1">
+                <div className="text-center py-16 text-gray-500">
+                  <ImageIcon className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                  <p className="text-base">이미지가 없습니다</p>
+                  <p className="text-sm mt-2">
                     이미지를 업로드하거나 Ctrl+V로 붙여넣기
                   </p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              <ImageIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-              <p className="text-sm">추가내역을 선택하세요</p>
-              <p className="text-xs mt-1">선택한 항목의 이미지를 관리할 수 있습니다</p>
+            <div className="text-center py-16 text-gray-500">
+              <ImageIcon className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+              <p className="text-base">추가내역을 선택하세요</p>
+              <p className="text-sm mt-2">선택한 항목의 이미지를 관리할 수 있습니다</p>
             </div>
           )}
         </div>
