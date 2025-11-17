@@ -57,8 +57,8 @@ app.use(cors({
   origin: CORS_ORIGIN,
   credentials: true
 }));
-app.use(express.json({ limit: '50mb' })); // Increase limit for database upload
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '200mb' })); // Increase limit for large image uploads
+app.use(express.urlencoded({ extended: true, limit: '200mb' }));
 
 // 정적 파일 제공 - PUBLIC 폴더에서만 제공
 // 모든 프론트엔드 빌드 파일은 public 폴더에 있어야 함

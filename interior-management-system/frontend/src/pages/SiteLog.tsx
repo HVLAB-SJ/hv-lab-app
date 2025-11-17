@@ -99,6 +99,50 @@ const SiteLog = () => {
     }
   };
 
+  // 이미지 압축 함수
+  const compressImage = (file: File, maxWidth: number = 1920, maxHeight: number = 1080, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // 비율 유지하면서 크기 조정
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width *= ratio;
+            height *= ratio;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Canvas context not available'));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error('Failed to compress image'));
+              return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          }, file.type, quality);
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   // 이미지 업로드 처리 - 바로 저장 또는 기존 로그에 추가
   const handleImageUpload = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -109,22 +153,21 @@ const SiteLog = () => {
       return;
     }
 
+    if (imageFiles.length > 100) {
+      toast.error('한번에 최대 100장까지 업로드 가능합니다');
+      return;
+    }
+
     if (!selectedProject) {
       toast.error('프로젝트를 선택하세요');
       return;
     }
 
     setIsUploading(true);
+    toast.loading(`${imageFiles.length}개의 이미지를 처리중...`);
 
-    const promises = imageFiles.map(file => {
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      });
-    });
+    // 이미지 압축
+    const promises = imageFiles.map(file => compressImage(file));
 
     try {
       const images = await Promise.all(promises);
@@ -142,26 +185,66 @@ const SiteLog = () => {
         }
       });
 
+      // 이미지를 배치로 나누어 업로드 (20개씩)
+      const batchSize = 20;
+      const batches = [];
+      for (let i = 0; i < images.length; i += batchSize) {
+        batches.push(images.slice(i, i + batchSize));
+      }
+
+      toast.dismiss(); // 로딩 토스트 제거
+
       if (existingLog) {
-        // 기존 로그가 있으면 이미지 추가
-        const updatedImages = [...existingLog.images, ...images];
-        await siteLogService.updateLog(existingLog.id, {
-          project: existingLog.project,
-          date: existingLog.date,
-          images: updatedImages,
-          notes: existingLog.notes || ''
-        });
+        // 기존 로그가 있으면 배치별로 이미지 추가
+        let currentImages = [...existingLog.images];
+
+        for (let i = 0; i < batches.length; i++) {
+          toast.loading(`이미지 업로드 중... (${i + 1}/${batches.length})`);
+          currentImages = [...currentImages, ...batches[i]];
+
+          await siteLogService.updateLog(existingLog.id, {
+            project: existingLog.project,
+            date: existingLog.date,
+            images: currentImages,
+            notes: existingLog.notes || ''
+          });
+
+          toast.dismiss();
+        }
         toast.success(`${images.length}개의 사진이 추가되었습니다`);
       } else {
-        // 기존 로그가 없으면 새로 생성
+        // 기존 로그가 없으면 첫 배치로 생성, 나머지는 업데이트
+        toast.loading(`이미지 업로드 중... (1/${batches.length})`);
+
         const logData = {
           project: selectedProject,
           date: selectedDate,
-          images: images,
+          images: batches[0],
           notes: '',
           createdBy: user?.name || ''
         };
-        await siteLogService.createLog(logData);
+        const newLog = await siteLogService.createLog(logData);
+        toast.dismiss();
+
+        // 나머지 배치 업데이트
+        if (batches.length > 1) {
+          let currentImages = [...batches[0]];
+
+          for (let i = 1; i < batches.length; i++) {
+            toast.loading(`이미지 업로드 중... (${i + 1}/${batches.length})`);
+            currentImages = [...currentImages, ...batches[i]];
+
+            await siteLogService.updateLog(newLog._id || newLog.id, {
+              project: selectedProject,
+              date: selectedDate,
+              images: currentImages,
+              notes: ''
+            });
+
+            toast.dismiss();
+          }
+        }
+
         toast.success(`${images.length}개의 사진이 저장되었습니다`);
       }
 
