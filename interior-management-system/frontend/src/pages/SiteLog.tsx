@@ -568,32 +568,79 @@ const SiteLog = () => {
                           </div>
                         </div>
 
-                        {/* 이미지 갤러리 - 크게 보기 */}
-                        {log.images && log.images.length > 0 && (
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                            {log.images.map((img, idx) => (
-                              <div key={idx} className="relative group">
-                                <img
-                                  src={img}
-                                  alt={`현장사진 ${idx + 1}`}
-                                  className="w-full aspect-[4/3] object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
-                                  onClick={() => openImageGallery(log.images, idx)}
-                                />
-                                <button
-                                  onClick={() => openImageGallery(log.images, idx)}
-                                  className="absolute top-2 right-2 p-1.5 bg-black bg-opacity-50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <Maximize2 className="h-4 w-4" />
-                                </button>
-                                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                                  {idx + 1} / {log.images.length}
+                        {/* 이미지 갤러리 영역 */}
+                        <div className="min-h-[150px]">
+                          {log.images && log.images.length > 0 ? (
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                              {log.images.map((img, idx) => (
+                                <div key={idx} className="relative group">
+                                  <img
+                                    src={img}
+                                    alt={`현장사진 ${idx + 1}`}
+                                    className="w-full aspect-[4/3] object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
+                                    onClick={() => openImageGallery(log.images, idx)}
+                                  />
+                                  <button
+                                    onClick={() => openImageGallery(log.images, idx)}
+                                    className="absolute top-2 right-2 p-1.5 bg-black bg-opacity-50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <Maximize2 className="h-4 w-4" />
+                                  </button>
+                                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                    {idx + 1} / {log.images.length}
+                                  </div>
                                 </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center h-[150px] border-2 border-dashed border-gray-200 rounded-lg">
+                              <div className="text-center">
+                                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                                <p className="text-sm text-gray-500">사진을 드래그하거나 + 버튼을 클릭하세요</p>
                               </div>
-                            ))}
-                          </div>
-                        )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
+
+                    {/* 추가 드래그 영역 - 일지 목록 아래 */}
+                    <div
+                      className={`mt-4 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                        isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={handleDrop}
+                    >
+                      <Upload className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-600 font-medium mb-1">새 사진 추가</p>
+                      <p className="text-sm text-gray-500">
+                        이곳에 사진을 드래그하거나 클릭하여 선택하세요
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        id="new-photo-input"
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            handleImageUpload(e.target.files);
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor="new-photo-input"
+                        className="inline-block mt-3 px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 cursor-pointer transition-colors"
+                      >
+                        파일 선택
+                      </label>
+                    </div>
                   </div>
                 );
               } else {
