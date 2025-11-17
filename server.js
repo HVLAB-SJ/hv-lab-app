@@ -32,6 +32,7 @@ const createSpecbookTable = require('./server/migrations/create-specbook-table')
 const addSubImagesColumn = require('./server/migrations/add-sub-images-column');
 const addQuoteInquiryDeduplication = require('./server/migrations/add-quote-inquiry-deduplication');
 const createSiteLogsTable = require('./server/migrations/create-site-logs-table');
+const addQuickTextColumn = require('./server/migrations/add-quick-text-column');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
@@ -44,6 +45,7 @@ createSpecbookTable().catch(console.error);
 addSubImagesColumn().catch(console.error);
 addQuoteInquiryDeduplication().catch(console.error);
 createSiteLogsTable().catch(console.error);
+addQuickTextColumn().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
