@@ -48,12 +48,30 @@ const SiteLog = () => {
   const [editingLogId, setEditingLogId] = useState<string | null>(null);
   const logFileInputRef = useRef<HTMLInputElement>(null);
 
-  // 프로젝트 초기값 설정
+  // 프로젝트 초기값 설정 (사용자별 마지막 선택 복원)
   useEffect(() => {
     if (projects.length > 0 && !selectedProject) {
-      setSelectedProject(projects[0].name);
+      // localStorage에서 사용자별 마지막 선택한 프로젝트 가져오기
+      const storageKey = `siteLog_lastProject_${user?.id || user?.name}`;
+      const savedProject = localStorage.getItem(storageKey);
+
+      // 저장된 프로젝트가 현재 프로젝트 목록에 있는지 확인
+      if (savedProject && projects.find(p => p.name === savedProject)) {
+        setSelectedProject(savedProject);
+      } else {
+        // 없으면 첫 번째 프로젝트 선택
+        setSelectedProject(projects[0].name);
+      }
     }
-  }, [projects, selectedProject]);
+  }, [projects, user]);
+
+  // 프로젝트 선택 시 localStorage에 저장
+  useEffect(() => {
+    if (selectedProject && user) {
+      const storageKey = `siteLog_lastProject_${user.id || user.name}`;
+      localStorage.setItem(storageKey, selectedProject);
+    }
+  }, [selectedProject, user]);
 
   // 로그 데이터 로드
   useEffect(() => {
