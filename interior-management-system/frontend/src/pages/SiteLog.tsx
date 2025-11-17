@@ -724,7 +724,7 @@ const SiteLog = () => {
                   <div>
                     {/* 큰 드래그 영역 */}
                     <div
-                      className="rounded-lg p-12 text-center border border-gray-200 hover:border-gray-300 transition-colors"
+                      className="rounded-lg p-12 text-center"
                     >
                       <Camera className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                       <p className="text-lg font-medium text-gray-700 mb-2">
