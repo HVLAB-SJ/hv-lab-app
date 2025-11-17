@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useAuth } from '../contexts/AuthContext';
-import { Camera, Upload, X, ChevronLeft, ChevronRight, Trash2, Maximize2 } from 'lucide-react';
+import { Camera, Upload, X, ChevronLeft, ChevronRight, Trash2, Maximize2, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import siteLogService from '../services/siteLogService';
 
@@ -40,6 +40,9 @@ const SiteLog = () => {
     notes: '',
     images: [] as string[]
   });
+
+  // 파일 입력 ref
+  const additionalFileInputRef = useRef<HTMLInputElement>(null);
 
   // 프로젝트 초기값 설정
   useEffect(() => {
@@ -411,7 +414,15 @@ const SiteLog = () => {
 
           {/* 이미지 업로드 영역 - 새로운 일지 추가할 때 */}
           {formData.images.length > 0 && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div
+              className={`mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg transition-all ${isDragging ? 'ring-2 ring-yellow-400 bg-yellow-100' : ''}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+            >
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-gray-700">업로드 대기 중인 사진</h3>
                 <button
@@ -440,10 +451,31 @@ const SiteLog = () => {
                     </button>
                   </div>
                 ))}
+                {/* 추가 버튼 */}
+                <button
+                  onClick={() => additionalFileInputRef.current?.click()}
+                  className="aspect-[4/3] border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 hover:bg-white transition-colors"
+                  title="사진 추가"
+                >
+                  <Plus className="h-8 w-8 text-gray-400" />
+                </button>
               </div>
               <p className="text-xs text-gray-600 mt-3">
-                왼쪽 폼에서 작업 내용을 입력하고 저장 버튼을 누르면 사진이 함께 저장됩니다.
+                사진을 드래그하거나 Ctrl+V로 붙여넣기, 또는 + 버튼을 클릭하여 추가할 수 있습니다.
               </p>
+              {/* 숨겨진 파일 입력 */}
+              <input
+                ref={additionalFileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files) {
+                    handleImageUpload(e.target.files);
+                  }
+                }}
+              />
             </div>
           )}
 
