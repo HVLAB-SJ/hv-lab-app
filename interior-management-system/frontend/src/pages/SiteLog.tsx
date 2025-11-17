@@ -243,10 +243,9 @@ const SiteLog = () => {
 
   return (
     <div className="space-y-4">
-      {/* 헤더 */}
+      {/* 상단 캘린더와 프로젝트 선택 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
           {/* 프로젝트 선택 */}
           <select
             value={selectedProject}
@@ -259,29 +258,75 @@ const SiteLog = () => {
               </option>
             ))}
           </select>
+
+          {/* 선택된 날짜 표시 */}
+          <div className="text-lg font-medium">
+            {format(selectedDate, 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
+          </div>
+        </div>
+
+        {/* 큰 캘린더 */}
+        <div>
+          {/* 캘린더 헤더 */}
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => changeMonth(-1)}
+              className="p-2 hover:bg-gray-100 rounded transition-colors"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <h3 className="text-lg font-semibold">
+              {format(calendarMonth, 'yyyy년 M월')}
+            </h3>
+            <button
+              onClick={() => changeMonth(1)}
+              className="p-2 hover:bg-gray-100 rounded transition-colors"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* 캘린더 그리드 */}
+          <div className="grid grid-cols-7 gap-1">
+            {['일', '월', '화', '수', '목', '금', '토'].map(day => (
+              <div key={day} className="text-center text-sm font-medium text-gray-600 py-2">
+                {day}
+              </div>
+            ))}
+            {getCalendarDays().map((day, idx) => {
+              const isCurrentMonth = day.date.getMonth() === calendarMonth.getMonth();
+              const isToday = format(day.date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+              const isSelected = format(day.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setSelectedDate(day.date)}
+                  className={`text-center p-3 cursor-pointer rounded-lg transition-colors ${
+                    !isCurrentMonth ? 'text-gray-300' : 'text-gray-700'
+                  } ${isToday ? 'bg-blue-100' : ''} ${
+                    isSelected ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
+                  } ${day.hasImages ? 'font-bold' : ''}`}
+                >
+                  {format(day.date, 'd')}
+                  {day.hasImages && (
+                    <div className="w-2 h-2 bg-green-500 rounded-full mx-auto mt-1"></div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* 왼쪽: 입력 폼 + 미니 캘린더 */}
+        {/* 왼쪽: 입력 폼 */}
         <div className="lg:col-span-3 space-y-4">
           {/* 입력 폼 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <h2 className="text-lg font-semibold mb-4">일지 작성</h2>
 
             <div className="space-y-4">
-              {/* 날짜 선택 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  날짜
-                </label>
-                <input
-                  type="date"
-                  value={format(selectedDate, 'yyyy-MM-dd')}
-                  onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                />
-              </div>
 
               {/* 작업 내용 */}
               <div>
@@ -378,74 +423,25 @@ const SiteLog = () => {
               </button>
             </div>
           </div>
-
-          {/* 미니 캘린더 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-            {/* 캘린더 헤더 */}
-            <div className="flex items-center justify-between mb-2">
-              <button
-                onClick={() => changeMonth(-1)}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <h3 className="text-sm font-semibold">
-                {format(calendarMonth, 'yyyy년 M월')}
-              </h3>
-              <button
-                onClick={() => changeMonth(1)}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* 캘린더 그리드 - 매우 작게 */}
-            <div className="grid grid-cols-7 gap-0.5">
-              {['일', '월', '화', '수', '목', '금', '토'].map(day => (
-                <div key={day} className="text-center text-[10px] font-medium text-gray-500 py-0.5">
-                  {day}
-                </div>
-              ))}
-              {getCalendarDays().map((day, idx) => {
-                const isCurrentMonth = day.date.getMonth() === calendarMonth.getMonth();
-                const isToday = format(day.date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
-                const isSelected = format(day.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => setSelectedDate(day.date)}
-                    className={`text-center p-1 text-[11px] cursor-pointer rounded ${
-                      !isCurrentMonth ? 'text-gray-300' : 'text-gray-700'
-                    } ${isToday ? 'bg-blue-100' : ''} ${
-                      isSelected ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
-                    } ${day.hasImages ? 'font-bold' : ''}`}
-                  >
-                    {format(day.date, 'd')}
-                    {day.hasImages && (
-                      <div className="w-1 h-1 bg-green-500 rounded-full mx-auto mt-0.5"></div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
-        {/* 오른쪽: 사진 목록 */}
+        {/* 오른쪽: 선택된 날짜의 일지 */}
         <div className="lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h2 className="text-lg font-semibold mb-4">현장일지 목록</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            {format(selectedDate, 'yyyy년 M월 d일', { locale: ko })} 현장일지
+          </h2>
 
           <div className="space-y-6 max-h-[800px] overflow-y-auto">
-            {sortedDates.length > 0 ? (
-              sortedDates.map(dateKey => (
-                <div key={dateKey} className="border-l-4 border-gray-300 pl-4">
-                  <h3 className="font-medium text-gray-900 mb-3">
-                    {format(new Date(dateKey), 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
-                  </h3>
+            {(() => {
+              const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+              const selectedDateLogs = logs.filter(log =>
+                format(log.date, 'yyyy-MM-dd') === selectedDateStr
+              );
+
+              if (selectedDateLogs.length > 0) {
+                return (
                   <div className="space-y-4">
-                    {groupedLogs[dateKey].map(log => (
+                    {selectedDateLogs.map(log => (
                       <div key={log.id} className="bg-gray-50 rounded-lg p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
@@ -492,14 +488,17 @@ const SiteLog = () => {
                       </div>
                     ))}
                   </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <Camera className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                <p>아직 작성된 현장일지가 없습니다</p>
-              </div>
-            )}
+                );
+              } else {
+                return (
+                  <div className="text-center py-12 text-gray-500">
+                    <Camera className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p>{format(selectedDate, 'M월 d일')}에 작성된 현장일지가 없습니다</p>
+                    <p className="text-sm mt-2">왼쪽 폼에서 새로운 일지를 작성해보세요</p>
+                  </div>
+                );
+              }
+            })()}
           </div>
         </div>
       </div>

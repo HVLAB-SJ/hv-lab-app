@@ -31,6 +31,7 @@ const addKakaoPayFields = require('./server/migrations/add-kakaopay-fields');
 const createSpecbookTable = require('./server/migrations/create-specbook-table');
 const addSubImagesColumn = require('./server/migrations/add-sub-images-column');
 const addQuoteInquiryDeduplication = require('./server/migrations/add-quote-inquiry-deduplication');
+const createSiteLogsTable = require('./server/migrations/create-site-logs-table');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
@@ -42,6 +43,7 @@ addKakaoPayFields().catch(console.error);
 createSpecbookTable().catch(console.error);
 addSubImagesColumn().catch(console.error);
 addQuoteInquiryDeduplication().catch(console.error);
+createSiteLogsTable().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
@@ -122,6 +124,7 @@ const adminRoutes = require('./server/routes/admin');
 const specbookRoutes = require('./server/routes/specbook');
 const estimatePreviewRoutes = require('./server/routes/estimate-preview');
 const finishCheckRoutes = require('./server/routes/finish-check');
+const siteLogsRoutes = require('./server/routes/siteLogs');
 
 // API 라우트 설정
 app.use('/api/auth', authRoutes);
@@ -142,6 +145,7 @@ app.use('/api/admin', adminRoutes); // 관리자 라우트 추가
 app.use('/api/specbook', specbookRoutes); // 스펙북 라우트 추가
 app.use('/api/finish-check', finishCheckRoutes); // 마감체크 라우트 추가
 app.use('/api/estimate-preview', estimatePreviewRoutes); // 가견적서 라우트 추가
+app.use('/api/site-logs', siteLogsRoutes); // 현장일지 라우트 추가
 
 
 // 로그인 페이지 라우트

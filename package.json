@@ -14,7 +14,8 @@
     "deploy:old": "deploy.bat",
     "build": "cd interior-management-system/frontend && rm -rf node_modules/.cache && npm ci && npm run build && cd ../.. && cp -r interior-management-system/frontend/dist/* public/",
     "build:frontend": "cd interior-management-system/frontend && npm run build",
-    "railway:deploy": "git add . && git commit -m \"Deploy to Railway\" && git push && railway up"
+    "railway:deploy": "git add . && git commit -m \"Deploy to Railway\" && git push && railway up",
+    "auto-deploy": "cd interior-management-system/frontend && npm run build && cd ../.. && powershell -Command \"Copy-Item -Path 'interior-management-system/frontend/dist/*' -Destination 'public/' -Recurse -Force\" && git add . && git commit -m \"Auto deploy: Frontend build\" && git push"
   },
   "keywords": [
     "interior",
@@ -43,7 +44,8 @@
     "sharp": "^0.34.4",
     "socket.io": "^4.8.1",
     "solapi": "^5.5.2",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "mongodb": "^6.20.0",
