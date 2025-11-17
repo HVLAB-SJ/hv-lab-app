@@ -1561,7 +1561,6 @@ const Payments = () => {
     <div className="space-y-3 md:space-y-4">
       {/* 모바일에서 프로젝트 선택 */}
       <div className="lg:hidden mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트 (선택)</label>
         <select
           value={formData.project}
           onChange={(e) => {
@@ -1625,7 +1624,6 @@ const Payments = () => {
           <div className="space-y-4">
             {/* 프로젝트 - 데스크톱에서만 표시 */}
             <div className="hidden lg:block">
-              <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트 (선택)</label>
               <select
                 value={formData.project}
                 onChange={(e) => {
