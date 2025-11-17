@@ -627,15 +627,15 @@ const SiteLog = () => {
                   <div
                     key={idx}
                     onClick={() => setSelectedDate(day.date)}
-                    className={`text-center p-2 text-xs cursor-pointer rounded transition-colors ${
+                    className={`text-center p-2 text-xs cursor-pointer rounded transition-colors min-h-[48px] flex flex-col items-center justify-center ${
                       !isCurrentMonth ? 'text-gray-300' : 'text-gray-700'
                     } ${isToday ? 'bg-blue-100' : ''} ${
                       isSelected ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
                     } ${day.hasImages ? 'font-bold' : ''}`}
                   >
-                    {format(day.date, 'd')}
+                    <span>{format(day.date, 'd')}</span>
                     {day.hasImages && (
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full mx-auto mt-0.5"></div>
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-0.5"></div>
                     )}
                   </div>
                 );
@@ -659,8 +659,8 @@ const SiteLog = () => {
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  rows={5}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  rows={10}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none"
                   placeholder="오늘 진행한 작업 내용을 입력하세요"
                 />
               </div>
@@ -708,7 +708,7 @@ const SiteLog = () => {
             </h2>
           </div>
 
-          <div className="space-y-6 max-h-[800px] overflow-y-auto">
+          <div className="space-y-6 max-h-[900px] overflow-y-auto">
             {(() => {
               const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
               const selectedDateLogs = logs.filter(log => {
@@ -775,7 +775,7 @@ const SiteLog = () => {
                         </div>
 
                         {/* 이미지 갤러리 영역 */}
-                        <div className="min-h-[150px]">
+                        <div className="min-h-[600px]">
                           {log.images && log.images.length > 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                               {log.images.map((img, idx) => (
@@ -808,7 +808,7 @@ const SiteLog = () => {
                               ))}
                             </div>
                           ) : (
-                            <div className="flex items-center justify-center h-[150px]">
+                            <div className="flex items-center justify-center h-[600px]">
                               <div className="text-center">
                                 <Upload className="h-8 w-8 text-gray-300 mx-auto mb-2" />
                                 <p className="text-sm text-gray-400">사진을 드래그하거나 + 버튼을 클릭하세요</p>
