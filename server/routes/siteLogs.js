@@ -2,7 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
+
+// UUID 대체 함수
+const generateId = () => {
+  return crypto.randomBytes(16).toString('hex');
+};
 
 // 프로젝트별 현장일지 조회
 router.get('/project/:projectName', authenticateToken, (req, res) => {
@@ -63,7 +68,7 @@ router.post('/', authenticateToken, (req, res) => {
     return res.status(400).json({ error: '필수 항목을 입력해주세요' });
   }
 
-  const id = uuidv4();
+  const id = generateId();
   const now = new Date().toISOString();
 
   const query = `
