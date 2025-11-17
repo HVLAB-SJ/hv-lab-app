@@ -44,6 +44,11 @@ const SiteLog = () => {
   // 파일 입력 ref
   const additionalFileInputRef = useRef<HTMLInputElement>(null);
 
+  // 수정 중인 로그 추적
+  const [editingLogId, setEditingLogId] = useState<string | null>(null);
+  const [isDraggingOnLog, setIsDraggingOnLog] = useState<string | null>(null);
+  const logFileInputRef = useRef<HTMLInputElement>(null);
+
   // 프로젝트 초기값 설정
   useEffect(() => {
     if (projects.length > 0 && !selectedProject) {
@@ -258,6 +263,59 @@ const SiteLog = () => {
     setImageModal(prev => ({ ...prev, url: imageModal.images![newIndex] }));
   };
 
+  // 저장된 로그에 이미지 추가
+  const handleAddImagesToLog = async (logId: string, newImages: string[]) => {
+    const log = logs.find(l => l.id === logId);
+    if (!log) return;
+
+    try {
+      const updatedLog = {
+        ...log,
+        images: [...log.images, ...newImages]
+      };
+
+      await siteLogService.updateLog(logId, {
+        project: log.project,
+        date: log.date,
+        images: updatedLog.images,
+        notes: log.notes
+      });
+
+      // 로컬 상태 업데이트
+      setLogs(prev => prev.map(l => l.id === logId ? updatedLog : l));
+      toast.success(`${newImages.length}개의 사진이 추가되었습니다`);
+      setEditingLogId(null);
+    } catch (error) {
+      console.error('Failed to add images to log:', error);
+      toast.error('사진 추가에 실패했습니다');
+    }
+  };
+
+  // 로그용 이미지 업로드 처리
+  const handleLogImageUpload = useCallback((logId: string, files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const imageFiles = fileArray.filter(f => f.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+      toast.error('이미지 파일만 업로드 가능합니다');
+      return;
+    }
+
+    const promises = imageFiles.map(file => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(promises).then(images => {
+      handleAddImagesToLog(logId, images);
+    });
+  }, [logs]);
+
   // 키보드 이벤트 처리
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -414,15 +472,7 @@ const SiteLog = () => {
 
           {/* 이미지 업로드 영역 - 새로운 일지 추가할 때 */}
           {formData.images.length > 0 && (
-            <div
-              className={`mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg transition-all ${isDragging ? 'ring-2 ring-yellow-400 bg-yellow-100' : ''}`}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleDrop}
-            >
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-gray-700">업로드 대기 중인 사진</h3>
                 <button
@@ -451,31 +501,10 @@ const SiteLog = () => {
                     </button>
                   </div>
                 ))}
-                {/* 추가 버튼 */}
-                <button
-                  onClick={() => additionalFileInputRef.current?.click()}
-                  className="aspect-[4/3] border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 hover:bg-white transition-colors"
-                  title="사진 추가"
-                >
-                  <Plus className="h-8 w-8 text-gray-400" />
-                </button>
               </div>
               <p className="text-xs text-gray-600 mt-3">
-                사진을 드래그하거나 Ctrl+V로 붙여넣기, 또는 + 버튼을 클릭하여 추가할 수 있습니다.
+                왼쪽 폼에서 작업 내용을 입력하고 저장 버튼을 누르면 사진이 함께 저장됩니다.
               </p>
-              {/* 숨겨진 파일 입력 */}
-              <input
-                ref={additionalFileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files) {
-                    handleImageUpload(e.target.files);
-                  }
-                }}
-              />
             </div>
           )}
 
@@ -518,29 +547,70 @@ const SiteLog = () => {
                         </div>
 
                         {/* 이미지 갤러리 - 크게 보기 */}
-                        {log.images && log.images.length > 0 && (
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                            {log.images.map((img, idx) => (
-                              <div key={idx} className="relative group">
-                                <img
-                                  src={img}
-                                  alt={`현장사진 ${idx + 1}`}
-                                  className="w-full aspect-[4/3] object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
-                                  onClick={() => openImageGallery(log.images, idx)}
-                                />
-                                <button
-                                  onClick={() => openImageGallery(log.images, idx)}
-                                  className="absolute top-2 right-2 p-1.5 bg-black bg-opacity-50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <Maximize2 className="h-4 w-4" />
-                                </button>
-                                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                                  {idx + 1} / {log.images.length}
-                                </div>
+                        <div
+                          className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 ${
+                            isDraggingOnLog === log.id ? 'ring-2 ring-blue-400 bg-blue-50 rounded-lg p-2' : ''
+                          }`}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setIsDraggingOnLog(log.id);
+                          }}
+                          onDragLeave={() => setIsDraggingOnLog(null)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setIsDraggingOnLog(null);
+                            handleLogImageUpload(log.id, e.dataTransfer.files);
+                          }}
+                        >
+                          {log.images && log.images.map((img, idx) => (
+                            <div key={idx} className="relative group">
+                              <img
+                                src={img}
+                                alt={`현장사진 ${idx + 1}`}
+                                className="w-full aspect-[4/3] object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
+                                onClick={() => openImageGallery(log.images, idx)}
+                              />
+                              <button
+                                onClick={() => openImageGallery(log.images, idx)}
+                                className="absolute top-2 right-2 p-1.5 bg-black bg-opacity-50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Maximize2 className="h-4 w-4" />
+                              </button>
+                              <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                {idx + 1} / {log.images.length}
                               </div>
-                            ))}
+                            </div>
+                          ))}
+                          {/* 사진 추가 버튼 */}
+                          <div>
+                            <button
+                              onClick={() => {
+                                setEditingLogId(log.id);
+                                logFileInputRef.current?.click();
+                              }}
+                              className="w-full aspect-[4/3] border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                              title="사진 추가"
+                            >
+                              <Plus className="h-8 w-8 text-gray-400" />
+                            </button>
+                            {/* 숨겨진 파일 입력 */}
+                            {editingLogId === log.id && (
+                              <input
+                                ref={logFileInputRef}
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files) {
+                                    handleLogImageUpload(log.id, e.target.files);
+                                    e.target.value = ''; // 입력 초기화
+                                  }
+                                }}
+                              />
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     ))}
                   </div>
