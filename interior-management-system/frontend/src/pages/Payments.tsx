@@ -464,6 +464,45 @@ const Payments = () => {
       includeVat: false
     };
 
+    // 한국 일반적인 성씨 목록 (예금주 이름 인식용)
+    const koreanSurnames = [
+      '김', '이', '박', '최', '정', '강', '조', '윤', '장', '임',
+      '한', '오', '서', '신', '권', '황', '안', '송', '류', '전',
+      '홍', '고', '문', '양', '손', '배', '백', '허', '유', '남',
+      '심', '노', '하', '곽', '성', '차', '주', '우', '구', '민',
+      '진', '나', '엄', '채', '원', '천', '방', '공', '현', '함',
+      '변', '염', '여', '추', '도', '석', '선', '설', '마', '길',
+      '연', '위', '표', '명', '기', '반', '라', '왕', '금', '옥',
+      '육', '인', '맹', '제', '탁', '국', '어', '경', '봉', '사'
+    ];
+
+    // 한국 사람 이름인지 확인하는 함수
+    const isKoreanName = (text: string): boolean => {
+      if (!text || text.length < 2 || text.length > 5) return false;
+
+      // 2-5글자 한글이어야 함
+      if (!/^[가-힣]{2,5}$/.test(text)) return false;
+
+      // 성씨로 시작하는지 확인 (2글자 이상일 때)
+      if (text.length >= 2) {
+        const firstChar = text.charAt(0);
+        const first2Chars = text.substring(0, 2); // 복성 체크용
+
+        // 복성 체크 (선우, 남궁, 독고 등)
+        if (['남궁', '선우', '독고', '황보', '사공', '서문', '제갈'].includes(first2Chars)) {
+          return true;
+        }
+
+        // 단성 체크
+        if (koreanSurnames.includes(firstChar)) {
+          return true;
+        }
+      }
+
+      // 성씨 없이도 2-3글자 한글이면 이름 가능성 있음
+      return text.length >= 2 && text.length <= 4;
+    };
+
     // 먼저 무통장 입금 안내 형식 체크
     const isBankTransferNotification = lines.some(line =>
       line.includes('무통장 입금') || line.includes('무통장입금')
@@ -518,6 +557,14 @@ const Payments = () => {
     // 계좌번호가 발견된 줄 인덱스 추적
     let accountNumberFoundAtIndex = -1;
 
+    // 대괄호 안의 텍스트를 용도/설명으로 추출 (예금주로 취급하지 않음)
+    lines.forEach(line => {
+      const bracketMatch = line.match(/\[([^\]]+)\]/);
+      if (bracketMatch && !result.itemName) {
+        result.itemName = bracketMatch[1].trim();
+      }
+    });
+
     // 각 줄을 분석하여 역할 추정
     lines.forEach((line, index) => {
       // 0-1. 부가세 포함 체크
@@ -547,28 +594,18 @@ const Payments = () => {
         const parts = line.split('/');
         parts.forEach(part => {
           const trimmedPart = part.trim();
+          // 대괄호 안의 텍스트는 건너뛰기
+          if (trimmedPart.startsWith('[') || trimmedPart.endsWith(']')) return;
+
           // 숫자와 하이픈만 있는 패턴 (계좌번호)
           if (/^[\d\-]+$/.test(trimmedPart) && trimmedPart.replace(/\-/g, '').length >= 10) {
             if (!result.bankInfo.accountNumber) {
               result.bankInfo.accountNumber = trimmedPart;
             }
           }
-          // 한글 이름 패턴 (예금주) - 부가세포함, 은행명 등 제외
-          else if (/^[가-힣]{2,}$/.test(trimmedPart)) {
-            // 절대 예금주가 될 수 없는 단어들 (금액 단위, 은행명 포함)
-            const excludedWords = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
-            // 은행 관련 단어는 예금주가 될 수 없음
-            const isBankName = trimmedPart.includes('은행') || trimmedPart.includes('뱅크') ||
-                              trimmedPart.includes('금고') || trimmedPart.includes('신협') ||
-                              ['국민', '신한', '하나', '우리', '기업', '농협', '카카오', '토스', '케이',
-                               '산업', '수협', '대구', '부산', '경남', '광주', '전북', '제일', '씨티',
-                               '우체국', '새마을', '카뱅', 'KB', 'IBK', 'NH', 'KDB', 'SC', 'K뱅크'].includes(trimmedPart) ||
-                              ['우리은행', '국민은행', '신한은행', '하나은행', '기업은행', '농협은행',
-                               '카카오뱅크', '토스뱅크', '케이뱅크', '산업은행', '수협은행'].includes(trimmedPart);
-
-            if (!excludedWords.includes(trimmedPart) && !isBankName && !result.bankInfo.accountHolder) {
-              result.bankInfo.accountHolder = trimmedPart;
-            }
+          // 한국 사람 이름인지 확인
+          else if (isKoreanName(trimmedPart) && !result.bankInfo.accountHolder) {
+            result.bankInfo.accountHolder = trimmedPart;
           }
         });
       }
@@ -597,32 +634,43 @@ const Payments = () => {
 
           // 계좌번호 바로 뒤에 나오는 이름 패턴 찾기
           const afterAccountText = line.substring(accountNumberIndex + accountNumberText.length);
-          const afterNameMatch = afterAccountText.match(/^\s*([가-힣]{2,}(?:\s*[가-힣]{2,})?)/);
-          if (afterNameMatch) {
-            const potentialName = afterNameMatch[1].trim();
-            // 은행명이나 제외 단어가 아닌 경우 예금주로 설정
-            const excludedWords = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
-            const isBankName = potentialName.includes('은행') || potentialName.includes('뱅크') ||
-                              potentialName.includes('금고') || potentialName.includes('신협');
+          // 공백으로 분리하여 각 단어 검사
+          const afterWords = afterAccountText.trim().split(/\s+/);
+          for (const word of afterWords) {
+            // 대괄호 안의 텍스트는 건너뛰기
+            if (word.startsWith('[') || word.endsWith(']')) continue;
 
-            if (!excludedWords.includes(potentialName) && !isBankName) {
-              result.bankInfo.accountHolder = potentialName; // 계좌번호 뒤 이름을 최우선 예금주로 설정
+            // 한국 사람 이름인지 확인
+            if (isKoreanName(word)) {
+              result.bankInfo.accountHolder = word; // 계좌번호 뒤 이름을 최우선 예금주로 설정
+              break;
             }
           }
 
           // 계좌번호 다음 줄에서 예금주 찾기 (같은 줄에서 못 찾았을 때)
           if (!result.bankInfo.accountHolder && index + 1 < lines.length) {
             const nextLine = lines[index + 1];
-            const nextLineNameMatch = nextLine.match(/^([가-힣]{2,})/);
-            if (nextLineNameMatch) {
-              const potentialName = nextLineNameMatch[1].trim();
-              // 은행명이나 제외 단어가 아닌 경우 예금주로 설정
-              const excludedWords = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원', '목재대금', '공사비', '자재비', '인건비'];
-              const isBankName = potentialName.includes('은행') || potentialName.includes('뱅크') ||
-                                potentialName.includes('금고') || potentialName.includes('신협');
+            // 다음 줄의 모든 단어를 검사
+            const words = nextLine.split(/\s+/);
+            for (const word of words) {
+              // 대괄호 안의 텍스트는 건너뛰기
+              if (word.startsWith('[') || word.endsWith(']')) continue;
 
-              if (!excludedWords.includes(potentialName) && !isBankName && potentialName.length <= 5) {
-                result.bankInfo.accountHolder = potentialName;
+              // 한국 사람 이름인지 확인
+              if (isKoreanName(word)) {
+                result.bankInfo.accountHolder = word;
+                break; // 첫 번째 이름을 찾으면 중단
+              }
+            }
+
+            // 그래도 못 찾았으면 기존 방식 시도
+            if (!result.bankInfo.accountHolder) {
+              const nextLineNameMatch = nextLine.match(/^([가-힣]{2,5})/);
+              if (nextLineNameMatch) {
+                const potentialName = nextLineNameMatch[1].trim();
+                if (isKoreanName(potentialName)) {
+                  result.bankInfo.accountHolder = potentialName;
+                }
               }
             }
           }
@@ -703,11 +751,11 @@ const Payments = () => {
       // 2-1. 괄호 안 이름 추출 (예: "레브(최승혁)") - 계좌번호 뒤 이름보다 우선순위 높음
       const bracketNameMatch = line.match(/\(([가-힣]{2,5})\)/);
       if (bracketNameMatch) {
-        // 부가세포함 등은 절대 예금주가 아님
-        const excludedWords = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
-        if (!excludedWords.includes(bracketNameMatch[1])) {
+        const potentialName = bracketNameMatch[1];
+        // 한국 사람 이름인지 확인
+        if (isKoreanName(potentialName)) {
           // 괄호 안 이름은 계좌번호 뒤 이름보다 우선순위가 높음
-          result.bankInfo.accountHolder = bracketNameMatch[1];
+          result.bankInfo.accountHolder = potentialName;
         }
       }
 
@@ -720,49 +768,45 @@ const Payments = () => {
           const hasAccountInSameLine = line.match(/\d{10,}/) || line.match(/\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/);
 
           names.forEach(name => {
-            // 절대 예금주가 될 수 없는 단어들 체크
-            const absoluteExcluded = ['부가세포함', '부가세', '포함', '만원', '천원', '백원', '원'];
-            if (absoluteExcluded.includes(name)) {
-              return; // 즉시 건너뛰기
+            // 대괄호 안의 텍스트는 건너뛰기 (대괄호 자체는 제거되었을 수 있으므로 원본 확인)
+            const originalLine = text.split('\n')[index];
+            if (originalLine && originalLine.includes(`[${name}]`)) {
+              return; // 대괄호 안의 텍스트는 용도이므로 건너뛰기
             }
 
-            // 은행명은 절대 예금주가 될 수 없음
-            const isBankName = name.includes('은행') || name.includes('뱅크') ||
-                              name.includes('금고') || name.includes('신협') ||
-                              ['우리은행', '국민은행', '신한은행', '하나은행', '기업은행', '농협은행',
-                               'IBK기업은행', 'KB국민은행', 'NH농협은행', 'KDB산업은행', 'SC제일은행',
-                               '카카오뱅크', '토스뱅크', '케이뱅크', '수협은행', '대구은행', '부산은행',
-                               '경남은행', '광주은행', '전북은행', '한국씨티은행', '우체국', '새마을금고'].includes(name);
-
-            if (isBankName) {
-              return; // 은행명은 건너뛰기
+            // 한국 사람 이름인지 확인
+            if (!isKoreanName(name)) {
+              return; // 사람 이름이 아니면 건너뛰기
             }
 
-            // 금액 관련 단어, 은행 키워드, 공정명이 아닌 경우 예금주로 추정
-            const isMoneyRelated = name.includes('금액') || name.includes('가격') || name.includes('비용');
-            const isBankKeyword = Object.keys(knownBanks).includes(name);
-            const isNotBankOrProcess = !isMoneyRelated && !isBankKeyword && !name.includes('은행') && !name.includes('뱅크') &&
-              !['목공', '타일', '도배', '전기', '설비', '청소', '미장', '도장', '아크로텔', '자재', '레브', '필름', '라인조명', '조명'].some(p => name.includes(p));
+            // 공정명/작업명은 예금주가 아님
+            const workKeywords = ['철거', '폐기물', '목공', '타일', '도배', '전기', '설비', '청소',
+                                  '미장', '도장', '방수', '샷시', '샤시', '유리', '필름', '조명',
+                                  '가구', '싱크', '주방', '욕실', '화장실', '마루', '장판', '벽지',
+                                  '페인트', '도색', '배관', '누수', '하자', '보수', '시공', '공사'];
 
-            if (isNotBankOrProcess) {
-              // 괄호로 명시된 이름이 있으면 건너뛰기
-              if (bracketNameMatch && name === bracketNameMatch[1]) {
-                return; // 이미 처리됨
-              }
-              // 같은 줄에 계좌번호가 있으면 이 이름을 우선적으로 예금주로 설정 (괄호 이름이 없을 때만)
-              if (hasAccountInSameLine && !bracketNameMatch) {
-                result.bankInfo.accountHolder = name; // 덮어쓰기 허용
-              }
-              // 계좌번호가 없는 줄이면 기존 예금주가 없을 때만 설정
-              else if (!result.bankInfo.accountHolder) {
-                // 계좌번호나 은행명 근처에 있는 이름을 예금주로 추정
-                const hasNearbyBankInfo = (index > 0 && (lines[index - 1].match(/\d{10,}/) || lines[index - 1].match(/은행|뱅크/))) ||
-                  (index < lines.length - 1 && (lines[index + 1].match(/\d{10,}/) || lines[index + 1].match(/은행|뱅크/))) ||
-                  line.match(/은행|뱅크/);
+            if (workKeywords.includes(name)) {
+              return; // 작업명은 건너뛰기
+            }
 
-                if (hasNearbyBankInfo) {
-                  result.bankInfo.accountHolder = name;
-                }
+            // 괄호로 명시된 이름이 있으면 건너뛰기
+            if (bracketNameMatch && name === bracketNameMatch[1]) {
+              return; // 이미 처리됨
+            }
+
+            // 같은 줄에 계좌번호가 있으면 이 이름을 우선적으로 예금주로 설정 (괄호 이름이 없을 때만)
+            if (hasAccountInSameLine && !bracketNameMatch) {
+              result.bankInfo.accountHolder = name; // 덮어쓰기 허용
+            }
+            // 계좌번호가 없는 줄이면 기존 예금주가 없을 때만 설정
+            else if (!result.bankInfo.accountHolder) {
+              // 계좌번호나 은행명 근처에 있는 이름을 예금주로 추정
+              const hasNearbyBankInfo = (index > 0 && (lines[index - 1].match(/\d{10,}/) || lines[index - 1].match(/은행|뱅크/))) ||
+                (index < lines.length - 1 && (lines[index + 1].match(/\d{10,}/) || lines[index + 1].match(/은행|뱅크/))) ||
+                line.match(/은행|뱅크/);
+
+              if (hasNearbyBankInfo) {
+                result.bankInfo.accountHolder = name;
               }
             }
           });
