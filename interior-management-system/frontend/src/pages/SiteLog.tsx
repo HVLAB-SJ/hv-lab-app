@@ -132,8 +132,8 @@ const SiteLog = () => {
       return;
     }
 
-    if (formData.images.length === 0) {
-      toast.error('최소 1개 이상의 현장 사진이 필요합니다');
+    if (!formData.notes && formData.images.length === 0) {
+      toast.error('작업 내용을 입력하거나 사진을 업로드해주세요');
       return;
     }
 
@@ -331,90 +331,23 @@ const SiteLog = () => {
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  rows={3}
+                  rows={5}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="오늘 진행한 작업 내용을 입력하세요"
                 />
               </div>
 
-              {/* 이미지 업로드 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  현장 사진 (필수)
-                </label>
-
-                <div
-                  className={`border-2 border-dashed rounded-lg p-4 text-center ${
-                    isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300'
-                  }`}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setIsDragging(true);
-                  }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={handleDrop}
-                >
-                  <Camera className="mx-auto h-6 w-6 text-gray-400" />
-                  <p className="mt-1 text-xs text-gray-600">
-                    이미지를 드래그하거나 클릭하여 업로드
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Ctrl+V로 붙여넣기 가능
-                  </p>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
-                    className="hidden"
-                    id="image-upload"
-                  />
-                  <label
-                    htmlFor="image-upload"
-                    className="mt-2 inline-flex items-center px-2 py-1 border border-gray-300 rounded text-xs text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
-                  >
-                    <Upload className="h-3 w-3 mr-1" />
-                    파일 선택
-                  </label>
-                </div>
-
-                {/* 이미지 미리보기 */}
-                {formData.images.length > 0 && (
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    {formData.images.map((img, idx) => (
-                      <div key={idx} className="relative group">
-                        <img
-                          src={img}
-                          alt={`현장사진 ${idx + 1}`}
-                          className="w-full h-20 object-cover rounded cursor-pointer"
-                          onClick={() => openImageGallery(formData.images, idx)}
-                        />
-                        <button
-                          onClick={() => setFormData(prev => ({
-                            ...prev,
-                            images: prev.images.filter((_, i) => i !== idx)
-                          }))}
-                          className="absolute top-1 right-1 p-0.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* 저장 버튼 */}
               <button
                 onClick={handleSave}
-                disabled={isUploading || formData.images.length === 0}
+                disabled={isUploading}
                 className={`w-full py-2 rounded-lg font-medium text-sm transition-colors ${
-                  isUploading || formData.images.length === 0
+                  isUploading
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-gray-900 text-white hover:bg-gray-800'
                 }`}
               >
-                {isUploading ? '저장 중...' : '현장일지 저장'}
+                {isUploading ? '저장 중...' : '작업 내용 저장'}
               </button>
             </div>
           </div>
@@ -422,9 +355,54 @@ const SiteLog = () => {
 
         {/* 오른쪽: 선택된 날짜의 일지 */}
         <div className="lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h2 className="text-lg font-semibold mb-4">
-            {format(selectedDate, 'yyyy년 M월 d일', { locale: ko })} 현장일지
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">
+              {format(selectedDate, 'yyyy년 M월 d일', { locale: ko })} 현장일지
+            </h2>
+            {formData.images.length > 0 && (
+              <span className="text-sm text-gray-500">
+                {formData.images.length}개의 사진 대기 중
+              </span>
+            )}
+          </div>
+
+          {/* 이미지 업로드 영역 - 새로운 일지 추가할 때 */}
+          {formData.images.length > 0 && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-700">업로드 대기 중인 사진</h3>
+                <button
+                  onClick={() => setFormData(prev => ({ ...prev, images: [] }))}
+                  className="text-xs text-red-600 hover:text-red-800"
+                >
+                  모두 삭제
+                </button>
+              </div>
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {formData.images.map((img, idx) => (
+                  <div key={idx} className="relative group">
+                    <img
+                      src={img}
+                      alt={`대기 ${idx + 1}`}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                    <button
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        images: prev.images.filter((_, i) => i !== idx)
+                      }))}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-600 mt-3">
+                왼쪽 폼에서 작업 내용을 입력하고 저장 버튼을 누르면 사진이 함께 저장됩니다.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-6 max-h-[800px] overflow-y-auto">
             {(() => {
@@ -486,10 +464,50 @@ const SiteLog = () => {
                 );
               } else {
                 return (
-                  <div className="text-center py-12 text-gray-500">
-                    <Camera className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                    <p>{format(selectedDate, 'M월 d일')}에 작성된 현장일지가 없습니다</p>
-                    <p className="text-sm mt-2">왼쪽 폼에서 새로운 일지를 작성해보세요</p>
+                  <div>
+                    {/* 큰 드래그 영역 */}
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+                        isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={handleDrop}
+                    >
+                      <Camera className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                      <p className="text-lg font-medium text-gray-700 mb-2">
+                        {format(selectedDate, 'M월 d일')} 현장 사진을 업로드하세요
+                      </p>
+                      <p className="text-sm text-gray-600 mb-4">
+                        이미지를 이곳에 드래그하거나 클릭하여 선택
+                      </p>
+                      <p className="text-xs text-gray-500 mb-4">
+                        Ctrl+V로 클립보드 이미지 붙여넣기도 가능합니다
+                      </p>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
+                        className="hidden"
+                        id="main-image-upload"
+                      />
+                      <label
+                        htmlFor="main-image-upload"
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        파일 선택
+                      </label>
+                    </div>
+                    {selectedDateLogs.length === 0 && formData.images.length === 0 && (
+                      <p className="text-center text-sm text-gray-500 mt-4">
+                        사진을 업로드한 후 왼쪽에서 작업 내용을 입력하고 저장하세요
+                      </p>
+                    )}
                   </div>
                 );
               }

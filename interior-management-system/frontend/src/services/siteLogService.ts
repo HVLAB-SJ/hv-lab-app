@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import api from './api';
 
 interface SiteLogData {
   project: string;
@@ -14,7 +12,7 @@ const siteLogService = {
   // 프로젝트별 일지 조회
   async getProjectLogs(projectName: string) {
     try {
-      const response = await axios.get(`${API_URL}/site-logs/project/${encodeURIComponent(projectName)}`);
+      const response = await api.get(`/site-logs/project/${encodeURIComponent(projectName)}`);
       return response.data;
     } catch (error) {
       console.error('Failed to get project logs:', error);
@@ -25,7 +23,7 @@ const siteLogService = {
   // 모든 일지 조회
   async getAllLogs() {
     try {
-      const response = await axios.get(`${API_URL}/site-logs`);
+      const response = await api.get(`/site-logs`);
       return response.data;
     } catch (error) {
       console.error('Failed to get all logs:', error);
@@ -36,7 +34,7 @@ const siteLogService = {
   // 일지 생성
   async createLog(logData: SiteLogData) {
     try {
-      const response = await axios.post(`${API_URL}/site-logs`, logData);
+      const response = await api.post(`/site-logs`, logData);
       return response.data;
     } catch (error) {
       console.error('Failed to create log:', error);
@@ -47,7 +45,7 @@ const siteLogService = {
   // 일지 수정
   async updateLog(id: string, logData: Partial<SiteLogData>) {
     try {
-      const response = await axios.put(`${API_URL}/site-logs/${id}`, logData);
+      const response = await api.put(`/site-logs/${id}`, logData);
       return response.data;
     } catch (error) {
       console.error('Failed to update log:', error);
@@ -58,7 +56,7 @@ const siteLogService = {
   // 일지 삭제
   async deleteLog(id: string) {
     try {
-      const response = await axios.delete(`${API_URL}/site-logs/${id}`);
+      const response = await api.delete(`/site-logs/${id}`);
       return response.data;
     } catch (error) {
       console.error('Failed to delete log:', error);
@@ -69,7 +67,7 @@ const siteLogService = {
   // 날짜 범위로 조회
   async getLogsByDateRange(projectName: string, startDate: Date, endDate: Date) {
     try {
-      const response = await axios.get(`${API_URL}/site-logs/range`, {
+      const response = await api.get(`/site-logs/range`, {
         params: {
           project: projectName,
           startDate: startDate.toISOString(),
