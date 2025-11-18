@@ -1752,11 +1752,11 @@ const Payments = () => {
       </div>
 
       {/* 메인 컨텐츠 - 3열 레이아웃 */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-3 md:gap-4">
 
         {/* 왼쪽: 입력 폼 (2열) */}
-        <div className={`lg:col-span-2 bg-white rounded-lg border p-4 overflow-y-auto ${
-          mobileView !== 'form' ? 'hidden lg:block' : ''
+        <div className={`md:col-span-2 lg:col-span-2 bg-white rounded-lg border p-3 md:p-4 overflow-y-auto ${
+          mobileView !== 'form' ? 'hidden md:block' : ''
         }`}>
           <div className="space-y-4">
             {/* 프로젝트 - 데스크톱에서만 표시 */}
@@ -2134,8 +2134,8 @@ const Payments = () => {
         </div>
 
         {/* 중앙: 결제요청 목록 - 카드 형식 (4열) */}
-        <div className={`lg:col-span-4 bg-white rounded-lg border overflow-hidden flex flex-col ${
-          mobileView !== 'list' ? 'hidden lg:flex' : ''
+        <div className={`md:col-span-4 lg:col-span-4 bg-white rounded-lg border overflow-hidden flex flex-col ${
+          mobileView !== 'list' ? 'hidden md:flex' : ''
         }`}>
           {/* 상태 탭 + 선택된 프로젝트 필터 */}
           <div className="bg-gray-50 px-4 pt-3 pb-0">
@@ -2468,9 +2468,9 @@ const Payments = () => {
           </div>
         </div>
 
-        {/* 오른쪽: 이미지 업로드 및 뷰어 (6열) */}
+        {/* 오른쪽: 이미지 업로드 및 뷰어 (6열) - 태블릿에서는 전체 너비로 표시 */}
         <div
-          className={`lg:col-span-6 bg-white rounded-lg border flex flex-col overflow-hidden ${
+          className={`md:col-span-6 lg:col-span-6 bg-white rounded-lg border flex flex-col overflow-hidden ${
             mobileView !== 'image' ? 'hidden lg:flex' : ''
           }`}
           onDragOver={handleDragOver}
