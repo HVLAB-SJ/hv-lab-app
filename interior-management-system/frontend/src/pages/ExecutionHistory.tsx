@@ -807,7 +807,8 @@ const ExecutionHistory = () => {
                         {record.author || '-'}
                       </td>
                       <td className="px-3 py-3 text-gray-600">
-                        {format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}
+                        <span className="desktop:hidden">{format(new Date(record.date), 'MM-dd (EEE)', { locale: ko })}</span>
+                        <span className="hidden desktop:inline">{format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}</span>
                       </td>
                       <td className="px-3 py-3 text-gray-600">
                         {record.process || '-'}
@@ -854,7 +855,7 @@ const ExecutionHistory = () => {
                       </p>
                     </div>
                     <div className="text-xs text-gray-500">
-                      {format(new Date(record.date), 'yyyy.MM.dd (EEE)', { locale: ko })}
+                      {format(new Date(record.date), 'MM.dd (EEE)', { locale: ko })}
                     </div>
                     <div className="mt-2 pt-2 border-t grid grid-cols-3 gap-2 text-xs">
                       <div>
