@@ -6,6 +6,12 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        'ipad': '834px',      // 아이패드 프로 11인치 세로
+        'ipad-lg': '1024px',  // 아이패드 프로 13인치 세로
+        'ipad-xl': '1194px',  // 아이패드 프로 11인치 가로
+        'ipad-2xl': '1366px', // 아이패드 프로 13인치 가로
+      },
       colors: {
         primary: '#6B7280',
         secondary: '#F3F4F6',

@@ -568,7 +568,7 @@ const ExecutionHistory = () => {
       </div>
 
       {/* 메인 컨텐츠 - 3열 레이아웃 */}
-      <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-12 ipad:grid-cols-12 ipad-lg:grid-cols-12 ipad-xl:grid-cols-12 ipad-2xl:grid-cols-12 gap-3 md:gap-4">
 
         {/* 왼쪽: 입력 폼 (2열) */}
         <div className={`md:col-span-3 lg:col-span-2 bg-white rounded-lg border p-3 md:p-4 flex flex-col overflow-hidden ${
