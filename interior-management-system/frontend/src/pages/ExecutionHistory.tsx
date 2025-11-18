@@ -807,7 +807,7 @@ const ExecutionHistory = () => {
                         {record.author || '-'}
                       </td>
                       <td className="px-3 py-3 text-gray-600">
-                        <span className="ipad-xl:hidden">{format(new Date(record.date), 'MM-dd (EEE)', { locale: ko })}</span>
+                        <span className="ipad-xl:hidden">{format(new Date(record.date), 'MM-dd', { locale: ko })}</span>
                         <span className="hidden ipad-xl:inline">{format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}</span>
                       </td>
                       <td className="px-3 py-3 text-gray-600">
@@ -826,7 +826,8 @@ const ExecutionHistory = () => {
                         {(record.vatAmount || 0).toLocaleString()}
                       </td>
                       <td className="px-3 py-3 text-right font-semibold">
-                        {(record.totalAmount || 0).toLocaleString()}원
+                        <span className="ipad-xl:hidden">{(record.totalAmount || 0).toLocaleString()}</span>
+                        <span className="hidden ipad-xl:inline">{(record.totalAmount || 0).toLocaleString()}원</span>
                       </td>
                     </tr>
                   ))}
