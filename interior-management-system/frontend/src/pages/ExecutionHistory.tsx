@@ -567,12 +567,12 @@ const ExecutionHistory = () => {
         </nav>
       </div>
 
-      {/* 메인 컨텐츠 - 3열 레이아웃 */}
-      <div className="grid grid-cols-1 md:grid-cols-12 ipad:grid-cols-12 ipad-lg:grid-cols-12 ipad-xl:grid-cols-12 ipad-2xl:grid-cols-12 gap-3 md:gap-4">
+      {/* 메인 컨텐츠 - 태블릿: 수직 배치, 데스크톱: 3열 레이아웃 */}
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-3 md:gap-4">
 
-        {/* 왼쪽: 입력 폼 (2열) */}
-        <div className={`md:col-span-4 ipad:col-span-4 ipad-lg:col-span-3 ipad-xl:col-span-3 ipad-2xl:col-span-2 lg:col-span-2 bg-white rounded-lg border p-3 md:p-4 flex flex-col overflow-hidden ${
-          mobileView !== 'form' ? 'hidden md:flex' : ''
+        {/* 입력 폼 - 태블릿: 전체 너비, 데스크톱: 2열 */}
+        <div className={`bg-white rounded-lg border p-3 md:p-4 flex flex-col overflow-hidden w-full lg:col-span-2 ${
+          mobileView !== 'form' ? 'hidden md:flex' : 'flex'
         }`}>
           <div className="space-y-4 overflow-y-auto flex-shrink-0">
             {/* 프로젝트 - 태블릿/데스크톱에서만 표시 */}
@@ -775,7 +775,7 @@ const ExecutionHistory = () => {
         </div>
 
         {/* 중앙: 실행내역 목록 - 테이블 형식 (6열) */}
-        <div className={`md:col-span-4 ipad:col-span-4 ipad-lg:col-span-5 ipad-xl:col-span-5 ipad-2xl:col-span-6 lg:col-span-6 bg-white rounded-lg border overflow-hidden flex flex-col ${
+        <div className={`bg-white rounded-lg border overflow-hidden flex flex-col w-full lg:col-span-6 ${
           mobileView !== 'list' ? 'hidden md:flex' : ''
         }`}>
           {/* 모바일: 카드 형식, 데스크톱: 테이블 형식 */}
@@ -985,9 +985,9 @@ const ExecutionHistory = () => {
           </div>
         </div>
 
-        {/* 오른쪽: 이미지 업로드 및 뷰어 (3열) */}
+        {/* 오른쪽: 이미지 업로드 및 뷰어 (4열) */}
         <div
-          className={`md:col-span-4 ipad:col-span-4 ipad-lg:col-span-4 ipad-xl:col-span-4 ipad-2xl:col-span-4 lg:col-span-4 bg-white rounded-lg border flex flex-col overflow-hidden ${
+          className={`bg-white rounded-lg border flex flex-col overflow-hidden w-full lg:col-span-4 ${
             mobileView !== 'image' ? 'hidden md:flex' : ''
           }`}
           onDragOver={handleDragOver}
