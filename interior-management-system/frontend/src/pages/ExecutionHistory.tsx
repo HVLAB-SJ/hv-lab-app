@@ -786,14 +786,14 @@ const ExecutionHistory = () => {
                 <table className="hidden md:table w-full">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr className="text-left text-sm text-gray-700 border-b">
-                    <th className="px-3 py-3 font-medium w-[7%]">작성자</th>
-                    <th className="px-3 py-3 font-medium w-[14%]">날짜</th>
-                    <th className="px-3 py-3 font-medium w-[9%]">공정</th>
-                    <th className="px-3 py-3 font-medium w-[20%]">항목명</th>
-                    <th className="px-3 py-3 font-medium text-right w-[12%]">자재비</th>
-                    <th className="px-3 py-3 font-medium text-right w-[12%]">인건비</th>
-                    <th className="px-3 py-3 font-medium text-right w-[12%]">부가세</th>
-                    <th className="px-3 py-3 font-medium text-right w-[14%]">총액</th>
+                    <th className="px-3 py-3 font-medium w-[6%]">작성자</th>
+                    <th className="px-3 py-3 font-medium w-[10%]">날짜</th>
+                    <th className="px-3 py-3 font-medium w-[10%]">공정</th>
+                    <th className="px-3 py-3 font-medium w-[22%]">항목명</th>
+                    <th className="px-3 py-3 font-medium text-right w-[13%]">자재비</th>
+                    <th className="px-3 py-3 font-medium text-right w-[13%]">인건비</th>
+                    <th className="px-3 py-3 font-medium text-right w-[13%]">부가세</th>
+                    <th className="px-3 py-3 font-medium text-right w-[13%]">총액</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -807,8 +807,8 @@ const ExecutionHistory = () => {
                         {record.author || '-'}
                       </td>
                       <td className="px-3 py-3 text-gray-600">
-                        <span className="ipad-xl:hidden">{format(new Date(record.date), 'MM-dd', { locale: ko })}</span>
-                        <span className="hidden ipad-xl:inline">{format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}</span>
+                        <span className="portrait:block landscape:hidden ipad-xl:hidden">{format(new Date(record.date), 'MM-dd', { locale: ko })}</span>
+                        <span className="portrait:hidden landscape:inline ipad-xl:!inline">{format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}</span>
                       </td>
                       <td className="px-3 py-3 text-gray-600">
                         {record.process || '-'}
@@ -826,8 +826,8 @@ const ExecutionHistory = () => {
                         {(record.vatAmount || 0).toLocaleString()}
                       </td>
                       <td className="px-3 py-3 text-right font-semibold">
-                        <span className="ipad-xl:hidden">{(record.totalAmount || 0).toLocaleString()}</span>
-                        <span className="hidden ipad-xl:inline">{(record.totalAmount || 0).toLocaleString()}원</span>
+                        <span className="portrait:inline landscape:hidden ipad-xl:hidden">{(record.totalAmount || 0).toLocaleString()}</span>
+                        <span className="portrait:hidden landscape:inline ipad-xl:!inline">{(record.totalAmount || 0).toLocaleString()}원</span>
                       </td>
                     </tr>
                   ))}
