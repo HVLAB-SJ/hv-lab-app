@@ -807,8 +807,8 @@ const ExecutionHistory = () => {
                         {record.author || '-'}
                       </td>
                       <td className="px-3 py-3 text-gray-600">
-                        <span className="desktop:hidden">{format(new Date(record.date), 'MM-dd (EEE)', { locale: ko })}</span>
-                        <span className="hidden desktop:inline">{format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}</span>
+                        <span className="ipad-xl:hidden">{format(new Date(record.date), 'MM-dd (EEE)', { locale: ko })}</span>
+                        <span className="hidden ipad-xl:inline">{format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}</span>
                       </td>
                       <td className="px-3 py-3 text-gray-600">
                         {record.process || '-'}
