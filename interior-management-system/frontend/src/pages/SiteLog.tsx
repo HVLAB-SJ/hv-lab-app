@@ -35,6 +35,11 @@ const SiteLog = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [imageZoom, setImageZoom] = useState(1);
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
 
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -530,10 +535,19 @@ const SiteLog = () => {
 
   const sortedDates = Object.keys(groupedLogs).sort((a, b) => b.localeCompare(a));
 
+  // 두 터치 포인트 간 거리 계산
+  const getTouchDistance = (touch1: React.Touch, touch2: React.Touch) => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
   // 이미지 갤러리 모달 열기
   const openImageGallery = (images: string[], startIndex: number = 0) => {
     setImageModal({ show: true, url: images[startIndex], images });
     setCurrentImageIndex(startIndex);
+    setImageZoom(1);
+    setImagePosition({ x: 0, y: 0 });
   };
 
   // 다음/이전 이미지
@@ -930,19 +944,38 @@ const SiteLog = () => {
       {/* 이미지 모달 - 갤러리 형식 */}
       {imageModal.show && imageModal.url && (
         <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center"
-          onClick={() => setImageModal({ show: false, url: null })}
+          className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center overflow-hidden"
+          onClick={() => {
+            setImageModal({ show: false, url: null });
+            setImageZoom(1);
+            setImagePosition({ x: 0, y: 0 });
+          }}
+          onWheel={(e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            setImageZoom(prev => Math.max(0.5, Math.min(5, prev + delta)));
+          }}
         >
           <div className="relative w-full h-full flex items-center justify-center p-4">
+            {/* 닫기 버튼 */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setImageModal({ show: false, url: null });
+                setImageZoom(1);
+                setImagePosition({ x: 0, y: 0 });
               }}
               className="absolute top-4 right-4 p-2 bg-white bg-opacity-20 backdrop-blur rounded-full hover:bg-opacity-30 z-10"
             >
               <X className="h-6 w-6 text-white" />
             </button>
+
+            {/* 줌 레벨 표시 */}
+            {imageZoom !== 1 && (
+              <div className="absolute top-4 left-4 bg-white bg-opacity-20 text-white px-3 py-2 rounded-lg text-sm backdrop-blur">
+                {Math.round(imageZoom * 100)}%
+              </div>
+            )}
 
             {/* 이전 버튼 */}
             {imageModal.images && imageModal.images.length > 1 && (
@@ -950,6 +983,8 @@ const SiteLog = () => {
                 onClick={(e) => {
                   e.stopPropagation();
                   navigateImage(-1);
+                  setImageZoom(1);
+                  setImagePosition({ x: 0, y: 0 });
                 }}
                 className="absolute left-4 p-3 bg-white bg-opacity-20 backdrop-blur rounded-full hover:bg-opacity-30"
               >
@@ -958,12 +993,83 @@ const SiteLog = () => {
             )}
 
             {/* 이미지 */}
-            <img
-              src={imageModal.url}
-              alt="확대 이미지"
-              className="max-w-full max-h-[90vh] object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div
+              className="w-full h-full flex items-center justify-center"
+              onMouseDown={(e) => {
+                if (imageZoom > 1) {
+                  setIsDraggingImage(true);
+                  setDragStart({ x: e.clientX - imagePosition.x, y: e.clientY - imagePosition.y });
+                }
+              }}
+              onMouseMove={(e) => {
+                if (isDraggingImage && imageZoom > 1) {
+                  setImagePosition({
+                    x: e.clientX - dragStart.x,
+                    y: e.clientY - dragStart.y
+                  });
+                }
+              }}
+              onMouseUp={() => setIsDraggingImage(false)}
+              onMouseLeave={() => setIsDraggingImage(false)}
+              onTouchStart={(e) => {
+                if (e.touches.length === 2) {
+                  e.preventDefault();
+                  const distance = getTouchDistance(e.touches[0], e.touches[1]);
+                  setLastTouchDistance(distance);
+                } else if (e.touches.length === 1 && imageZoom > 1) {
+                  const touch = e.touches[0];
+                  setDragStart({ x: touch.clientX - imagePosition.x, y: touch.clientY - imagePosition.y });
+                }
+              }}
+              onTouchMove={(e) => {
+                if (e.touches.length === 2) {
+                  e.preventDefault();
+                  const distance = getTouchDistance(e.touches[0], e.touches[1]);
+                  if (lastTouchDistance) {
+                    const scale = distance / lastTouchDistance;
+                    setImageZoom(prev => Math.max(0.5, Math.min(5, prev * scale)));
+                  }
+                  setLastTouchDistance(distance);
+                } else if (e.touches.length === 1 && imageZoom > 1) {
+                  e.preventDefault();
+                  const touch = e.touches[0];
+                  setImagePosition({
+                    x: touch.clientX - dragStart.x,
+                    y: touch.clientY - dragStart.y
+                  });
+                }
+              }}
+              onTouchEnd={() => {
+                setLastTouchDistance(null);
+              }}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                if (imageZoom === 1) {
+                  setImageZoom(2);
+                } else {
+                  setImageZoom(1);
+                  setImagePosition({ x: 0, y: 0 });
+                }
+              }}
+            >
+              <img
+                src={imageModal.url}
+                alt="확대 이미지"
+                style={{
+                  transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
+                  transformOrigin: 'center center',
+                  transition: (isDraggingImage || lastTouchDistance !== null) ? 'none' : 'transform 0.1s ease-out',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain',
+                  cursor: imageZoom > 1 ? (isDraggingImage ? 'grabbing' : 'grab') : 'pointer',
+                  userSelect: 'none',
+                  touchAction: 'none'
+                }}
+                draggable={false}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
 
             {/* 다음 버튼 */}
             {imageModal.images && imageModal.images.length > 1 && (
@@ -971,6 +1077,8 @@ const SiteLog = () => {
                 onClick={(e) => {
                   e.stopPropagation();
                   navigateImage(1);
+                  setImageZoom(1);
+                  setImagePosition({ x: 0, y: 0 });
                 }}
                 className="absolute right-4 p-3 bg-white bg-opacity-20 backdrop-blur rounded-full hover:bg-opacity-30"
               >
@@ -984,6 +1092,11 @@ const SiteLog = () => {
                 {currentImageIndex + 1} / {imageModal.images.length}
               </div>
             )}
+
+            {/* 사용 안내 */}
+            <div className="absolute bottom-4 right-4 bg-white bg-opacity-10 text-white px-3 py-2 rounded-lg text-xs text-center backdrop-blur">
+              마우스 휠 또는 두 손가락으로 확대/축소
+            </div>
           </div>
         </div>
       )}

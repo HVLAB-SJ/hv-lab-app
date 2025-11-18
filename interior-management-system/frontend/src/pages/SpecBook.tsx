@@ -296,6 +296,7 @@ const SpecBook = () => {
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
   const subImagesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -308,6 +309,13 @@ const SpecBook = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // 두 터치 포인트 간 거리 계산
+  const getTouchDistance = (touch1: React.Touch, touch2: React.Touch) => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
 
   useEffect(() => {
     loadCategories();
@@ -1737,6 +1745,37 @@ const SpecBook = () => {
             }}
             onMouseUp={() => setIsDraggingImage(false)}
             onMouseLeave={() => setIsDraggingImage(false)}
+            onTouchStart={(e) => {
+              if (e.touches.length === 2) {
+                e.preventDefault();
+                const distance = getTouchDistance(e.touches[0], e.touches[1]);
+                setLastTouchDistance(distance);
+              } else if (e.touches.length === 1 && imageZoom > 1) {
+                const touch = e.touches[0];
+                setDragStart({ x: touch.clientX - imagePosition.x, y: touch.clientY - imagePosition.y });
+              }
+            }}
+            onTouchMove={(e) => {
+              if (e.touches.length === 2) {
+                e.preventDefault();
+                const distance = getTouchDistance(e.touches[0], e.touches[1]);
+                if (lastTouchDistance) {
+                  const scale = distance / lastTouchDistance;
+                  setImageZoom(prev => Math.max(0.5, Math.min(5, prev * scale)));
+                }
+                setLastTouchDistance(distance);
+              } else if (e.touches.length === 1 && imageZoom > 1) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                setImagePosition({
+                  x: touch.clientX - dragStart.x,
+                  y: touch.clientY - dragStart.y
+                });
+              }
+            }}
+            onTouchEnd={() => {
+              setLastTouchDistance(null);
+            }}
             onDoubleClick={(e) => {
               e.stopPropagation();
               if (imageZoom === 1) {
@@ -1753,12 +1792,13 @@ const SpecBook = () => {
               style={{
                 transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
                 transformOrigin: 'center center',
-                transition: isDraggingImage ? 'none' : 'transform 0.1s ease-out',
+                transition: (isDraggingImage || lastTouchDistance !== null) ? 'none' : 'transform 0.1s ease-out',
                 maxWidth: '100%',
                 maxHeight: '100%',
                 objectFit: 'contain',
                 cursor: imageZoom > 1 ? (isDraggingImage ? 'grabbing' : 'grab') : 'pointer',
-                userSelect: 'none'
+                userSelect: 'none',
+                touchAction: 'none'
               }}
               draggable={false}
             />
@@ -1766,7 +1806,7 @@ const SpecBook = () => {
 
           {/* 사용 안내 */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 text-white px-4 py-2 rounded-lg text-xs text-center">
-            마우스 휠로 확대/축소 | 드래그로 이동 | 더블클릭으로 2배 확대/초기화
+            마우스 휠 또는 두 손가락으로 확대/축소 | 드래그로 이동 | 더블클릭으로 2배 확대/초기화
           </div>
         </div>
       )}
