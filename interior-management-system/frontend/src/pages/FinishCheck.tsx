@@ -768,7 +768,7 @@ const FinishCheck = () => {
                           {completedItems.map((item) => (
                             <div
                               key={item.id}
-                              className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg"
+                              className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg opacity-40"
                             >
                               <input
                                 type="checkbox"
@@ -974,7 +974,7 @@ const FinishCheck = () => {
                     {completedItems.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+                        className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors opacity-40"
                       >
                         <input
                           type="checkbox"
