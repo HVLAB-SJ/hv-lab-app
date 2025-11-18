@@ -92,7 +92,7 @@ const Dashboard = () => {
     <div className="space-y-3 md:space-y-5 lg:space-y-4">
       {/* 사람별 할일 섹션 */}
       <div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-4 lg:gap-4">
           {TEAM_MEMBERS.map((member) => {
             const { todaySchedules, upcomingSchedules } = getMemberSchedules(member);
             const totalTasks = todaySchedules.length + upcomingSchedules.length;

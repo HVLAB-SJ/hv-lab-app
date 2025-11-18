@@ -1161,7 +1161,7 @@ const SpecBook = () => {
           <div className="flex-1 flex flex-col overflow-hidden pr-4 pt-3">
           {/* 버튼 영역 */}
           <div className="mb-4 px-4">
-            <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 lg:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 lg:gap-4">
               {!isAnTeamUser && (
                 <button
                   onClick={() => {
@@ -1218,7 +1218,7 @@ const SpecBook = () => {
                 items={items.map(item => item.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                   {items.map(item => (
                     <SortableSpecBookItem
                       key={item.id}
@@ -1251,7 +1251,7 @@ const SpecBook = () => {
           <div className="flex-1 flex flex-col overflow-hidden pr-4 pt-3">
             {/* 버튼 영역 */}
             <div className="mb-4 px-4">
-              <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 lg:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 lg:gap-4">
                 {!isAnTeamUser && (
                   <button
                     onClick={() => {
@@ -1300,7 +1300,7 @@ const SpecBook = () => {
                     라이브러리 아이템이 없습니다
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {allLibraryItems
                       .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
                       .map(item => (
@@ -1413,7 +1413,7 @@ const SpecBook = () => {
                         .map(item => item.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                         {items
                           .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
                           .map(item => (

@@ -838,7 +838,7 @@ const SiteLog = () => {
                         {/* 이미지 갤러리 영역 */}
                         <div className="min-h-[600px]">
                           {log.images && log.images.length > 0 ? (
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
                               {log.images.map((img, idx) => (
                                 <div key={idx} className="relative group">
                                   <img

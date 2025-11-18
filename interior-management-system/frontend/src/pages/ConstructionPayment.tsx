@@ -591,7 +591,7 @@ const ConstructionPayment = () => {
       </div>
 
       {/* Records List */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 gap-6">
             {filteredRecords.map((record) => {
               const received = calculateReceived(record);
               const remaining = calculateRemaining(record);
@@ -710,7 +710,7 @@ const ConstructionPayment = () => {
 
               {/* Received, Execution Total, Additional Work & Remaining */}
               <div className="mb-4">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3">
                   <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
                     <p className="text-xs text-gray-700 mb-1">수령금액</p>
                     <p className="text-base font-bold text-gray-800">

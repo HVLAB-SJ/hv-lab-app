@@ -534,7 +534,7 @@ const EstimatePreview: React.FC = () => {
       </div>
 
       {activeTab === 'form' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
           {/* 입력 폼 */}
           <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">
