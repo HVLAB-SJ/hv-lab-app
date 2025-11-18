@@ -1534,7 +1534,8 @@ const Payments = () => {
       const recipientName = '에이치브이랩';
 
       // 토스 송금 URL 생성 (은행 코드와 은행명을 함께 전달)
-      const tossUrl = `supertoss://send?amount=${payment.amount}&bankCode=${bankCode}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}&name=${encodeURIComponent(recipientName)}`;
+      // receiverName과 toName 파라미터 모두 추가하여 호환성 확보
+      const tossUrl = `supertoss://send?amount=${payment.amount}&bankCode=${bankCode}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}&receiverName=${encodeURIComponent(recipientName)}&toName=${encodeURIComponent(recipientName)}`;
 
       // 토스 앱 실행 시도
       let appOpened = false;
