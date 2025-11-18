@@ -297,6 +297,7 @@ const SpecBook = () => {
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
+  const [lastTouchCenter, setLastTouchCenter] = useState<{ x: number; y: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
   const subImagesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -315,6 +316,14 @@ const SpecBook = () => {
     const dx = touch1.clientX - touch2.clientX;
     const dy = touch1.clientY - touch2.clientY;
     return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  // 두 터치 포인트의 중심점 계산
+  const getTouchCenter = (touch1: React.Touch, touch2: React.Touch) => {
+    return {
+      x: (touch1.clientX + touch2.clientX) / 2,
+      y: (touch1.clientY + touch2.clientY) / 2
+    };
   };
 
   useEffect(() => {
@@ -1666,6 +1675,8 @@ const SpecBook = () => {
               setViewingImage(null);
               setImageZoom(1);
               setImagePosition({ x: 0, y: 0 });
+              setLastTouchDistance(null);
+              setLastTouchCenter(null);
             }
           }}
           onWheel={(e) => {
@@ -1677,7 +1688,13 @@ const SpecBook = () => {
           {/* 컨트롤 버튼들 */}
           <div className="absolute top-4 right-4 flex flex-col gap-2">
             <button
-              onClick={() => setViewingImage(null)}
+              onClick={() => {
+                setViewingImage(null);
+                setImageZoom(1);
+                setImagePosition({ x: 0, y: 0 });
+                setLastTouchDistance(null);
+                setLastTouchCenter(null);
+              }}
               className="p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition-colors"
             >
               <X className="h-6 w-6 text-white" />
@@ -1749,7 +1766,9 @@ const SpecBook = () => {
               if (e.touches.length === 2) {
                 e.preventDefault();
                 const distance = getTouchDistance(e.touches[0], e.touches[1]);
+                const center = getTouchCenter(e.touches[0], e.touches[1]);
                 setLastTouchDistance(distance);
+                setLastTouchCenter(center);
               } else if (e.touches.length === 1 && imageZoom > 1) {
                 const touch = e.touches[0];
                 setDragStart({ x: touch.clientX - imagePosition.x, y: touch.clientY - imagePosition.y });
@@ -1759,11 +1778,27 @@ const SpecBook = () => {
               if (e.touches.length === 2) {
                 e.preventDefault();
                 const distance = getTouchDistance(e.touches[0], e.touches[1]);
-                if (lastTouchDistance) {
+                const center = getTouchCenter(e.touches[0], e.touches[1]);
+
+                if (lastTouchDistance && lastTouchCenter) {
                   const scale = distance / lastTouchDistance;
-                  setImageZoom(prev => Math.max(0.5, Math.min(5, prev * scale)));
+                  const newZoom = Math.max(0.5, Math.min(5, imageZoom * scale));
+
+                  // 중심점 기준으로 위치 조정
+                  const deltaX = center.x - lastTouchCenter.x;
+                  const deltaY = center.y - lastTouchCenter.y;
+
+                  // 줌 변경에 따른 위치 보정
+                  const zoomChange = newZoom / imageZoom;
+                  const newX = imagePosition.x * zoomChange + deltaX;
+                  const newY = imagePosition.y * zoomChange + deltaY;
+
+                  setImageZoom(newZoom);
+                  setImagePosition({ x: newX, y: newY });
                 }
+
                 setLastTouchDistance(distance);
+                setLastTouchCenter(center);
               } else if (e.touches.length === 1 && imageZoom > 1) {
                 e.preventDefault();
                 const touch = e.touches[0];
@@ -1775,6 +1810,7 @@ const SpecBook = () => {
             }}
             onTouchEnd={() => {
               setLastTouchDistance(null);
+              setLastTouchCenter(null);
             }}
             onDoubleClick={(e) => {
               e.stopPropagation();

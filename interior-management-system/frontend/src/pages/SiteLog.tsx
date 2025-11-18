@@ -40,6 +40,7 @@ const SiteLog = () => {
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
+  const [lastTouchCenter, setLastTouchCenter] = useState<{ x: number; y: number } | null>(null);
 
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -542,12 +543,22 @@ const SiteLog = () => {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
+  // 두 터치 포인트의 중심점 계산
+  const getTouchCenter = (touch1: React.Touch, touch2: React.Touch) => {
+    return {
+      x: (touch1.clientX + touch2.clientX) / 2,
+      y: (touch1.clientY + touch2.clientY) / 2
+    };
+  };
+
   // 이미지 갤러리 모달 열기
   const openImageGallery = (images: string[], startIndex: number = 0) => {
     setImageModal({ show: true, url: images[startIndex], images });
     setCurrentImageIndex(startIndex);
     setImageZoom(1);
     setImagePosition({ x: 0, y: 0 });
+    setLastTouchDistance(null);
+    setLastTouchCenter(null);
   };
 
   // 다음/이전 이미지
@@ -1015,7 +1026,9 @@ const SiteLog = () => {
                 if (e.touches.length === 2) {
                   e.preventDefault();
                   const distance = getTouchDistance(e.touches[0], e.touches[1]);
+                  const center = getTouchCenter(e.touches[0], e.touches[1]);
                   setLastTouchDistance(distance);
+                  setLastTouchCenter(center);
                 } else if (e.touches.length === 1 && imageZoom > 1) {
                   const touch = e.touches[0];
                   setDragStart({ x: touch.clientX - imagePosition.x, y: touch.clientY - imagePosition.y });
@@ -1025,11 +1038,27 @@ const SiteLog = () => {
                 if (e.touches.length === 2) {
                   e.preventDefault();
                   const distance = getTouchDistance(e.touches[0], e.touches[1]);
-                  if (lastTouchDistance) {
+                  const center = getTouchCenter(e.touches[0], e.touches[1]);
+
+                  if (lastTouchDistance && lastTouchCenter) {
                     const scale = distance / lastTouchDistance;
-                    setImageZoom(prev => Math.max(0.5, Math.min(5, prev * scale)));
+                    const newZoom = Math.max(0.5, Math.min(5, imageZoom * scale));
+
+                    // 중심점 기준으로 위치 조정
+                    const deltaX = center.x - lastTouchCenter.x;
+                    const deltaY = center.y - lastTouchCenter.y;
+
+                    // 줌 변경에 따른 위치 보정
+                    const zoomChange = newZoom / imageZoom;
+                    const newX = imagePosition.x * zoomChange + deltaX;
+                    const newY = imagePosition.y * zoomChange + deltaY;
+
+                    setImageZoom(newZoom);
+                    setImagePosition({ x: newX, y: newY });
                   }
+
                   setLastTouchDistance(distance);
+                  setLastTouchCenter(center);
                 } else if (e.touches.length === 1 && imageZoom > 1) {
                   e.preventDefault();
                   const touch = e.touches[0];
@@ -1041,6 +1070,7 @@ const SiteLog = () => {
               }}
               onTouchEnd={() => {
                 setLastTouchDistance(null);
+                setLastTouchCenter(null);
               }}
               onDoubleClick={(e) => {
                 e.stopPropagation();
