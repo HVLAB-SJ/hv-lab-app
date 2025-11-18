@@ -342,7 +342,7 @@ export default function Contractors() {
       <div className="flex items-center justify-end">
         <button
           onClick={() => handleOpenModal()}
-          className="hidden lg:inline-flex btn btn-primary px-4 py-2"
+          className="hidden md:inline-flex btn btn-primary px-3 md:px-4 py-2"
         >
           + 새 협력업체
         </button>

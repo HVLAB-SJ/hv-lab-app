@@ -107,7 +107,7 @@ const ExecutionHistory = () => {
 
     // 모바일 여부 확인
     const checkMobile = () => {
-      setIsMobileDevice(window.innerWidth < 1024);
+      setIsMobileDevice(window.innerWidth < 768);
     };
 
     checkMobile();
@@ -513,7 +513,7 @@ const ExecutionHistory = () => {
   return (
     <div className="space-y-3 md:space-y-4">
       {/* 모바일에서 프로젝트 선택 */}
-      <div className="lg:hidden mb-4">
+      <div className="md:hidden mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트</label>
         <select
           value={formData.project}
@@ -532,7 +532,7 @@ const ExecutionHistory = () => {
       </div>
 
       {/* 모바일에서 탭 표시 */}
-      <div className="lg:hidden border-b border-gray-200 mb-4">
+      <div className="md:hidden border-b border-gray-200 mb-4">
         <nav className="flex space-x-4">
           <button
             onClick={() => setMobileView('form')}
@@ -568,15 +568,15 @@ const ExecutionHistory = () => {
       </div>
 
       {/* 메인 컨텐츠 - 3열 레이아웃 */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-3 md:gap-4">
 
         {/* 왼쪽: 입력 폼 (2열) */}
-        <div className={`lg:col-span-2 bg-white rounded-lg border p-4 flex flex-col overflow-hidden ${
-          mobileView !== 'form' ? 'hidden lg:flex' : ''
+        <div className={`md:col-span-3 lg:col-span-2 bg-white rounded-lg border p-3 md:p-4 flex flex-col overflow-hidden ${
+          mobileView !== 'form' ? 'hidden md:flex' : ''
         }`}>
           <div className="space-y-4 overflow-y-auto flex-shrink-0">
-            {/* 프로젝트 - 데스크톱에서만 표시 */}
-            <div className="hidden lg:block">
+            {/* 프로젝트 - 태블릿/데스크톱에서만 표시 */}
+            <div className="hidden md:block">
               <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트 *</label>
               <select
                 value={formData.project}
@@ -752,8 +752,8 @@ const ExecutionHistory = () => {
               </div>
             </div>
 
-            {/* 총계 표시 - 데스크톱에서만 표시 */}
-            <div className="hidden lg:block bg-gray-50 rounded-lg p-4 space-y-2" style={{ marginTop: '114.67px' }}>
+            {/* 총계 표시 - 태블릿/데스크톱에서만 표시 */}
+            <div className="hidden md:block bg-gray-50 rounded-lg p-3 md:p-4 space-y-2 md:mt-8 lg:mt-[114.67px]">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">자재비 총합:</span>
                 <span className="text-sm font-medium text-gray-900">{projectTotals.material.toLocaleString()}원</span>
@@ -775,15 +775,15 @@ const ExecutionHistory = () => {
         </div>
 
         {/* 중앙: 실행내역 목록 - 테이블 형식 (6열) */}
-        <div className={`lg:col-span-6 bg-white rounded-lg border overflow-hidden flex flex-col ${
-          mobileView !== 'list' ? 'hidden lg:flex' : ''
+        <div className={`md:col-span-5 lg:col-span-6 bg-white rounded-lg border overflow-hidden flex flex-col ${
+          mobileView !== 'list' ? 'hidden md:flex' : ''
         }`}>
           {/* 모바일: 카드 형식, 데스크톱: 테이블 형식 */}
           <div className="flex-1 overflow-auto">
             {filteredRecords.length > 0 ? (
               <>
-                {/* 데스크톱 테이블 뷰 */}
-                <table className="hidden lg:table w-full">
+                {/* 태블릿/데스크톱 테이블 뷰 */}
+                <table className="hidden md:table w-full">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr className="text-left text-sm text-gray-700 border-b">
                     <th className="px-3 py-3 font-medium w-[7%]">작성자</th>
@@ -833,7 +833,7 @@ const ExecutionHistory = () => {
               </table>
 
               {/* 모바일 카드 뷰 */}
-              <div className="lg:hidden space-y-3 p-3">
+              <div className="md:hidden space-y-3 p-3">
                 {filteredRecords.map((record) => (
                   <div
                     key={record.id}
@@ -887,7 +887,7 @@ const ExecutionHistory = () => {
             {mobileView === 'list' && (
               <>
                 {/* 모바일 검색 입력창 */}
-                <div className="lg:hidden mb-3">
+                <div className="md:hidden mb-3">
                   <div className="relative">
                     <input
                       type="text"
@@ -901,7 +901,7 @@ const ExecutionHistory = () => {
                 </div>
 
                 {/* 모바일 총계 표시 */}
-                <div className="lg:hidden bg-white rounded-lg p-3 mb-3 space-y-2 border">
+                <div className="md:hidden bg-white rounded-lg p-3 mb-3 space-y-2 border">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">자재비 총합:</span>
                     <span className="text-sm font-medium text-gray-900">{projectTotals.material.toLocaleString()}원</span>
@@ -922,23 +922,23 @@ const ExecutionHistory = () => {
               </>
             )}
 
-            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-              {/* 데스크톱 검색 입력창 */}
-              <div className="hidden lg:block flex-1 lg:max-w-sm">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+              {/* 태블릿/데스크톱 검색 입력창 */}
+              <div className="hidden md:block flex-1 md:max-w-sm">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="검색..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm lg:text-base"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm md:text-sm lg:text-base"
                   />
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 </div>
               </div>
 
               {/* 버튼들 */}
-              <div className="flex items-center justify-between lg:justify-end gap-2">
+              <div className="flex items-center justify-between md:justify-end gap-2">
                 {selectedRecord && (
                   <button
                     onClick={() => {
@@ -976,7 +976,7 @@ const ExecutionHistory = () => {
                 {/* 공정별 합계 버튼 */}
                 <button
                   onClick={() => setShowProcessSummary(true)}
-                  className="px-3 py-2 text-sm lg:text-base lg:px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium whitespace-nowrap"
+                  className="px-3 py-2 text-sm md:px-3 lg:px-4 lg:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium whitespace-nowrap"
                 >
                   공정별 합계
                 </button>
@@ -987,8 +987,8 @@ const ExecutionHistory = () => {
 
         {/* 오른쪽: 이미지 업로드 및 뷰어 (3열) */}
         <div
-          className={`lg:col-span-4 bg-white rounded-lg border flex flex-col overflow-hidden ${
-            mobileView !== 'image' ? 'hidden lg:flex' : ''
+          className={`md:col-span-4 lg:col-span-4 bg-white rounded-lg border flex flex-col overflow-hidden ${
+            mobileView !== 'image' ? 'hidden md:flex' : ''
           }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -1221,23 +1221,23 @@ const ExecutionHistory = () => {
 
       {/* 공정별 합계 모달 */}
       {showProcessSummary && (
-        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-t-2xl lg:rounded-lg w-full lg:max-w-4xl max-h-[85vh] lg:max-h-[80vh] overflow-hidden lg:m-4">
-            <div className="flex items-center justify-between p-4 lg:p-6 border-b">
-              <h2 className="text-lg lg:text-xl font-bold text-gray-900">공정별 합계</h2>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-t-2xl md:rounded-lg w-full md:max-w-4xl max-h-[85vh] md:max-h-[80vh] overflow-hidden md:m-4">
+            <div className="flex items-center justify-between p-4 md:p-5 lg:p-6 border-b">
+              <h2 className="text-lg md:text-lg lg:text-xl font-bold text-gray-900">공정별 합계</h2>
               <button
                 onClick={() => setShowProcessSummary(false)}
-                className="p-1.5 lg:p-2 hover:bg-gray-100 rounded-full"
+                className="p-1.5 md:p-2 hover:bg-gray-100 rounded-full"
               >
                 <X className="h-5 w-5 text-gray-500" />
               </button>
             </div>
 
-            <div className="p-4 lg:p-6 overflow-y-auto max-h-[calc(85vh-120px)] lg:max-h-[calc(80vh-120px)]">
+            <div className="p-4 md:p-5 lg:p-6 overflow-y-auto max-h-[calc(85vh-120px)] md:max-h-[calc(80vh-120px)]">
               {getProcessSummary().length > 0 ? (
                 <>
-                  {/* 데스크톱 테이블 뷰 */}
-                  <table className="hidden lg:table w-full">
+                  {/* 태블릿/데스크톱 테이블 뷰 */}
+                  <table className="hidden md:table w-full">
                     <thead className="bg-gray-100">
                       <tr className="text-left text-sm text-gray-700">
                         <th className="px-4 py-3 font-medium">공정</th>
@@ -1270,7 +1270,7 @@ const ExecutionHistory = () => {
                   </table>
 
                   {/* 모바일 카드 뷰 */}
-                  <div className="lg:hidden space-y-3">
+                  <div className="md:hidden space-y-3">
                     {getProcessSummary().map(([process, data]) => (
                       <div key={process} className="bg-gray-50 rounded-lg p-4">
                         <div className="flex justify-between items-start mb-3">
@@ -1335,7 +1335,7 @@ const ExecutionHistory = () => {
       {showProcessPicker && (
         <>
           {/* 모바일: 중앙 모달 */}
-          <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="md:hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[80vh] overflow-hidden">
               <div className="flex items-center justify-between p-3 border-b">
                 <h2 className="text-base font-bold text-gray-900">공정 선택</h2>
@@ -1382,8 +1382,8 @@ const ExecutionHistory = () => {
             </div>
           </div>
 
-          {/* 데스크톱: 버튼 근처 팝업 */}
-          <div className="hidden lg:block fixed inset-0 z-40" onClick={() => setShowProcessPicker(false)}>
+          {/* 태블릿/데스크톱: 버튼 근처 팝업 */}
+          <div className="hidden md:block fixed inset-0 z-40" onClick={() => setShowProcessPicker(false)}>
             <div
               onClick={(e) => e.stopPropagation()}
               className="absolute bg-white rounded-lg shadow-xl border border-gray-200"
