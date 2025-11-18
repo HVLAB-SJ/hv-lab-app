@@ -11,6 +11,7 @@ export default {
         'ipad-lg': '1024px',  // 아이패드 프로 13인치 세로
         'ipad-xl': '1194px',  // 아이패드 프로 11인치 가로
         'ipad-2xl': '1366px', // 아이패드 프로 13인치 가로
+        'desktop': '1400px',  // 데스크톱 (모든 태블릿에서 수직 배치)
       },
       colors: {
         primary: '#6B7280',

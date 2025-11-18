@@ -568,10 +568,10 @@ const ExecutionHistory = () => {
       </div>
 
       {/* 메인 컨텐츠 - 태블릿: 수직 배치, 데스크톱: 3열 레이아웃 */}
-      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-3 md:gap-4">
+      <div className="flex flex-col desktop:grid desktop:grid-cols-12 gap-3 md:gap-4">
 
         {/* 입력 폼 - 태블릿: 전체 너비, 데스크톱: 2열 */}
-        <div className={`bg-white rounded-lg border p-3 md:p-4 flex flex-col overflow-hidden w-full lg:col-span-2 ${
+        <div className={`bg-white rounded-lg border p-3 md:p-4 flex flex-col overflow-hidden w-full desktop:col-span-2 ${
           mobileView !== 'form' ? 'hidden md:flex' : 'flex'
         }`}>
           <div className="space-y-4 overflow-y-auto flex-shrink-0">
@@ -775,7 +775,7 @@ const ExecutionHistory = () => {
         </div>
 
         {/* 중앙: 실행내역 목록 - 테이블 형식 (6열) */}
-        <div className={`bg-white rounded-lg border overflow-hidden flex flex-col w-full lg:col-span-6 ${
+        <div className={`bg-white rounded-lg border overflow-hidden flex flex-col w-full desktop:col-span-6 ${
           mobileView !== 'list' ? 'hidden md:flex' : ''
         }`}>
           {/* 모바일: 카드 형식, 데스크톱: 테이블 형식 */}
@@ -987,7 +987,7 @@ const ExecutionHistory = () => {
 
         {/* 오른쪽: 이미지 업로드 및 뷰어 (4열) */}
         <div
-          className={`bg-white rounded-lg border flex flex-col overflow-hidden w-full lg:col-span-4 ${
+          className={`bg-white rounded-lg border flex flex-col overflow-hidden w-full desktop:col-span-4 ${
             mobileView !== 'image' ? 'hidden md:flex' : ''
           }`}
           onDragOver={handleDragOver}
