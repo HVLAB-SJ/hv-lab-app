@@ -1454,7 +1454,7 @@ const Payments = () => {
       // 이체 정보 확인
       const confirmed = window.confirm(
         `토스 앱으로 이체하시겠습니까?\n\n` +
-        `받는분: ${accountHolder}\n` +
+        `받는분: 에이치브이랩\n` +
         `은행: ${bankName}\n` +
         `계좌: ${accountNumber}\n` +
         `금액: ${payment.amount.toLocaleString()}원`
@@ -1530,8 +1530,11 @@ const Payments = () => {
 
       const bankCode = bankCodeMap[bankName] || '004';
 
+      // 받는 분 이름을 "에이치브이랩"으로 고정
+      const recipientName = '에이치브이랩';
+
       // 토스 송금 URL 생성 (은행 코드와 은행명을 함께 전달)
-      const tossUrl = `supertoss://send?amount=${payment.amount}&bankCode=${bankCode}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}`;
+      const tossUrl = `supertoss://send?amount=${payment.amount}&bankCode=${bankCode}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}&name=${encodeURIComponent(recipientName)}`;
 
       // 토스 앱 실행 시도
       let appOpened = false;
@@ -1553,7 +1556,7 @@ const Payments = () => {
           if (isIOS || isAndroid) {
             toast(
               '토스 앱이 설치되어 있지 않거나 실행에 실패했습니다.\n\n' +
-              `받는분: ${accountHolder}\n` +
+              `받는분: 에이치브이랩\n` +
               `계좌: ${accountNumber}\n` +
               `금액: ${payment.amount.toLocaleString()}원\n\n` +
               '토스 앱을 직접 열어 이체해주세요.',
@@ -1571,7 +1574,7 @@ const Payments = () => {
         // 실패 시 정보 표시
         toast(
           `토스 앱 실행에 실패했습니다.\n\n` +
-          `받는분: ${accountHolder}\n` +
+          `받는분: 에이치브이랩\n` +
           `은행: ${bankName}\n` +
           `계좌: ${accountNumber}\n` +
           `금액: ${payment.amount.toLocaleString()}원\n\n` +
