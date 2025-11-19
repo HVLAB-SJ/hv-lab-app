@@ -787,9 +787,9 @@ const ExecutionHistory = () => {
                 <thead className="bg-gray-50 sticky top-0">
                   <tr className="text-left text-sm text-gray-700 border-b">
                     <th className="px-3 py-3 font-medium w-[6%]">작성자</th>
-                    <th className="px-3 py-3 font-medium w-[10%]">날짜</th>
+                    <th className="px-3 py-3 font-medium w-[13%]">날짜</th>
                     <th className="px-3 py-3 font-medium w-[10%]">공정</th>
-                    <th className="px-3 py-3 font-medium w-[22%]">항목명</th>
+                    <th className="px-3 py-3 font-medium w-[19%]">항목명</th>
                     <th className="px-3 py-3 font-medium text-right w-[13%]">자재비</th>
                     <th className="px-3 py-3 font-medium text-right w-[13%]">인건비</th>
                     <th className="px-3 py-3 font-medium text-right w-[13%]">부가세</th>
