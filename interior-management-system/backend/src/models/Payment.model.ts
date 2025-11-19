@@ -6,6 +6,13 @@ export interface IPayment extends Document {
   approvedBy?: mongoose.Types.ObjectId | string;
   processedBy?: mongoose.Types.ObjectId | string;
   amount: number;
+  materialAmount?: number; // 자재비
+  laborAmount?: number; // 인건비
+  originalMaterialAmount?: number; // 공제 전 원래 자재비
+  originalLaborAmount?: number; // 공제 전 원래 인건비
+  applyTaxDeduction?: boolean; // 3.3% 세금공제 여부
+  includesVAT?: boolean; // 부가세 포함 여부
+  quickText?: string; // 자동으로 항목 채우기에 입력했던 원본 텍스트
   purpose: string;
   process?: string;
   itemName?: string;
@@ -54,6 +61,34 @@ const paymentSchema = new Schema<IPayment>({
     type: Number,
     required: [true, '금액을 입력해주세요'],
     min: [0, '금액은 0보다 커야 합니다']
+  },
+  materialAmount: {
+    type: Number,
+    min: 0
+  },
+  laborAmount: {
+    type: Number,
+    min: 0
+  },
+  originalMaterialAmount: {
+    type: Number,
+    min: 0
+  },
+  originalLaborAmount: {
+    type: Number,
+    min: 0
+  },
+  applyTaxDeduction: {
+    type: Boolean,
+    default: false
+  },
+  includesVAT: {
+    type: Boolean,
+    default: false
+  },
+  quickText: {
+    type: String,
+    trim: true
   },
   purpose: {
     type: String,

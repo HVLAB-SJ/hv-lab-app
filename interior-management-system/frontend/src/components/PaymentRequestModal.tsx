@@ -195,6 +195,11 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
       setValue('accountNumber', payment.bankInfo?.accountNumber);
       setValue('notes', payment.notes);
       setValue('requestedBy', payment.requestedBy);
+
+      // 저장된 quickText 불러오기
+      if (payment.quickText) {
+        setQuickText(payment.quickText);
+      }
     } else {
       // Auto-fill requestedBy with logged-in user's name for new payments
       if (user) {
@@ -389,6 +394,7 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
       originalLaborAmount: originalLaborAmount, // 원래 인건비 저장
       applyTaxDeduction: applyTaxDeduction, // 3.3% 공제 여부 저장
       includesVAT: includesVAT, // 부가세 포함 여부 저장
+      quickText: quickText, // 자동으로 항목 채우기에 입력했던 원본 텍스트 저장
       category: selectedCategories.join(', '), // 여러 카테고리를 문자열로 저장
       urgency: isUrgent ? 'urgent' : 'normal', // 긴급 여부를 전송
       requestedBy: data.requestedBy, // Include requestedBy from form

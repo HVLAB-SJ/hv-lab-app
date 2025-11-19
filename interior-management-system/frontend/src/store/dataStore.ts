@@ -69,6 +69,7 @@ export interface Payment {
   originalLaborAmount?: number;
   applyTaxDeduction?: boolean;
   includesVAT?: boolean;
+  quickText?: string; // 자동으로 항목 채우기에 입력했던 원본 텍스트
   category: 'material' | 'labor' | 'equipment' | 'transport' | 'other';
   status: 'pending' | 'reviewing' | 'approved' | 'on-hold' | 'rejected' | 'completed';
   urgency: 'normal' | 'urgent' | 'emergency';
