@@ -300,6 +300,8 @@ const SpecBook = () => {
   const [lastTouchCenter, setLastTouchCenter] = useState<{ x: number; y: number } | null>(null);
   const [isPinching, setIsPinching] = useState(false);
   const [lastTapTime, setLastTapTime] = useState(0);
+  const [showProjectSelectModal, setShowProjectSelectModal] = useState(false);
+  const [draggedItemId, setDraggedItemId] = useState<number | null>(null);
   const [lastTapPosition, setLastTapPosition] = useState<{ x: number; y: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
@@ -1229,38 +1231,107 @@ const SpecBook = () => {
               등록된 스펙북 아이템이 없습니다
             </div>
           ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleItemDragEnd}
-            >
-              <SortableContext
-                items={items.map(item => item.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {items.map(item => (
-                    <SortableSpecBookItem
-                      key={item.id}
-                      item={item}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onImageClick={handleImageClick}
-                    />
-                  ))}
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {items.map(item => (
+                <div
+                  key={item.id}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('itemId', item.id.toString());
+                    e.dataTransfer.effectAllowed = 'copy';
+                  }}
+                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-move flex flex-col group relative"
+                >
+                  <div className="w-full aspect-square bg-gray-100 relative">
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        className="w-full h-full object-contain pointer-events-none"
+                        draggable={false}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                        이미지 없음
+                      </div>
+                    )}
+                  </div>
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(item);
+                      }}
+                      className="p-1.5 bg-white text-gray-700 hover:bg-gray-100 rounded-md shadow-md transition-colors"
+                      title="수정"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(item.id);
+                      }}
+                      className="p-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-md shadow-md transition-colors"
+                      title="삭제"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="p-2 pt-1.5 flex flex-col flex-1">
+                    <div className="flex items-start justify-between mb-1">
+                      <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
+                        {item.category}
+                      </span>
+                      {item.grade && (
+                        <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${getGradeColor(item.grade)}`}>
+                          {formatGradeRange(item.grade)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-baseline justify-between gap-1 mt-auto">
+                      <div className="flex items-baseline gap-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
+                        {item.brand && (
+                          <span className="text-xs text-gray-600 flex-shrink-0">{item.brand}</span>
+                        )}
+                      </div>
+                      {item.price && (
+                        <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </SortableContext>
-            </DndContext>
+              ))}
+            </div>
                 )}
               </div>
             </div>
             {/* 중앙 경계선 (데스크톱에서만 표시) */}
             <div className="hidden md:block w-px bg-gray-300 self-stretch"></div>
-            {/* 우측: 빈 공간 (데스크톱에서만 표시) */}
+            {/* 우측: 드롭 영역 (데스크톱에서만 표시) */}
             <div className="hidden md:flex w-1/2 flex-col overflow-hidden pl-3 pb-4">
-              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
+              <div
+                className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 border-2 border-dashed border-gray-300 transition-colors"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.add('bg-blue-50', 'border-blue-400');
+                }}
+                onDragLeave={(e) => {
+                  e.currentTarget.classList.remove('bg-blue-50', 'border-blue-400');
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.remove('bg-blue-50', 'border-blue-400');
+                  const itemId = e.dataTransfer.getData('itemId');
+                  if (itemId) {
+                    setDraggedItemId(Number(itemId));
+                    setShowProjectSelectModal(true);
+                  }
+                }}
+              >
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-                  프로젝트를 선택하면 여기에 프로젝트 아이템이 표시됩니다
+                  좌측에서 아이템을 드래그하여 추가하세요
                 </div>
               </div>
             </div>
@@ -1909,6 +1980,58 @@ const SpecBook = () => {
           {/* 사용 안내 */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 text-white px-4 py-2 rounded-lg text-xs text-center">
             마우스 휠 또는 두 손가락으로 확대/축소 | 드래그로 이동 | 더블클릭으로 2배 확대/초기화
+          </div>
+        </div>
+      )}
+
+      {/* 프로젝트 선택 모달 */}
+      {showProjectSelectModal && draggedItemId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">프로젝트 선택</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              아이템을 추가할 프로젝트를 선택하세요
+            </p>
+            <div className="max-h-96 overflow-y-auto space-y-2 mb-6">
+              {projects.map((project) => (
+                <button
+                  key={project.id}
+                  onClick={async () => {
+                    try {
+                      const sourceItem = allLibraryItems.find(i => i.id === draggedItemId);
+                      if (sourceItem) {
+                        const { id, created_at, updated_at, ...itemData } = sourceItem;
+                        await api.post('/specbook/base64', {
+                          ...itemData,
+                          isLibrary: false,
+                          projectId: project.id
+                        });
+                        toast.success(`"${project.title}"에 아이템이 추가되었습니다`);
+                        loadAllProjectItems();
+                      }
+                    } catch (error) {
+                      console.error('아이템 추가 실패:', error);
+                      toast.error('아이템 추가 실패');
+                    } finally {
+                      setShowProjectSelectModal(false);
+                      setDraggedItemId(null);
+                    }
+                  }}
+                  className="w-full px-4 py-3 text-left border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                >
+                  <div className="font-medium text-gray-900">{project.title}</div>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                setShowProjectSelectModal(false);
+                setDraggedItemId(null);
+              }}
+              className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              취소
+            </button>
           </div>
         </div>
       )}
