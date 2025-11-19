@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import clsx from 'clsx';
+import { Plus } from 'lucide-react';
 import { useDataStore, type Project } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
@@ -581,9 +582,10 @@ const Projects = () => {
                 setSelectedProject(null);
                 setShowModal(true);
               }}
-              className="hidden lg:inline-flex btn btn-primary px-4 py-2"
+              className="hidden lg:inline-flex btn btn-primary portrait:px-2 landscape:px-4 py-2 items-center gap-1"
             >
-              + 새 프로젝트
+              <Plus className="h-4 w-4" />
+              <span className="portrait:hidden landscape:inline">새 프로젝트</span>
             </button>
           </div>
         </div>
