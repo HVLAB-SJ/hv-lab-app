@@ -924,10 +924,10 @@ const SiteLog = () => {
                       <p className="text-lg font-medium text-gray-700 mb-2">
                         {format(selectedDate, 'M월 d일')} 현장 사진을 업로드하세요
                       </p>
-                      <p className="text-sm text-gray-600 mb-4">
+                      <p className="hidden desktop:block text-sm text-gray-600 mb-4">
                         이미지를 이곳에 드래그하거나 클릭하여 선택
                       </p>
-                      <p className="text-xs text-gray-500 mb-4">
+                      <p className="hidden desktop:block text-xs text-gray-500 mb-4">
                         Ctrl+V로 클립보드 이미지 붙여넣기도 가능합니다
                       </p>
                       <input
@@ -946,11 +946,6 @@ const SiteLog = () => {
                         파일 선택
                       </label>
                     </div>
-                    {selectedDateLogs.length === 0 && formData.images.length === 0 && (
-                      <p className="text-center text-sm text-gray-500 mt-4">
-                        사진을 업로드한 후 왼쪽에서 작업 내용을 입력하고 저장하세요
-                      </p>
-                    )}
                   </div>
                 );
               }
