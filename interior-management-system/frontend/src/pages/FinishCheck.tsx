@@ -62,6 +62,7 @@ const FinishCheck = () => {
   const [showMobileImageModal, setShowMobileImageModal] = useState(false);
   const [deletingSpaceId, setDeletingSpaceId] = useState<number | null>(null);
   const [selectedItemsToDelete, setSelectedItemsToDelete] = useState<Set<number>>(new Set());
+  const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
 
   useEffect(() => {
     // Don't load spaces initially - wait for project to be selected
@@ -574,6 +575,21 @@ const FinishCheck = () => {
                 </button>
               </div>
             </div>
+
+            {/* 필터 토글 */}
+            <div className="flex items-end">
+              <button
+                onClick={() => setShowOnlyIncomplete(!showOnlyIncomplete)}
+                className={`px-4 py-2.5 md:py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                  showOnlyIncomplete
+                    ? 'bg-gray-800 text-white hover:bg-gray-900'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                title={showOnlyIncomplete ? '전체 보기' : '미완료만 보기'}
+              >
+                {showOnlyIncomplete ? '미완료만' : '전체보기'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -584,17 +600,19 @@ const FinishCheck = () => {
               공간을 추가해주세요
             </div>
           ) : (
-            <div className="columns-1 portrait:md:columns-2 landscape:md:columns-3 desktop:columns-4 column-gap-4">
+            <div className="grid grid-cols-1 portrait:md:grid-cols-2 landscape:md:grid-cols-3 desktop:grid-cols-4 gap-4 items-start">
               {spaces.map((space, spaceIndex) => {
                 const incompleteItems = space.items
                   .filter(item => !item.is_completed)
                   .sort((a, b) => (b.is_priority || 0) - (a.is_priority || 0));
                 const completedItems = space.items.filter(item => item.is_completed);
 
+                // 필터링: 미완료만 보기가 활성화되어 있고 미완료 항목이 없으면 건너뛰기
+                if (showOnlyIncomplete && incompleteItems.length === 0) return null;
                 if (space.items.length === 0) return null;
 
                 return (
-                  <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-4 break-inside-avoid">
+                  <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                     {/* 공간 헤더 */}
                     {editingSpaceId === space.id ? (
                       <div className="flex gap-2 mb-4">
@@ -774,7 +792,7 @@ const FinishCheck = () => {
                     )}
 
                     {/* 완료 항목 */}
-                    {completedItems.length > 0 && (
+                    {!showOnlyIncomplete && completedItems.length > 0 && (
                       <div>
                         <div className="space-y-2">
                           {completedItems.map((item) => (
