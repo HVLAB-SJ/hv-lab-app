@@ -186,7 +186,12 @@ const FinishCheck = () => {
         name: newSpaceName.trim(),
         project_id: selectedProjectId
       });
-      setSpaces([...spaces, response.data]);
+      // Ensure items array exists
+      const newSpace = {
+        ...response.data,
+        items: response.data.items || []
+      };
+      setSpaces([...spaces, newSpace]);
       setNewSpaceName('');
       setShowAddSpaceModal(false);
       toast.success('공간이 추가되었습니다');
@@ -658,7 +663,6 @@ const FinishCheck = () => {
 
                 // 필터링: 미완료만 보기가 활성화되어 있고 미완료 항목이 없으면 건너뛰기
                 if (showOnlyIncomplete && incompleteItems.length === 0) return null;
-                if (space.items.length === 0) return null;
 
                 return (
                   <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-4 break-inside-avoid">
