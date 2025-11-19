@@ -302,6 +302,8 @@ const SpecBook = () => {
   const [lastTapTime, setLastTapTime] = useState(0);
   const [showProjectSelectModal, setShowProjectSelectModal] = useState(false);
   const [draggedItemId, setDraggedItemId] = useState<number | null>(null);
+  const [isDraggingItem, setIsDraggingItem] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [lastTapPosition, setLastTapPosition] = useState<{ x: number; y: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
@@ -1237,16 +1239,33 @@ const SpecBook = () => {
                   key={item.id}
                   draggable
                   onDragStart={(e) => {
+                    setIsDraggingItem(true);
                     e.dataTransfer.setData('itemId', item.id.toString());
                     e.dataTransfer.effectAllowed = 'copy';
+                  }}
+                  onDragEnd={() => {
+                    setIsDraggingItem(false);
+                    setDragStartPos(null);
                   }}
                   className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing flex flex-col group relative"
                 >
                   <div
                     className="w-full aspect-square bg-gray-100 relative"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      handleImageClick(item);
+                    onMouseDown={(e) => {
+                      setDragStartPos({ x: e.clientX, y: e.clientY });
+                    }}
+                    onClick={(e) => {
+                      // 드래그 중이 아니고, 마우스가 거의 이동하지 않았으면 클릭으로 간주
+                      if (!isDraggingItem && dragStartPos) {
+                        const distance = Math.sqrt(
+                          Math.pow(e.clientX - dragStartPos.x, 2) +
+                          Math.pow(e.clientY - dragStartPos.y, 2)
+                        );
+                        if (distance < 5) {  // 5px 이하 이동은 클릭
+                          handleImageClick(item);
+                        }
+                      }
+                      setDragStartPos(null);
                     }}
                   >
                     {item.image_url ? (
@@ -1407,16 +1426,33 @@ const SpecBook = () => {
                         key={item.id}
                         draggable
                         onDragStart={(e) => {
+                          setIsDraggingItem(true);
                           e.dataTransfer.setData('itemId', item.id.toString());
                           e.dataTransfer.effectAllowed = 'copy';
+                        }}
+                        onDragEnd={() => {
+                          setIsDraggingItem(false);
+                          setDragStartPos(null);
                         }}
                         className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing flex flex-col"
                       >
                         <div
                           className="w-full aspect-square bg-gray-100"
-                          onDoubleClick={(e) => {
-                            e.stopPropagation();
-                            handleImageClick(item);
+                          onMouseDown={(e) => {
+                            setDragStartPos({ x: e.clientX, y: e.clientY });
+                          }}
+                          onClick={(e) => {
+                            // 드래그 중이 아니고, 마우스가 거의 이동하지 않았으면 클릭으로 간주
+                            if (!isDraggingItem && dragStartPos) {
+                              const distance = Math.sqrt(
+                                Math.pow(e.clientX - dragStartPos.x, 2) +
+                                Math.pow(e.clientY - dragStartPos.y, 2)
+                              );
+                              if (distance < 5) {  // 5px 이하 이동은 클릭
+                                handleImageClick(item);
+                              }
+                            }
+                            setDragStartPos(null);
                           }}
                         >
                           {item.image_url ? (
