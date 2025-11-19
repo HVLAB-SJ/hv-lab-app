@@ -61,6 +61,7 @@ const FinishCheck = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showMobileImageModal, setShowMobileImageModal] = useState(false);
+  const [showAddItemForm, setShowAddItemForm] = useState(false);
 
   useEffect(() => {
     // Don't load spaces initially - wait for project to be selected
@@ -649,14 +650,14 @@ const FinishCheck = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-gray-900 truncate">{space.name}</h3>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 mt-1 whitespace-nowrap">
                           {space.items.filter(item => item.is_completed).length} / {space.items.length} 완료
                         </p>
                       </div>
-                      <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => {
                             setEditingSpaceId(space.id);
@@ -818,27 +819,29 @@ const FinishCheck = () => {
                 <h2 className="text-lg font-bold text-gray-900">{selectedSpace.name} - 마감체크</h2>
               </div>
 
-              {/* 항목 추가 입력 */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newItemContent}
-                  onChange={(e) => setNewItemContent(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleAddItem();
-                    }
-                  }}
-                  placeholder="마감 항목 입력"
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                />
-                <button
-                  onClick={handleAddItem}
-                  className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium"
-                >
-                  추가
-                </button>
-              </div>
+              {/* 항목 추가 입력 - 데스크톱에서는 항상 표시, 태블릿에서는 토글 */}
+              {(showAddItemForm || window.innerWidth >= 1400) && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newItemContent}
+                    onChange={(e) => setNewItemContent(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddItem();
+                      }
+                    }}
+                    placeholder="마감 항목 입력"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                  <button
+                    onClick={handleAddItem}
+                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium"
+                  >
+                    추가
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -1091,6 +1094,16 @@ const FinishCheck = () => {
                 </div>
               )}
             </div>
+
+            {/* 태블릿 모드 플로팅 추가 버튼 */}
+            {window.innerWidth < 1400 && (
+              <button
+                onClick={() => setShowAddItemForm(!showAddItemForm)}
+                className="fixed bottom-6 right-6 w-14 h-14 bg-gray-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-800 transition-transform desktop:hidden"
+              >
+                {showAddItemForm ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
+              </button>
+            )}
           </>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-500 text-sm">
