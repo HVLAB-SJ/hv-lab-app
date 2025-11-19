@@ -1242,12 +1242,12 @@ const SpecBook = () => {
                   }}
                   className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing flex flex-col group relative"
                 >
-                  <div className="w-full aspect-square bg-gray-100 relative">
+                  <div className="w-full aspect-square bg-gray-100 relative cursor-pointer" onClick={() => handleImageClick(item)}>
                     {item.image_url ? (
                       <img
                         src={item.image_url}
                         alt={item.name}
-                        className="w-full h-full object-contain pointer-events-none"
+                        className="w-full h-full object-contain"
                         draggable={false}
                       />
                     ) : (
@@ -1404,14 +1404,14 @@ const SpecBook = () => {
                           e.dataTransfer.setData('itemId', item.id.toString());
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
-                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-move flex flex-col"
+                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing flex flex-col"
                       >
-                        <div className="w-full aspect-square bg-gray-100">
+                        <div className="w-full aspect-square bg-gray-100 cursor-pointer" onClick={() => handleImageClick(item)}>
                           {item.image_url ? (
                             <img
                               src={item.image_url}
                               alt={item.name}
-                              className="w-full h-full object-contain pointer-events-none"
+                              className="w-full h-full object-contain"
                               draggable={false}
                             />
                           ) : (
