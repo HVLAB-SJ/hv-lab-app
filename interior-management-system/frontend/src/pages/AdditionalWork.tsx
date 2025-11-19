@@ -324,7 +324,7 @@ const AdditionalWork = () => {
   return (
     <div className="space-y-4 md:space-y-6">
       {/* 태블릿/데스크톱 3열 레이아웃 */}
-      <div className="hidden md:grid md:gap-4 lg:gap-6 md:grid-cols-12">
+      <div className="hidden lg:grid lg:gap-4 xl:gap-6 lg:grid-cols-12">
         {/* 왼쪽: 추가내역 등록 폼 */}
         <div className="md:col-span-4 lg:col-span-4 bg-white border border-gray-200 rounded-lg p-4 md:p-5 lg:p-6 h-fit sticky top-4">
           <div className="space-y-4">
@@ -572,7 +572,7 @@ const AdditionalWork = () => {
       </div>
 
       {/* 모바일 레이아웃 */}
-      <div className="md:hidden space-y-3">
+      <div className="lg:hidden space-y-3">
         {/* 검색 및 총액 */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
           <div className="space-y-3">

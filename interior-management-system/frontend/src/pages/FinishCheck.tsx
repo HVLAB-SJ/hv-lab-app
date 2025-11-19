@@ -597,6 +597,9 @@ const FinishCheck = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-900">전체 보기</h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {spaces.reduce((sum, space) => sum + space.items.filter(item => item.is_completed).length, 0)} / {spaces.reduce((sum, space) => sum + space.items.length, 0)} 완료
+                    </p>
                   </div>
                 </div>
               </div>
@@ -695,14 +698,11 @@ const FinishCheck = () => {
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <h2 className="text-lg font-bold text-gray-900">전체 마감체크</h2>
-                <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full">
-                  {spaces.reduce((sum, space) => sum + space.items.filter(item => item.is_completed).length, 0)} / {spaces.reduce((sum, space) => sum + space.items.length, 0)} 완료
-                </span>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
-              <div className="columns-1 md:columns-4 gap-4">
+              <div className="columns-1 portrait:columns-1 landscape:md:columns-4 gap-4">
               {spaces.map((space, spaceIndex) => {
                 const incompleteItems = space.items
                   .filter(item => !item.is_completed)
