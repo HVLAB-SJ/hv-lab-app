@@ -680,101 +680,47 @@ const FinishCheck = () => {
                                 className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
                               />
 
-                              {editingItemId === item.id ? (
-                                <div className="flex-1 flex gap-2">
-                                  <input
-                                    type="text"
-                                    value={editingItemContent}
-                                    onChange={(e) => setEditingItemContent(e.target.value)}
-                                    onKeyPress={(e) => {
-                                      if (e.key === 'Enter') {
-                                        handleUpdateItem(item.id, editingItemContent);
-                                      } else if (e.key === 'Escape') {
-                                        setEditingItemId(null);
-                                        setEditingItemContent('');
-                                      }
-                                    }}
-                                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                    autoFocus
-                                  />
-                                  <button
-                                    onClick={() => handleUpdateItem(item.id, editingItemContent)}
-                                    className="p-1 text-green-600 hover:text-green-700"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setEditingItemId(null);
-                                      setEditingItemContent('');
-                                    }}
-                                    className="p-1 text-gray-600 hover:text-gray-700"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <>
-                                  <span
-                                    className={`flex-1 text-sm text-gray-900 ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
-                                    onClick={() => !isMobile && setSelectedItemForImages(item.id)}
-                                    style={{ cursor: !isMobile ? 'pointer' : 'default' }}
-                                  >
-                                    {item.content}
-                                    {item.images && item.images.length > 0 && (
-                                      <span className="ml-2 text-xs text-gray-500">
-                                        ({item.images.length})
-                                      </span>
-                                    )}
+                              <span
+                                className={`flex-1 text-sm text-gray-900 ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
+                                onClick={() => !isMobile && setSelectedItemForImages(item.id)}
+                                style={{ cursor: !isMobile ? 'pointer' : 'default' }}
+                              >
+                                {item.content}
+                                {item.images && item.images.length > 0 && (
+                                  <span className="ml-2 text-xs text-gray-500">
+                                    ({item.images.length})
                                   </span>
-                                  <div className="flex items-center gap-1">
-                                    <button
-                                      onClick={() => handleTogglePriority(item.id)}
-                                      className={`p-1 transition-colors ${
-                                        item.is_priority
-                                          ? 'text-yellow-500 hover:text-yellow-600'
-                                          : 'text-gray-300 hover:text-gray-400'
-                                      }`}
-                                      title="우선순위"
-                                    >
-                                      <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setSelectedItemForImages(item.id);
-                                        if (isMobile) {
-                                          setShowMobileImageModal(true);
-                                        }
-                                      }}
-                                      className={`p-1 transition-colors ${
-                                        item.images && item.images.length > 0
-                                          ? 'text-blue-600 hover:text-blue-800'
-                                          : 'text-gray-300 hover:text-gray-400'
-                                      }`}
-                                      title="이미지"
-                                    >
-                                      <ImageIcon className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setEditingItemId(item.id);
-                                        setEditingItemContent(item.content);
-                                      }}
-                                      className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
-                                      title="수정"
-                                    >
-                                      <Edit2 className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteItem(item.id)}
-                                      className="p-1 text-red-500 hover:text-red-700 transition-colors"
-                                      title="삭제"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                </>
-                              )}
+                                )}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => {
+                                    setSelectedItemForImages(item.id);
+                                    if (isMobile) {
+                                      setShowMobileImageModal(true);
+                                    }
+                                  }}
+                                  className={`p-1 transition-colors ${
+                                    item.images && item.images.length > 0
+                                      ? 'text-blue-600 hover:text-blue-800'
+                                      : 'text-gray-300 hover:text-gray-400'
+                                  }`}
+                                  title="이미지"
+                                >
+                                  <ImageIcon className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleTogglePriority(item.id)}
+                                  className={`p-1 transition-colors ${
+                                    item.is_priority
+                                      ? 'text-yellow-500 hover:text-yellow-600'
+                                      : 'text-gray-300 hover:text-gray-400'
+                                  }`}
+                                  title="우선순위"
+                                >
+                                  <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -797,101 +743,47 @@ const FinishCheck = () => {
                                 className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
                               />
 
-                              {editingItemId === item.id ? (
-                                <div className="flex-1 flex gap-2">
-                                  <input
-                                    type="text"
-                                    value={editingItemContent}
-                                    onChange={(e) => setEditingItemContent(e.target.value)}
-                                    onKeyPress={(e) => {
-                                      if (e.key === 'Enter') {
-                                        handleUpdateItem(item.id, editingItemContent);
-                                      } else if (e.key === 'Escape') {
-                                        setEditingItemId(null);
-                                        setEditingItemContent('');
-                                      }
-                                    }}
-                                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                    autoFocus
-                                  />
-                                  <button
-                                    onClick={() => handleUpdateItem(item.id, editingItemContent)}
-                                    className="p-1 text-green-600 hover:text-green-700"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setEditingItemId(null);
-                                      setEditingItemContent('');
-                                    }}
-                                    className="p-1 text-gray-600 hover:text-gray-700"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <>
-                                  <span
-                                    className={`flex-1 text-sm text-gray-500 line-through ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
-                                    onClick={() => !isMobile && setSelectedItemForImages(item.id)}
-                                    style={{ cursor: !isMobile ? 'pointer' : 'default' }}
-                                  >
-                                    {item.content}
-                                    {item.images && item.images.length > 0 && (
-                                      <span className="ml-2 text-xs text-gray-500">
-                                        ({item.images.length})
-                                      </span>
-                                    )}
+                              <span
+                                className={`flex-1 text-sm text-gray-500 line-through ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
+                                onClick={() => !isMobile && setSelectedItemForImages(item.id)}
+                                style={{ cursor: !isMobile ? 'pointer' : 'default' }}
+                              >
+                                {item.content}
+                                {item.images && item.images.length > 0 && (
+                                  <span className="ml-2 text-xs text-gray-500">
+                                    ({item.images.length})
                                   </span>
-                                  <div className="flex items-center gap-1">
-                                    <button
-                                      onClick={() => handleTogglePriority(item.id)}
-                                      className={`p-1 transition-colors ${
-                                        item.is_priority
-                                          ? 'text-yellow-500 hover:text-yellow-600'
-                                          : 'text-gray-300 hover:text-gray-400'
-                                      }`}
-                                      title="우선순위"
-                                    >
-                                      <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setSelectedItemForImages(item.id);
-                                        if (isMobile) {
-                                          setShowMobileImageModal(true);
-                                        }
-                                      }}
-                                      className={`p-1 transition-colors ${
-                                        item.images && item.images.length > 0
-                                          ? 'text-blue-600 hover:text-blue-800'
-                                          : 'text-gray-300 hover:text-gray-400'
-                                      }`}
-                                      title="이미지"
-                                    >
-                                      <ImageIcon className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setEditingItemId(item.id);
-                                        setEditingItemContent(item.content);
-                                      }}
-                                      className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
-                                      title="수정"
-                                    >
-                                      <Edit2 className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteItem(item.id)}
-                                      className="p-1 text-red-500 hover:text-red-700 transition-colors"
-                                      title="삭제"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                </>
-                              )}
+                                )}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => {
+                                    setSelectedItemForImages(item.id);
+                                    if (isMobile) {
+                                      setShowMobileImageModal(true);
+                                    }
+                                  }}
+                                  className={`p-1 transition-colors ${
+                                    item.images && item.images.length > 0
+                                      ? 'text-blue-600 hover:text-blue-800'
+                                      : 'text-gray-300 hover:text-gray-400'
+                                  }`}
+                                  title="이미지"
+                                >
+                                  <ImageIcon className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleTogglePriority(item.id)}
+                                  className={`p-1 transition-colors ${
+                                    item.is_priority
+                                      ? 'text-yellow-500 hover:text-yellow-600'
+                                      : 'text-gray-300 hover:text-gray-400'
+                                  }`}
+                                  title="우선순위"
+                                >
+                                  <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
