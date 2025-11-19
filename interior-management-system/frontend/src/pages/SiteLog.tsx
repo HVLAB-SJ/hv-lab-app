@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useAuth } from '../contexts/AuthContext';
-import { Camera, Upload, X, ChevronLeft, ChevronRight, Trash2, Maximize2, Plus } from 'lucide-react';
+import { Camera, Upload, X, ChevronLeft, ChevronRight, Trash2, Maximize2, Plus, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import siteLogService from '../services/siteLogService';
 
@@ -57,6 +57,8 @@ const SiteLog = () => {
   // 수정 중인 로그 추적
   const [editingLogId, setEditingLogId] = useState<string | null>(null);
   const logFileInputRef = useRef<HTMLInputElement>(null);
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // 프로젝트 초기값 설정 (사용자별 마지막 선택 복원)
   useEffect(() => {
@@ -116,6 +118,7 @@ const SiteLog = () => {
     } else {
       setFormData(prev => ({ ...prev, notes: '' }));
     }
+    setHasUnsavedChanges(false);
   }, [selectedDate, selectedProject, logs]);
 
   const loadSiteLogs = async () => {
@@ -321,18 +324,18 @@ const SiteLog = () => {
   }, [handleImageUpload]);
 
   // 일지 저장 (기존 로그에 노트 추가 또는 새 로그 생성)
-  const handleSave = async () => {
+  const handleSaveNotes = async () => {
     if (!selectedProject) {
       toast.error('프로젝트를 선택하세요');
       return;
     }
 
-    if (!formData.notes) {
+    if (!formData.notes.trim()) {
       toast.error('작업 내용을 입력해주세요');
       return;
     }
 
-    setIsUploading(true);
+    setIsSavingNotes(true);
     try {
       // 같은 날짜와 프로젝트의 기존 로그 확인
       const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -355,7 +358,7 @@ const SiteLog = () => {
           images: existingLog.images,
           notes: formData.notes
         });
-        toast.success('작업 내용이 업데이트되었습니다');
+        toast.success('작업 내용이 저장되었습니다');
       } else {
         // 기존 로그가 없으면 새로 생성
         const logData = {
@@ -366,22 +369,18 @@ const SiteLog = () => {
           createdBy: user?.name || ''
         };
         await siteLogService.createLog(logData);
-        toast.success('현장일지가 저장되었습니다');
+        toast.success('작업 내용이 저장되었습니다');
       }
 
-      // 폼 초기화
-      setFormData({
-        notes: '',
-        images: []
-      });
+      setHasUnsavedChanges(false);
 
       // 목록 새로고침
       await loadSiteLogs();
     } catch (error) {
       console.error('Failed to save site log:', error);
-      toast.error('현장일지 저장에 실패했습니다');
+      toast.error('작업 내용 저장에 실패했습니다');
     } finally {
-      setIsUploading(false);
+      setIsSavingNotes(false);
     }
   };
 
@@ -741,28 +740,33 @@ const SiteLog = () => {
 
               {/* 작업 내용 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  작업 내용
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    작업 내용
+                  </label>
+                  <button
+                    onClick={handleSaveNotes}
+                    disabled={!hasUnsavedChanges || isSavingNotes}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      hasUnsavedChanges && !isSavingNotes
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                    title={hasUnsavedChanges ? '저장하기' : '저장됨'}
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{isSavingNotes ? '저장 중...' : hasUnsavedChanges ? '저장' : '저장됨'}</span>
+                  </button>
+                </div>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => {
-                    const newNotes = e.target.value;
-                    setFormData(prev => ({ ...prev, notes: newNotes }));
-
-                    // Clear existing timer
-                    if (autoSaveTimerRef.current) {
-                      clearTimeout(autoSaveTimerRef.current);
-                    }
-
-                    // Set new timer for auto-save (1.5 seconds delay)
-                    autoSaveTimerRef.current = setTimeout(() => {
-                      handleAutoSave(newNotes);
-                    }, 1500);
+                    setFormData(prev => ({ ...prev, notes: e.target.value }));
+                    setHasUnsavedChanges(true);
                   }}
                   rows={10}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none"
-                  placeholder="오늘 진행한 작업 내용을 입력하세요 (자동 저장됨)"
+                  placeholder="오늘 진행한 작업 내용을 입력하세요"
                 />
               </div>
             </div>
