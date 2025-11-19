@@ -600,7 +600,7 @@ const FinishCheck = () => {
               공간을 추가해주세요
             </div>
           ) : (
-            <div className="grid grid-cols-1 portrait:md:grid-cols-2 landscape:md:grid-cols-3 desktop:grid-cols-4 gap-4 items-start">
+            <div className="columns-1 portrait:md:columns-2 landscape:md:columns-3 desktop:columns-4 column-gap-4">
               {spaces.map((space, spaceIndex) => {
                 const incompleteItems = space.items
                   .filter(item => !item.is_completed)
@@ -612,7 +612,7 @@ const FinishCheck = () => {
                 if (space.items.length === 0) return null;
 
                 return (
-                  <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-4 break-inside-avoid">
                     {/* 공간 헤더 */}
                     {editingSpaceId === space.id ? (
                       <div className="flex gap-2 mb-4">
