@@ -1313,13 +1313,18 @@ const Schedule = () => {
     }
   }), [CustomDateHeaderWrapper, CustomEventWrapper]);
 
-  // 선택된 날짜의 일정 필터링 및 정렬
+  // 선택된 날짜의 일정 필터링 및 정렬 (주 단위)
   const selectedDateEvents = React.useMemo(() => {
     if (!selectedDate) return [];
 
-    const filtered = filteredEvents.filter(event =>
-      moment(event.start).isSame(selectedDate, 'day')
-    );
+    // 선택된 날짜가 속한 주의 시작일과 종료일 계산
+    const weekStart = moment(selectedDate).startOf('week'); // 일요일
+    const weekEnd = moment(selectedDate).endOf('week'); // 토요일
+
+    const filtered = filteredEvents.filter(event => {
+      const eventDate = moment(event.start);
+      return eventDate.isSameOrAfter(weekStart, 'day') && eventDate.isSameOrBefore(weekEnd, 'day');
+    });
 
     const sorted = [...filtered].sort((a, b) => {
       // 사용자 할당 여부 확인
@@ -1650,14 +1655,14 @@ const Schedule = () => {
             />
           </div>
 
-          {/* 모바일 하단 선택된 날짜 일정 표시 */}
+          {/* 모바일/태블릿 하단 선택된 주 일정 표시 */}
           {selectedDate && (
-            <div className="md:hidden mt-3 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+            <div className="desktop:hidden mt-3 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
               {/* 날짜 헤더 */}
               <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold text-gray-900">
-                    {moment(selectedDate).format('MM월 DD일 dddd')}
+                    {moment(selectedDate).startOf('week').format('MM월 DD일')} - {moment(selectedDate).endOf('week').format('MM월 DD일')}
                   </p>
                   {/* 공휴일 표시 */}
                   {holidays[moment(selectedDate).format('YYYY-MM-DD')] && (
@@ -1676,15 +1681,39 @@ const Schedule = () => {
                 </button>
               </div>
 
-              {/* 일정 목록 */}
+              {/* 일정 목록 - 날짜별로 그룹핑 */}
               <div className="max-h-[35vh] overflow-y-auto">
                 {selectedDateEvents.length === 0 ? (
                   <div className="p-4 text-center">
                     <p className="text-sm text-gray-500">일정이 없습니다</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100">
-                    {selectedDateEvents.map((event) => {
+                  <div>
+                    {(() => {
+                      // 날짜별로 그룹핑
+                      const eventsByDate = selectedDateEvents.reduce((acc, event) => {
+                        const dateKey = moment(event.start).format('YYYY-MM-DD');
+                        if (!acc[dateKey]) {
+                          acc[dateKey] = [];
+                        }
+                        acc[dateKey].push(event);
+                        return acc;
+                      }, {} as Record<string, typeof selectedDateEvents>);
+
+                      // 날짜순으로 정렬
+                      const sortedDates = Object.keys(eventsByDate).sort();
+
+                      return sortedDates.map((dateKey) => (
+                        <div key={dateKey} className="border-b border-gray-100 last:border-b-0">
+                          {/* 날짜 헤더 */}
+                          <div className="px-3 py-2 bg-gray-50 sticky top-0 z-10">
+                            <p className="text-xs font-semibold text-gray-700">
+                              {moment(dateKey).format('MM월 DD일 (ddd)')}
+                            </p>
+                          </div>
+                          {/* 해당 날짜의 일정들 */}
+                          <div className="divide-y divide-gray-100">
+                            {eventsByDate[dateKey].map((event) => {
                       // 로그인한 사용자가 담당자인지 확인
                       // 팀 담당자인 경우 해당 팀원들에게 노란색으로 표시
                       const isHVLabAssigned = event.assignedTo && event.assignedTo.includes('HV LAB');
@@ -1759,7 +1788,11 @@ const Schedule = () => {
                         </div>
                       </div>
                       );
-                    })}
+                            })}
+                          </div>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 )}
               </div>
