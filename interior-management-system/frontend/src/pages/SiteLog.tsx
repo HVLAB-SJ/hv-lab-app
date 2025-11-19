@@ -657,10 +657,10 @@ const SiteLog = () => {
 
   return (
     <div className="space-y-3 md:space-y-4">
-
-      <div className="grid grid-cols-1 portrait:grid-cols-1 landscape:md:grid-cols-12 landscape:lg:grid-cols-12 gap-3 md:gap-4">
-        {/* 왼쪽: 캘린더 + 입력 폼 */}
-        <div className="portrait:col-span-1 landscape:md:col-span-4 landscape:lg:col-span-3 space-y-3 md:space-y-4">
+      {/* 상단: 달력 + 일지작성 (태블릿 세로모드에서 2열) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 desktop:grid-cols-12 gap-3 md:gap-4">
+        {/* 달력 */}
+        <div className="md:col-span-1 desktop:col-span-3">
           {/* 프로젝트 선택 및 캘린더 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4">
             {/* 프로젝트 선택 */}
@@ -728,9 +728,11 @@ const SiteLog = () => {
               })}
             </div>
           </div>
+        </div>
 
-          {/* 입력 폼 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4">
+        {/* 일지작성 */}
+        <div className="md:col-span-1 desktop:col-span-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 h-full">
             <h2 className="text-lg font-semibold mb-4">
               {format(selectedDate, 'M월 d일')} 일지 작성
             </h2>
@@ -766,10 +768,11 @@ const SiteLog = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* 오른쪽: 선택된 날짜의 일지 */}
-        <div
-          className={`portrait:col-span-1 landscape:md:col-span-8 landscape:lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 transition-all ${
+      {/* 하단: 현장일지 목록 */}
+      <div
+        className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 transition-all ${
             isDraggingEmpty ? 'ring-2 ring-blue-400 bg-blue-50' : ''
           }`}
           onDragOver={(e) => {
@@ -954,7 +957,6 @@ const SiteLog = () => {
             })()}
           </div>
         </div>
-      </div>
 
       {/* 이미지 모달 - 갤러리 형식 */}
       {imageModal.show && imageModal.url && (
