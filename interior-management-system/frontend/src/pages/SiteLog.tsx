@@ -656,9 +656,9 @@ const SiteLog = () => {
   return (
     <div className="space-y-3 md:space-y-4">
 
-      <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 portrait:grid-cols-1 landscape:md:grid-cols-12 landscape:lg:grid-cols-12 gap-3 md:gap-4">
         {/* 왼쪽: 캘린더 + 입력 폼 */}
-        <div className="md:col-span-4 lg:col-span-3 space-y-3 md:space-y-4">
+        <div className="portrait:col-span-1 landscape:md:col-span-4 landscape:lg:col-span-3 space-y-3 md:space-y-4">
           {/* 프로젝트 선택 및 캘린더 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4">
             {/* 프로젝트 선택 */}
@@ -767,7 +767,7 @@ const SiteLog = () => {
 
         {/* 오른쪽: 선택된 날짜의 일지 */}
         <div
-          className={`md:col-span-8 lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 transition-all ${
+          className={`portrait:col-span-1 landscape:md:col-span-8 landscape:lg:col-span-9 bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 transition-all ${
             isDraggingEmpty ? 'ring-2 ring-blue-400 bg-blue-50' : ''
           }`}
           onDragOver={(e) => {
