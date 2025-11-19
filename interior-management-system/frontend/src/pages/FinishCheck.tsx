@@ -60,6 +60,8 @@ const FinishCheck = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showMobileImageModal, setShowMobileImageModal] = useState(false);
+  const [deletingSpaceId, setDeletingSpaceId] = useState<number | null>(null);
+  const [selectedItemsToDelete, setSelectedItemsToDelete] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     // Don't load spaces initially - wait for project to be selected
@@ -213,15 +215,59 @@ const FinishCheck = () => {
     }
   };
 
-  const handleDeleteSpace = async (spaceId: number, spaceName: string) => {
-    if (!confirm(`"${spaceName}" 공간을 삭제하시겠습니까?\n\n삭제된 공간과 해당 공간의 모든 항목은 복구할 수 없습니다.`)) {
+  const handleDeleteSpace = (spaceId: number) => {
+    setDeletingSpaceId(spaceId);
+    setSelectedItemsToDelete(new Set());
+  };
+
+  const handleDeleteSelectedItems = async () => {
+    if (deletingSpaceId === null) return;
+
+    if (selectedItemsToDelete.size === 0) {
+      toast.error('삭제할 항목을 선택하세요');
       return;
     }
 
     try {
-      await api.delete(`/finish-check/spaces/${spaceId}`);
-      setSpaces(spaces.filter(space => space.id !== spaceId));
+      // 선택된 항목들을 삭제
+      await Promise.all(
+        Array.from(selectedItemsToDelete).map(itemId =>
+          api.delete(`/finish-check/items/${itemId}`)
+        )
+      );
+
+      // 로컬 상태 업데이트
+      setSpaces(spaces.map(space =>
+        space.id === deletingSpaceId
+          ? { ...space, items: space.items.filter(item => !selectedItemsToDelete.has(item.id)) }
+          : space
+      ));
+
+      toast.success(`${selectedItemsToDelete.size}개 항목이 삭제되었습니다`);
+      setDeletingSpaceId(null);
+      setSelectedItemsToDelete(new Set());
+    } catch (error) {
+      console.error('Failed to delete items:', error);
+      toast.error('항목 삭제에 실패했습니다');
+    }
+  };
+
+  const handleDeleteEntireSpace = async () => {
+    if (deletingSpaceId === null) return;
+
+    const space = spaces.find(s => s.id === deletingSpaceId);
+    if (!space) return;
+
+    if (!confirm(`"${space.name}" 공간을 삭제하시겠습니까?\n\n삭제된 공간과 해당 공간의 모든 항목은 복구할 수 없습니다.`)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/finish-check/spaces/${deletingSpaceId}`);
+      setSpaces(spaces.filter(s => s.id !== deletingSpaceId));
       toast.success('공간이 삭제되었습니다');
+      setDeletingSpaceId(null);
+      setSelectedItemsToDelete(new Set());
     } catch (error) {
       console.error('Failed to delete space:', error);
       toast.error('공간 삭제에 실패했습니다');
@@ -538,7 +584,7 @@ const FinishCheck = () => {
               공간을 추가해주세요
             </div>
           ) : (
-            <div className="columns-1 portrait:md:columns-2 landscape:md:columns-3 desktop:columns-4 gap-4">
+            <div className="columns-1 portrait:md:columns-2 landscape:md:columns-3 desktop:columns-4 column-gap-4">
               {spaces.map((space, spaceIndex) => {
                 const incompleteItems = space.items
                   .filter(item => !item.is_completed)
@@ -548,7 +594,7 @@ const FinishCheck = () => {
                 if (space.items.length === 0) return null;
 
                 return (
-                  <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-2 break-inside-avoid">
+                  <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-4 break-inside-avoid">
                     {/* 공간 헤더 */}
                     {editingSpaceId === space.id ? (
                       <div className="flex gap-2 mb-4">
@@ -626,7 +672,7 @@ const FinishCheck = () => {
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDeleteSpace(space.id, space.name)}
+                            onClick={() => handleDeleteSpace(space.id)}
                             className="p-1 text-red-500 hover:text-red-700 transition-colors"
                             title="삭제"
                           >
@@ -922,6 +968,90 @@ const FinishCheck = () => {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 공간 삭제 모달 */}
+      {deletingSpaceId !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900">
+                  {spaces.find(s => s.id === deletingSpaceId)?.name} - 삭제
+                </h3>
+                <button
+                  onClick={() => {
+                    setDeletingSpaceId(null);
+                    setSelectedItemsToDelete(new Set());
+                  }}
+                  className="p-1 text-gray-600 hover:text-gray-900"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <p className="text-sm text-gray-600 mb-4">
+                삭제할 항목을 선택하세요. 선택하지 않은 항목은 유지됩니다.
+              </p>
+              <div className="space-y-2">
+                {spaces
+                  .find(s => s.id === deletingSpaceId)
+                  ?.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                      onClick={() => {
+                        const newSet = new Set(selectedItemsToDelete);
+                        if (newSet.has(item.id)) {
+                          newSet.delete(item.id);
+                        } else {
+                          newSet.add(item.id);
+                        }
+                        setSelectedItemsToDelete(newSet);
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedItemsToDelete.has(item.id)}
+                        onChange={() => {}}
+                        className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
+                      />
+                      <span className={`flex-1 text-sm ${item.is_completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                        {item.content}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-200 flex gap-2">
+              <button
+                onClick={handleDeleteSelectedItems}
+                disabled={selectedItemsToDelete.size === 0}
+                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                선택 항목 삭제 ({selectedItemsToDelete.size})
+              </button>
+              <button
+                onClick={handleDeleteEntireSpace}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+              >
+                공간 전체 삭제
+              </button>
+              <button
+                onClick={() => {
+                  setDeletingSpaceId(null);
+                  setSelectedItemsToDelete(new Set());
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+              >
+                취소
+              </button>
             </div>
           </div>
         </div>
