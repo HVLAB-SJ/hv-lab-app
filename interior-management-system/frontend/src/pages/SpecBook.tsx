@@ -1240,7 +1240,7 @@ const SpecBook = () => {
                     e.dataTransfer.setData('itemId', item.id.toString());
                     e.dataTransfer.effectAllowed = 'copy';
                   }}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-move flex flex-col group relative"
+                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing flex flex-col group relative"
                 >
                   <div className="w-full aspect-square bg-gray-100 relative">
                     {item.image_url ? (
@@ -1256,13 +1256,14 @@ const SpecBook = () => {
                       </div>
                     )}
                   </div>
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEdit(item);
                       }}
-                      className="p-1.5 bg-white text-gray-700 hover:bg-gray-100 rounded-md shadow-md transition-colors"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className="p-1.5 bg-white text-gray-700 hover:bg-gray-100 rounded-md shadow-md transition-colors cursor-pointer"
                       title="수정"
                     >
                       <Pencil className="w-3.5 h-3.5" />
@@ -1272,7 +1273,8 @@ const SpecBook = () => {
                         e.stopPropagation();
                         handleDelete(item.id);
                       }}
-                      className="p-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-md shadow-md transition-colors"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className="p-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-md shadow-md transition-colors cursor-pointer"
                       title="삭제"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
