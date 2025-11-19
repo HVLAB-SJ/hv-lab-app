@@ -47,21 +47,19 @@ const FinishCheck = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [spaces, setSpaces] = useState<FinishCheckSpace[]>([]);
-  const [selectedSpaceId, setSelectedSpaceId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [newSpaceName, setNewSpaceName] = useState('');
   const [newItemContent, setNewItemContent] = useState('');
+  const [selectedSpaceIdForNewItem, setSelectedSpaceIdForNewItem] = useState<number | null>(null);
   const [editingSpaceId, setEditingSpaceId] = useState<number | null>(null);
   const [editingSpaceName, setEditingSpaceName] = useState('');
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editingItemContent, setEditingItemContent] = useState('');
-  const [showMobileItems, setShowMobileItems] = useState(false);
   const [selectedItemForImages, setSelectedItemForImages] = useState<number | null>(null);
   const [uploadingImages, setUploadingImages] = useState<Set<number>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showMobileImageModal, setShowMobileImageModal] = useState(false);
-  const [showAddItemForm, setShowAddItemForm] = useState(false);
 
   useEffect(() => {
     // Don't load spaces initially - wait for project to be selected
@@ -92,13 +90,6 @@ const FinishCheck = () => {
       localStorage.setItem(`finishCheck_selectedProject_${user.id}`, selectedProjectId.toString());
     }
   }, [selectedProjectId, user?.id]);
-
-  // 공간 선택 시 localStorage에 저장
-  useEffect(() => {
-    if (selectedSpaceId !== null && user?.id) {
-      localStorage.setItem(`finishCheck_selectedSpace_${user.id}`, selectedSpaceId.toString());
-    }
-  }, [selectedSpaceId, user?.id]);
 
   useEffect(() => {
     if (!isMobile && selectedItemForImages) {
@@ -167,25 +158,6 @@ const FinishCheck = () => {
       }));
 
       setSpaces(spacesWithImages);
-
-      // localStorage에서 사용자별 마지막 선택 공간 불러오기
-      const savedSpaceId = user?.id
-        ? localStorage.getItem(`finishCheck_selectedSpace_${user.id}`)
-        : null;
-
-      if (savedSpaceId) {
-        const spaceId = Number(savedSpaceId);
-        // 전체 보기(-1) 또는 목록에 있는 공간이면 선택
-        if (spaceId === -1 || spacesWithImages.some(s => s.id === spaceId)) {
-          setSelectedSpaceId(spaceId);
-          return;
-        }
-      }
-
-      // 저장된 공간이 없거나 유효하지 않으면 첫 번째 공간을 자동으로 선택
-      if (spacesWithImages.length > 0 && selectedSpaceId === null) {
-        setSelectedSpaceId(spacesWithImages[0].id);
-      }
     } catch (error) {
       console.error('Failed to load spaces:', error);
       toast.error('공간 목록을 불러오는데 실패했습니다');
@@ -213,11 +185,6 @@ const FinishCheck = () => {
       setSpaces([...spaces, response.data]);
       setNewSpaceName('');
       toast.success('공간이 추가되었습니다');
-
-      // 첫 번째 공간이면 자동 선택
-      if (spaces.length === 0) {
-        setSelectedSpaceId(response.data.id);
-      }
     } catch (error) {
       console.error('Failed to add space:', error);
       toast.error('공간 추가에 실패했습니다');
@@ -253,14 +220,7 @@ const FinishCheck = () => {
 
     try {
       await api.delete(`/finish-check/spaces/${spaceId}`);
-      const updatedSpaces = spaces.filter(space => space.id !== spaceId);
-      setSpaces(updatedSpaces);
-
-      // 삭제된 공간이 선택되어 있었다면 첫 번째 공간을 선택
-      if (selectedSpaceId === spaceId) {
-        setSelectedSpaceId(updatedSpaces.length > 0 ? updatedSpaces[0].id : null);
-      }
-
+      setSpaces(spaces.filter(space => space.id !== spaceId));
       toast.success('공간이 삭제되었습니다');
     } catch (error) {
       console.error('Failed to delete space:', error);
@@ -268,12 +228,7 @@ const FinishCheck = () => {
     }
   };
 
-  const handleAddItem = async () => {
-    if (!selectedSpaceId) {
-      toast.error('공간을 선택하세요');
-      return;
-    }
-
+  const handleAddItem = async (spaceId: number) => {
     if (!newItemContent.trim()) {
       toast.error('항목 내용을 입력하세요');
       return;
@@ -281,16 +236,17 @@ const FinishCheck = () => {
 
     try {
       const response = await api.post('/finish-check/items', {
-        space_id: selectedSpaceId,
+        space_id: spaceId,
         content: newItemContent.trim()
       });
 
       setSpaces(spaces.map(space =>
-        space.id === selectedSpaceId
+        space.id === spaceId
           ? { ...space, items: [...space.items, { ...response.data, images: [] }] }
           : space
       ));
       setNewItemContent('');
+      setSelectedSpaceIdForNewItem(null);
       toast.success('항목이 추가되었습니다');
     } catch (error) {
       console.error('Failed to add item:', error);
@@ -494,11 +450,6 @@ const FinishCheck = () => {
     e.stopPropagation();
   };
 
-  const selectedSpace = spaces.find(space => space.id === selectedSpaceId);
-  const incompleteItems = (selectedSpace?.items.filter(item => !item.is_completed) || [])
-    .sort((a, b) => (b.is_priority || 0) - (a.is_priority || 0));
-  const completedItems = selectedSpace?.items.filter(item => item.is_completed) || [];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-120px)]">
@@ -527,183 +478,67 @@ const FinishCheck = () => {
         }}
       />
 
-      {/* 좌측: 공간 목록 */}
-      <div className={`w-full md:w-64 lg:w-80 flex-shrink-0 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col ${showMobileItems ? 'hidden md:flex' : 'flex'}`}>
+      {/* 메인 영역 */}
+      <div className="flex-1 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col">
+        {/* 상단 헤더 */}
         <div className="p-4 border-b border-gray-200">
-          {/* 프로젝트 선택 */}
-          <div className="mb-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트</label>
-            <select
-              value={selectedProjectId || ''}
-              onChange={(e) => {
-                const projectId = e.target.value ? Number(e.target.value) : null;
-                setSelectedProjectId(projectId);
-                setSelectedSpaceId(null); // 프로젝트 변경 시 공간 선택 초기화
-              }}
-              className="w-full px-3 py-2.5 md:py-2 text-sm md:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
-            >
-              {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.title}
-                </option>
-              ))}
-            </select>
-          </div>
+          <div className="flex flex-col md:flex-row gap-3">
+            {/* 프로젝트 선택 */}
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트</label>
+              <select
+                value={selectedProjectId || ''}
+                onChange={(e) => {
+                  const projectId = e.target.value ? Number(e.target.value) : null;
+                  setSelectedProjectId(projectId);
+                }}
+                className="w-full px-3 py-2.5 md:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
+              >
+                {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.title}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <h2 className="text-lg font-bold text-gray-900 mb-3">공간 목록</h2>
-
-          {/* 공간 추가 입력 */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newSpaceName}
-              onChange={(e) => setNewSpaceName(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleAddSpace();
-                }
-              }}
-              placeholder="공간 이름"
-              className="flex-1 px-3 py-2.5 md:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-            />
-            <button
-              onClick={handleAddSpace}
-              className="px-3 py-2.5 md:p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center justify-center min-w-[44px]"
-              title="공간 추가"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
+            {/* 공간 추가 */}
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">공간 추가</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newSpaceName}
+                  onChange={(e) => setNewSpaceName(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleAddSpace();
+                    }
+                  }}
+                  placeholder="공간 이름 입력"
+                  className="flex-1 px-3 py-2.5 md:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                />
+                <button
+                  onClick={handleAddSpace}
+                  className="px-3 py-2.5 md:p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center justify-center min-w-[44px]"
+                  title="공간 추가"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 공간 목록 */}
-        <div className="flex-1 overflow-y-auto">
+        {/* 전체 마감체크 내용 */}
+        <div className="flex-1 overflow-y-auto p-4">
           {spaces.length === 0 ? (
-            <div className="p-4 text-center text-sm text-gray-500">
+            <div className="flex items-center justify-center h-full text-gray-500 text-sm">
               공간을 추가해주세요
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
-              {/* 전체 보기 옵션 */}
-              <div
-                className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-                  selectedSpaceId === -1 ? 'bg-gray-100 border-l-4 border-gray-800' : ''
-                }`}
-                onClick={() => {
-                  setSelectedSpaceId(-1);
-                  setShowMobileItems(true);
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900">전체 보기</h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {spaces.reduce((sum, space) => sum + space.items.filter(item => item.is_completed).length, 0)} / {spaces.reduce((sum, space) => sum + space.items.length, 0)} 완료
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {spaces.map((space) => (
-                <div
-                  key={space.id}
-                  className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-                    selectedSpaceId === space.id ? 'bg-gray-100 border-l-4 border-gray-800' : ''
-                  }`}
-                  onClick={() => {
-                    setSelectedSpaceId(space.id);
-                    setShowMobileItems(true);
-                  }}
-                >
-                  {editingSpaceId === space.id ? (
-                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="text"
-                        value={editingSpaceName}
-                        onChange={(e) => setEditingSpaceName(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            handleUpdateSpace(space.id, editingSpaceName);
-                          } else if (e.key === 'Escape') {
-                            setEditingSpaceId(null);
-                            setEditingSpaceName('');
-                          }
-                        }}
-                        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                        autoFocus
-                      />
-                      <button
-                        onClick={() => handleUpdateSpace(space.id, editingSpaceName)}
-                        className="p-1 text-green-600 hover:text-green-700"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingSpaceId(null);
-                          setEditingSpaceName('');
-                        }}
-                        className="p-1 text-gray-600 hover:text-gray-700"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 truncate">{space.name}</h3>
-                        <p className="text-xs text-gray-500 mt-1 whitespace-nowrap">
-                          {space.items.filter(item => item.is_completed).length} / {space.items.length} 완료
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => {
-                            setEditingSpaceId(space.id);
-                            setEditingSpaceName(space.name);
-                          }}
-                          className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
-                          title="수정"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSpace(space.id, space.name)}
-                          className="p-1 text-red-500 hover:text-red-700 transition-colors"
-                          title="삭제"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 우측: 마감 항목 목록 */}
-      <div className={`flex-1 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col ${!showMobileItems ? 'hidden md:flex' : 'flex'}`}>
-        {selectedSpaceId === -1 ? (
-          /* 전체 보기 */
-          <>
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowMobileItems(false)}
-                  className="md:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <h2 className="text-lg font-bold text-gray-900">전체 마감체크</h2>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="columns-1 portrait:columns-1 landscape:md:columns-4 gap-4">
+            <div className="columns-1 portrait:columns-1 landscape:md:columns-4 gap-4">
               {spaces.map((space, spaceIndex) => {
                 const incompleteItems = space.items
                   .filter(item => !item.is_completed)
@@ -714,12 +549,69 @@ const FinishCheck = () => {
 
                 return (
                   <div key={space.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-2 break-inside-avoid">
-                    <h3 className="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-300 flex items-center gap-2">
-                      <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-800 text-white text-xs font-bold rounded-full">
-                        {spaceIndex + 1}
-                      </span>
-                      {space.name}
-                    </h3>
+                    {/* 공간 헤더 */}
+                    {editingSpaceId === space.id ? (
+                      <div className="flex gap-2 mb-4">
+                        <input
+                          type="text"
+                          value={editingSpaceName}
+                          onChange={(e) => setEditingSpaceName(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              handleUpdateSpace(space.id, editingSpaceName);
+                            } else if (e.key === 'Escape') {
+                              setEditingSpaceId(null);
+                              setEditingSpaceName('');
+                            }
+                          }}
+                          className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleUpdateSpace(space.id, editingSpaceName)}
+                          className="p-1 text-green-600 hover:text-green-700"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingSpaceId(null);
+                            setEditingSpaceName('');
+                          }}
+                          className="p-1 text-gray-600 hover:text-gray-700"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-300">
+                        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-800 text-white text-xs font-bold rounded-full">
+                            {spaceIndex + 1}
+                          </span>
+                          {space.name}
+                        </h3>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              setEditingSpaceId(space.id);
+                              setEditingSpaceName(space.name);
+                            }}
+                            className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
+                            title="수정"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSpace(space.id, space.name)}
+                            className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                            title="삭제"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* 미완료 항목 */}
                     {incompleteItems.length > 0 && (
@@ -739,18 +631,102 @@ const FinishCheck = () => {
                                 onChange={() => handleToggleItem(item.id)}
                                 className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
                               />
-                              <span className="flex-1 text-sm text-gray-900">{item.content}</span>
-                              <button
-                                onClick={() => handleTogglePriority(item.id)}
-                                className={`p-1 transition-colors ${
-                                  item.is_priority
-                                    ? 'text-yellow-500 hover:text-yellow-600'
-                                    : 'text-gray-300 hover:text-gray-400'
-                                }`}
-                                title="우선순위"
-                              >
-                                <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
-                              </button>
+
+                              {editingItemId === item.id ? (
+                                <div className="flex-1 flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={editingItemContent}
+                                    onChange={(e) => setEditingItemContent(e.target.value)}
+                                    onKeyPress={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleUpdateItem(item.id, editingItemContent);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingItemId(null);
+                                        setEditingItemContent('');
+                                      }
+                                    }}
+                                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => handleUpdateItem(item.id, editingItemContent)}
+                                    className="p-1 text-green-600 hover:text-green-700"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingItemId(null);
+                                      setEditingItemContent('');
+                                    }}
+                                    className="p-1 text-gray-600 hover:text-gray-700"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <span
+                                    className={`flex-1 text-sm text-gray-900 ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
+                                    onClick={() => !isMobile && setSelectedItemForImages(item.id)}
+                                    style={{ cursor: !isMobile ? 'pointer' : 'default' }}
+                                  >
+                                    {item.content}
+                                    {item.images && item.images.length > 0 && (
+                                      <span className="ml-2 text-xs text-gray-500">
+                                        ({item.images.length})
+                                      </span>
+                                    )}
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => handleTogglePriority(item.id)}
+                                      className={`p-1 transition-colors ${
+                                        item.is_priority
+                                          ? 'text-yellow-500 hover:text-yellow-600'
+                                          : 'text-gray-300 hover:text-gray-400'
+                                      }`}
+                                      title="우선순위"
+                                    >
+                                      <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedItemForImages(item.id);
+                                        if (isMobile) {
+                                          setShowMobileImageModal(true);
+                                        }
+                                      }}
+                                      className={`p-1 transition-colors ${
+                                        item.images && item.images.length > 0
+                                          ? 'text-blue-600 hover:text-blue-800'
+                                          : 'text-gray-300 hover:text-gray-400'
+                                      }`}
+                                      title="이미지"
+                                    >
+                                      <ImageIcon className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEditingItemId(item.id);
+                                        setEditingItemContent(item.content);
+                                      }}
+                                      className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
+                                      title="수정"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteItem(item.id)}
+                                      className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                                      title="삭제"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -775,18 +751,102 @@ const FinishCheck = () => {
                                 onChange={() => handleToggleItem(item.id)}
                                 className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
                               />
-                              <span className="flex-1 text-sm text-gray-500 line-through">{item.content}</span>
-                              <button
-                                onClick={() => handleTogglePriority(item.id)}
-                                className={`p-1 transition-colors ${
-                                  item.is_priority
-                                    ? 'text-yellow-500 hover:text-yellow-600'
-                                    : 'text-gray-300 hover:text-gray-400'
-                                }`}
-                                title="우선순위"
-                              >
-                                <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
-                              </button>
+
+                              {editingItemId === item.id ? (
+                                <div className="flex-1 flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={editingItemContent}
+                                    onChange={(e) => setEditingItemContent(e.target.value)}
+                                    onKeyPress={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleUpdateItem(item.id, editingItemContent);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingItemId(null);
+                                        setEditingItemContent('');
+                                      }
+                                    }}
+                                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => handleUpdateItem(item.id, editingItemContent)}
+                                    className="p-1 text-green-600 hover:text-green-700"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingItemId(null);
+                                      setEditingItemContent('');
+                                    }}
+                                    className="p-1 text-gray-600 hover:text-gray-700"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <span
+                                    className={`flex-1 text-sm text-gray-500 line-through ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
+                                    onClick={() => !isMobile && setSelectedItemForImages(item.id)}
+                                    style={{ cursor: !isMobile ? 'pointer' : 'default' }}
+                                  >
+                                    {item.content}
+                                    {item.images && item.images.length > 0 && (
+                                      <span className="ml-2 text-xs text-gray-500">
+                                        ({item.images.length})
+                                      </span>
+                                    )}
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => handleTogglePriority(item.id)}
+                                      className={`p-1 transition-colors ${
+                                        item.is_priority
+                                          ? 'text-yellow-500 hover:text-yellow-600'
+                                          : 'text-gray-300 hover:text-gray-400'
+                                      }`}
+                                      title="우선순위"
+                                    >
+                                      <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedItemForImages(item.id);
+                                        if (isMobile) {
+                                          setShowMobileImageModal(true);
+                                        }
+                                      }}
+                                      className={`p-1 transition-colors ${
+                                        item.images && item.images.length > 0
+                                          ? 'text-blue-600 hover:text-blue-800'
+                                          : 'text-gray-300 hover:text-gray-400'
+                                      }`}
+                                      title="이미지"
+                                    >
+                                      <ImageIcon className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEditingItemId(item.id);
+                                        setEditingItemContent(item.content);
+                                      }}
+                                      className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
+                                      title="수정"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteItem(item.id)}
+                                      className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                                      title="삭제"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -795,317 +855,9 @@ const FinishCheck = () => {
                   </div>
                 );
               })}
-              </div>
-
-              {spaces.every(space => space.items.length === 0) && (
-                <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                  등록된 마감 항목이 없습니다
-                </div>
-              )}
             </div>
-          </>
-        ) : selectedSpace ? (
-          <>
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center gap-2 mb-3">
-                <button
-                  onClick={() => setShowMobileItems(false)}
-                  className="md:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <h2 className="text-lg font-bold text-gray-900">{selectedSpace.name} - 마감체크</h2>
-              </div>
-
-              {/* 항목 추가 입력 - 데스크톱에서는 항상 표시, 태블릿에서는 토글 */}
-              {(showAddItemForm || window.innerWidth >= 1400) && (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newItemContent}
-                    onChange={(e) => setNewItemContent(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleAddItem();
-                      }
-                    }}
-                    placeholder="마감 항목 입력"
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  />
-                  <button
-                    onClick={handleAddItem}
-                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium"
-                  >
-                    추가
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {/* 미완료 항목 */}
-              {incompleteItems.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                    ({incompleteItems.length})
-                  </h3>
-                  <div className="space-y-2">
-                    {incompleteItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={false}
-                          onChange={() => handleToggleItem(item.id)}
-                          className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
-                        />
-
-                        {editingItemId === item.id ? (
-                          <div className="flex-1 flex gap-2">
-                            <input
-                              type="text"
-                              value={editingItemContent}
-                              onChange={(e) => setEditingItemContent(e.target.value)}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  handleUpdateItem(item.id, editingItemContent);
-                                } else if (e.key === 'Escape') {
-                                  setEditingItemId(null);
-                                  setEditingItemContent('');
-                                }
-                              }}
-                              className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                              autoFocus
-                            />
-                            <button
-                              onClick={() => handleUpdateItem(item.id, editingItemContent)}
-                              className="p-1 text-green-600 hover:text-green-700"
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditingItemId(null);
-                                setEditingItemContent('');
-                              }}
-                              className="p-1 text-gray-600 hover:text-gray-700"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <>
-                            <span
-                              className={`flex-1 text-sm text-gray-900 ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
-                              onClick={() => !isMobile && setSelectedItemForImages(item.id)}
-                              style={{ cursor: !isMobile ? 'pointer' : 'default' }}
-                            >
-                              {item.content}
-                              {item.images.length > 0 && (
-                                <span className="ml-2 text-xs text-gray-500">
-                                  ({item.images.length})
-                                </span>
-                              )}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleTogglePriority(item.id)}
-                                className={`p-1 transition-colors ${
-                                  item.is_priority
-                                    ? 'text-yellow-500 hover:text-yellow-600'
-                                    : 'text-gray-300 hover:text-gray-400'
-                                }`}
-                                title="우선순위"
-                              >
-                                <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setSelectedItemForImages(item.id);
-                                  if (isMobile) {
-                                    setShowMobileImageModal(true);
-                                  }
-                                }}
-                                className={`p-1 transition-colors ${
-                                  item.images.length > 0
-                                    ? 'text-blue-600 hover:text-blue-800'
-                                    : 'text-gray-300 hover:text-gray-400'
-                                }`}
-                                title="이미지"
-                              >
-                                <ImageIcon className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setEditingItemId(item.id);
-                                  setEditingItemContent(item.content);
-                                }}
-                                className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
-                                title="수정"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteItem(item.id)}
-                                className="p-1 text-red-500 hover:text-red-700 transition-colors"
-                                title="삭제"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 완료 항목 */}
-              {completedItems.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                    ({completedItems.length})
-                  </h3>
-                  <div className="space-y-2">
-                    {completedItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors opacity-40"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={true}
-                          onChange={() => handleToggleItem(item.id)}
-                          className="mt-1 w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-500 cursor-pointer"
-                        />
-
-                        {editingItemId === item.id ? (
-                          <div className="flex-1 flex gap-2">
-                            <input
-                              type="text"
-                              value={editingItemContent}
-                              onChange={(e) => setEditingItemContent(e.target.value)}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  handleUpdateItem(item.id, editingItemContent);
-                                } else if (e.key === 'Escape') {
-                                  setEditingItemId(null);
-                                  setEditingItemContent('');
-                                }
-                              }}
-                              className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                              autoFocus
-                            />
-                            <button
-                              onClick={() => handleUpdateItem(item.id, editingItemContent)}
-                              className="p-1 text-green-600 hover:text-green-700"
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditingItemId(null);
-                                setEditingItemContent('');
-                              }}
-                              className="p-1 text-gray-600 hover:text-gray-700"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <>
-                            <span
-                              className={`flex-1 text-sm text-gray-500 line-through ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
-                              onClick={() => !isMobile && setSelectedItemForImages(item.id)}
-                              style={{ cursor: !isMobile ? 'pointer' : 'default' }}
-                            >
-                              {item.content}
-                              {item.images.length > 0 && (
-                                <span className="ml-2 text-xs text-gray-500">
-                                  ({item.images.length})
-                                </span>
-                              )}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleTogglePriority(item.id)}
-                                className={`p-1 transition-colors ${
-                                  item.is_priority
-                                    ? 'text-yellow-500 hover:text-yellow-600'
-                                    : 'text-gray-300 hover:text-gray-400'
-                                }`}
-                                title="우선순위"
-                              >
-                                <Star className={`w-4 h-4 ${item.is_priority ? 'fill-current' : ''}`} />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setSelectedItemForImages(item.id);
-                                  if (isMobile) {
-                                    setShowMobileImageModal(true);
-                                  }
-                                }}
-                                className={`p-1 transition-colors ${
-                                  item.images.length > 0
-                                    ? 'text-blue-600 hover:text-blue-800'
-                                    : 'text-gray-300 hover:text-gray-400'
-                                }`}
-                                title="이미지"
-                              >
-                                <ImageIcon className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setEditingItemId(item.id);
-                                  setEditingItemContent(item.content);
-                                }}
-                                className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
-                                title="수정"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteItem(item.id)}
-                                className="p-1 text-red-500 hover:text-red-700 transition-colors"
-                                title="삭제"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 항목이 없을 때 */}
-              {incompleteItems.length === 0 && completedItems.length === 0 && (
-                <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                  마감 항목을 추가해주세요
-                </div>
-              )}
-            </div>
-
-            {/* 태블릿 모드 플로팅 추가 버튼 */}
-            {window.innerWidth < 1400 && (
-              <button
-                onClick={() => setShowAddItemForm(!showAddItemForm)}
-                className="fixed bottom-6 right-6 w-14 h-14 bg-gray-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-800 transition-transform desktop:hidden"
-              >
-                {showAddItemForm ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
-              </button>
-            )}
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-            좌측에서 공간을 선택하세요
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* 우측: 이미지 패널 (데스크톱만) */}
