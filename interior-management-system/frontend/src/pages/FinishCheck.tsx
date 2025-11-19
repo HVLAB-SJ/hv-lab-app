@@ -724,9 +724,8 @@ const FinishCheck = () => {
                     {/* 미완료 항목 */}
                     {incompleteItems.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                          미완료 ({incompleteItems.length})
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                          ({incompleteItems.length})
                         </h4>
                         <div className="space-y-2">
                           {incompleteItems.map((item) => (
@@ -761,9 +760,8 @@ const FinishCheck = () => {
                     {/* 완료 항목 */}
                     {completedItems.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                          완료 ({completedItems.length})
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                          ({completedItems.length})
                         </h4>
                         <div className="space-y-2">
                           {completedItems.map((item) => (
@@ -848,9 +846,8 @@ const FinishCheck = () => {
               {/* 미완료 항목 */}
               {incompleteItems.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                    미완료 ({incompleteItems.length})
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                    ({incompleteItems.length})
                   </h3>
                   <div className="space-y-2">
                     {incompleteItems.map((item) => (
@@ -969,9 +966,8 @@ const FinishCheck = () => {
               {/* 완료 항목 */}
               {completedItems.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    완료 ({completedItems.length})
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                    ({completedItems.length})
                   </h3>
                   <div className="space-y-2">
                     {completedItems.map((item) => (
