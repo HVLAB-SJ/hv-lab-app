@@ -662,7 +662,7 @@ const SiteLog = () => {
         {/* 달력 */}
         <div className="md:col-span-1 desktop:col-span-3">
           {/* 프로젝트 선택 및 캘린더 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[70vh] desktop:max-h-none overflow-y-auto">
             {/* 프로젝트 선택 */}
             <div className="mb-4">
               <select
@@ -732,7 +732,7 @@ const SiteLog = () => {
 
         {/* 일지작성 */}
         <div className="md:col-span-1 desktop:col-span-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 h-full">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[70vh] desktop:h-full desktop:max-h-none overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">
               {format(selectedDate, 'M월 d일')} 일지 작성
             </h2>
