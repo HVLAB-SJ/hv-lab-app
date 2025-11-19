@@ -656,13 +656,13 @@ const SiteLog = () => {
   }, [imageModal.show, imageModal.images, currentImageIndex]);
 
   return (
-    <div className="space-y-3 md:space-y-4">
-      {/* 상단: 달력 + 일지작성 (태블릿 세로모드에서 2열) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 desktop:grid-cols-12 gap-3 md:gap-4">
+    <div className="desktop:grid desktop:grid-cols-12 desktop:gap-4 desktop:h-[calc(100vh-140px)] space-y-3 desktop:space-y-0">
+      {/* 좌측: 달력 + 일지작성 (데스크톱에서 상하 배치) */}
+      <div className="desktop:col-span-4 desktop:flex desktop:flex-col desktop:gap-4 desktop:h-full space-y-3 desktop:space-y-0">
         {/* 달력 */}
-        <div className="md:col-span-1 desktop:col-span-3">
+        <div className="desktop:flex-shrink-0">
           {/* 프로젝트 선택 및 캘린더 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[70vh] desktop:max-h-none overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[70vh] desktop:max-h-full overflow-y-auto">
             {/* 프로젝트 선택 */}
             <div className="mb-4">
               <select
@@ -731,8 +731,8 @@ const SiteLog = () => {
         </div>
 
         {/* 일지작성 */}
-        <div className="md:col-span-1 desktop:col-span-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[70vh] desktop:h-full desktop:max-h-none overflow-y-auto">
+        <div className="desktop:flex-1 desktop:min-h-0">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[70vh] desktop:h-full overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">
               {format(selectedDate, 'M월 d일')} 일지 작성
             </h2>
@@ -770,9 +770,10 @@ const SiteLog = () => {
         </div>
       </div>
 
-      {/* 하단: 현장일지 목록 */}
-      <div
-        className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 transition-all ${
+      {/* 우측: 현장일지 목록 (데스크톱에서 크게 표시) */}
+      <div className="desktop:col-span-8 desktop:h-full">
+        <div
+        className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 transition-all desktop:h-full desktop:flex desktop:flex-col ${
             isDraggingEmpty ? 'ring-2 ring-blue-400 bg-blue-50' : ''
           }`}
           onDragOver={(e) => {
@@ -791,7 +792,7 @@ const SiteLog = () => {
             handleDrop(e);
           }}
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 desktop:flex-shrink-0">
             <h2 className="text-lg font-semibold flex items-center gap-4">
               <span>{format(selectedDate, 'yyyy년 M월 d일', { locale: ko })} 현장일지</span>
               <span className="text-sm font-normal text-gray-600">작성자: {user?.name || '알 수 없음'}</span>
@@ -840,7 +841,7 @@ const SiteLog = () => {
             </div>
           </div>
 
-          <div className="space-y-6 max-h-[990px] overflow-y-auto">
+          <div className="space-y-6 max-h-[990px] desktop:max-h-full desktop:flex-1 desktop:min-h-0 overflow-y-auto">
             {(() => {
               const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
               const selectedDateLogs = logs.filter(log => {
@@ -868,9 +869,9 @@ const SiteLog = () => {
                         )}
 
                         {/* 이미지 갤러리 영역 */}
-                        <div className="min-h-[600px]">
+                        <div className="min-h-[600px] desktop:min-h-0">
                           {log.images && log.images.length > 0 ? (
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-3 desktop:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
                               {log.images.map((img, idx) => (
                                 <div key={idx} className="relative group">
                                   <img
@@ -952,6 +953,7 @@ const SiteLog = () => {
             })()}
           </div>
         </div>
+      </div>
 
       {/* 이미지 모달 - 갤러리 형식 */}
       {imageModal.show && imageModal.url && (
