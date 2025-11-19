@@ -41,6 +41,7 @@ const SiteLog = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
   const [lastTouchCenter, setLastTouchCenter] = useState<{ x: number; y: number } | null>(null);
+  const [isPinching, setIsPinching] = useState(false);
 
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -559,6 +560,7 @@ const SiteLog = () => {
     setImagePosition({ x: 0, y: 0 });
     setLastTouchDistance(null);
     setLastTouchCenter(null);
+    setIsPinching(false);
   };
 
   // 다음/이전 이미지
@@ -1025,11 +1027,12 @@ const SiteLog = () => {
               onTouchStart={(e) => {
                 if (e.touches.length === 2) {
                   e.preventDefault();
+                  setIsPinching(true);
                   const distance = getTouchDistance(e.touches[0], e.touches[1]);
                   const center = getTouchCenter(e.touches[0], e.touches[1]);
                   setLastTouchDistance(distance);
                   setLastTouchCenter(center);
-                } else if (e.touches.length === 1 && imageZoom > 1) {
+                } else if (e.touches.length === 1 && imageZoom > 1 && !isPinching) {
                   const touch = e.touches[0];
                   setDragStart({ x: touch.clientX - imagePosition.x, y: touch.clientY - imagePosition.y });
                 }
@@ -1037,6 +1040,7 @@ const SiteLog = () => {
               onTouchMove={(e) => {
                 if (e.touches.length === 2) {
                   e.preventDefault();
+                  setIsPinching(true);
                   const distance = getTouchDistance(e.touches[0], e.touches[1]);
                   const center = getTouchCenter(e.touches[0], e.touches[1]);
 
@@ -1059,7 +1063,7 @@ const SiteLog = () => {
 
                   setLastTouchDistance(distance);
                   setLastTouchCenter(center);
-                } else if (e.touches.length === 1 && imageZoom > 1) {
+                } else if (e.touches.length === 1 && imageZoom > 1 && !isPinching) {
                   e.preventDefault();
                   const touch = e.touches[0];
                   setImagePosition({
@@ -1068,9 +1072,21 @@ const SiteLog = () => {
                   });
                 }
               }}
-              onTouchEnd={() => {
-                setLastTouchDistance(null);
-                setLastTouchCenter(null);
+              onTouchEnd={(e) => {
+                if (e.touches.length === 0) {
+                  // 모든 손가락을 뗐을 때
+                  setLastTouchDistance(null);
+                  setLastTouchCenter(null);
+                  setIsPinching(false);
+                } else if (e.touches.length === 1 && isPinching) {
+                  // 두 손가락에서 한 손가락으로 전환될 때
+                  setLastTouchDistance(null);
+                  setLastTouchCenter(null);
+                  setIsPinching(false);
+                  // 드래그 시작점을 재설정
+                  const touch = e.touches[0];
+                  setDragStart({ x: touch.clientX - imagePosition.x, y: touch.clientY - imagePosition.y });
+                }
               }}
               onDoubleClick={(e) => {
                 e.stopPropagation();

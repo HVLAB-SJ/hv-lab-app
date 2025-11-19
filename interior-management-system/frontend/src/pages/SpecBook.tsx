@@ -298,6 +298,7 @@ const SpecBook = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
   const [lastTouchCenter, setLastTouchCenter] = useState<{ x: number; y: number } | null>(null);
+  const [isPinching, setIsPinching] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
   const subImagesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1677,6 +1678,7 @@ const SpecBook = () => {
               setImagePosition({ x: 0, y: 0 });
               setLastTouchDistance(null);
               setLastTouchCenter(null);
+              setIsPinching(false);
             }
           }}
           onWheel={(e) => {
@@ -1694,6 +1696,7 @@ const SpecBook = () => {
                 setImagePosition({ x: 0, y: 0 });
                 setLastTouchDistance(null);
                 setLastTouchCenter(null);
+                setIsPinching(false);
               }}
               className="p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition-colors"
             >
@@ -1765,11 +1768,12 @@ const SpecBook = () => {
             onTouchStart={(e) => {
               if (e.touches.length === 2) {
                 e.preventDefault();
+                setIsPinching(true);
                 const distance = getTouchDistance(e.touches[0], e.touches[1]);
                 const center = getTouchCenter(e.touches[0], e.touches[1]);
                 setLastTouchDistance(distance);
                 setLastTouchCenter(center);
-              } else if (e.touches.length === 1 && imageZoom > 1) {
+              } else if (e.touches.length === 1 && imageZoom > 1 && !isPinching) {
                 const touch = e.touches[0];
                 setDragStart({ x: touch.clientX - imagePosition.x, y: touch.clientY - imagePosition.y });
               }
@@ -1777,6 +1781,7 @@ const SpecBook = () => {
             onTouchMove={(e) => {
               if (e.touches.length === 2) {
                 e.preventDefault();
+                setIsPinching(true);
                 const distance = getTouchDistance(e.touches[0], e.touches[1]);
                 const center = getTouchCenter(e.touches[0], e.touches[1]);
 
@@ -1799,7 +1804,7 @@ const SpecBook = () => {
 
                 setLastTouchDistance(distance);
                 setLastTouchCenter(center);
-              } else if (e.touches.length === 1 && imageZoom > 1) {
+              } else if (e.touches.length === 1 && imageZoom > 1 && !isPinching) {
                 e.preventDefault();
                 const touch = e.touches[0];
                 setImagePosition({
@@ -1808,9 +1813,21 @@ const SpecBook = () => {
                 });
               }
             }}
-            onTouchEnd={() => {
-              setLastTouchDistance(null);
-              setLastTouchCenter(null);
+            onTouchEnd={(e) => {
+              if (e.touches.length === 0) {
+                // 모든 손가락을 뗐을 때
+                setLastTouchDistance(null);
+                setLastTouchCenter(null);
+                setIsPinching(false);
+              } else if (e.touches.length === 1 && isPinching) {
+                // 두 손가락에서 한 손가락으로 전환될 때
+                setLastTouchDistance(null);
+                setLastTouchCenter(null);
+                setIsPinching(false);
+                // 드래그 시작점을 재설정
+                const touch = e.touches[0];
+                setDragStart({ x: touch.clientX - imagePosition.x, y: touch.clientY - imagePosition.y });
+              }
             }}
             onDoubleClick={(e) => {
               e.stopPropagation();
