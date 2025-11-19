@@ -379,8 +379,8 @@ const AfterService = () => {
         />
       </div>
 
-      {/* Mobile & Tablet Card View */}
-      <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* Mobile Card View */}
+      <div className="md:hidden grid grid-cols-1 gap-3">
         {filteredRequests.map((request) => (
           <div
             key={request.id}
@@ -631,9 +631,9 @@ const AfterService = () => {
         ))}
       </div>
 
-      {/* Desktop 3-Column Card View */}
-      <div className="hidden lg:grid lg:grid-cols-3 gap-4">
-        {/* 첫 번째, 두 번째 열: AS 요청 카드 (2열로 나눔) */}
+      {/* Tablet & Desktop Multi-Column Card View */}
+      <div className="hidden md:grid md:grid-cols-2 desktop:grid-cols-3 gap-4">
+        {/* 첫 번째, 두 번째 열: AS 요청 카드 (desktop: 2열, tablet: 1열) */}
         {(() => {
           const midPoint = Math.ceil(filteredRequests.length / 2);
           const firstHalf = filteredRequests.slice(0, midPoint);
@@ -641,9 +641,9 @@ const AfterService = () => {
 
           return (
             <>
-              {/* 첫 번째 열 */}
+              {/* 첫 번째 열 - 태블릿에서는 모든 프로젝트, 데스크톱에서는 절반만 */}
               <div className="space-y-4">
-                {firstHalf.map((request) => (
+                {(window.innerWidth >= 1400 ? firstHalf : filteredRequests).map((request) => (
                   <div
                     key={request.id}
                     data-request-id={request.id}
@@ -888,8 +888,8 @@ const AfterService = () => {
                 ))}
               </div>
 
-              {/* 두 번째 열 */}
-              <div className="space-y-4">
+              {/* 두 번째 열 - 데스크톱에서만 표시 */}
+              <div className="space-y-4 hidden desktop:block">
                 {secondHalf.map((request) => (
                   <div
                     key={request.id}
