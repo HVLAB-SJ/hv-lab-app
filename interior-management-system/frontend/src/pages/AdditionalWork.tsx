@@ -38,6 +38,7 @@ const AdditionalWork = () => {
   const [modalImage, setModalImage] = useState<string | null>(null);
   const [workImages, setWorkImages] = useState<Record<string, string[]>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showMobileForm, setShowMobileForm] = useState(false);
 
   // 입력 폼 상태
   const [formData, setFormData] = useState({
@@ -573,6 +574,81 @@ const AdditionalWork = () => {
 
       {/* 모바일 레이아웃 */}
       <div className="desktop:hidden space-y-3">
+        {/* 추가내역 등록 폼 */}
+        {showMobileForm && (
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <div className="space-y-3">
+              {/* 프로젝트 선택 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  프로젝트 *
+                </label>
+                <select
+                  value={formData.project}
+                  onChange={(e) => setFormData(prev => ({ ...prev, project: e.target.value }))}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white"
+                >
+                  {user?.name !== '안팀' && <option value="">선택하세요</option>}
+                  {filteredProjects.map((project) => (
+                    <option key={project.id} value={project.name}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 일자 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  일자 *
+                </label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                />
+              </div>
+
+              {/* 내용 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  내용 *
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  rows={4}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none"
+                  placeholder="추가내역 내용을 입력하세요"
+                />
+              </div>
+
+              {/* 금액 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  금액 *
+                </label>
+                <input
+                  type="number"
+                  value={formData.amount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  placeholder="0"
+                />
+              </div>
+
+              {/* 등록 버튼 */}
+              <button
+                onClick={handleFormSubmit}
+                className="w-full py-3 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                추가내역 등록
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 검색 및 총액 */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
           <div className="space-y-3">
@@ -654,15 +730,12 @@ const AdditionalWork = () => {
           </div>
         ))}
 
-        {/* 추가 버튼 */}
+        {/* 추가내역 등록 토글 버튼 */}
         <button
-          onClick={() => {
-            setSelectedWork(null);
-            setIsModalOpen(true);
-          }}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-gray-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-800"
+          onClick={() => setShowMobileForm(!showMobileForm)}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-gray-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-800 transition-transform"
         >
-          <Plus className="h-6 w-6" />
+          {showMobileForm ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
         </button>
       </div>
 
