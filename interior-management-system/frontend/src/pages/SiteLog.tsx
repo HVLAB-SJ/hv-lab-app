@@ -42,6 +42,8 @@ const SiteLog = () => {
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
   const [lastTouchCenter, setLastTouchCenter] = useState<{ x: number; y: number } | null>(null);
   const [isPinching, setIsPinching] = useState(false);
+  const [lastTapTime, setLastTapTime] = useState(0);
+  const [lastTapPosition, setLastTapPosition] = useState<{ x: number; y: number } | null>(null);
 
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -1075,6 +1077,43 @@ const SiteLog = () => {
               onTouchEnd={(e) => {
                 if (e.touches.length === 0) {
                   // 모든 손가락을 뗐을 때
+                  const now = Date.now();
+                  const touch = e.changedTouches[0];
+                  const tapPosition = { x: touch.clientX, y: touch.clientY };
+
+                  // 더블탭 감지 (300ms 이내, 30px 이내)
+                  const timeDiff = now - lastTapTime;
+                  const isDoubleTap = timeDiff < 300 &&
+                    lastTapPosition &&
+                    Math.abs(tapPosition.x - lastTapPosition.x) < 30 &&
+                    Math.abs(tapPosition.y - lastTapPosition.y) < 30;
+
+                  if (isDoubleTap && !isPinching) {
+                    // 더블탭 시 줌 토글
+                    if (imageZoom === 1) {
+                      // 줌 인: 탭한 위치를 중심으로 2.5배 확대
+                      const container = e.currentTarget.getBoundingClientRect();
+                      const centerX = (tapPosition.x - container.left - container.width / 2);
+                      const centerY = (tapPosition.y - container.top - container.height / 2);
+
+                      setImageZoom(2.5);
+                      setImagePosition({
+                        x: -centerX * 1.5,
+                        y: -centerY * 1.5
+                      });
+                    } else {
+                      // 줌 아웃: 화면에 맞춤
+                      setImageZoom(1);
+                      setImagePosition({ x: 0, y: 0 });
+                    }
+                    setLastTapTime(0);
+                    setLastTapPosition(null);
+                  } else {
+                    // 단일 탭
+                    setLastTapTime(now);
+                    setLastTapPosition(tapPosition);
+                  }
+
                   setLastTouchDistance(null);
                   setLastTouchCenter(null);
                   setIsPinching(false);
@@ -1090,8 +1129,17 @@ const SiteLog = () => {
               }}
               onDoubleClick={(e) => {
                 e.stopPropagation();
+                const rect = e.currentTarget.getBoundingClientRect();
+                const centerX = (e.clientX - rect.left - rect.width / 2);
+                const centerY = (e.clientY - rect.top - rect.height / 2);
+
                 if (imageZoom === 1) {
-                  setImageZoom(2);
+                  // 더블클릭 위치를 중심으로 2.5배 확대
+                  setImageZoom(2.5);
+                  setImagePosition({
+                    x: -centerX * 1.5,
+                    y: -centerY * 1.5
+                  });
                 } else {
                   setImageZoom(1);
                   setImagePosition({ x: 0, y: 0 });
@@ -1104,7 +1152,7 @@ const SiteLog = () => {
                 style={{
                   transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
                   transformOrigin: 'center center',
-                  transition: (isDraggingImage || lastTouchDistance !== null) ? 'none' : 'transform 0.1s ease-out',
+                  transition: (isDraggingImage || lastTouchDistance !== null) ? 'none' : 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)',
                   maxWidth: '100%',
                   maxHeight: '100%',
                   objectFit: 'contain',
