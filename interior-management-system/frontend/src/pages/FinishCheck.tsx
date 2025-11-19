@@ -63,6 +63,7 @@ const FinishCheck = () => {
   const [deletingSpaceId, setDeletingSpaceId] = useState<number | null>(null);
   const [selectedItemsToDelete, setSelectedItemsToDelete] = useState<Set<number>>(new Set());
   const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
+  const [showAddSpaceModal, setShowAddSpaceModal] = useState(false);
 
   useEffect(() => {
     // Don't load spaces initially - wait for project to be selected
@@ -187,6 +188,7 @@ const FinishCheck = () => {
       });
       setSpaces([...spaces, response.data]);
       setNewSpaceName('');
+      setShowAddSpaceModal(false);
       toast.success('공간이 추가되었습니다');
     } catch (error) {
       console.error('Failed to add space:', error);
@@ -529,68 +531,115 @@ const FinishCheck = () => {
       <div className="flex-1 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col">
         {/* 상단 헤더 */}
         <div className="p-4 border-b border-gray-200">
-          <div className="flex flex-col md:flex-row gap-3">
-            {/* 프로젝트 선택 */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트</label>
-              <select
-                value={selectedProjectId || ''}
-                onChange={(e) => {
-                  const projectId = e.target.value ? Number(e.target.value) : null;
-                  setSelectedProjectId(projectId);
-                }}
-                className="w-full px-3 py-2.5 md:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
-              >
-                {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 공간 추가 */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">공간 추가</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newSpaceName}
-                  onChange={(e) => setNewSpaceName(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleAddSpace();
-                    }
+          {/* 모바일 레이아웃 */}
+          {isMobile ? (
+            <div className="flex items-center gap-2">
+              {/* 프로젝트 선택 */}
+              <div className="flex-1">
+                <select
+                  value={selectedProjectId || ''}
+                  onChange={(e) => {
+                    const projectId = e.target.value ? Number(e.target.value) : null;
+                    setSelectedProjectId(projectId);
                   }}
-                  placeholder="공간 이름 입력"
-                  className="flex-1 px-3 py-2.5 md:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                />
-                <button
-                  onClick={handleAddSpace}
-                  className="px-3 py-2.5 md:p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center justify-center min-w-[44px]"
-                  title="공간 추가"
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
                 >
-                  <Plus className="w-5 h-5" />
-                </button>
+                  {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
 
-            {/* 필터 토글 */}
-            <div className="flex items-end">
+              {/* 필터 토글 */}
               <button
                 onClick={() => setShowOnlyIncomplete(!showOnlyIncomplete)}
-                className={`px-4 py-2.5 md:py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                className={`px-3 py-2.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
                   showOnlyIncomplete
                     ? 'bg-gray-800 text-white hover:bg-gray-900'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
                 title={showOnlyIncomplete ? '전체 보기' : '미완료만 보기'}
               >
-                {showOnlyIncomplete ? '미완료만' : '전체보기'}
+                {showOnlyIncomplete ? '미완료' : '전체'}
+              </button>
+
+              {/* 공간 추가 버튼 */}
+              <button
+                onClick={() => setShowAddSpaceModal(true)}
+                className="p-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center justify-center"
+                title="공간 추가"
+              >
+                <Plus className="w-5 h-5" />
               </button>
             </div>
-          </div>
+          ) : (
+            /* 데스크톱 레이아웃 */
+            <div className="flex gap-3">
+              {/* 프로젝트 선택 */}
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트</label>
+                <select
+                  value={selectedProjectId || ''}
+                  onChange={(e) => {
+                    const projectId = e.target.value ? Number(e.target.value) : null;
+                    setSelectedProjectId(projectId);
+                  }}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
+                >
+                  {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 공간 추가 */}
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">공간 추가</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSpaceName}
+                    onChange={(e) => setNewSpaceName(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddSpace();
+                      }
+                    }}
+                    placeholder="공간 이름 입력"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                  <button
+                    onClick={handleAddSpace}
+                    className="p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center justify-center min-w-[44px]"
+                    title="공간 추가"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 필터 토글 */}
+              <div className="flex items-end">
+                <button
+                  onClick={() => setShowOnlyIncomplete(!showOnlyIncomplete)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                    showOnlyIncomplete
+                      ? 'bg-gray-800 text-white hover:bg-gray-900'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  title={showOnlyIncomplete ? '전체 보기' : '미완료만 보기'}
+                >
+                  {showOnlyIncomplete ? '미완료만' : '전체보기'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 전체 마감체크 내용 */}
@@ -1070,6 +1119,66 @@ const FinishCheck = () => {
               >
                 취소
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 공간 추가 모달 (모바일) */}
+      {showAddSpaceModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50">
+          <div className="bg-white rounded-t-2xl md:rounded-lg w-full md:max-w-md">
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900">공간 추가</h3>
+                <button
+                  onClick={() => {
+                    setShowAddSpaceModal(false);
+                    setNewSpaceName('');
+                  }}
+                  className="p-1 text-gray-600 hover:text-gray-900"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">공간 이름</label>
+                <input
+                  type="text"
+                  value={newSpaceName}
+                  onChange={(e) => setNewSpaceName(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && newSpaceName.trim()) {
+                      handleAddSpace();
+                    }
+                  }}
+                  placeholder="공간 이름 입력"
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowAddSpaceModal(false);
+                    setNewSpaceName('');
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleAddSpace}
+                  disabled={!newSpaceName.trim()}
+                  className="flex-1 px-4 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  추가
+                </button>
+              </div>
             </div>
           </div>
         </div>
