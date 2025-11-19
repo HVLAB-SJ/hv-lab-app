@@ -538,7 +538,7 @@ const FinishCheck = () => {
               공간을 추가해주세요
             </div>
           ) : (
-            <div className="columns-1 portrait:columns-1 landscape:md:columns-4 gap-4">
+            <div className="columns-1 portrait:md:columns-2 landscape:md:columns-3 desktop:columns-4 gap-4">
               {spaces.map((space, spaceIndex) => {
                 const incompleteItems = space.items
                   .filter(item => !item.is_completed)
@@ -585,12 +585,17 @@ const FinishCheck = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-300">
-                        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                          <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-800 text-white text-xs font-bold rounded-full">
-                            {spaceIndex + 1}
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                            <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-800 text-white text-xs font-bold rounded-full">
+                              {spaceIndex + 1}
+                            </span>
+                            {space.name}
+                          </h3>
+                          <span className="text-xs text-gray-500">
+                            {completedItems.length}/{space.items.length} 완료
                           </span>
-                          {space.name}
-                        </h3>
+                        </div>
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => {
@@ -616,9 +621,6 @@ const FinishCheck = () => {
                     {/* 미완료 항목 */}
                     {incompleteItems.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                          ({incompleteItems.length})
-                        </h4>
                         <div className="space-y-2">
                           {incompleteItems.map((item) => (
                             <div
@@ -736,9 +738,6 @@ const FinishCheck = () => {
                     {/* 완료 항목 */}
                     {completedItems.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                          ({completedItems.length})
-                        </h4>
                         <div className="space-y-2">
                           {completedItems.map((item) => (
                             <div
