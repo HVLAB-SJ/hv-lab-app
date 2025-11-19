@@ -1400,7 +1400,6 @@ const SpecBook = () => {
                         const { id, created_at, updated_at, ...itemData } = sourceItem;
                         await api.post('/specbook/base64', {
                           ...itemData,
-                          imageData: sourceItem.image_url, // 이미지 데이터 전달
                           isLibrary: false,
                           projectId: selectedProject
                         });
