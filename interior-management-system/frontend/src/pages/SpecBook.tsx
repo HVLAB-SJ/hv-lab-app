@@ -1242,16 +1242,22 @@ const SpecBook = () => {
                   }}
                   className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing flex flex-col group relative"
                 >
-                  <div className="w-full aspect-square bg-gray-100 relative cursor-pointer" onClick={() => handleImageClick(item)}>
+                  <div
+                    className="w-full aspect-square bg-gray-100 relative"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      handleImageClick(item);
+                    }}
+                  >
                     {item.image_url ? (
                       <img
                         src={item.image_url}
                         alt={item.name}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain pointer-events-none"
                         draggable={false}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs pointer-events-none">
                         이미지 없음
                       </div>
                     )}
@@ -1406,16 +1412,22 @@ const SpecBook = () => {
                         }}
                         className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing flex flex-col"
                       >
-                        <div className="w-full aspect-square bg-gray-100 cursor-pointer" onClick={() => handleImageClick(item)}>
+                        <div
+                          className="w-full aspect-square bg-gray-100"
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            handleImageClick(item);
+                          }}
+                        >
                           {item.image_url ? (
                             <img
                               src={item.image_url}
                               alt={item.name}
-                              className="w-full h-full object-contain"
+                              className="w-full h-full object-contain pointer-events-none"
                               draggable={false}
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs pointer-events-none">
                               이미지 없음
                             </div>
                           )}
