@@ -599,6 +599,24 @@ const FinishCheck = () => {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => {
+                              if (selectedSpaceIdForNewItem === space.id) {
+                                setSelectedSpaceIdForNewItem(null);
+                                setNewItemContent('');
+                              } else {
+                                setSelectedSpaceIdForNewItem(space.id);
+                              }
+                            }}
+                            className={`p-1 transition-colors ${
+                              selectedSpaceIdForNewItem === space.id
+                                ? 'text-gray-900 bg-gray-100 rounded'
+                                : 'text-gray-600 hover:text-gray-800'
+                            }`}
+                            title="항목 추가"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
                               setEditingSpaceId(space.id);
                               setEditingSpaceName(space.name);
                             }}
@@ -613,6 +631,34 @@ const FinishCheck = () => {
                             title="삭제"
                           >
                             <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 항목 추가 입력 폼 */}
+                    {selectedSpaceIdForNewItem === space.id && (
+                      <div className="mb-4 p-3 bg-white border border-gray-300 rounded-lg">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newItemContent}
+                            onChange={(e) => setNewItemContent(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter' && newItemContent.trim()) {
+                                handleAddItem(space.id);
+                              }
+                            }}
+                            placeholder="마감 항목 입력"
+                            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleAddItem(space.id)}
+                            disabled={!newItemContent.trim()}
+                            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            추가
                           </button>
                         </div>
                       </div>
