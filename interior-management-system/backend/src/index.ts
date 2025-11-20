@@ -29,6 +29,7 @@ import asRequestRoutes from './routes/asrequest.routes';
 import constructionPaymentRoutes from './routes/constructionPayment.routes';
 import workRequestRoutes from './routes/workrequest.routes';
 import additionalWorkRoutes from './routes/additionalWork.routes';
+import siteLogRoutes from './routes/siteLog.routes';
 
 // Import middleware
 import { errorHandler } from './middleware/error.middleware';
@@ -103,6 +104,7 @@ app.use('/api/as-requests', asRequestRoutes);
 app.use('/api/construction-payments', constructionPaymentRoutes);
 app.use('/api/workrequests', workRequestRoutes);
 app.use('/api/additional-works', additionalWorkRoutes);
+app.use('/api/site-logs', siteLogRoutes);
 
 // Health check endpoint with version info
 app.get('/api/health', (_req, res) => {
