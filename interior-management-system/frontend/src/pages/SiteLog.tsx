@@ -330,11 +330,6 @@ const SiteLog = () => {
       return;
     }
 
-    if (!formData.notes.trim()) {
-      toast.error('작업 내용을 입력해주세요');
-      return;
-    }
-
     setIsSavingNotes(true);
     try {
       // 같은 날짜와 프로젝트의 기존 로그 확인
@@ -749,7 +744,7 @@ const SiteLog = () => {
                     disabled={!hasUnsavedChanges || isSavingNotes}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       hasUnsavedChanges && !isSavingNotes
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        ? 'bg-gray-700 text-white hover:bg-gray-800'
                         : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}
                     title={hasUnsavedChanges ? '저장하기' : '저장됨'}
