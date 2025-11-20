@@ -1023,20 +1023,32 @@ const ExecutionHistory = () => {
                       ₩{(record.totalAmount || 0).toLocaleString()}
                     </p>
                   </div>
-                  {/* 원본 텍스트 표시 */}
-                  {record.type === 'payment' && (record as any).quickText && (
-                    <div className="mt-3 p-2 bg-blue-50 rounded-lg">
-                      <p className="text-xs font-semibold text-blue-900 mb-1">자동 채우기 원본:</p>
-                      <p className="text-xs text-blue-800 whitespace-pre-wrap mb-2">{(record as any).quickText}</p>
+                  {/* 결제요청 금액 분할 기능 */}
+                  {record.type === 'payment' && (
+                    <div className="mt-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                      {(record as any).quickText ? (
+                        <>
+                          <p className="text-xs font-semibold text-blue-900 mb-1">자동 채우기 원본:</p>
+                          <p className="text-xs text-blue-800 whitespace-pre-wrap mb-2">{(record as any).quickText}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-xs font-semibold text-blue-900 mb-1">결제요청 금액:</p>
+                          <p className="text-xs text-blue-800 mb-2">
+                            총 {record.totalAmount?.toLocaleString()}원
+                            {record.itemName && ` (${record.itemName})`}
+                          </p>
+                        </>
+                      )}
                       <button
                         onClick={() => {
                           // 원본 텍스트를 기반으로 금액 분할 제안
-                          const quickText = (record as any).quickText || '';
+                          const quickText = (record as any).quickText || record.itemName || '';
                           const totalAmount = record.totalAmount || 0;
 
                           // 자재비/인건비 키워드 확인
                           const hasMaterial = quickText.includes('자재') || quickText.includes('재료');
-                          const hasLabor = quickText.includes('인건') || quickText.includes('노무');
+                          const hasLabor = quickText.includes('인건') || quickText.includes('노무') || quickText.includes('인건비');
 
                           // 기본 비율 (자재비 70%, 인건비 30%)
                           let materialRatio = 0.7;
@@ -1108,23 +1120,35 @@ const ExecutionHistory = () => {
 
               return (
                 <div className="h-full flex flex-col">
-                  {/* 결제요청의 자동 채우기 텍스트를 이미지 영역 상단에 표시 */}
-                  {fullRecord?.type === 'payment' && (fullRecord as any).quickText && (
+                  {/* 결제요청 금액 분할 기능 */}
+                  {fullRecord?.type === 'payment' && (
                     <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
-                          <p className="text-sm font-semibold text-blue-900 mb-2">자동 채우기 원본:</p>
-                          <p className="text-sm text-blue-800 whitespace-pre-wrap">{(fullRecord as any).quickText}</p>
+                          {(fullRecord as any).quickText ? (
+                            <>
+                              <p className="text-sm font-semibold text-blue-900 mb-2">자동 채우기 원본:</p>
+                              <p className="text-sm text-blue-800 whitespace-pre-wrap">{(fullRecord as any).quickText}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm font-semibold text-blue-900 mb-2">결제요청 금액:</p>
+                              <p className="text-sm text-blue-800">
+                                총 {fullRecord.totalAmount?.toLocaleString()}원
+                                {fullRecord.itemName && ` (${fullRecord.itemName})`}
+                              </p>
+                            </>
+                          )}
                         </div>
                         <button
                           onClick={() => {
                             // 원본 텍스트를 기반으로 금액 분할 제안
-                            const quickText = (fullRecord as any).quickText || '';
+                            const quickText = (fullRecord as any).quickText || fullRecord.itemName || '';
                             const totalAmount = fullRecord.totalAmount || 0;
 
                             // 자재비/인건비 키워드 확인
                             const hasMaterial = quickText.includes('자재') || quickText.includes('재료');
-                            const hasLabor = quickText.includes('인건') || quickText.includes('노무');
+                            const hasLabor = quickText.includes('인건') || quickText.includes('노무') || quickText.includes('인건비');
 
                             // 기본 비율 (자재비 70%, 인건비 30%)
                             let materialRatio = 0.7;
