@@ -951,9 +951,9 @@ const Payments = () => {
 
       // 추천 협력업체에서 같은 계좌번호 찾기
       const matchingContractor = contractors.find((contractor: Contractor) => {
-        // 계좌번호 비교 (하이픈 제거하고 비교)
-        const cleanAccountNumber = analysis.bankInfo.accountNumber?.replace(/-/g, '');
-        const contractorAccountNumber = contractor.accountNumber?.replace(/-/g, '');
+        // 계좌번호 비교 (하이픈과 공백 제거하고 비교)
+        const cleanAccountNumber = analysis.bankInfo.accountNumber?.replace(/[-\s]/g, '');
+        const contractorAccountNumber = contractor.accountNumber?.replace(/[-\s]/g, '');
         return contractorAccountNumber === cleanAccountNumber;
       });
 
@@ -1462,7 +1462,8 @@ const Payments = () => {
 
       if (!confirmed) return;
 
-      const cleanAccountNumber = accountNumber.replace(/-/g, '');
+      // 계좌번호에서 하이픈과 공백 모두 제거
+      const cleanAccountNumber = accountNumber.replace(/[-\s]/g, '');
 
       // 은행명을 토스 인식 형식으로 변환
       const bankNameMap: Record<string, string> = {
