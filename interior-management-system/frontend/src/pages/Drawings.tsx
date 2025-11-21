@@ -451,7 +451,8 @@ const Drawings = () => {
                                 const scale = Math.min(scaleX, scaleY);
                                 return {
                                   transform: `scale(${scale}) translate(${-selectedRoom.x}%, ${-selectedRoom.y}%)`,
-                                  transformOrigin: '0 0'
+                                  transformOrigin: '0 0',
+                                  clipPath: `inset(${selectedRoom.y}% ${100 - selectedRoom.x - selectedRoom.width}% ${100 - selectedRoom.y - selectedRoom.height}% ${selectedRoom.x}%)`
                                 };
                               })()
                             : undefined
