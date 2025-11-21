@@ -116,6 +116,7 @@ const Layout = () => {
     { name: '담당업무', href: '/dashboard' },
     { name: '프로젝트', href: '/projects' },
     { name: '일정표', href: '/schedule' },
+    { name: '공사도면', href: '/drawings' },
     { name: '현장일지', href: '/site-log' },
     { name: '추가내역', href: '/additional-work' },
     { name: '공사대금', href: '/construction-payment', roles: ['admin', 'manager'] },
