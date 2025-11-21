@@ -445,10 +445,15 @@ const Drawings = () => {
                         draggable={false}
                         style={
                           viewMode === 'room' && selectedRoom
-                            ? {
-                                transform: `scale(${100 / selectedRoom.width}) translate(${-selectedRoom.x}%, ${-selectedRoom.y}%)`,
-                                transformOrigin: '0 0'
-                              }
+                            ? (() => {
+                                const scaleX = 100 / selectedRoom.width;
+                                const scaleY = 100 / selectedRoom.height;
+                                const scale = Math.min(scaleX, scaleY);
+                                return {
+                                  transform: `scale(${scale}) translate(${-selectedRoom.x}%, ${-selectedRoom.y}%)`,
+                                  transformOrigin: '0 0'
+                                };
+                              })()
                             : undefined
                         }
                       />
