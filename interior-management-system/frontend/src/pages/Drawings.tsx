@@ -425,39 +425,32 @@ const Drawings = () => {
               </div>
 
               {/* 캔버스 영역 */}
-              <div className="flex-1 overflow-auto p-6">
+              <div className="flex-1 overflow-hidden p-6">
                 {uploadedImage ? (
-                  <div
-                    ref={canvasRef}
-                    className={`relative bg-white rounded-lg shadow-lg ${
-                      workMode === 'room' ? 'cursor-crosshair' : 'cursor-default'
-                    }`}
-                    style={{
-                      width: viewMode === 'room' && selectedRoom ? `${100 / selectedRoom.width * 100}%` : '100%',
-                      height: viewMode === 'room' && selectedRoom ? `${100 / selectedRoom.height * 100}%` : '100%',
-                      minWidth: '100%',
-                      minHeight: '100%'
-                    }}
-                    onMouseDown={handleCanvasMouseDown}
-                    onMouseMove={handleCanvasMouseMove}
-                    onMouseUp={handleCanvasMouseUp}
-                    onMouseLeave={handleCanvasMouseUp}
-                  >
+                  <div className="relative w-full h-full bg-white rounded-lg shadow-lg overflow-hidden">
                     <div
-                      className="relative w-full h-full"
-                      style={
-                        viewMode === 'room' && selectedRoom
-                          ? {
-                              transform: `translate(${-selectedRoom.x * 100 / selectedRoom.width}%, ${-selectedRoom.y * 100 / selectedRoom.height}%)`,
-                            }
-                          : undefined
-                      }
+                      ref={canvasRef}
+                      className={`relative w-full h-full ${
+                        workMode === 'room' ? 'cursor-crosshair' : 'cursor-default'
+                      }`}
+                      onMouseDown={handleCanvasMouseDown}
+                      onMouseMove={handleCanvasMouseMove}
+                      onMouseUp={handleCanvasMouseUp}
+                      onMouseLeave={handleCanvasMouseUp}
                     >
                       <img
                         src={uploadedImage}
                         alt="평면도"
                         className="w-full h-full object-contain pointer-events-none select-none"
                         draggable={false}
+                        style={
+                          viewMode === 'room' && selectedRoom
+                            ? {
+                                transform: `scale(${100 / selectedRoom.width}) translate(${-selectedRoom.x}%, ${-selectedRoom.y}%)`,
+                                transformOrigin: '0 0'
+                              }
+                            : undefined
+                        }
                       />
 
                     {/* 영역 표시 (전체 보기 모드) */}
