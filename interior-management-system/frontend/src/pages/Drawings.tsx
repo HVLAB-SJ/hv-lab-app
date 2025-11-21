@@ -125,59 +125,62 @@ const Drawings = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">공사도면</h1>
-        <p className="text-gray-600">프로젝트별 도면을 관리하고 전기/설비 위치를 표시하세요</p>
-      </div>
-
-      {/* 프로젝트 선택 */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          프로젝트 선택
-        </label>
-        <select
-          value={selectedProject}
-          onChange={(e) => setSelectedProject(e.target.value)}
-          className="input max-w-md"
-        >
-          <option value="">프로젝트를 선택하세요</option>
-          {projects
-            .filter(p => p.status !== 'completed')
-            .map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-        </select>
+    <div className="h-full flex flex-col">
+      {/* 상단 헤더 */}
+      <div className="bg-white border-b px-6 py-4 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">공사도면</h1>
+            <p className="text-sm text-gray-600 mt-1">프로젝트별 도면을 관리하고 전기/설비 위치를 표시하세요</p>
+          </div>
+          <div className="w-80">
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="input w-full"
+            >
+              <option value="">프로젝트를 선택하세요</option>
+              {projects
+                .filter(p => p.status !== 'completed')
+                .map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {selectedProject && (
-        <div className="grid grid-cols-12 gap-6">
+        <div className="flex-1 flex overflow-hidden">
           {/* 좌측: 도면 종류 선택 */}
-          <div className="col-span-2 bg-white rounded-lg shadow p-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">도면 종류</h3>
-            <div className="space-y-1">
-              {DRAWING_TYPES.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setSelectedDrawingType(type)}
-                  className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
-                    selectedDrawingType === type
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
+          <div className="w-48 bg-white border-r flex-shrink-0 overflow-y-auto">
+            <div className="p-4">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">도면 종류</h3>
+              <div className="space-y-1">
+                {DRAWING_TYPES.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setSelectedDrawingType(type)}
+                    className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors ${
+                      selectedDrawingType === type
+                        ? 'bg-gray-900 text-white font-medium'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* 중앙: 작업 영역 */}
-          <div className="col-span-7 bg-white rounded-lg shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
+          <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* 상단 툴바 */}
+              <div className="bg-white border-b px-6 py-3 flex items-center justify-between flex-shrink-0">
                 <h3 className="text-lg font-semibold text-gray-900">{selectedDrawingType}</h3>
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -196,21 +199,20 @@ const Drawings = () => {
               </div>
 
               {/* 캔버스 영역 */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+              <div className="flex-1 overflow-auto p-6">
                 {uploadedImage ? (
                   <div
                     ref={canvasRef}
-                    className="relative cursor-crosshair"
+                    className="relative cursor-crosshair bg-white rounded-lg shadow-lg w-full h-full"
                     onClick={handleCanvasClick}
                     onMouseMove={handleMarkerMove}
                     onMouseUp={handleMarkerMouseUp}
                     onMouseLeave={handleMarkerMouseUp}
-                    style={{ minHeight: '600px' }}
                   >
                     <img
                       src={uploadedImage}
                       alt="평면도"
-                      className="w-full h-auto pointer-events-none select-none"
+                      className="w-full h-full object-contain pointer-events-none select-none"
                       draggable={false}
                     />
 
@@ -247,24 +249,24 @@ const Drawings = () => {
                     })}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-32 text-gray-500">
-                    <FileImage className="w-16 h-16 mb-4 text-gray-400" />
-                    <p className="text-sm mb-2">평면도 이미지를 업로드하세요</p>
-                    <p className="text-xs text-gray-400">이미지를 클릭하여 마커를 추가할 수 있습니다</p>
+                  <div className="flex flex-col items-center justify-center h-full bg-white rounded-lg shadow-lg text-gray-500">
+                    <FileImage className="w-20 h-20 mb-4 text-gray-400" />
+                    <p className="text-base mb-2">평면도 이미지를 업로드하세요</p>
+                    <p className="text-sm text-gray-400">이미지를 클릭하여 마커를 추가할 수 있습니다</p>
                   </div>
                 )}
               </div>
 
               {/* 하단 툴바 */}
               {selectedDrawingType === '전기도면' && uploadedImage && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="bg-white border-t px-6 py-4 flex-shrink-0">
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-gray-700">심볼 선택:</span>
                     {ELECTRIC_SYMBOLS.map((symbol) => (
                       <button
                         key={symbol.id}
                         onClick={() => setSelectedSymbol(symbol.id)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                           selectedSymbol === symbol.id
                             ? 'bg-gray-900 text-white shadow-md'
                             : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-900'
@@ -283,44 +285,48 @@ const Drawings = () => {
           </div>
 
           {/* 우측: 수량 집계 */}
-          <div className="col-span-3 bg-white rounded-lg shadow p-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">수량 집계</h3>
-            {selectedDrawingType === '전기도면' && (
-              <div className="space-y-3">
-                {ELECTRIC_SYMBOLS.map((symbol) => {
-                  const count = getSymbolCount(symbol.id);
-                  return (
-                    <div
-                      key={symbol.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl" style={{ color: symbol.color }}>
-                          {symbol.symbol}
-                        </span>
-                        <span className="text-sm font-medium text-gray-900">{symbol.name}</span>
+          <div className="w-80 bg-white border-l flex-shrink-0 overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">수량 집계</h3>
+              {selectedDrawingType === '전기도면' && (
+                <div className="space-y-3">
+                  {ELECTRIC_SYMBOLS.map((symbol) => {
+                    const count = getSymbolCount(symbol.id);
+                    return (
+                      <div
+                        key={symbol.id}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl" style={{ color: symbol.color }}>
+                            {symbol.symbol}
+                          </span>
+                          <span className="text-sm font-medium text-gray-900">{symbol.name}</span>
+                        </div>
+                        <span className="text-xl font-bold text-gray-900">{count}개</span>
                       </div>
-                      <span className="text-lg font-bold text-gray-900">{count}개</span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
 
-                {markers.length === 0 && (
-                  <p className="text-xs text-gray-500 text-center py-8">
-                    평면도에 마커를 추가하면<br />자동으로 수량이 집계됩니다
-                  </p>
-                )}
-              </div>
-            )}
+                  {markers.length === 0 && (
+                    <p className="text-xs text-gray-500 text-center py-12">
+                      평면도에 마커를 추가하면<br />자동으로 수량이 집계됩니다
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {!selectedProject && (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <FileImage className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-600 mb-2">프로젝트를 선택하여 시작하세요</p>
-          <p className="text-sm text-gray-500">도면을 업로드하고 전기/설비 위치를 표시할 수 있습니다</p>
+        <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <FileImage className="w-20 h-20 mx-auto mb-4 text-gray-400" />
+            <p className="text-lg text-gray-600 mb-2">프로젝트를 선택하여 시작하세요</p>
+            <p className="text-sm text-gray-500">도면을 업로드하고 전기/설비 위치를 표시할 수 있습니다</p>
+          </div>
         </div>
       )}
     </div>
