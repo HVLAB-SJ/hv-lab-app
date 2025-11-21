@@ -425,33 +425,42 @@ const Drawings = () => {
               </div>
 
               {/* 캔버스 영역 */}
-              <div className="flex-1 overflow-auto p-6">
+              <div className="flex-1 overflow-hidden p-6">
                 {uploadedImage ? (
-                  <div
-                    ref={canvasRef}
-                    className={`relative bg-white rounded-lg shadow-lg w-full h-full ${
-                      workMode === 'room' ? 'cursor-crosshair' : 'cursor-default'
-                    }`}
-                    onMouseDown={handleCanvasMouseDown}
-                    onMouseMove={handleCanvasMouseMove}
-                    onMouseUp={handleCanvasMouseUp}
-                    onMouseLeave={handleCanvasMouseUp}
-                  >
-                    <img
-                      src={uploadedImage}
-                      alt="평면도"
-                      className="w-full h-full object-contain pointer-events-none select-none"
-                      draggable={false}
-                      style={
-                        viewMode === 'room' && selectedRoom
-                          ? {
-                              clipPath: `inset(${selectedRoom.y}% ${100 - selectedRoom.x - selectedRoom.width}% ${100 - selectedRoom.y - selectedRoom.height}% ${selectedRoom.x}%)`,
-                              transform: `scale(${100 / selectedRoom.width}) translate(${-selectedRoom.x * 100 / selectedRoom.width}%, ${-selectedRoom.y * 100 / selectedRoom.height}%)`,
-                              transformOrigin: '0 0'
-                            }
-                          : undefined
-                      }
-                    />
+                  <div className="relative w-full h-full">
+                    <div
+                      ref={canvasRef}
+                      className={`relative bg-white rounded-lg shadow-lg overflow-hidden ${
+                        workMode === 'room' ? 'cursor-crosshair' : 'cursor-default'
+                      }`}
+                      style={{
+                        width: '100%',
+                        height: '100%'
+                      }}
+                      onMouseDown={handleCanvasMouseDown}
+                      onMouseMove={handleCanvasMouseMove}
+                      onMouseUp={handleCanvasMouseUp}
+                      onMouseLeave={handleCanvasMouseUp}
+                    >
+                      <div
+                        className="absolute inset-0"
+                        style={
+                          viewMode === 'room' && selectedRoom
+                            ? {
+                                transform: `scale(${100 / selectedRoom.width})`,
+                                transformOrigin: `${selectedRoom.x + selectedRoom.width / 2}% ${selectedRoom.y + selectedRoom.height / 2}%`,
+                                width: '100%',
+                                height: '100%'
+                              }
+                            : undefined
+                        }
+                      >
+                        <img
+                          src={uploadedImage}
+                          alt="평면도"
+                          className="w-full h-full object-contain pointer-events-none select-none"
+                          draggable={false}
+                        />
 
                     {/* 영역 표시 (전체 보기 모드) */}
                     {viewMode === 'full' && rooms.map((room) => (
@@ -504,10 +513,7 @@ const Drawings = () => {
                           className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move group"
                           style={{
                             left: `${marker.x}%`,
-                            top: `${marker.y}%`,
-                            ...(viewMode === 'room' && selectedRoom ? {
-                              transform: `scale(${100 / selectedRoom.width}) translate(-50%, -50%)`,
-                            } : {})
+                            top: `${marker.y}%`
                           }}
                         >
                           {symbolInfo?.category === 'light' ? (
@@ -548,6 +554,8 @@ const Drawings = () => {
                         </div>
                       );
                     })}
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full bg-white rounded-lg shadow-lg text-gray-500">
