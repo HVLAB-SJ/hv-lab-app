@@ -193,6 +193,23 @@ const Drawings = () => {
     }
   };
 
+  // 이미지 삭제
+  const handleDeleteImage = () => {
+    if (confirm('이미지를 삭제하시겠습니까? 마커와 영역 데이터도 함께 삭제됩니다.')) {
+      setUploadedImage('');
+      setMarkers([]);
+      setRooms([]);
+      setViewMode('full');
+      setSelectedRoomId(null);
+
+      // localStorage에서도 삭제
+      if (user?.id && selectedProject && selectedDrawingType) {
+        const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
+        localStorage.removeItem(key);
+      }
+    }
+  };
+
   // 캔버스 클릭/드래그 처리
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!uploadedImage || !canvasRef.current) return;
@@ -582,8 +599,26 @@ const Drawings = () => {
           <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* 상단 툴바 */}
-              <div className="bg-white border-b px-6 py-3 flex items-center flex-shrink-0">
+              <div className="bg-white border-b px-6 py-3 flex items-center justify-between flex-shrink-0">
                 <h3 className="text-lg font-semibold text-gray-900">{selectedDrawingType}</h3>
+                {uploadedImage && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="btn btn-outline text-sm"
+                    >
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      이미지 변경
+                    </button>
+                    <button
+                      onClick={handleDeleteImage}
+                      className="btn btn-outline text-sm text-red-600 border-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      이미지 삭제
+                    </button>
+                  </div>
+                )}
                 <input
                   ref={fileInputRef}
                   type="file"
