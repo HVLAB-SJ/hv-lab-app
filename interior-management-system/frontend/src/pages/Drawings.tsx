@@ -111,24 +111,22 @@ const Drawings = () => {
 
   // 캔버스 클릭/드래그 처리
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!uploadedImage || !imageRef.current) return;
+    if (!uploadedImage || !canvasRef.current) return;
 
-    // 이미지 요소의 실제 렌더링된 위치와 크기 가져오기
-    const imgRect = imageRef.current.getBoundingClientRect();
+    // 컨테이너 기준 좌표 계산 (transform 영향 없음)
+    const rect = canvasRef.current.getBoundingClientRect();
+    let x = ((e.clientX - rect.left) / rect.width) * 100;
+    let y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    // 클릭한 위치를 이미지 기준 백분율로 변환
-    let x = ((e.clientX - imgRect.left) / imgRect.width) * 100;
-    let y = ((e.clientY - imgRect.top) / imgRect.height) * 100;
-
-    // 영역 확대 모드일 때 transform 역산
-    if (viewMode === 'room' && selectedRoomId) {
+    // 영역 확대 모드일 때만 좌표 변환
+    if (viewMode === 'room' && selectedRoomId && imageRef.current) {
       const room = rooms.find(r => r.id === selectedRoomId);
       if (room) {
         const scaleX = 100 / room.width;
         const scaleY = 100 / room.height;
         const scale = Math.min(scaleX, scaleY);
 
-        // transform 역산: scale(scale) translate(-room.x%, -room.y%)
+        // transform 역산
         x = x / scale + room.x;
         y = y / scale + room.y;
       }
@@ -176,16 +174,14 @@ const Drawings = () => {
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!uploadedImage || !imageRef.current) return;
+    if (!uploadedImage || !canvasRef.current) return;
 
-    // 이미지 요소의 실제 렌더링된 위치와 크기 가져오기
-    const imgRect = imageRef.current.getBoundingClientRect();
+    // 컨테이너 기준 좌표 계산
+    const rect = canvasRef.current.getBoundingClientRect();
+    let x = ((e.clientX - rect.left) / rect.width) * 100;
+    let y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    // 클릭한 위치를 이미지 기준 백분율로 변환
-    let x = ((e.clientX - imgRect.left) / imgRect.width) * 100;
-    let y = ((e.clientY - imgRect.top) / imgRect.height) * 100;
-
-    // 영역 확대 모드일 때 transform 역산
+    // 영역 확대 모드일 때만 좌표 변환
     if (viewMode === 'room' && selectedRoomId) {
       const room = rooms.find(r => r.id === selectedRoomId);
       if (room) {
@@ -256,6 +252,8 @@ const Drawings = () => {
       setShowRoomNameModal(false);
       setNewRoomName('');
       setPendingRoom(null);
+      // 영역 그리기 완료 후 자동으로 마커 추가 모드로 전환
+      setWorkMode('marker');
     }
   };
 
@@ -384,26 +382,10 @@ const Drawings = () => {
 
               {selectedDrawingType === '전기도면' && uploadedImage && (
                 <>
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">작업 모드</h3>
-                  <div className="space-y-1 mb-6">
-                    <button
-                      onClick={() => setWorkMode('marker')}
-                      className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center ${
-                        workMode === 'marker'
-                          ? 'bg-blue-600 text-white font-medium'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <ZoomIn className="w-4 h-4 mr-2" />
-                      마커 추가
-                    </button>
+                  <div className="mb-6">
                     <button
                       onClick={() => setWorkMode('room')}
-                      className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center ${
-                        workMode === 'room'
-                          ? 'bg-green-600 text-white font-medium'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
+                      className="w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center bg-green-600 text-white font-medium hover:bg-green-700"
                     >
                       <Square className="w-4 h-4 mr-2" />
                       영역 그리기
