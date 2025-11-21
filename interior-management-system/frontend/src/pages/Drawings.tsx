@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useDataStore } from '../store/dataStore';
+import { useAuth } from '../contexts/AuthContext';
 import { FileImage, Trash2, Square, ZoomIn, ArrowLeft, Edit2 } from 'lucide-react';
 
 // 도면 종류
@@ -67,6 +68,7 @@ interface DrawingData {
 
 const Drawings = () => {
   const { projects } = useDataStore();
+  const { user } = useAuth();
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [selectedDrawingType, setSelectedDrawingType] = useState('전기도면');
   const [selectedSymbol, setSelectedSymbol] = useState(ELECTRIC_SYMBOLS[0].id);
@@ -96,6 +98,27 @@ const Drawings = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load selected project from localStorage on mount
+  useEffect(() => {
+    if (user?.id) {
+      const savedProjectId = localStorage.getItem(`drawings-selected-project-${user.id}`);
+      if (savedProjectId) {
+        // Check if the saved project still exists
+        const projectExists = projects.some(p => p.id === savedProjectId);
+        if (projectExists) {
+          setSelectedProject(savedProjectId);
+        }
+      }
+    }
+  }, [user?.id, projects]);
+
+  // Save selected project to localStorage when it changes
+  useEffect(() => {
+    if (user?.id && selectedProject) {
+      localStorage.setItem(`drawings-selected-project-${user.id}`, selectedProject);
+    }
+  }, [user?.id, selectedProject]);
 
   // 이미지 업로드
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -358,77 +381,79 @@ const Drawings = () => {
         </div>
       </div>
 
-      {selectedProject && (
-        <div className="flex-1 flex overflow-hidden">
-          {/* 좌측: 도면 종류 및 영역 목록 */}
-          <div className="w-48 bg-white border-r flex-shrink-0 overflow-y-auto">
-            <div className="p-4">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">도면 종류</h3>
-              <div className="space-y-1 mb-6">
-                {DRAWING_TYPES.map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setSelectedDrawingType(type)}
-                    className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors ${
-                      selectedDrawingType === type
-                        ? 'bg-gray-900 text-white font-medium'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
-
-              {selectedDrawingType === '전기도면' && uploadedImage && (
-                <>
-                  <div className="mb-6">
-                    <button
-                      onClick={() => setWorkMode('room')}
-                      className="w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center bg-green-600 text-white font-medium hover:bg-green-700"
-                    >
-                      <Square className="w-4 h-4 mr-2" />
-                      영역 그리기
-                    </button>
-                  </div>
-
-                  {rooms.length > 0 && (
-                    <>
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">영역 목록</h3>
-                      <div className="space-y-1">
-                        {rooms.map((room) => (
-                          <div
-                            key={room.id}
-                            className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center justify-between group ${
-                              selectedRoomId === room.id
-                                ? 'bg-purple-600 text-white font-medium'
-                                : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                          >
-                            <button
-                              onClick={() => handleRoomClick(room.id)}
-                              className="flex-1 text-left"
-                            >
-                              {room.name}
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteRoom(room.id);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 ml-2"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
+      <div className="flex-1 flex overflow-hidden">
+        {/* 좌측: 도면 종류 및 영역 목록 - 항상 표시 */}
+        <div className="w-48 bg-white border-r flex-shrink-0 overflow-y-auto">
+          <div className="p-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">도면 종류</h3>
+            <div className="space-y-1 mb-6">
+              {DRAWING_TYPES.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setSelectedDrawingType(type)}
+                  className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors ${
+                    selectedDrawingType === type
+                      ? 'bg-gray-900 text-white font-medium'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
             </div>
+
+            {selectedProject && selectedDrawingType === '전기도면' && uploadedImage && (
+              <>
+                <div className="mb-6">
+                  <button
+                    onClick={() => setWorkMode('room')}
+                    className="w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center bg-green-600 text-white font-medium hover:bg-green-700"
+                  >
+                    <Square className="w-4 h-4 mr-2" />
+                    영역 그리기
+                  </button>
+                </div>
+
+                {rooms.length > 0 && (
+                  <>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">영역 목록</h3>
+                    <div className="space-y-1">
+                      {rooms.map((room) => (
+                        <div
+                          key={room.id}
+                          className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center justify-between group ${
+                            selectedRoomId === room.id
+                              ? 'bg-purple-600 text-white font-medium'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <button
+                            onClick={() => handleRoomClick(room.id)}
+                            className="flex-1 text-left"
+                          >
+                            {room.name}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteRoom(room.id);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 ml-2"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
           </div>
+        </div>
+
+        {selectedProject ? (
+          <>
 
           {/* 중앙: 작업 영역 */}
           <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
@@ -663,18 +688,17 @@ const Drawings = () => {
               )}
             </div>
           </div>
-        </div>
-      )}
-
-      {!selectedProject && (
-        <div className="flex-1 flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <FileImage className="w-20 h-20 mx-auto mb-4 text-gray-400" />
-            <p className="text-lg text-gray-600 mb-2">프로젝트를 선택하여 시작하세요</p>
-            <p className="text-sm text-gray-500">도면을 업로드하고 전기/설비 위치를 표시할 수 있습니다</p>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <FileImage className="w-20 h-20 mx-auto mb-4 text-gray-400" />
+              <p className="text-lg text-gray-600 mb-2">프로젝트를 선택하여 시작하세요</p>
+              <p className="text-sm text-gray-500">도면을 업로드하고 전기/설비 위치를 표시할 수 있습니다</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* 영역 이름 입력 모달 */}
       {showRoomNameModal && (
