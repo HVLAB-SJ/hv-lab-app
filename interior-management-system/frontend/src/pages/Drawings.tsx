@@ -113,8 +113,24 @@ const Drawings = () => {
     if (!uploadedImage) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    let x = ((e.clientX - rect.left) / rect.width) * 100;
+    let y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // 영역 확대 모드일 때 transform 역산하여 실제 이미지 좌표 계산
+    if (viewMode === 'room' && selectedRoomId) {
+      const room = rooms.find(r => r.id === selectedRoomId);
+      if (room) {
+        const scaleX = 100 / room.width;
+        const scaleY = 100 / room.height;
+        const scale = Math.min(scaleX, scaleY);
+
+        // transform 역산: scale(scale) translate(-room.x%, -room.y%)
+        // 1. scale 역산: x / scale, y / scale
+        // 2. translate 역산: x / scale + room.x, y / scale + room.y
+        x = x / scale + room.x;
+        y = y / scale + room.y;
+      }
+    }
 
     if (workMode === 'room') {
       // 영역 그리기 시작
@@ -161,14 +177,39 @@ const Drawings = () => {
     if (!uploadedImage) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    let x = ((e.clientX - rect.left) / rect.width) * 100;
+    let y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // 영역 확대 모드일 때 transform 역산
+    if (viewMode === 'room' && selectedRoomId) {
+      const room = rooms.find(r => r.id === selectedRoomId);
+      if (room) {
+        const scaleX = 100 / room.width;
+        const scaleY = 100 / room.height;
+        const scale = Math.min(scaleX, scaleY);
+        x = x / scale + room.x;
+        y = y / scale + room.y;
+      }
+    }
 
     if (isDrawingRoom && roomDrawStart) {
       // 영역 그리기 중
       setRoomDrawCurrent({ x, y });
     } else if (isDragging && draggedMarkerId) {
       // 마커 드래그 중
+      const draggedMarker = markers.find(m => m.id === draggedMarkerId);
+      if (draggedMarker && viewMode === 'room' && selectedRoomId) {
+        const room = rooms.find(r => r.id === selectedRoomId);
+        if (room) {
+          // 영역 내 상대 좌표도 업데이트
+          const roomX = ((x - room.x) / room.width) * 100;
+          const roomY = ((y - room.y) / room.height) * 100;
+          setMarkers(markers.map(m =>
+            m.id === draggedMarkerId ? { ...m, x, y, roomX, roomY } : m
+          ));
+          return;
+        }
+      }
       setMarkers(markers.map(m =>
         m.id === draggedMarkerId ? { ...m, x, y } : m
       ));
