@@ -94,6 +94,7 @@ const Drawings = () => {
   const [pendingRoom, setPendingRoom] = useState<Omit<Room, 'id' | 'name'> | null>(null);
 
   const canvasRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 이미지 업로드
@@ -110,13 +111,16 @@ const Drawings = () => {
 
   // 캔버스 클릭/드래그 처리
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!uploadedImage) return;
+    if (!uploadedImage || !imageRef.current) return;
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    let x = ((e.clientX - rect.left) / rect.width) * 100;
-    let y = ((e.clientY - rect.top) / rect.height) * 100;
+    // 이미지 요소의 실제 렌더링된 위치와 크기 가져오기
+    const imgRect = imageRef.current.getBoundingClientRect();
 
-    // 영역 확대 모드일 때 transform 역산하여 실제 이미지 좌표 계산
+    // 클릭한 위치를 이미지 기준 백분율로 변환
+    let x = ((e.clientX - imgRect.left) / imgRect.width) * 100;
+    let y = ((e.clientY - imgRect.top) / imgRect.height) * 100;
+
+    // 영역 확대 모드일 때 transform 역산
     if (viewMode === 'room' && selectedRoomId) {
       const room = rooms.find(r => r.id === selectedRoomId);
       if (room) {
@@ -125,8 +129,6 @@ const Drawings = () => {
         const scale = Math.min(scaleX, scaleY);
 
         // transform 역산: scale(scale) translate(-room.x%, -room.y%)
-        // 1. scale 역산: x / scale, y / scale
-        // 2. translate 역산: x / scale + room.x, y / scale + room.y
         x = x / scale + room.x;
         y = y / scale + room.y;
       }
@@ -174,11 +176,14 @@ const Drawings = () => {
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!uploadedImage) return;
+    if (!uploadedImage || !imageRef.current) return;
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    let x = ((e.clientX - rect.left) / rect.width) * 100;
-    let y = ((e.clientY - rect.top) / rect.height) * 100;
+    // 이미지 요소의 실제 렌더링된 위치와 크기 가져오기
+    const imgRect = imageRef.current.getBoundingClientRect();
+
+    // 클릭한 위치를 이미지 기준 백분율로 변환
+    let x = ((e.clientX - imgRect.left) / imgRect.width) * 100;
+    let y = ((e.clientY - imgRect.top) / imgRect.height) * 100;
 
     // 영역 확대 모드일 때 transform 역산
     if (viewMode === 'room' && selectedRoomId) {
@@ -480,6 +485,7 @@ const Drawings = () => {
                       onMouseLeave={handleCanvasMouseUp}
                     >
                       <img
+                        ref={imageRef}
                         src={uploadedImage}
                         alt="평면도"
                         className="w-full h-full object-contain pointer-events-none select-none"
