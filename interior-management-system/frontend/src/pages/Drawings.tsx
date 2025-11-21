@@ -6,8 +6,8 @@ import { FileImage, Trash2, Square, ZoomIn, ArrowLeft, Edit2 } from 'lucide-reac
 // 도면 종류
 const DRAWING_TYPES = [
   '평면도',
-  '3D도면',
   '네이버도면',
+  '3D도면',
   '철거도면',
   '전기도면',
   '설비도면',
@@ -101,7 +101,7 @@ const Drawings = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasLoadedInitialProject = useRef(false);
 
-  // Load selected project from localStorage once when projects are available
+  // Load selected project and drawing type from localStorage once when projects are available
   useEffect(() => {
     if (user?.id && projects.length > 0 && !hasLoadedInitialProject.current) {
       const savedProjectId = localStorage.getItem(`drawings-selected-project-${user.id}`);
@@ -111,6 +111,12 @@ const Drawings = () => {
           setSelectedProject(savedProjectId);
         }
       }
+
+      const savedDrawingType = localStorage.getItem(`drawings-selected-type-${user.id}`);
+      if (savedDrawingType && DRAWING_TYPES.includes(savedDrawingType)) {
+        setSelectedDrawingType(savedDrawingType);
+      }
+
       hasLoadedInitialProject.current = true;
     }
   }, [user?.id, projects]);
@@ -121,6 +127,13 @@ const Drawings = () => {
       localStorage.setItem(`drawings-selected-project-${user.id}`, selectedProject);
     }
   }, [user?.id, selectedProject]);
+
+  // Save selected drawing type to localStorage when it changes
+  useEffect(() => {
+    if (user?.id && selectedDrawingType) {
+      localStorage.setItem(`drawings-selected-type-${user.id}`, selectedDrawingType);
+    }
+  }, [user?.id, selectedDrawingType]);
 
   // Load drawing data when project or drawing type changes
   useEffect(() => {
