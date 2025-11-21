@@ -1674,11 +1674,43 @@ const ConstructionPayment = () => {
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">총공사금액</td>
-                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.totalContractAmount.toLocaleString()} 원</td>
+                        <td className="py-3 px-4 text-right pr-4">
+                          <span className="print:hidden flex items-center justify-end gap-1">
+                            <input
+                              type="text"
+                              value={cashReceiptData.totalContractAmount.toLocaleString()}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^0-9]/g, '');
+                                const amount = value ? parseInt(value) : 0;
+                                setCashReceiptData({...cashReceiptData, totalContractAmount: amount});
+                              }}
+                              placeholder="금액 입력"
+                              className="w-full text-right border border-gray-300 rounded px-2 py-1"
+                            />
+                            <span>원</span>
+                          </span>
+                          <span className="hidden print:inline">{cashReceiptData.totalContractAmount.toLocaleString()} 원</span>
+                        </td>
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">이전수령금액</td>
-                        <td className="py-3 px-4 text-right pr-4">{cashReceiptData.previousAmount.toLocaleString()} 원</td>
+                        <td className="py-3 px-4 text-right pr-4">
+                          <span className="print:hidden flex items-center justify-end gap-1">
+                            <input
+                              type="text"
+                              value={cashReceiptData.previousAmount.toLocaleString()}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^0-9]/g, '');
+                                const amount = value ? parseInt(value) : 0;
+                                setCashReceiptData({...cashReceiptData, previousAmount: amount});
+                              }}
+                              placeholder="금액 입력"
+                              className="w-full text-right border border-gray-300 rounded px-2 py-1"
+                            />
+                            <span>원</span>
+                          </span>
+                          <span className="hidden print:inline">{cashReceiptData.previousAmount.toLocaleString()} 원</span>
+                        </td>
                       </tr>
                       <tr className="border border-t-0 border-black">
                         <td className="border-r border-black py-3 px-4 bg-white font-medium whitespace-nowrap">당일수령금액</td>
@@ -1705,11 +1737,21 @@ const ConstructionPayment = () => {
                           잔여금액 <span className="text-xs">(추가금액 제외)</span>
                         </td>
                         <td className="py-3 px-4 text-right pr-4">
-                          {(() => {
-                            const todayAmount = cashReceiptData.amount ? parseInt(cashReceiptData.amount.replace(/,/g, '')) : 0;
-                            const remaining = cashReceiptData.remainingAmount - todayAmount;
-                            return remaining.toLocaleString();
-                          })()} 원
+                          <span className="print:hidden flex items-center justify-end gap-1">
+                            <input
+                              type="text"
+                              value={cashReceiptData.remainingAmount.toLocaleString()}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^0-9]/g, '');
+                                const amount = value ? parseInt(value) : 0;
+                                setCashReceiptData({...cashReceiptData, remainingAmount: amount});
+                              }}
+                              placeholder="금액 입력"
+                              className="w-full text-right border border-gray-300 rounded px-2 py-1"
+                            />
+                            <span>원</span>
+                          </span>
+                          <span className="hidden print:inline">{cashReceiptData.remainingAmount.toLocaleString()} 원</span>
                         </td>
                       </tr>
                     </tbody>
