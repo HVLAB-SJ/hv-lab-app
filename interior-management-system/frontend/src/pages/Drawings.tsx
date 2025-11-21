@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useDataStore } from '../store/dataStore';
-import { FileImage, Plus, Trash2, Move } from 'lucide-react';
+import { FileImage, Trash2, Square, ZoomIn, ArrowLeft, Edit2 } from 'lucide-react';
 
 // 도면 종류
 const DRAWING_TYPES = [
@@ -35,10 +35,22 @@ const ELECTRIC_SYMBOLS = [
   { id: 'light', name: '조명', symbol: '●', count: 1, color: '#f59e0b', category: 'light' }
 ];
 
+interface Room {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 interface Marker {
   id: string;
   x: number;
   y: number;
+  roomId: string | null;
+  roomX?: number;
+  roomY?: number;
   type: string;
   label: string;
   details?: string;
@@ -49,6 +61,7 @@ interface DrawingData {
   projectId: string;
   imageUrl: string;
   markers: Marker[];
+  rooms: Room[];
   lastModified: Date;
 }
 
@@ -59,8 +72,27 @@ const Drawings = () => {
   const [selectedSymbol, setSelectedSymbol] = useState(ELECTRIC_SYMBOLS[0].id);
   const [uploadedImage, setUploadedImage] = useState<string>('');
   const [markers, setMarkers] = useState<Marker[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+
+  // 작업 모드
+  const [workMode, setWorkMode] = useState<'marker' | 'room'>('marker');
+  const [viewMode, setViewMode] = useState<'full' | 'room'>('full');
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+
+  // 드래그 상태
   const [isDragging, setIsDragging] = useState(false);
   const [draggedMarkerId, setDraggedMarkerId] = useState<string | null>(null);
+
+  // 영역 그리기 상태
+  const [isDrawingRoom, setIsDrawingRoom] = useState(false);
+  const [roomDrawStart, setRoomDrawStart] = useState<{x: number, y: number} | null>(null);
+  const [roomDrawCurrent, setRoomDrawCurrent] = useState<{x: number, y: number} | null>(null);
+
+  // 영역 이름 입력 모달
+  const [showRoomNameModal, setShowRoomNameModal] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
+  const [pendingRoom, setPendingRoom] = useState<Omit<Room, 'id' | 'name'> | null>(null);
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,25 +108,109 @@ const Drawings = () => {
     }
   };
 
-  // 캔버스 클릭 - 마커 추가
-  const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!uploadedImage || isDragging) return;
+  // 캔버스 클릭/드래그 처리
+  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!uploadedImage) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    const symbolInfo = ELECTRIC_SYMBOLS.find(s => s.id === selectedSymbol);
-    const newMarker: Marker = {
-      id: `marker-${Date.now()}`,
-      x,
-      y,
-      type: selectedSymbol,
-      label: symbolInfo?.name || '',
-      details: ''
-    };
+    if (workMode === 'room') {
+      // 영역 그리기 시작
+      setIsDrawingRoom(true);
+      setRoomDrawStart({ x, y });
+      setRoomDrawCurrent({ x, y });
+    } else {
+      // 마커 추가 모드
+      if (isDragging) return;
 
-    setMarkers([...markers, newMarker]);
+      const symbolInfo = ELECTRIC_SYMBOLS.find(s => s.id === selectedSymbol);
+
+      let roomId = null;
+      let roomX = undefined;
+      let roomY = undefined;
+
+      // 선택된 영역이 있으면 해당 영역에 마커 추가
+      if (viewMode === 'room' && selectedRoomId) {
+        const room = rooms.find(r => r.id === selectedRoomId);
+        if (room) {
+          roomId = selectedRoomId;
+          roomX = ((x - room.x) / room.width) * 100;
+          roomY = ((y - room.y) / room.height) * 100;
+        }
+      }
+
+      const newMarker: Marker = {
+        id: `marker-${Date.now()}`,
+        x,
+        y,
+        roomId,
+        roomX,
+        roomY,
+        type: selectedSymbol,
+        label: symbolInfo?.name || '',
+        details: ''
+      };
+
+      setMarkers([...markers, newMarker]);
+    }
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!uploadedImage) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    if (isDrawingRoom && roomDrawStart) {
+      // 영역 그리기 중
+      setRoomDrawCurrent({ x, y });
+    } else if (isDragging && draggedMarkerId) {
+      // 마커 드래그 중
+      setMarkers(markers.map(m =>
+        m.id === draggedMarkerId ? { ...m, x, y } : m
+      ));
+    }
+  };
+
+  const handleCanvasMouseUp = () => {
+    if (isDrawingRoom && roomDrawStart && roomDrawCurrent) {
+      // 영역 그리기 완료
+      const x = Math.min(roomDrawStart.x, roomDrawCurrent.x);
+      const y = Math.min(roomDrawStart.y, roomDrawCurrent.y);
+      const width = Math.abs(roomDrawCurrent.x - roomDrawStart.x);
+      const height = Math.abs(roomDrawCurrent.y - roomDrawStart.y);
+
+      // 최소 크기 체크
+      if (width > 2 && height > 2) {
+        setPendingRoom({ x, y, width, height });
+        setShowRoomNameModal(true);
+      }
+
+      setIsDrawingRoom(false);
+      setRoomDrawStart(null);
+      setRoomDrawCurrent(null);
+    }
+
+    setIsDragging(false);
+    setDraggedMarkerId(null);
+  };
+
+  // 영역 이름 저장
+  const handleSaveRoomName = () => {
+    if (pendingRoom && newRoomName.trim()) {
+      const newRoom: Room = {
+        id: `room-${Date.now()}`,
+        name: newRoomName.trim(),
+        ...pendingRoom
+      };
+      setRooms([...rooms, newRoom]);
+      setShowRoomNameModal(false);
+      setNewRoomName('');
+      setPendingRoom(null);
+    }
   };
 
   // 마커 드래그 시작
@@ -104,64 +220,107 @@ const Drawings = () => {
     setDraggedMarkerId(markerId);
   };
 
-  // 마커 드래그
-  const handleMarkerMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || !draggedMarkerId) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    setMarkers(markers.map(m =>
-      m.id === draggedMarkerId ? { ...m, x, y } : m
-    ));
-  };
-
-  // 마커 드래그 종료
-  const handleMarkerMouseUp = () => {
-    setIsDragging(false);
-    setDraggedMarkerId(null);
-  };
-
   // 마커 삭제
   const handleDeleteMarker = (markerId: string) => {
     setMarkers(markers.filter(m => m.id !== markerId));
   };
 
+  // 영역 삭제
+  const handleDeleteRoom = (roomId: string) => {
+    setRooms(rooms.filter(r => r.id !== roomId));
+    // 해당 영역의 마커도 삭제
+    setMarkers(markers.filter(m => m.roomId !== roomId));
+    if (selectedRoomId === roomId) {
+      setSelectedRoomId(null);
+      setViewMode('full');
+    }
+  };
+
+  // 영역 클릭 - 확대 보기
+  const handleRoomClick = (roomId: string) => {
+    setSelectedRoomId(roomId);
+    setViewMode('room');
+  };
+
+  // 전체 보기로 돌아가기
+  const handleBackToFull = () => {
+    setViewMode('full');
+    setSelectedRoomId(null);
+  };
+
   // 수량 계산
-  const getSymbolCount = (symbolId: string) => {
+  const getSymbolCount = (symbolId: string, roomId?: string) => {
+    if (roomId) {
+      return markers.filter(m => m.type === symbolId && m.roomId === roomId).length;
+    }
     return markers.filter(m => m.type === symbolId).length;
   };
+
+  // 현재 보여줄 마커 계산
+  const getVisibleMarkers = () => {
+    if (viewMode === 'room' && selectedRoomId) {
+      const room = rooms.find(r => r.id === selectedRoomId);
+      if (!room) return [];
+
+      // 해당 영역의 마커만 반환, 영역 기준 좌표로 변환
+      return markers
+        .filter(m => m.roomId === selectedRoomId)
+        .map(m => ({
+          ...m,
+          x: room.x + (m.roomX || 0) * room.width / 100,
+          y: room.y + (m.roomY || 0) * room.height / 100
+        }));
+    }
+    return markers;
+  };
+
+  // 선택된 영역
+  const selectedRoom = rooms.find(r => r.id === selectedRoomId);
 
   return (
     <div className="h-full flex flex-col">
       {/* 상단 헤더 */}
       <div className="bg-white border-b px-6 py-3 flex-shrink-0">
-        <div className="w-80">
-          <select
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            className="input w-full"
-          >
-            <option value="">프로젝트를 선택하세요</option>
-            {projects
-              .filter(p => p.status !== 'completed')
-              .map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-          </select>
+        <div className="flex items-center justify-between">
+          <div className="w-80">
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="input w-full"
+            >
+              <option value="">프로젝트를 선택하세요</option>
+              {projects
+                .filter(p => p.status !== 'completed')
+                .map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          {viewMode === 'room' && selectedRoom && (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleBackToFull}
+                className="btn btn-outline text-sm"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                전체 보기
+              </button>
+              <span className="text-lg font-semibold text-gray-900">{selectedRoom.name}</span>
+            </div>
+          )}
         </div>
       </div>
 
       {selectedProject && (
         <div className="flex-1 flex overflow-hidden">
-          {/* 좌측: 도면 종류 선택 */}
+          {/* 좌측: 도면 종류 및 영역 목록 */}
           <div className="w-48 bg-white border-r flex-shrink-0 overflow-y-auto">
             <div className="p-4">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">도면 종류</h3>
-              <div className="space-y-1">
+              <div className="space-y-1 mb-6">
                 {DRAWING_TYPES.map((type) => (
                   <button
                     key={type}
@@ -176,6 +335,70 @@ const Drawings = () => {
                   </button>
                 ))}
               </div>
+
+              {selectedDrawingType === '전기도면' && uploadedImage && (
+                <>
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">작업 모드</h3>
+                  <div className="space-y-1 mb-6">
+                    <button
+                      onClick={() => setWorkMode('marker')}
+                      className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center ${
+                        workMode === 'marker'
+                          ? 'bg-blue-600 text-white font-medium'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <ZoomIn className="w-4 h-4 mr-2" />
+                      마커 추가
+                    </button>
+                    <button
+                      onClick={() => setWorkMode('room')}
+                      className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center ${
+                        workMode === 'room'
+                          ? 'bg-green-600 text-white font-medium'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Square className="w-4 h-4 mr-2" />
+                      영역 그리기
+                    </button>
+                  </div>
+
+                  {rooms.length > 0 && (
+                    <>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">영역 목록</h3>
+                      <div className="space-y-1">
+                        {rooms.map((room) => (
+                          <div
+                            key={room.id}
+                            className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center justify-between group ${
+                              selectedRoomId === room.id
+                                ? 'bg-purple-600 text-white font-medium'
+                                : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            <button
+                              onClick={() => handleRoomClick(room.id)}
+                              className="flex-1 text-left"
+                            >
+                              {room.name}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteRoom(room.id);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 ml-2"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
@@ -206,21 +429,73 @@ const Drawings = () => {
                 {uploadedImage ? (
                   <div
                     ref={canvasRef}
-                    className="relative cursor-crosshair bg-white rounded-lg shadow-lg w-full h-full"
-                    onClick={handleCanvasClick}
-                    onMouseMove={handleMarkerMove}
-                    onMouseUp={handleMarkerMouseUp}
-                    onMouseLeave={handleMarkerMouseUp}
+                    className={`relative bg-white rounded-lg shadow-lg w-full h-full ${
+                      workMode === 'room' ? 'cursor-crosshair' : 'cursor-default'
+                    }`}
+                    onMouseDown={handleCanvasMouseDown}
+                    onMouseMove={handleCanvasMouseMove}
+                    onMouseUp={handleCanvasMouseUp}
+                    onMouseLeave={handleCanvasMouseUp}
                   >
                     <img
                       src={uploadedImage}
                       alt="평면도"
                       className="w-full h-full object-contain pointer-events-none select-none"
                       draggable={false}
+                      style={
+                        viewMode === 'room' && selectedRoom
+                          ? {
+                              clipPath: `inset(${selectedRoom.y}% ${100 - selectedRoom.x - selectedRoom.width}% ${100 - selectedRoom.y - selectedRoom.height}% ${selectedRoom.x}%)`,
+                              transform: `scale(${100 / selectedRoom.width}) translate(${-selectedRoom.x * 100 / selectedRoom.width}%, ${-selectedRoom.y * 100 / selectedRoom.height}%)`,
+                              transformOrigin: '0 0'
+                            }
+                          : undefined
+                      }
                     />
 
+                    {/* 영역 표시 (전체 보기 모드) */}
+                    {viewMode === 'full' && rooms.map((room) => (
+                      <div
+                        key={room.id}
+                        className="absolute border-2 border-purple-500 bg-purple-500 bg-opacity-10 hover:bg-opacity-20 transition-all cursor-pointer group"
+                        style={{
+                          left: `${room.x}%`,
+                          top: `${room.y}%`,
+                          width: `${room.width}%`,
+                          height: `${room.height}%`
+                        }}
+                        onClick={() => handleRoomClick(room.id)}
+                      >
+                        <div className="absolute top-1 left-1 bg-purple-600 text-white px-2 py-0.5 rounded text-xs font-medium">
+                          {room.name}
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteRoom(room.id);
+                          }}
+                          className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* 영역 그리기 중 */}
+                    {isDrawingRoom && roomDrawStart && roomDrawCurrent && (
+                      <div
+                        className="absolute border-2 border-dashed border-green-500 bg-green-500 bg-opacity-10"
+                        style={{
+                          left: `${Math.min(roomDrawStart.x, roomDrawCurrent.x)}%`,
+                          top: `${Math.min(roomDrawStart.y, roomDrawCurrent.y)}%`,
+                          width: `${Math.abs(roomDrawCurrent.x - roomDrawStart.x)}%`,
+                          height: `${Math.abs(roomDrawCurrent.y - roomDrawStart.y)}%`
+                        }}
+                      />
+                    )}
+
                     {/* 마커들 */}
-                    {markers.map((marker) => {
+                    {getVisibleMarkers().map((marker) => {
                       const symbolInfo = ELECTRIC_SYMBOLS.find(s => s.id === marker.type);
                       return (
                         <div
@@ -229,11 +504,13 @@ const Drawings = () => {
                           className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move group"
                           style={{
                             left: `${marker.x}%`,
-                            top: `${marker.y}%`
+                            top: `${marker.y}%`,
+                            ...(viewMode === 'room' && selectedRoom ? {
+                              transform: `scale(${100 / selectedRoom.width}) translate(-50%, -50%)`,
+                            } : {})
                           }}
                         >
                           {symbolInfo?.category === 'light' ? (
-                            // 조명은 원형, 테두리 없음
                             <div
                               className="rounded-full shadow-md transition-transform group-hover:scale-110"
                               style={{
@@ -243,7 +520,6 @@ const Drawings = () => {
                               }}
                             />
                           ) : (
-                            // 콘센트/스위치는 사각형, 테두리 있음
                             <div
                               className="flex items-center justify-center bg-white rounded shadow-md transition-transform group-hover:scale-110"
                               style={{
@@ -283,7 +559,7 @@ const Drawings = () => {
               </div>
 
               {/* 하단 툴바 */}
-              {selectedDrawingType === '전기도면' && uploadedImage && (
+              {selectedDrawingType === '전기도면' && uploadedImage && workMode === 'marker' && (
                 <div className="bg-white border-t px-6 py-3 flex-shrink-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-medium text-gray-700 mr-2">C: 콘센트 / S: 스위치 / ●: 조명</span>
@@ -320,7 +596,7 @@ const Drawings = () => {
               {selectedDrawingType === '전기도면' && (
                 <div className="space-y-2">
                   {ELECTRIC_SYMBOLS.map((symbol) => {
-                    const count = getSymbolCount(symbol.id);
+                    const count = getSymbolCount(symbol.id, viewMode === 'room' ? selectedRoomId || undefined : undefined);
                     if (count === 0) return null;
                     return (
                       <div
@@ -363,6 +639,47 @@ const Drawings = () => {
             <FileImage className="w-20 h-20 mx-auto mb-4 text-gray-400" />
             <p className="text-lg text-gray-600 mb-2">프로젝트를 선택하여 시작하세요</p>
             <p className="text-sm text-gray-500">도면을 업로드하고 전기/설비 위치를 표시할 수 있습니다</p>
+          </div>
+        </div>
+      )}
+
+      {/* 영역 이름 입력 모달 */}
+      {showRoomNameModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">영역 이름 입력</h3>
+            <input
+              type="text"
+              value={newRoomName}
+              onChange={(e) => setNewRoomName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSaveRoomName();
+                }
+              }}
+              placeholder="예: 거실, 침실1, 주방"
+              className="input w-full mb-4"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowRoomNameModal(false);
+                  setNewRoomName('');
+                  setPendingRoom(null);
+                }}
+                className="btn btn-outline"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSaveRoomName}
+                className="btn btn-primary"
+                disabled={!newRoomName.trim()}
+              >
+                저장
+              </button>
+            </div>
           </div>
         </div>
       )}
