@@ -81,7 +81,7 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "url": "assets/index-B7C027w7.css",
     "revision": null
   }, {
-    "url": "assets/index-BqOUkMib.js",
+    "url": "assets/index-C21gvNNU.js",
     "revision": null
   }, {
     "url": "assets/workbox-window.prod.es5-B9K5rw8f.js",
@@ -100,7 +100,7 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "revision": "13c8dc084d8e721d3dbb3d62d72ae126"
   }, {
     "url": "index.html",
-    "revision": "0c131f50b175ec7a90397cfe7a2eb6e6"
+    "revision": "6d8d8db06e1b1e1091d76b52526ff9a1"
   }, {
     "url": "vite.svg",
     "revision": "8e3a10e157f75ada21ab742c022d5430"

@@ -154,24 +154,21 @@ const Drawings = () => {
     <div className="h-full flex flex-col">
       {/* 상단 헤더 */}
       <div className="bg-white border-b px-6 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">공사도면</h1>
-          <div className="w-80">
-            <select
-              value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="input w-full"
-            >
-              <option value="">프로젝트를 선택하세요</option>
-              {projects
-                .filter(p => p.status !== 'completed')
-                .map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-            </select>
-          </div>
+        <div className="w-80">
+          <select
+            value={selectedProject}
+            onChange={(e) => setSelectedProject(e.target.value)}
+            className="input w-full"
+          >
+            <option value="">프로젝트를 선택하세요</option>
+            {projects
+              .filter(p => p.status !== 'completed')
+              .map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+          </select>
         </div>
       </div>
 
