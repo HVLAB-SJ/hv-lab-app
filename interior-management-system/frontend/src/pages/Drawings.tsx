@@ -5,8 +5,8 @@ import { FileImage, Trash2, Square, ZoomIn, ArrowLeft, Edit2 } from 'lucide-reac
 
 // 도면 종류
 const DRAWING_TYPES = [
-  '평면도',
   '네이버도면',
+  '평면도',
   '3D도면',
   '철거도면',
   '전기도면',
