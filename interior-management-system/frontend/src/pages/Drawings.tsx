@@ -7,6 +7,7 @@ import { FileImage, Trash2, Square, ZoomIn, ArrowLeft, Edit2 } from 'lucide-reac
 const DRAWING_TYPES = [
   '평면도',
   '3D도면',
+  '네이버도면',
   '철거도면',
   '전기도면',
   '설비도면',
@@ -120,6 +121,48 @@ const Drawings = () => {
       localStorage.setItem(`drawings-selected-project-${user.id}`, selectedProject);
     }
   }, [user?.id, selectedProject]);
+
+  // Load drawing data when project or drawing type changes
+  useEffect(() => {
+    if (user?.id && selectedProject && selectedDrawingType) {
+      const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
+      const savedData = localStorage.getItem(key);
+      if (savedData) {
+        try {
+          const data: DrawingData = JSON.parse(savedData);
+          setUploadedImage(data.imageUrl || '');
+          setMarkers(data.markers || []);
+          setRooms(data.rooms || []);
+        } catch (error) {
+          console.error('Failed to load drawing data:', error);
+        }
+      } else {
+        // Clear current data if no saved data exists
+        setUploadedImage('');
+        setMarkers([]);
+        setRooms([]);
+      }
+      // Reset view mode when switching drawings
+      setViewMode('full');
+      setSelectedRoomId(null);
+    }
+  }, [user?.id, selectedProject, selectedDrawingType]);
+
+  // Save drawing data when image, markers, or rooms change
+  useEffect(() => {
+    if (user?.id && selectedProject && selectedDrawingType && uploadedImage) {
+      const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
+      const data: DrawingData = {
+        type: selectedDrawingType,
+        projectId: selectedProject,
+        imageUrl: uploadedImage,
+        markers,
+        rooms,
+        lastModified: new Date()
+      };
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+  }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms]);
 
   // 이미지 업로드
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
