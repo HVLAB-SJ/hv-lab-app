@@ -71,20 +71,8 @@ const Drawings = () => {
   const { projects } = useDataStore();
   const { user } = useAuth();
 
-  // Initialize from localStorage
-  const [selectedProject, setSelectedProject] = useState<string>(() => {
-    if (typeof window !== 'undefined' && user?.id) {
-      return localStorage.getItem(`drawings-selected-project-${user.id}`) || '';
-    }
-    return '';
-  });
-
-  const [selectedDrawingType, setSelectedDrawingType] = useState(() => {
-    if (typeof window !== 'undefined' && user?.id) {
-      return localStorage.getItem(`drawings-selected-type-${user.id}`) || '네이버도면';
-    }
-    return '네이버도면';
-  });
+  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [selectedDrawingType, setSelectedDrawingType] = useState('네이버도면');
   const [selectedSymbol, setSelectedSymbol] = useState(ELECTRIC_SYMBOLS[0].id);
   const [uploadedImage, setUploadedImage] = useState<string>('');
   const [markers, setMarkers] = useState<Marker[]>([]);
@@ -113,15 +101,29 @@ const Drawings = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Validate selected project when projects load
+  // Load from localStorage when user and projects are ready (only if not selected)
   useEffect(() => {
-    if (user?.id && projects.length > 0 && selectedProject) {
-      const projectExists = projects.some(p => p.id === selectedProject);
-      if (!projectExists) {
-        setSelectedProject('');
+    if (user?.id && projects.length > 0 && !selectedProject) {
+      const savedProjectId = localStorage.getItem(`drawings-selected-project-${user.id}`);
+
+      if (savedProjectId) {
+        const projectExists = projects.some(p => p.id === savedProjectId);
+        if (projectExists) {
+          setSelectedProject(savedProjectId);
+        }
       }
     }
   }, [user?.id, projects, selectedProject]);
+
+  // Load drawing type from localStorage on mount
+  useEffect(() => {
+    if (user?.id) {
+      const savedDrawingType = localStorage.getItem(`drawings-selected-type-${user.id}`);
+      if (savedDrawingType && DRAWING_TYPES.includes(savedDrawingType)) {
+        setSelectedDrawingType(savedDrawingType);
+      }
+    }
+  }, [user?.id]);
 
   // Save selected project to localStorage when it changes
   useEffect(() => {
