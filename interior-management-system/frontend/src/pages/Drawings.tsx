@@ -70,8 +70,21 @@ interface DrawingData {
 const Drawings = () => {
   const { projects } = useDataStore();
   const { user } = useAuth();
-  const [selectedProject, setSelectedProject] = useState<string>('');
-  const [selectedDrawingType, setSelectedDrawingType] = useState('전기도면');
+
+  // Initialize from localStorage
+  const [selectedProject, setSelectedProject] = useState<string>(() => {
+    if (typeof window !== 'undefined' && user?.id) {
+      return localStorage.getItem(`drawings-selected-project-${user.id}`) || '';
+    }
+    return '';
+  });
+
+  const [selectedDrawingType, setSelectedDrawingType] = useState(() => {
+    if (typeof window !== 'undefined' && user?.id) {
+      return localStorage.getItem(`drawings-selected-type-${user.id}`) || '네이버도면';
+    }
+    return '네이버도면';
+  });
   const [selectedSymbol, setSelectedSymbol] = useState(ELECTRIC_SYMBOLS[0].id);
   const [uploadedImage, setUploadedImage] = useState<string>('');
   const [markers, setMarkers] = useState<Marker[]>([]);
@@ -99,27 +112,16 @@ const Drawings = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const hasLoadedInitialProject = useRef(false);
 
-  // Load selected project and drawing type from localStorage once when projects are available
+  // Validate selected project when projects load
   useEffect(() => {
-    if (user?.id && projects.length > 0 && !hasLoadedInitialProject.current) {
-      const savedProjectId = localStorage.getItem(`drawings-selected-project-${user.id}`);
-      if (savedProjectId) {
-        const projectExists = projects.some(p => p.id === savedProjectId);
-        if (projectExists) {
-          setSelectedProject(savedProjectId);
-        }
+    if (user?.id && projects.length > 0 && selectedProject) {
+      const projectExists = projects.some(p => p.id === selectedProject);
+      if (!projectExists) {
+        setSelectedProject('');
       }
-
-      const savedDrawingType = localStorage.getItem(`drawings-selected-type-${user.id}`);
-      if (savedDrawingType && DRAWING_TYPES.includes(savedDrawingType)) {
-        setSelectedDrawingType(savedDrawingType);
-      }
-
-      hasLoadedInitialProject.current = true;
     }
-  }, [user?.id, projects]);
+  }, [user?.id, projects, selectedProject]);
 
   // Save selected project to localStorage when it changes
   useEffect(() => {
@@ -253,8 +255,8 @@ const Drawings = () => {
       setIsDrawingRoom(true);
       setRoomDrawStart({ x, y });
       setRoomDrawCurrent({ x, y });
-    } else {
-      // 마커 추가 모드
+    } else if (selectedDrawingType === '전기도면') {
+      // 마커 추가 모드 (전기도면에서만)
       if (isDragging) return;
 
       const symbolInfo = ELECTRIC_SYMBOLS.find(s => s.id === selectedSymbol);
@@ -578,15 +580,8 @@ const Drawings = () => {
           <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* 상단 툴바 */}
-              <div className="bg-white border-b px-6 py-3 flex items-center justify-between flex-shrink-0">
+              <div className="bg-white border-b px-6 py-3 flex items-center flex-shrink-0">
                 <h3 className="text-lg font-semibold text-gray-900">{selectedDrawingType}</h3>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="btn btn-outline text-sm"
-                >
-                  <FileImage className="w-4 h-4 mr-2" />
-                  평면도 업로드
-                </button>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -729,8 +724,14 @@ const Drawings = () => {
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full bg-white rounded-lg shadow-lg text-gray-500">
                     <FileImage className="w-20 h-20 mb-4 text-gray-400" />
-                    <p className="text-base mb-2">평면도 이미지를 업로드하세요</p>
-                    <p className="text-sm text-gray-400">이미지를 클릭하여 마커를 추가할 수 있습니다</p>
+                    <p className="text-base mb-4">도면 이미지를 업로드하세요</p>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="btn btn-primary"
+                    >
+                      <FileImage className="w-4 h-4 mr-2" />
+                      파일 선택
+                    </button>
                   </div>
                 )}
               </div>
