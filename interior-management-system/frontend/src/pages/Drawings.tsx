@@ -205,9 +205,9 @@ const Drawings = () => {
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          // 최대 크기 설정 (1920px)
-          const MAX_WIDTH = 1920;
-          const MAX_HEIGHT = 1920;
+          // 최대 크기 설정 (1280px로 축소)
+          const MAX_WIDTH = 1280;
+          const MAX_HEIGHT = 1280;
           let width = img.width;
           let height = img.height;
 
@@ -233,15 +233,15 @@ const Drawings = () => {
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
 
-            // JPEG로 압축 (품질 0.8)
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            // JPEG로 압축 (품질 0.6으로 더 강한 압축)
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
 
-            // Base64 크기 체크 (약 3MB 제한 - localStorage 용량 고려)
+            // Base64 크기 체크 (약 1.5MB 제한으로 축소)
             const sizeInBytes = (compressedDataUrl.length * 3) / 4;
             const sizeInMB = sizeInBytes / (1024 * 1024);
 
-            if (sizeInMB > 3) {
-              alert('압축된 이미지가 여전히 큽니다 (3MB 초과). 더 작은 이미지를 선택하거나 해상도를 낮춰주세요.');
+            if (sizeInMB > 1.5) {
+              alert('압축된 이미지가 여전히 큽니다 (1.5MB 초과). 더 작은 이미지를 선택해주세요.');
               return;
             }
 
@@ -270,6 +270,38 @@ const Drawings = () => {
       if (user?.id && selectedProject && selectedDrawingType) {
         const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
         localStorage.removeItem(key);
+      }
+    }
+  };
+
+  // 모든 도면 데이터 삭제
+  const handleClearAllDrawings = () => {
+    if (confirm('⚠️ 경고: 모든 프로젝트의 모든 도면 데이터를 삭제합니다.\n\n계속하시겠습니까?')) {
+      if (confirm('정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+        try {
+          // localStorage에서 drawing- 으로 시작하는 모든 키 삭제
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('drawing-')) {
+              keysToRemove.push(key);
+            }
+          }
+
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+
+          // 현재 상태 초기화
+          setUploadedImage('');
+          setMarkers([]);
+          setRooms([]);
+          setViewMode('full');
+          setSelectedRoomId(null);
+
+          alert(`✅ ${keysToRemove.length}개의 도면 데이터가 삭제되었습니다.`);
+        } catch (error) {
+          console.error('Failed to clear drawings:', error);
+          alert('데이터 삭제 중 오류가 발생했습니다.');
+        }
       }
     }
   };
@@ -553,21 +585,31 @@ const Drawings = () => {
       {/* 상단 헤더 */}
       <div className="bg-white border-b px-6 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="w-80">
-            <select
-              value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="input w-full"
+          <div className="flex items-center gap-3">
+            <div className="w-80">
+              <select
+                value={selectedProject}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                className="input w-full"
+              >
+                <option value="">프로젝트를 선택하세요</option>
+                {projects
+                  .filter(p => p.status !== 'completed')
+                  .map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <button
+              onClick={handleClearAllDrawings}
+              className="btn btn-outline text-sm text-red-600 border-red-600 hover:bg-red-50 whitespace-nowrap"
+              title="모든 도면 데이터 삭제 (저장 공간 확보)"
             >
-              <option value="">프로젝트를 선택하세요</option>
-              {projects
-                .filter(p => p.status !== 'completed')
-                .map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-            </select>
+              <Trash2 className="w-4 h-4 mr-2" />
+              전체 삭제
+            </button>
           </div>
 
           {viewMode === 'room' && selectedRoom && (
