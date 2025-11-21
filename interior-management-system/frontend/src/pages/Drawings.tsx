@@ -20,14 +20,19 @@ const DRAWING_TYPES = [
 
 // 전기 심볼 종류
 const ELECTRIC_SYMBOLS = [
-  { id: 'outlet-1', name: '콘센트 1구', symbol: '⊕', count: 1, color: '#ef4444', category: 'outlet' },
-  { id: 'outlet-2', name: '콘센트 2구', symbol: '⊕⊕', count: 2, color: '#ef4444', category: 'outlet' },
-  { id: 'outlet-3', name: '콘센트 3구', symbol: '⊕⊕⊕', count: 3, color: '#ef4444', category: 'outlet' },
+  { id: 'outlet-1', name: '콘센트 1구', symbol: 'C1', count: 1, color: '#ef4444', category: 'outlet' },
+  { id: 'outlet-2', name: '콘센트 2구', symbol: 'C2', count: 2, color: '#ef4444', category: 'outlet' },
+  { id: 'outlet-3', name: '콘센트 3구', symbol: 'C3', count: 3, color: '#ef4444', category: 'outlet' },
+  { id: 'outlet-4', name: '콘센트 4구', symbol: 'C4', count: 4, color: '#ef4444', category: 'outlet' },
   { id: 'switch-1', name: '스위치 1구', symbol: 'S1', count: 1, color: '#3b82f6', category: 'switch' },
   { id: 'switch-2', name: '스위치 2구', symbol: 'S2', count: 2, color: '#3b82f6', category: 'switch' },
   { id: 'switch-3', name: '스위치 3구', symbol: 'S3', count: 3, color: '#3b82f6', category: 'switch' },
-  { id: 'light', name: '조명', symbol: '◎', count: 1, color: '#f59e0b', category: 'light' },
-  { id: 'panel', name: '배전반', symbol: '□', count: 1, color: '#8b5cf6', category: 'panel' }
+  { id: 'switch-4', name: '스위치 4구', symbol: 'S4', count: 4, color: '#3b82f6', category: 'switch' },
+  { id: 'switch-5', name: '스위치 5구', symbol: 'S5', count: 5, color: '#3b82f6', category: 'switch' },
+  { id: 'switch-6', name: '스위치 6구', symbol: 'S6', count: 6, color: '#3b82f6', category: 'switch' },
+  { id: 'switch-7', name: '스위치 7구', symbol: 'S7', count: 7, color: '#3b82f6', category: 'switch' },
+  { id: 'switch-8', name: '스위치 8구', symbol: 'S8', count: 8, color: '#3b82f6', category: 'switch' },
+  { id: 'light', name: '조명', symbol: '●', count: 1, color: '#f59e0b', category: 'light' }
 ];
 
 interface Marker {
@@ -99,13 +104,30 @@ const Drawings = () => {
     setDraggedMarkerId(markerId);
   };
 
-  // 마커 드래그
+  // 마커 드래그 - 스냅(자석) 기능 추가
   const handleMarkerMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging || !draggedMarkerId) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    let x = ((e.clientX - rect.left) / rect.width) * 100;
+    let y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // 스냅 임계값 (2% 이내면 스냅)
+    const snapThreshold = 2;
+
+    // 다른 마커들과의 정렬 체크
+    const otherMarkers = markers.filter(m => m.id !== draggedMarkerId);
+
+    for (const marker of otherMarkers) {
+      // X축 정렬
+      if (Math.abs(x - marker.x) < snapThreshold) {
+        x = marker.x;
+      }
+      // Y축 정렬
+      if (Math.abs(y - marker.y) < snapThreshold) {
+        y = marker.y;
+      }
+    }
 
     setMarkers(markers.map(m =>
       m.id === draggedMarkerId ? { ...m, x, y } : m
@@ -230,21 +252,39 @@ const Drawings = () => {
                             top: `${marker.y}%`
                           }}
                         >
-                          <div
-                            className="flex items-center justify-center bg-white rounded shadow-md transition-transform group-hover:scale-110"
-                            style={{
-                              borderColor: symbolInfo?.color,
-                              color: symbolInfo?.color,
-                              border: '1.5px solid',
-                              padding: '2px 4px',
-                              fontSize: '10px',
-                              fontWeight: '600',
-                              minWidth: '20px',
-                              minHeight: '20px'
-                            }}
-                          >
-                            {symbolInfo?.symbol}
-                          </div>
+                          {symbolInfo?.category === 'light' ? (
+                            // 조명은 원형, 테두리 없음
+                            <div
+                              className="flex items-center justify-center rounded-full shadow-md transition-transform group-hover:scale-110"
+                              style={{
+                                backgroundColor: symbolInfo.color,
+                                color: 'white',
+                                width: '16px',
+                                height: '16px',
+                                fontSize: '12px',
+                                fontWeight: '700'
+                              }}
+                            >
+                              {symbolInfo.symbol}
+                            </div>
+                          ) : (
+                            // 콘센트/스위치는 사각형, 테두리 있음
+                            <div
+                              className="flex items-center justify-center bg-white rounded shadow-md transition-transform group-hover:scale-110"
+                              style={{
+                                borderColor: symbolInfo?.color,
+                                color: symbolInfo?.color,
+                                border: '1.5px solid',
+                                padding: '2px 4px',
+                                fontSize: '10px',
+                                fontWeight: '600',
+                                minWidth: '20px',
+                                minHeight: '20px'
+                              }}
+                            >
+                              {symbolInfo?.symbol}
+                            </div>
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
