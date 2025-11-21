@@ -104,30 +104,13 @@ const Drawings = () => {
     setDraggedMarkerId(markerId);
   };
 
-  // 마커 드래그 - 스냅(자석) 기능 추가
+  // 마커 드래그
   const handleMarkerMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging || !draggedMarkerId) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
-    let x = ((e.clientX - rect.left) / rect.width) * 100;
-    let y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    // 스냅 임계값 (2% 이내면 스냅)
-    const snapThreshold = 2;
-
-    // 다른 마커들과의 정렬 체크
-    const otherMarkers = markers.filter(m => m.id !== draggedMarkerId);
-
-    for (const marker of otherMarkers) {
-      // X축 정렬
-      if (Math.abs(x - marker.x) < snapThreshold) {
-        x = marker.x;
-      }
-      // Y축 정렬
-      if (Math.abs(y - marker.y) < snapThreshold) {
-        y = marker.y;
-      }
-    }
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
 
     setMarkers(markers.map(m =>
       m.id === draggedMarkerId ? { ...m, x, y } : m
@@ -252,18 +235,13 @@ const Drawings = () => {
                           {symbolInfo?.category === 'light' ? (
                             // 조명은 원형, 테두리 없음
                             <div
-                              className="flex items-center justify-center rounded-full shadow-md transition-transform group-hover:scale-110"
+                              className="rounded-full shadow-md transition-transform group-hover:scale-110"
                               style={{
                                 backgroundColor: symbolInfo.color,
-                                color: 'white',
                                 width: '16px',
-                                height: '16px',
-                                fontSize: '12px',
-                                fontWeight: '700'
+                                height: '16px'
                               }}
-                            >
-                              {symbolInfo.symbol}
-                            </div>
+                            />
                           ) : (
                             // 콘센트/스위치는 사각형, 테두리 있음
                             <div
@@ -308,12 +286,13 @@ const Drawings = () => {
               {selectedDrawingType === '전기도면' && uploadedImage && (
                 <div className="bg-white border-t px-6 py-3 flex-shrink-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-medium text-gray-700 mr-2">심볼:</span>
+                    <span className="text-xs font-medium text-gray-700 mr-2">C: 콘센트 / S: 스위치 / ●: 조명</span>
+                    <div className="w-px h-4 bg-gray-300 mx-1"></div>
                     {ELECTRIC_SYMBOLS.map((symbol) => (
                       <button
                         key={symbol.id}
                         onClick={() => setSelectedSymbol(symbol.id)}
-                        className={`px-3 py-1.5 rounded text-xs font-medium transition-all flex items-center gap-1.5 ${
+                        className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
                           selectedSymbol === symbol.id
                             ? 'bg-gray-900 text-white shadow-md'
                             : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-900'
@@ -326,7 +305,6 @@ const Drawings = () => {
                         <span className="text-sm font-semibold" style={{ color: selectedSymbol === symbol.id ? 'white' : symbol.color }}>
                           {symbol.symbol}
                         </span>
-                        <span>{symbol.name}</span>
                       </button>
                     ))}
                   </div>
