@@ -620,11 +620,14 @@ const ConstructionPayment = () => {
                     </button>
                     <button
                       onClick={() => {
-                        const record = filteredRecords[filteredRecords.length - 1];
                         const received = calculateReceived(record);
                         const totalContract = calculateTotalContractAmount(record);
+                        // 추가내역을 제외한 잔여금액 계산
                         const remainingWithoutAdditional = totalContract - received;
+
+                        // 프로젝트 정보에서 기간 가져오기
                         const projectInfo = projects.find(p => p.name === record.project);
+
                         setCashReceiptData({
                           project: record.project,
                           client: record.client,
