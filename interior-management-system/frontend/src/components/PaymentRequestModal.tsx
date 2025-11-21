@@ -72,20 +72,84 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
   const parseQuickText = (text: string) => {
     if (!text.trim()) return;
 
-    // 계좌번호 추출 먼저 (은행명 앞에서 처리하여 더 정확한 매칭)
-    // 다양한 형식 지원: "79525 0008 843", "362-910277-07207", "79525-0008-843" 등
-    const accountMatch = text.match(/(\d{3,7}[-\s]+\d{2,8}[-\s]+\d{2,10})/);
-    if (accountMatch) {
-      setValue('accountNumber', accountMatch[1]);
+    console.log('📝 파싱 시작:', text);
+
+    // 항목명 추출 (가장 먼저 - 대괄호 안의 텍스트)
+    const itemMatch = text.match(/\[([^\]]+)\]/);
+    if (itemMatch) {
+      console.log('✅ 항목명:', itemMatch[1]);
+      setValue('itemName', itemMatch[1]);
     }
 
-    // 은행명 추출 (전체 이름 + 축약형)
+    // 금액 추출 - 반드시 "원"으로 끝나는 패턴만 매칭
+    // "480,000원", "1,178,100원", "40만원" 등
+    const amountMatch = text.match(/(\d{1,3}(?:,\d{3})*|\d+)\s*만?\s*원/);
+    if (amountMatch) {
+      const amountStr = amountMatch[1].replace(/,/g, '');
+      let amount = parseInt(amountStr);
+
+      // "만원" 패턴인 경우
+      if (amountMatch[0].includes('만')) {
+        amount = amount * 10000;
+      }
+
+      console.log('✅ 금액:', amount, '원 (원본:', amountMatch[0], ')');
+      setOriginalMaterialAmount(amount);
+      setMaterialAmount(amount);
+      setValue('materialAmount', amount);
+    } else {
+      console.log('❌ 금액 매칭 실패');
+    }
+
+    // 계좌번호 추출 - 3개 부분으로 나뉜 숫자 (공백 또는 하이픈으로 구분)
+    // "79525 0008 843", "362-910277-07207", "79525-0008-843" 등
+    const accountMatch = text.match(/(\d{3,7})\s+(\d{2,8})\s+(\d{2,10})/);
+    const accountMatchDash = text.match(/(\d{3,7})-(\d{2,8})-(\d{2,10})/);
+
+    if (accountMatch) {
+      const fullAccount = `${accountMatch[1]} ${accountMatch[2]} ${accountMatch[3]}`;
+      console.log('✅ 계좌번호 (공백):', fullAccount);
+      setValue('accountNumber', fullAccount);
+
+      // 예금주 추출 (계좌번호 다음 + 은행명 다음에 오는 한글)
+      const afterAccount = text.substring(text.indexOf(accountMatch[0]) + accountMatch[0].length);
+      // 은행명 뒤의 한글 이름 찾기
+      const nameMatch = afterAccount.match(/(?:국민|신한|우리|하나|농협|기업|제일|씨티|카카오|케이|토스|KB국민|NH농협|IBK기업)\s+([가-힣]+)/);
+      if (nameMatch) {
+        console.log('✅ 예금주:', nameMatch[1]);
+        setValue('accountHolder', nameMatch[1].trim());
+      } else {
+        // 은행명 없이 바로 이름이 오는 경우
+        const directNameMatch = afterAccount.match(/\s+([가-힣]+)/);
+        if (directNameMatch) {
+          console.log('✅ 예금주 (직접):', directNameMatch[1]);
+          setValue('accountHolder', directNameMatch[1].trim());
+        }
+      }
+    } else if (accountMatchDash) {
+      const fullAccount = `${accountMatchDash[1]}-${accountMatchDash[2]}-${accountMatchDash[3]}`;
+      console.log('✅ 계좌번호 (하이픈):', fullAccount);
+      setValue('accountNumber', fullAccount);
+
+      // 예금주 추출
+      const afterAccount = text.substring(text.indexOf(accountMatchDash[0]) + accountMatchDash[0].length);
+      const nameMatch = afterAccount.match(/(?:국민|신한|우리|하나|농협|기업|제일|씨티|카카오|케이|토스|KB국민|NH농협|IBK기업)?\s*([가-힣]+)/);
+      if (nameMatch) {
+        console.log('✅ 예금주:', nameMatch[1]);
+        setValue('accountHolder', nameMatch[1].trim());
+      }
+    } else {
+      console.log('❌ 계좌번호 매칭 실패');
+    }
+
+    // 은행명 추출 (전체 이름)
     const bankFullMatch = text.match(/(KB국민은행|신한은행|우리은행|하나은행|NH농협은행|IBK기업은행|KEB하나은행|SC제일은행|한국씨티은행|부산은행|대구은행|경남은행|광주은행|전북은행|제주은행|산업은행|수협은행|우체국|새마을금고|신협|저축은행|카카오뱅크|케이뱅크|토스뱅크|NH투자증권|미래에셋증권|한국투자증권|키움증권|삼성증권|KB증권|신한투자증권|하이투자증권)/);
 
     // 축약형 은행명 매칭
     const bankShortMatch = text.match(/\s(국민|신한|우리|하나|농협|기업|제일|씨티|카카오|케이|토스)\s/);
 
     if (bankFullMatch) {
+      console.log('✅ 은행명:', bankFullMatch[1]);
       setValue('bankName', bankFullMatch[1]);
     } else if (bankShortMatch) {
       // 축약형을 전체 이름으로 변환
@@ -104,41 +168,11 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
       };
       const fullBankName = bankMap[bankShortMatch[1]];
       if (fullBankName) {
+        console.log('✅ 은행명 (축약):', fullBankName);
         setValue('bankName', fullBankName);
       }
-    }
-
-    // 예금주 추출 (계좌번호와 은행명 다음에 나오는 한글 이름)
-    if (accountMatch) {
-      const afterAccount = text.substring(text.indexOf(accountMatch[0]) + accountMatch[0].length);
-      // 은행명 이후의 텍스트에서 이름 찾기
-      const nameMatch = afterAccount.match(/(?:국민|신한|우리|하나|농협|기업|제일|씨티|카카오|케이|토스)?\s*([가-힣]+)/);
-      if (nameMatch) {
-        const cleanName = nameMatch[1].trim();
-        setValue('accountHolder', cleanName);
-      }
-    }
-
-    // 금액 추출 ("1,178,100원" 또는 "480,000원" 또는 "40만원")
-    const amountMatch = text.match(/(\d+(?:,\d+)*)\s*만?\s*원/);
-    if (amountMatch) {
-      const amountStr = amountMatch[1].replace(/,/g, '');
-      let amount = parseInt(amountStr);
-
-      // "만원" 패턴인 경우
-      if (text.includes(amountMatch[0]) && amountMatch[0].includes('만')) {
-        amount = amount * 10000;
-      }
-
-      setOriginalMaterialAmount(amount);
-      setMaterialAmount(amount);
-      setValue('materialAmount', amount);
-    }
-
-    // 항목명 추출 (대괄호 안의 텍스트 또는 "대금" 앞의 텍스트)
-    const itemMatch = text.match(/\[([^\]]+)\]/) || text.match(/([가-힣]+)대금/);
-    if (itemMatch) {
-      setValue('itemName', itemMatch[1]);
+    } else {
+      console.log('❌ 은행명 매칭 실패');
     }
   };
 
