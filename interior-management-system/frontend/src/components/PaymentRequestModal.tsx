@@ -101,18 +101,38 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
       console.log('❌ 금액 매칭 실패');
     }
 
-    // 계좌번호 추출 - 3개 부분으로 나뉜 숫자 (공백 또는 하이픈으로 구분)
-    // "79525 0008 843", "362-910277-07207", "79525-0008-843" 등
-    const accountMatch = text.match(/(\d{3,7})\s+(\d{2,8})\s+(\d{2,10})/);
-    const accountMatchDash = text.match(/(\d{3,7})-(\d{2,8})-(\d{2,10})/);
+    // 계좌번호 추출 - 유연한 형식 지원
+    // 3부분: "79525 0008 843", "362-910277-07207"
+    // 4부분: "356-0853-5848-03"
+    // 패턴: 숫자-(또는 공백)-숫자-(또는 공백)-숫자-(선택: 또는 공백-숫자)
+    const accountMatch4Dash = text.match(/(\d{2,7})-(\d{2,8})-(\d{2,10})-(\d{2,10})/);
+    const accountMatch3Dash = text.match(/(\d{2,7})-(\d{2,8})-(\d{2,10})/);
+    const accountMatch3Space = text.match(/(\d{3,7})\s+(\d{2,8})\s+(\d{2,10})/);
 
-    if (accountMatch) {
-      const fullAccount = `${accountMatch[1]} ${accountMatch[2]} ${accountMatch[3]}`;
-      console.log('✅ 계좌번호 (공백):', fullAccount);
-      setValue('accountNumber', fullAccount);
+    let accountNumber = '';
+    let accountMatchResult: RegExpMatchArray | null = null;
+
+    if (accountMatch4Dash) {
+      accountNumber = `${accountMatch4Dash[1]}-${accountMatch4Dash[2]}-${accountMatch4Dash[3]}-${accountMatch4Dash[4]}`;
+      accountMatchResult = accountMatch4Dash;
+      console.log('✅ 계좌번호 (4부분-하이픈):', accountNumber);
+    } else if (accountMatch3Dash) {
+      accountNumber = `${accountMatch3Dash[1]}-${accountMatch3Dash[2]}-${accountMatch3Dash[3]}`;
+      accountMatchResult = accountMatch3Dash;
+      console.log('✅ 계좌번호 (3부분-하이픈):', accountNumber);
+    } else if (accountMatch3Space) {
+      accountNumber = `${accountMatch3Space[1]} ${accountMatch3Space[2]} ${accountMatch3Space[3]}`;
+      accountMatchResult = accountMatch3Space;
+      console.log('✅ 계좌번호 (3부분-공백):', accountNumber);
+    } else {
+      console.log('❌ 계좌번호 매칭 실패');
+    }
+
+    if (accountNumber && accountMatchResult) {
+      setValue('accountNumber', accountNumber);
 
       // 예금주 추출 (계좌번호 다음 + 은행명 다음에 오는 한글)
-      const afterAccount = text.substring(text.indexOf(accountMatch[0]) + accountMatch[0].length);
+      const afterAccount = text.substring(text.indexOf(accountMatchResult[0]) + accountMatchResult[0].length);
       // 은행명 뒤의 한글 이름 찾기
       const nameMatch = afterAccount.match(/(?:국민|신한|우리|하나|농협|기업|제일|씨티|카카오|케이|토스|KB국민|NH농협|IBK기업)\s+([가-힣]+)/);
       if (nameMatch) {
@@ -126,20 +146,6 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
           setValue('accountHolder', directNameMatch[1].trim());
         }
       }
-    } else if (accountMatchDash) {
-      const fullAccount = `${accountMatchDash[1]}-${accountMatchDash[2]}-${accountMatchDash[3]}`;
-      console.log('✅ 계좌번호 (하이픈):', fullAccount);
-      setValue('accountNumber', fullAccount);
-
-      // 예금주 추출
-      const afterAccount = text.substring(text.indexOf(accountMatchDash[0]) + accountMatchDash[0].length);
-      const nameMatch = afterAccount.match(/(?:국민|신한|우리|하나|농협|기업|제일|씨티|카카오|케이|토스|KB국민|NH농협|IBK기업)?\s*([가-힣]+)/);
-      if (nameMatch) {
-        console.log('✅ 예금주:', nameMatch[1]);
-        setValue('accountHolder', nameMatch[1].trim());
-      }
-    } else {
-      console.log('❌ 계좌번호 매칭 실패');
     }
 
     // 은행명 추출 (전체 이름)
