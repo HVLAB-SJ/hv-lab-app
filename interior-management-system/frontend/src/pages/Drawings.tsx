@@ -98,18 +98,19 @@ const Drawings = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasLoadedInitialProject = useRef(false);
 
-  // Load selected project from localStorage on mount
+  // Load selected project from localStorage once when projects are available
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && projects.length > 0 && !hasLoadedInitialProject.current) {
       const savedProjectId = localStorage.getItem(`drawings-selected-project-${user.id}`);
       if (savedProjectId) {
-        // Check if the saved project still exists
         const projectExists = projects.some(p => p.id === savedProjectId);
         if (projectExists) {
           setSelectedProject(savedProjectId);
         }
       }
+      hasLoadedInitialProject.current = true;
     }
   }, [user?.id, projects]);
 
@@ -136,23 +137,59 @@ const Drawings = () => {
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!uploadedImage || !canvasRef.current) return;
 
-    // 컨테이너 기준 좌표 계산 (transform 영향 없음)
     const rect = canvasRef.current.getBoundingClientRect();
-    let x = ((e.clientX - rect.left) / rect.width) * 100;
-    let y = ((e.clientY - rect.top) / rect.height) * 100;
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
 
-    // 영역 확대 모드일 때만 좌표 변환
-    if (viewMode === 'room' && selectedRoomId && imageRef.current) {
+    let x, y;
+
+    // 영역 확대 모드일 때 좌표 변환 (letter-boxing 고려)
+    if (viewMode === 'room' && selectedRoomId) {
       const room = rooms.find(r => r.id === selectedRoomId);
       if (room) {
-        const scaleX = 100 / room.width;
-        const scaleY = 100 / room.height;
-        const scale = Math.min(scaleX, scaleY);
+        // 영역의 가로세로 비율
+        const roomAspect = room.width / room.height;
+        const containerAspect = rect.width / rect.height;
 
-        // transform 역산
-        x = x / scale + room.x;
-        y = y / scale + room.y;
+        let imageDisplayWidth, imageDisplayHeight, offsetX, offsetY;
+
+        if (containerAspect > roomAspect) {
+          // 컨테이너가 더 넓음 - 좌우 여백 발생
+          imageDisplayHeight = rect.height;
+          imageDisplayWidth = rect.height * roomAspect;
+          offsetX = (rect.width - imageDisplayWidth) / 2;
+          offsetY = 0;
+        } else {
+          // 컨테이너가 더 높음 - 상하 여백 발생
+          imageDisplayWidth = rect.width;
+          imageDisplayHeight = rect.width / roomAspect;
+          offsetX = 0;
+          offsetY = (rect.height - imageDisplayHeight) / 2;
+        }
+
+        // 여백을 제외한 실제 이미지 영역 내 클릭인지 확인
+        const adjustedX = clickX - offsetX;
+        const adjustedY = clickY - offsetY;
+
+        if (adjustedX < 0 || adjustedX > imageDisplayWidth || adjustedY < 0 || adjustedY > imageDisplayHeight) {
+          // 여백 영역 클릭 - 무시
+          return;
+        }
+
+        // 이미지 내 위치를 백분율로 변환
+        const percentX = (adjustedX / imageDisplayWidth) * 100;
+        const percentY = (adjustedY / imageDisplayHeight) * 100;
+
+        // 실제 이미지 좌표로 변환
+        x = room.x + percentX * room.width / 100;
+        y = room.y + percentY * room.height / 100;
+      } else {
+        return;
       }
+    } else {
+      // 전체 보기 모드
+      x = (clickX / rect.width) * 100;
+      y = (clickY / rect.height) * 100;
     }
 
     if (workMode === 'room') {
@@ -199,21 +236,47 @@ const Drawings = () => {
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!uploadedImage || !canvasRef.current) return;
 
-    // 컨테이너 기준 좌표 계산
     const rect = canvasRef.current.getBoundingClientRect();
-    let x = ((e.clientX - rect.left) / rect.width) * 100;
-    let y = ((e.clientY - rect.top) / rect.height) * 100;
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
 
-    // 영역 확대 모드일 때만 좌표 변환
+    let x, y;
+
+    // 영역 확대 모드일 때 좌표 변환 (letter-boxing 고려)
     if (viewMode === 'room' && selectedRoomId) {
       const room = rooms.find(r => r.id === selectedRoomId);
       if (room) {
-        const scaleX = 100 / room.width;
-        const scaleY = 100 / room.height;
-        const scale = Math.min(scaleX, scaleY);
-        x = x / scale + room.x;
-        y = y / scale + room.y;
+        const roomAspect = room.width / room.height;
+        const containerAspect = rect.width / rect.height;
+
+        let imageDisplayWidth, imageDisplayHeight, offsetX, offsetY;
+
+        if (containerAspect > roomAspect) {
+          imageDisplayHeight = rect.height;
+          imageDisplayWidth = rect.height * roomAspect;
+          offsetX = (rect.width - imageDisplayWidth) / 2;
+          offsetY = 0;
+        } else {
+          imageDisplayWidth = rect.width;
+          imageDisplayHeight = rect.width / roomAspect;
+          offsetX = 0;
+          offsetY = (rect.height - imageDisplayHeight) / 2;
+        }
+
+        const adjustedX = clickX - offsetX;
+        const adjustedY = clickY - offsetY;
+
+        const percentX = (adjustedX / imageDisplayWidth) * 100;
+        const percentY = (adjustedY / imageDisplayHeight) * 100;
+
+        x = room.x + percentX * room.width / 100;
+        y = room.y + percentY * room.height / 100;
+      } else {
+        return;
       }
+    } else {
+      x = (clickX / rect.width) * 100;
+      y = (clickY / rect.height) * 100;
     }
 
     if (isDrawingRoom && roomDrawStart) {
