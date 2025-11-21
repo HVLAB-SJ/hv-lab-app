@@ -20,10 +20,14 @@ const DRAWING_TYPES = [
 
 // 전기 심볼 종류
 const ELECTRIC_SYMBOLS = [
-  { id: 'outlet', name: '콘센트', symbol: '⊕', color: '#ef4444' },
-  { id: 'switch', name: '스위치', symbol: '─┤', color: '#3b82f6' },
-  { id: 'light', name: '조명', symbol: '◎', color: '#f59e0b' },
-  { id: 'panel', name: '배전반', symbol: '▭', color: '#8b5cf6' }
+  { id: 'outlet-1', name: '콘센트 1구', symbol: '⊕', count: 1, color: '#ef4444', category: 'outlet' },
+  { id: 'outlet-2', name: '콘센트 2구', symbol: '⊕⊕', count: 2, color: '#ef4444', category: 'outlet' },
+  { id: 'outlet-3', name: '콘센트 3구', symbol: '⊕⊕⊕', count: 3, color: '#ef4444', category: 'outlet' },
+  { id: 'switch-1', name: '스위치 1구', symbol: 'S1', count: 1, color: '#3b82f6', category: 'switch' },
+  { id: 'switch-2', name: '스위치 2구', symbol: 'S2', count: 2, color: '#3b82f6', category: 'switch' },
+  { id: 'switch-3', name: '스위치 3구', symbol: 'S3', count: 3, color: '#3b82f6', category: 'switch' },
+  { id: 'light', name: '조명', symbol: '◎', count: 1, color: '#f59e0b', category: 'light' },
+  { id: 'panel', name: '배전반', symbol: '□', count: 1, color: '#8b5cf6', category: 'panel' }
 ];
 
 interface Marker {
@@ -127,12 +131,9 @@ const Drawings = () => {
   return (
     <div className="h-full flex flex-col">
       {/* 상단 헤더 */}
-      <div className="bg-white border-b px-6 py-4 flex-shrink-0">
+      <div className="bg-white border-b px-6 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">공사도면</h1>
-            <p className="text-sm text-gray-600 mt-1">프로젝트별 도면을 관리하고 전기/설비 위치를 표시하세요</p>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">공사도면</h1>
           <div className="w-80">
             <select
               value={selectedProject}
@@ -230,8 +231,17 @@ const Drawings = () => {
                           }}
                         >
                           <div
-                            className="flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 shadow-lg text-lg font-bold transition-transform group-hover:scale-110"
-                            style={{ borderColor: symbolInfo?.color, color: symbolInfo?.color }}
+                            className="flex items-center justify-center bg-white rounded shadow-md transition-transform group-hover:scale-110"
+                            style={{
+                              borderColor: symbolInfo?.color,
+                              color: symbolInfo?.color,
+                              border: '1.5px solid',
+                              padding: '2px 4px',
+                              fontSize: '10px',
+                              fontWeight: '600',
+                              minWidth: '20px',
+                              minHeight: '20px'
+                            }}
                           >
                             {symbolInfo?.symbol}
                           </div>
@@ -240,9 +250,9 @@ const Drawings = () => {
                               e.stopPropagation();
                               handleDeleteMarker(marker.id);
                             }}
-                            className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-2.5 h-2.5" />
                           </button>
                         </div>
                       );
@@ -259,23 +269,27 @@ const Drawings = () => {
 
               {/* 하단 툴바 */}
               {selectedDrawingType === '전기도면' && uploadedImage && (
-                <div className="bg-white border-t px-6 py-4 flex-shrink-0">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700">심볼 선택:</span>
+                <div className="bg-white border-t px-6 py-3 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-medium text-gray-700 mr-2">심볼:</span>
                     {ELECTRIC_SYMBOLS.map((symbol) => (
                       <button
                         key={symbol.id}
                         onClick={() => setSelectedSymbol(symbol.id)}
-                        className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                        className={`px-3 py-1.5 rounded text-xs font-medium transition-all flex items-center gap-1.5 ${
                           selectedSymbol === symbol.id
                             ? 'bg-gray-900 text-white shadow-md'
                             : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-900'
                         }`}
+                        style={{
+                          borderColor: selectedSymbol === symbol.id ? undefined : symbol.color,
+                          borderWidth: selectedSymbol === symbol.id ? undefined : '1.5px'
+                        }}
                       >
-                        <span className="text-lg mr-2" style={{ color: selectedSymbol === symbol.id ? 'white' : symbol.color }}>
+                        <span className="text-sm font-semibold" style={{ color: selectedSymbol === symbol.id ? 'white' : symbol.color }}>
                           {symbol.symbol}
                         </span>
-                        {symbol.name}
+                        <span>{symbol.name}</span>
                       </button>
                     ))}
                   </div>
@@ -289,21 +303,29 @@ const Drawings = () => {
             <div className="p-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-4">수량 집계</h3>
               {selectedDrawingType === '전기도면' && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {ELECTRIC_SYMBOLS.map((symbol) => {
                     const count = getSymbolCount(symbol.id);
+                    if (count === 0) return null;
                     return (
                       <div
                         key={symbol.id}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded border"
+                        style={{ borderColor: symbol.color, borderWidth: '1.5px' }}
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl" style={{ color: symbol.color }}>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="text-base font-semibold px-2 py-1 bg-white rounded"
+                            style={{
+                              color: symbol.color,
+                              border: `1.5px solid ${symbol.color}`
+                            }}
+                          >
                             {symbol.symbol}
                           </span>
                           <span className="text-sm font-medium text-gray-900">{symbol.name}</span>
                         </div>
-                        <span className="text-xl font-bold text-gray-900">{count}개</span>
+                        <span className="text-lg font-bold text-gray-900">{count}개</span>
                       </div>
                     );
                   })}
