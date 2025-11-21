@@ -425,42 +425,40 @@ const Drawings = () => {
               </div>
 
               {/* 캔버스 영역 */}
-              <div className="flex-1 overflow-hidden p-6">
+              <div className="flex-1 overflow-auto p-6">
                 {uploadedImage ? (
-                  <div className="relative w-full h-full">
+                  <div
+                    ref={canvasRef}
+                    className={`relative bg-white rounded-lg shadow-lg ${
+                      workMode === 'room' ? 'cursor-crosshair' : 'cursor-default'
+                    }`}
+                    style={{
+                      width: viewMode === 'room' && selectedRoom ? `${100 / selectedRoom.width * 100}%` : '100%',
+                      height: viewMode === 'room' && selectedRoom ? `${100 / selectedRoom.height * 100}%` : '100%',
+                      minWidth: '100%',
+                      minHeight: '100%'
+                    }}
+                    onMouseDown={handleCanvasMouseDown}
+                    onMouseMove={handleCanvasMouseMove}
+                    onMouseUp={handleCanvasMouseUp}
+                    onMouseLeave={handleCanvasMouseUp}
+                  >
                     <div
-                      ref={canvasRef}
-                      className={`relative bg-white rounded-lg shadow-lg overflow-hidden ${
-                        workMode === 'room' ? 'cursor-crosshair' : 'cursor-default'
-                      }`}
-                      style={{
-                        width: '100%',
-                        height: '100%'
-                      }}
-                      onMouseDown={handleCanvasMouseDown}
-                      onMouseMove={handleCanvasMouseMove}
-                      onMouseUp={handleCanvasMouseUp}
-                      onMouseLeave={handleCanvasMouseUp}
+                      className="relative w-full h-full"
+                      style={
+                        viewMode === 'room' && selectedRoom
+                          ? {
+                              transform: `translate(${-selectedRoom.x * 100 / selectedRoom.width}%, ${-selectedRoom.y * 100 / selectedRoom.height}%)`,
+                            }
+                          : undefined
+                      }
                     >
-                      <div
-                        className="absolute inset-0"
-                        style={
-                          viewMode === 'room' && selectedRoom
-                            ? {
-                                transform: `scale(${100 / selectedRoom.width})`,
-                                transformOrigin: `${selectedRoom.x + selectedRoom.width / 2}% ${selectedRoom.y + selectedRoom.height / 2}%`,
-                                width: '100%',
-                                height: '100%'
-                              }
-                            : undefined
-                        }
-                      >
-                        <img
-                          src={uploadedImage}
-                          alt="평면도"
-                          className="w-full h-full object-contain pointer-events-none select-none"
-                          draggable={false}
-                        />
+                      <img
+                        src={uploadedImage}
+                        alt="평면도"
+                        className="w-full h-full object-contain pointer-events-none select-none"
+                        draggable={false}
+                      />
 
                     {/* 영역 표시 (전체 보기 모드) */}
                     {viewMode === 'full' && rooms.map((room) => (
@@ -554,7 +552,6 @@ const Drawings = () => {
                         </div>
                       );
                     })}
-                      </div>
                     </div>
                   </div>
                 ) : (
