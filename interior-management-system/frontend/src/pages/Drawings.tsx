@@ -177,20 +177,84 @@ const Drawings = () => {
         rooms,
         lastModified: new Date()
       };
-      localStorage.setItem(key, JSON.stringify(data));
+
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+          alert('저장 공간이 부족합니다. 이미지를 삭제하거나 더 작은 이미지를 사용해주세요.');
+          console.error('localStorage quota exceeded:', error);
+        } else {
+          console.error('Failed to save drawing data:', error);
+        }
+      }
     }
   }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms]);
 
-  // 이미지 업로드
+  // 이미지 압축 및 업로드
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // 파일 크기 체크 (10MB 제한)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('파일 크기가 너무 큽니다. 10MB 이하의 이미지를 선택해주세요.');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
-        setUploadedImage(event.target?.result as string);
+        const img = new Image();
+        img.onload = () => {
+          // 최대 크기 설정 (1920px)
+          const MAX_WIDTH = 1920;
+          const MAX_HEIGHT = 1920;
+          let width = img.width;
+          let height = img.height;
+
+          // 비율 유지하며 리사이즈
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = (height * MAX_WIDTH) / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = (width * MAX_HEIGHT) / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          // Canvas로 리사이즈 및 압축
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // JPEG로 압축 (품질 0.8)
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+            // Base64 크기 체크 (약 3MB 제한 - localStorage 용량 고려)
+            const sizeInBytes = (compressedDataUrl.length * 3) / 4;
+            const sizeInMB = sizeInBytes / (1024 * 1024);
+
+            if (sizeInMB > 3) {
+              alert('압축된 이미지가 여전히 큽니다 (3MB 초과). 더 작은 이미지를 선택하거나 해상도를 낮춰주세요.');
+              return;
+            }
+
+            setUploadedImage(compressedDataUrl);
+          }
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
+
+    // 파일 입력 초기화 (같은 파일 재선택 가능하도록)
+    e.target.value = '';
   };
 
   // 이미지 삭제
