@@ -300,7 +300,7 @@ const Drawings = () => {
     e.preventDefault();
 
     // 부드러운 확대/축소를 위한 배율 방식 사용
-    const zoomSpeed = 0.1; // 10%씩 확대/축소 (부드러우면서도 적절한 조절)
+    const zoomSpeed = 0.15; // 15%씩 확대/축소
     const direction = e.deltaY > 0 ? -1 : 1;
     const scaleFactor = 1 + (direction * zoomSpeed);
     const newScale = Math.min(Math.max(0.5, imageScale * scaleFactor), 5);
