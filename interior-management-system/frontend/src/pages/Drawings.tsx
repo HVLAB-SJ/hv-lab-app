@@ -103,6 +103,18 @@ const Drawings = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isLoadingRef = useRef(false); // 데이터 로딩 중 플래그
   const hasMigratedRef = useRef(false); // 마이그레이션 완료 플래그
+  const [storageInfo, setStorageInfo] = useState<{usage: number, quota: number} | null>(null);
+
+  // 저장소 용량 확인
+  useEffect(() => {
+    drawingStorage.estimateSize().then(info => {
+      setStorageInfo(info);
+      const usageMB = (info.usage / (1024 * 1024)).toFixed(2);
+      const quotaMB = (info.quota / (1024 * 1024)).toFixed(0);
+      const usagePercent = ((info.usage / info.quota) * 100).toFixed(1);
+      console.log(`📊 저장소 사용량: ${usageMB}MB / ${quotaMB}MB (${usagePercent}%)`);
+    });
+  }, [uploadedImage]);
 
   // localStorage에서 IndexedDB로 데이터 마이그레이션 (최초 1회만)
   useEffect(() => {
@@ -644,6 +656,30 @@ const Drawings = () => {
                 </button>
               ))}
             </div>
+
+            {/* 저장소 용량 정보 */}
+            {storageInfo && (
+              <div className="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">저장소 용량</h3>
+                <div className="text-xs text-gray-700">
+                  <div className="mb-1">
+                    사용: {(storageInfo.usage / (1024 * 1024)).toFixed(1)} MB
+                  </div>
+                  <div className="mb-2">
+                    전체: {(storageInfo.quota / (1024 * 1024)).toFixed(0)} MB
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all"
+                      style={{ width: `${Math.min((storageInfo.usage / storageInfo.quota) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <div className="mt-1 text-right text-gray-500">
+                    {((storageInfo.usage / storageInfo.quota) * 100).toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+            )}
 
             {selectedProject && selectedDrawingType === '전기도면' && uploadedImage && (
               <>
