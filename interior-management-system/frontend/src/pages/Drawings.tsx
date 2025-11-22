@@ -316,53 +316,83 @@ const Drawings = () => {
 
     let x, y;
 
-    // 영역 확대 모드일 때 좌표 변환 (letter-boxing 고려)
+    // 영역 확대 모드일 때 좌표 변환
     if (viewMode === 'room' && selectedRoomId) {
       const room = rooms.find(r => r.id === selectedRoomId);
-      if (room) {
-        // 영역의 가로세로 비율
-        const roomAspect = room.width / room.height;
-        const containerAspect = rect.width / rect.height;
+      if (!room || !imageRef.current) return;
 
-        let imageDisplayWidth, imageDisplayHeight, offsetX, offsetY;
+      // 실제 이미지 크기
+      const naturalWidth = imageRef.current.naturalWidth;
+      const naturalHeight = imageRef.current.naturalHeight;
+      if (!naturalWidth || !naturalHeight) return;
 
-        if (containerAspect > roomAspect) {
-          // 컨테이너가 더 넓음 - 좌우 여백 발생
-          imageDisplayHeight = rect.height;
-          imageDisplayWidth = rect.height * roomAspect;
-          offsetX = (rect.width - imageDisplayWidth) / 2;
-          offsetY = 0;
-        } else {
-          // 컨테이너가 더 높음 - 상하 여백 발생
-          imageDisplayWidth = rect.width;
-          imageDisplayHeight = rect.width / roomAspect;
-          offsetX = 0;
-          offsetY = (rect.height - imageDisplayHeight) / 2;
-        }
+      // 실제 이미지의 비율
+      const imageAspect = naturalWidth / naturalHeight;
+      const containerAspect = rect.width / rect.height;
 
-        // 여백을 제외한 실제 이미지 영역 내 클릭인지 확인
-        const adjustedX = clickX - offsetX;
-        const adjustedY = clickY - offsetY;
+      // object-contain 방식으로 표시되는 실제 크기 계산
+      let displayWidth, displayHeight, offsetX, offsetY;
 
-        if (adjustedX < 0 || adjustedX > imageDisplayWidth || adjustedY < 0 || adjustedY > imageDisplayHeight) {
-          // 여백 영역 클릭 - 무시
-          return;
-        }
-
-        // 이미지 내 위치를 백분율로 변환
-        const percentX = (adjustedX / imageDisplayWidth) * 100;
-        const percentY = (adjustedY / imageDisplayHeight) * 100;
-
-        // 실제 이미지 좌표로 변환
-        x = room.x + percentX * room.width / 100;
-        y = room.y + percentY * room.height / 100;
+      if (containerAspect > imageAspect) {
+        // 컨테이너가 더 넓음 - 좌우 여백
+        displayHeight = rect.height;
+        displayWidth = rect.height * imageAspect;
+        offsetX = (rect.width - displayWidth) / 2;
+        offsetY = 0;
       } else {
+        // 컨테이너가 더 높음 - 상하 여백
+        displayWidth = rect.width;
+        displayHeight = rect.width / imageAspect;
+        offsetX = 0;
+        offsetY = (rect.height - displayHeight) / 2;
+      }
+
+      // 여백을 제외한 클릭 위치
+      const adjustedX = clickX - offsetX;
+      const adjustedY = clickY - offsetY;
+
+      // 여백 영역 클릭 시 무시
+      if (adjustedX < 0 || adjustedX > displayWidth || adjustedY < 0 || adjustedY > displayHeight) {
         return;
       }
+
+      // 클릭 위치를 전체 이미지 기준 백분율로 변환
+      x = (adjustedX / displayWidth) * 100;
+      y = (adjustedY / displayHeight) * 100;
     } else {
-      // 전체 보기 모드
-      x = (clickX / rect.width) * 100;
-      y = (clickY / rect.height) * 100;
+      // 전체 보기 모드 - 동일한 로직 사용
+      if (!imageRef.current) return;
+
+      const naturalWidth = imageRef.current.naturalWidth;
+      const naturalHeight = imageRef.current.naturalHeight;
+      if (!naturalWidth || !naturalHeight) return;
+
+      const imageAspect = naturalWidth / naturalHeight;
+      const containerAspect = rect.width / rect.height;
+
+      let displayWidth, displayHeight, offsetX, offsetY;
+
+      if (containerAspect > imageAspect) {
+        displayHeight = rect.height;
+        displayWidth = rect.height * imageAspect;
+        offsetX = (rect.width - displayWidth) / 2;
+        offsetY = 0;
+      } else {
+        displayWidth = rect.width;
+        displayHeight = rect.width / imageAspect;
+        offsetX = 0;
+        offsetY = (rect.height - displayHeight) / 2;
+      }
+
+      const adjustedX = clickX - offsetX;
+      const adjustedY = clickY - offsetY;
+
+      if (adjustedX < 0 || adjustedX > displayWidth || adjustedY < 0 || adjustedY > displayHeight) {
+        return;
+      }
+
+      x = (adjustedX / displayWidth) * 100;
+      y = (adjustedY / displayHeight) * 100;
     }
 
     if (workMode === 'room') {
@@ -407,50 +437,42 @@ const Drawings = () => {
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!uploadedImage || !canvasRef.current) return;
+    if (!uploadedImage || !canvasRef.current || !imageRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
 
-    let x, y;
+    const naturalWidth = imageRef.current.naturalWidth;
+    const naturalHeight = imageRef.current.naturalHeight;
+    if (!naturalWidth || !naturalHeight) return;
 
-    // 영역 확대 모드일 때 좌표 변환 (letter-boxing 고려)
-    if (viewMode === 'room' && selectedRoomId) {
-      const room = rooms.find(r => r.id === selectedRoomId);
-      if (room) {
-        const roomAspect = room.width / room.height;
-        const containerAspect = rect.width / rect.height;
+    const imageAspect = naturalWidth / naturalHeight;
+    const containerAspect = rect.width / rect.height;
 
-        let imageDisplayWidth, imageDisplayHeight, offsetX, offsetY;
+    let displayWidth, displayHeight, offsetX, offsetY;
 
-        if (containerAspect > roomAspect) {
-          imageDisplayHeight = rect.height;
-          imageDisplayWidth = rect.height * roomAspect;
-          offsetX = (rect.width - imageDisplayWidth) / 2;
-          offsetY = 0;
-        } else {
-          imageDisplayWidth = rect.width;
-          imageDisplayHeight = rect.width / roomAspect;
-          offsetX = 0;
-          offsetY = (rect.height - imageDisplayHeight) / 2;
-        }
-
-        const adjustedX = clickX - offsetX;
-        const adjustedY = clickY - offsetY;
-
-        const percentX = (adjustedX / imageDisplayWidth) * 100;
-        const percentY = (adjustedY / imageDisplayHeight) * 100;
-
-        x = room.x + percentX * room.width / 100;
-        y = room.y + percentY * room.height / 100;
-      } else {
-        return;
-      }
+    if (containerAspect > imageAspect) {
+      displayHeight = rect.height;
+      displayWidth = rect.height * imageAspect;
+      offsetX = (rect.width - displayWidth) / 2;
+      offsetY = 0;
     } else {
-      x = (clickX / rect.width) * 100;
-      y = (clickY / rect.height) * 100;
+      displayWidth = rect.width;
+      displayHeight = rect.width / imageAspect;
+      offsetX = 0;
+      offsetY = (rect.height - displayHeight) / 2;
     }
+
+    const adjustedX = clickX - offsetX;
+    const adjustedY = clickY - offsetY;
+
+    if (adjustedX < 0 || adjustedX > displayWidth || adjustedY < 0 || adjustedY > displayHeight) {
+      return;
+    }
+
+    const x = (adjustedX / displayWidth) * 100;
+    const y = (adjustedY / displayHeight) * 100;
 
     if (isDrawingRoom && roomDrawStart) {
       // 영역 그리기 중
@@ -511,8 +533,7 @@ const Drawings = () => {
       setShowRoomNameModal(false);
       setNewRoomName('');
       setPendingRoom(null);
-      // 영역 그리기 완료 후 자동으로 마커 추가 모드로 전환
-      setWorkMode('marker');
+      // 영역 그리기 모드 유지 (사용자가 직접 토글할 때까지)
     }
   };
 
@@ -652,11 +673,15 @@ const Drawings = () => {
               <>
                 <div className="mb-6">
                   <button
-                    onClick={() => setWorkMode('room')}
-                    className="w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center bg-green-600 text-white font-medium hover:bg-green-700"
+                    onClick={() => setWorkMode(workMode === 'room' ? 'marker' : 'room')}
+                    className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors flex items-center font-medium ${
+                      workMode === 'room'
+                        ? 'bg-green-700 text-white'
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                    }`}
                   >
                     <Square className="w-4 h-4 mr-2" />
-                    영역 그리기
+                    {workMode === 'room' ? '영역 그리기 중...' : '영역 그리기'}
                   </button>
                 </div>
 
@@ -756,16 +781,12 @@ const Drawings = () => {
                         draggable={false}
                         style={
                           viewMode === 'room' && selectedRoom
-                            ? (() => {
-                                const scaleX = 100 / selectedRoom.width;
-                                const scaleY = 100 / selectedRoom.height;
-                                const scale = Math.min(scaleX, scaleY);
-                                return {
-                                  transform: `scale(${scale}) translate(${-selectedRoom.x}%, ${-selectedRoom.y}%)`,
-                                  transformOrigin: '0 0',
-                                  clipPath: `inset(${selectedRoom.y}% ${100 - selectedRoom.x - selectedRoom.width}% ${100 - selectedRoom.y - selectedRoom.height}% ${selectedRoom.x}%)`
-                                };
-                              })()
+                            ? {
+                                objectFit: 'none',
+                                objectPosition: `${-selectedRoom.x}% ${-selectedRoom.y}%`,
+                                transform: `scale(${100 / selectedRoom.width}, ${100 / selectedRoom.height})`,
+                                transformOrigin: 'center center'
+                              }
                             : undefined
                         }
                       />
