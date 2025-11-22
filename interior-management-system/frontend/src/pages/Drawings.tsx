@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
-import { FileImage, Trash2, Square, ZoomIn, ArrowLeft, Edit2 } from 'lucide-react';
+import { FileImage, Trash2, Square, ZoomIn, ArrowLeft, Edit2, X } from 'lucide-react';
 import { drawingStorage } from '../utils/drawingStorage';
 
 // 도면 종류
