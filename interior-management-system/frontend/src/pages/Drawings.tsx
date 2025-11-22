@@ -100,6 +100,7 @@ const Drawings = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isLoadingRef = useRef(false); // 데이터 로딩 중 플래그
 
   // Load from localStorage when user and projects are ready (only if not selected)
   useEffect(() => {
@@ -142,6 +143,7 @@ const Drawings = () => {
   // Load drawing data when project or drawing type changes
   useEffect(() => {
     if (user?.id && selectedProject && selectedDrawingType) {
+      isLoadingRef.current = true; // 로딩 시작
       const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
       const savedData = localStorage.getItem(key);
       if (savedData) {
@@ -162,11 +164,21 @@ const Drawings = () => {
       // Reset view mode when switching drawings
       setViewMode('full');
       setSelectedRoomId(null);
+
+      // 로딩 완료 - 다음 렌더 사이클에서 저장 가능하도록 설정
+      setTimeout(() => {
+        isLoadingRef.current = false;
+      }, 0);
     }
   }, [user?.id, selectedProject, selectedDrawingType]);
 
   // Save drawing data when image, markers, or rooms change
   useEffect(() => {
+    // 로딩 중이면 저장하지 않음 (무한 루프 방지)
+    if (isLoadingRef.current) {
+      return;
+    }
+
     if (user?.id && selectedProject && selectedDrawingType && uploadedImage) {
       const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
       const data: DrawingData = {
