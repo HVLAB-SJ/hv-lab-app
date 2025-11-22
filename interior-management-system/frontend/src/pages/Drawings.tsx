@@ -295,12 +295,25 @@ const Drawings = () => {
     e.target.value = '';
   };
 
-  // 이미지 확대/축소 핸들러
+  // 이미지 확대/축소 핸들러 (마우스 위치 기준)
   const handleImageWheel = (e: React.WheelEvent) => {
     e.preventDefault();
+
     const delta = e.deltaY * -0.01;
     const newScale = Math.min(Math.max(0.5, imageScale + delta), 5);
+
+    // 마우스 위치 기준으로 확대/축소
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left - rect.width / 2;
+    const mouseY = e.clientY - rect.top - rect.height / 2;
+
+    // 스케일 변화에 따른 위치 조정
+    const scaleChange = newScale / imageScale;
+    const newX = mouseX - (mouseX - imagePosition.x) * scaleChange;
+    const newY = mouseY - (mouseY - imagePosition.y) * scaleChange;
+
     setImageScale(newScale);
+    setImagePosition({ x: newX, y: newY });
   };
 
   const handleImageMouseDown = (e: React.MouseEvent) => {
