@@ -111,6 +111,9 @@ const Drawings = () => {
   // 드래그 앤 드롭 상태
   const [isDraggingFile, setIsDraggingFile] = useState(false);
 
+  // 이미지 팝업 상태
+  const [showImageModal, setShowImageModal] = useState(false);
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -710,13 +713,14 @@ const Drawings = () => {
             {selectedDrawingType === '네이버도면' && selectedProject && (
               <>
                 <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">타입</span>
                   <div className="flex items-center gap-1">
                     <input
                       type="text"
                       value={naverTypeSqm}
                       onChange={(e) => setNaverTypeSqm(e.target.value)}
-                      placeholder="136E"
-                      className="input w-24 h-[42px]"
+                      placeholder="예시: 136E"
+                      className="input w-28 h-[42px]"
                     />
                     <span className="text-sm font-medium text-gray-700">㎡</span>
                   </div>
@@ -726,18 +730,19 @@ const Drawings = () => {
                       type="text"
                       value={naverTypePyeong}
                       onChange={(e) => setNaverTypePyeong(e.target.value)}
-                      placeholder="41E"
-                      className="input w-20 h-[42px]"
+                      placeholder="예시: 41E"
+                      className="input w-24 h-[42px]"
                     />
                     <span className="text-sm font-medium text-gray-700">평</span>
                   </div>
                 </div>
-                <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">공급/전용</span>
                   <input
                     type="text"
                     value={naverArea}
                     onChange={(e) => setNaverArea(e.target.value)}
-                    placeholder="136.21㎡/101.97㎡(전용률 75%)"
+                    placeholder="예시: 136.21㎡/101.97㎡(전용률 75%)"
                     className="input w-80 h-[42px]"
                   />
                 </div>
@@ -868,7 +873,7 @@ const Drawings = () => {
           <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* 캔버스 영역 */}
-              <div className="flex-1 overflow-hidden p-6">
+              <div className="overflow-hidden p-6" style={{ height: 'calc(100vh - 280px)' }}>
                 {uploadedImage ? (
                   <div className="relative w-full h-full bg-white rounded-lg shadow-lg overflow-hidden">
                     <div
@@ -887,6 +892,12 @@ const Drawings = () => {
                         alt="평면도"
                         className="w-full h-full object-contain pointer-events-none select-none"
                         draggable={false}
+                        onClick={(e) => {
+                          // 마커나 영역 위에서 클릭하지 않았을 때만 팝업 열기
+                          if (e.target === e.currentTarget) {
+                            setShowImageModal(true);
+                          }
+                        }}
                         style={
                           viewMode === 'room' && selectedRoom
                             ? (() => {
@@ -902,10 +913,15 @@ const Drawings = () => {
                                 return {
                                   objectFit: 'none',
                                   transform: `scale(${scale}) translate(${(50 - centerX) / scale}%, ${(50 - centerY) / scale}%)`,
-                                  transformOrigin: '0 0'
+                                  transformOrigin: '0 0',
+                                  pointerEvents: 'auto',
+                                  cursor: 'pointer'
                                 };
                               })()
-                            : undefined
+                            : {
+                                pointerEvents: 'auto',
+                                cursor: 'pointer'
+                              }
                         }
                       />
 
@@ -1153,6 +1169,29 @@ const Drawings = () => {
                 저장
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 이미지 전체화면 모달 */}
+      {showImageModal && uploadedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className="relative w-full h-full p-8 flex items-center justify-center">
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center text-white transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img
+              src={uploadedImage}
+              alt="도면 전체화면"
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         </div>
       )}
