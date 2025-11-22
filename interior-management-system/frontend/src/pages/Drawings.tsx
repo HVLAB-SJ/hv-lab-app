@@ -7,6 +7,7 @@ import { drawingStorage } from '../utils/drawingStorage';
 // 도면 종류
 const DRAWING_TYPES = [
   '네이버도면',
+  '건축도면',
   '평면도',
   '3D도면',
   '철거도면',
