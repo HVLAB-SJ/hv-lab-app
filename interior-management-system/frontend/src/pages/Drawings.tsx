@@ -113,6 +113,10 @@ const Drawings = () => {
 
   // 이미지 팝업 상태
   const [showImageModal, setShowImageModal] = useState(false);
+  const [imageScale, setImageScale] = useState(1);
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -289,6 +293,46 @@ const Drawings = () => {
 
     // 파일 입력 초기화 (같은 파일 재선택 가능하도록)
     e.target.value = '';
+  };
+
+  // 이미지 확대/축소 핸들러
+  const handleImageWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY * -0.01;
+    const newScale = Math.min(Math.max(0.5, imageScale + delta), 5);
+    setImageScale(newScale);
+  };
+
+  const handleImageMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 0) { // 좌클릭만
+      setIsDraggingImage(true);
+      setDragStart({ x: e.clientX - imagePosition.x, y: e.clientY - imagePosition.y });
+    }
+  };
+
+  const handleImageMouseMove = (e: React.MouseEvent) => {
+    if (isDraggingImage) {
+      setImagePosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleImageMouseUp = () => {
+    setIsDraggingImage(false);
+  };
+
+  const handleImageDoubleClick = () => {
+    setImageScale(1);
+    setImagePosition({ x: 0, y: 0 });
+  };
+
+  const resetImageModal = () => {
+    setShowImageModal(false);
+    setImageScale(1);
+    setImagePosition({ x: 0, y: 0 });
+    setIsDraggingImage(false);
   };
 
   // 클립보드에서 이미지 붙여넣기
@@ -1039,9 +1083,8 @@ const Drawings = () => {
                     </p>
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="btn btn-primary"
+                      className="px-6 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
                     >
-                      <FileImage className="w-4 h-4 mr-2" />
                       파일 선택
                     </button>
                   </div>
@@ -1177,20 +1220,40 @@ const Drawings = () => {
       {showImageModal && uploadedImage && (
         <div
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
-          onClick={() => setShowImageModal(false)}
+          onClick={resetImageModal}
+          onWheel={handleImageWheel}
+          onMouseMove={handleImageMouseMove}
+          onMouseUp={handleImageMouseUp}
+          onMouseLeave={handleImageMouseUp}
         >
-          <div className="relative w-full h-full p-8 flex items-center justify-center">
+          <div className="relative w-full h-full p-8 flex items-center justify-center overflow-hidden">
             <button
-              onClick={() => setShowImageModal(false)}
-              className="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center text-white transition-all"
+              onClick={resetImageModal}
+              className="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center text-white transition-all z-10"
             >
               <X className="w-6 h-6" />
             </button>
+
+            {/* 확대/축소 안내 */}
+            <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white text-xs px-3 py-2 rounded z-10">
+              마우스 휠: 확대/축소 | 드래그: 이동 | 더블클릭: 초기화
+            </div>
+
             <img
               src={uploadedImage}
               alt="도면 전체화면"
-              className="max-w-full max-h-full object-contain"
+              className="object-contain select-none"
+              style={{
+                transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageScale})`,
+                cursor: isDraggingImage ? 'grabbing' : 'grab',
+                transition: isDraggingImage ? 'none' : 'transform 0.1s ease-out',
+                maxWidth: '100%',
+                maxHeight: '100%'
+              }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={handleImageMouseDown}
+              onDoubleClick={handleImageDoubleClick}
+              draggable={false}
             />
           </div>
         </div>
