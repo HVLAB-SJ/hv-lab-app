@@ -76,7 +76,6 @@ const AfterService = () => {
       setValue('project', selectedRequest.project);
       setValue('client', selectedRequest.client);
       setValue('siteAddress', selectedRequest.siteAddress);
-      setValue('entrancePassword', selectedRequest.entrancePassword);
       setValue('description', selectedRequest.description);
       if (selectedRequest.requestDate) {
         setValue('requestDate', new Date(selectedRequest.requestDate).toISOString().split('T')[0]);
@@ -399,9 +398,9 @@ const AfterService = () => {
   });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
       {/* 좌측: AS 요청 폼 */}
-      <div className="lg:col-span-4">
+      <div className="lg:col-span-1">
         <div className="card p-4 sticky top-4">
           <h2 className="text-lg font-semibold mb-4">
             {selectedRequest ? 'AS 요청 수정' : 'AS 요청 추가'}
@@ -421,7 +420,6 @@ const AfterService = () => {
                   if (selectedProject) {
                     setValue('client', selectedProject.client);
                     setValue('siteAddress', selectedProject.location);
-                    setValue('entrancePassword', selectedProject.entrancePassword || '');
                   }
                 }}
               >
@@ -463,17 +461,6 @@ const AfterService = () => {
               {errors.siteAddress && (
                 <p className="mt-1 text-xs text-red-600">{String(errors.siteAddress.message)}</p>
               )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                공동현관 비밀번호
-              </label>
-              <input
-                {...register('entrancePassword')}
-                type="text"
-                className="input text-sm"
-              />
             </div>
 
             <div>
@@ -653,7 +640,7 @@ const AfterService = () => {
       </div>
 
       {/* 우측: AS 요청 목록 */}
-      <div className="lg:col-span-8 space-y-4">
+      <div className="lg:col-span-4 space-y-4">
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="flex space-x-4 md:space-x-8">
