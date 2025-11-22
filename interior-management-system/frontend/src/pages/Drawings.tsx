@@ -217,9 +217,9 @@ const Drawings = () => {
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          // 최대 크기 설정 (1280px로 축소)
-          const MAX_WIDTH = 1280;
-          const MAX_HEIGHT = 1280;
+          // 최대 크기 설정 (2048px로 설정 - 화질 개선)
+          const MAX_WIDTH = 2048;
+          const MAX_HEIGHT = 2048;
           let width = img.width;
           let height = img.height;
 
@@ -245,15 +245,15 @@ const Drawings = () => {
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
 
-            // JPEG로 압축 (품질 0.6으로 더 강한 압축)
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            // JPEG로 압축 (품질 0.88로 설정 - 화질과 용량 균형)
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
 
-            // Base64 크기 체크 (약 1.5MB 제한으로 축소)
+            // Base64 크기 체크 (약 3MB 제한)
             const sizeInBytes = (compressedDataUrl.length * 3) / 4;
             const sizeInMB = sizeInBytes / (1024 * 1024);
 
-            if (sizeInMB > 1.5) {
-              alert('압축된 이미지가 여전히 큽니다 (1.5MB 초과). 더 작은 이미지를 선택해주세요.');
+            if (sizeInMB > 3) {
+              alert('압축된 이미지가 여전히 큽니다 (3MB 초과). 더 작은 이미지를 선택해주세요.');
               return;
             }
 
