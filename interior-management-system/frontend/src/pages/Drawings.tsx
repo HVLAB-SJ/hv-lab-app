@@ -719,7 +719,7 @@ const Drawings = () => {
                       type="text"
                       value={naverTypeSqm}
                       onChange={(e) => setNaverTypeSqm(e.target.value)}
-                      placeholder="예시: 136E"
+                      placeholder="예: 136E"
                       className="input w-28 h-[42px]"
                     />
                     <span className="text-sm font-medium text-gray-700">㎡</span>
@@ -730,7 +730,7 @@ const Drawings = () => {
                       type="text"
                       value={naverTypePyeong}
                       onChange={(e) => setNaverTypePyeong(e.target.value)}
-                      placeholder="예시: 41E"
+                      placeholder="예: 41E"
                       className="input w-24 h-[42px]"
                     />
                     <span className="text-sm font-medium text-gray-700">평</span>
@@ -742,7 +742,7 @@ const Drawings = () => {
                     type="text"
                     value={naverArea}
                     onChange={(e) => setNaverArea(e.target.value)}
-                    placeholder="예시: 136.21㎡/101.97㎡(전용률 75%)"
+                    placeholder="예: 136.21㎡/101.97㎡(전용률 75%)"
                     className="input w-80 h-[42px]"
                   />
                 </div>
