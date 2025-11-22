@@ -606,31 +606,21 @@ const Drawings = () => {
       {/* 상단 헤더 */}
       <div className="bg-white border-b px-6 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-80">
-              <select
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                className="input w-full"
-              >
-                <option value="">프로젝트를 선택하세요</option>
-                {projects
-                  .filter(p => p.status !== 'completed')
-                  .map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <button
-              onClick={handleClearAllDrawings}
-              className="btn btn-outline text-sm text-red-600 border-red-600 hover:bg-red-50 whitespace-nowrap"
-              title="모든 도면 데이터 삭제 (저장 공간 확보)"
+          <div className="w-80">
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="input w-full"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
-              전체 삭제
-            </button>
+              <option value="">프로젝트를 선택하세요</option>
+              {projects
+                .filter(p => p.status !== 'completed')
+                .map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+            </select>
           </div>
 
           {viewMode === 'room' && selectedRoom && (
