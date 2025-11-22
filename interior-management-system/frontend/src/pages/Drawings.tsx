@@ -68,7 +68,8 @@ interface DrawingData {
   rooms: Room[];
   lastModified: Date;
   // 네이버도면 전용 필드
-  naverType?: string;
+  naverTypeSqm?: string;
+  naverTypePyeong?: string;
   naverArea?: string;
 }
 
@@ -84,7 +85,8 @@ const Drawings = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
 
   // 네이버도면 전용 필드
-  const [naverType, setNaverType] = useState<string>('');
+  const [naverTypeSqm, setNaverTypeSqm] = useState<string>(''); // 제곱미터
+  const [naverTypePyeong, setNaverTypePyeong] = useState<string>(''); // 평
   const [naverArea, setNaverArea] = useState<string>('');
 
   // 작업 모드
@@ -180,14 +182,16 @@ const Drawings = () => {
           setMarkers(data.markers || []);
           setRooms(data.rooms || []);
           // 네이버도면 필드 로드
-          setNaverType(data.naverType || '');
+          setNaverTypeSqm(data.naverTypeSqm || '');
+          setNaverTypePyeong(data.naverTypePyeong || '');
           setNaverArea(data.naverArea || '');
         } else {
           // Clear current data if no saved data exists
           setUploadedImage('');
           setMarkers([]);
           setRooms([]);
-          setNaverType('');
+          setNaverTypeSqm('');
+          setNaverTypePyeong('');
           setNaverArea('');
         }
         // Reset view mode when switching drawings
@@ -204,7 +208,8 @@ const Drawings = () => {
         setUploadedImage('');
         setMarkers([]);
         setRooms([]);
-        setNaverType('');
+        setNaverTypeSqm('');
+        setNaverTypePyeong('');
         setNaverArea('');
         setViewMode('full');
         setSelectedRoomId(null);
@@ -229,7 +234,8 @@ const Drawings = () => {
         markers,
         rooms,
         lastModified: new Date(),
-        naverType,
+        naverTypeSqm,
+        naverTypePyeong,
         naverArea
       };
 
@@ -239,7 +245,7 @@ const Drawings = () => {
         alert('도면 저장 중 오류가 발생했습니다.');
       });
     }
-  }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverType, naverArea]);
+  }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea]);
 
   // 이미지 파일 처리 함수 (공통)
   const processImageFile = (file: File) => {
@@ -703,24 +709,36 @@ const Drawings = () => {
             {/* 네이버도면 전용 입력 필드 */}
             {selectedDrawingType === '네이버도면' && selectedProject && (
               <>
-                <div className="flex flex-col">
-                  <label className="text-xs text-gray-500 mb-1">타입</label>
-                  <input
-                    type="text"
-                    value={naverType}
-                    onChange={(e) => setNaverType(e.target.value)}
-                    placeholder="예: 136E㎡ / 41E평"
-                    className="input w-56 text-sm"
-                  />
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      value={naverTypeSqm}
+                      onChange={(e) => setNaverTypeSqm(e.target.value)}
+                      placeholder="136E"
+                      className="input w-24 h-[42px]"
+                    />
+                    <span className="text-sm font-medium text-gray-700">㎡</span>
+                  </div>
+                  <span className="text-gray-400">/</span>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      value={naverTypePyeong}
+                      onChange={(e) => setNaverTypePyeong(e.target.value)}
+                      placeholder="41E"
+                      className="input w-20 h-[42px]"
+                    />
+                    <span className="text-sm font-medium text-gray-700">평</span>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <label className="text-xs text-gray-500 mb-1">공급/전용</label>
+                <div>
                   <input
                     type="text"
                     value={naverArea}
                     onChange={(e) => setNaverArea(e.target.value)}
-                    placeholder="예: 136.21㎡/101.97㎡(전용률 75%)"
-                    className="input w-80 text-sm"
+                    placeholder="136.21㎡/101.97㎡(전용률 75%)"
+                    className="input w-80 h-[42px]"
                   />
                 </div>
               </>
