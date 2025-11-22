@@ -103,18 +103,6 @@ const Drawings = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isLoadingRef = useRef(false); // 데이터 로딩 중 플래그
   const hasMigratedRef = useRef(false); // 마이그레이션 완료 플래그
-  const [storageInfo, setStorageInfo] = useState<{usage: number, quota: number} | null>(null);
-
-  // 저장소 용량 확인
-  useEffect(() => {
-    drawingStorage.estimateSize().then(info => {
-      setStorageInfo(info);
-      const usageMB = (info.usage / (1024 * 1024)).toFixed(2);
-      const quotaMB = (info.quota / (1024 * 1024)).toFixed(0);
-      const usagePercent = ((info.usage / info.quota) * 100).toFixed(1);
-      console.log(`📊 저장소 사용량: ${usageMB}MB / ${quotaMB}MB (${usagePercent}%)`);
-    });
-  }, [uploadedImage]);
 
   // localStorage에서 IndexedDB로 데이터 마이그레이션 (최초 1회만)
   useEffect(() => {
@@ -621,7 +609,7 @@ const Drawings = () => {
             </select>
           </div>
 
-          {viewMode === 'room' && selectedRoom && (
+          {viewMode === 'room' && selectedRoom ? (
             <div className="flex items-center gap-3">
               <button
                 onClick={handleBackToFull}
@@ -632,8 +620,34 @@ const Drawings = () => {
               </button>
               <span className="text-lg font-semibold text-gray-900">{selectedRoom.name}</span>
             </div>
+          ) : (
+            uploadedImage && selectedProject && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-2 rounded border border-gray-300 hover:bg-gray-100 transition-colors"
+                  title="이미지 변경"
+                >
+                  <Edit2 className="w-5 h-5 text-gray-700" />
+                </button>
+                <button
+                  onClick={handleDeleteImage}
+                  className="p-2 rounded border border-red-300 hover:bg-red-50 transition-colors"
+                  title="이미지 삭제"
+                >
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                </button>
+              </div>
+            )
           )}
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
       </div>
 
       <div className="flex-1 flex overflow-hidden">
@@ -656,30 +670,6 @@ const Drawings = () => {
                 </button>
               ))}
             </div>
-
-            {/* 저장소 용량 정보 */}
-            {storageInfo && (
-              <div className="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">저장소 용량</h3>
-                <div className="text-xs text-gray-700">
-                  <div className="mb-1">
-                    사용: {(storageInfo.usage / (1024 * 1024)).toFixed(1)} MB
-                  </div>
-                  <div className="mb-2">
-                    전체: {(storageInfo.quota / (1024 * 1024)).toFixed(0)} MB
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all"
-                      style={{ width: `${Math.min((storageInfo.usage / storageInfo.quota) * 100, 100)}%` }}
-                    />
-                  </div>
-                  <div className="mt-1 text-right text-gray-500">
-                    {((storageInfo.usage / storageInfo.quota) * 100).toFixed(1)}%
-                  </div>
-                </div>
-              </div>
-            )}
 
             {selectedProject && selectedDrawingType === '전기도면' && uploadedImage && (
               <>
@@ -741,36 +731,6 @@ const Drawings = () => {
           {/* 중앙: 작업 영역 */}
           <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* 상단 툴바 */}
-              <div className="bg-white border-b px-6 py-3 flex items-center justify-between flex-shrink-0">
-                <h3 className="text-lg font-semibold text-gray-900">{selectedDrawingType}</h3>
-                {uploadedImage && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="btn btn-outline text-sm"
-                    >
-                      <Edit2 className="w-4 h-4 mr-2" />
-                      이미지 변경
-                    </button>
-                    <button
-                      onClick={handleDeleteImage}
-                      className="btn btn-outline text-sm text-red-600 border-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      이미지 삭제
-                    </button>
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </div>
-
               {/* 캔버스 영역 */}
               <div className="flex-1 overflow-hidden p-6">
                 {uploadedImage ? (
