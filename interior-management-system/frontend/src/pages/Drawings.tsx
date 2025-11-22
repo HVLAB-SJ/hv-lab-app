@@ -221,64 +221,28 @@ const Drawings = () => {
     }
   }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms]);
 
-  // 이미지 압축 및 업로드
+  // 이미지 업로드 (원본 화질 유지)
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 파일 크기 체크 (10MB 제한)
-      if (file.size > 10 * 1024 * 1024) {
-        alert('파일 크기가 너무 큽니다. 10MB 이하의 이미지를 선택해주세요.');
+      // 파일 크기 체크 (20MB 제한 - IndexedDB는 용량이 충분함)
+      if (file.size > 20 * 1024 * 1024) {
+        alert('파일 크기가 너무 큽니다. 20MB 이하의 이미지를 선택해주세요.');
         return;
       }
 
       const reader = new FileReader();
       reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          // 최대 크기 설정 (2048px로 설정 - 화질 개선)
-          const MAX_WIDTH = 2048;
-          const MAX_HEIGHT = 2048;
-          let width = img.width;
-          let height = img.height;
+        const dataUrl = event.target?.result as string;
 
-          // 비율 유지하며 리사이즈
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height = (height * MAX_WIDTH) / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width = (width * MAX_HEIGHT) / height;
-              height = MAX_HEIGHT;
-            }
-          }
+        // Base64 크기 체크
+        const sizeInBytes = (dataUrl.length * 3) / 4;
+        const sizeInMB = sizeInBytes / (1024 * 1024);
 
-          // Canvas로 리사이즈 및 압축
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
+        console.log(`이미지 크기: ${sizeInMB.toFixed(2)}MB (원본 화질 유지)`);
 
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-
-            // JPEG로 압축 (품질 0.88로 설정 - 화질과 용량 균형)
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
-
-            // Base64 크기 체크 (약 3MB 제한)
-            const sizeInBytes = (compressedDataUrl.length * 3) / 4;
-            const sizeInMB = sizeInBytes / (1024 * 1024);
-
-            if (sizeInMB > 3) {
-              alert('압축된 이미지가 여전히 큽니다 (3MB 초과). 더 작은 이미지를 선택해주세요.');
-              return;
-            }
-
-            setUploadedImage(compressedDataUrl);
-          }
-        };
-        img.src = event.target?.result as string;
+        // 원본 이미지를 그대로 저장 (압축 없음)
+        setUploadedImage(dataUrl);
       };
       reader.readAsDataURL(file);
     }
