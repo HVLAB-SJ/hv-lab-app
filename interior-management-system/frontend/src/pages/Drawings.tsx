@@ -67,6 +67,9 @@ interface DrawingData {
   markers: Marker[];
   rooms: Room[];
   lastModified: Date;
+  // 네이버도면 전용 필드
+  naverType?: string;
+  naverArea?: string;
 }
 
 const Drawings = () => {
@@ -79,6 +82,10 @@ const Drawings = () => {
   const [uploadedImage, setUploadedImage] = useState<string>('');
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+
+  // 네이버도면 전용 필드
+  const [naverType, setNaverType] = useState<string>('');
+  const [naverArea, setNaverArea] = useState<string>('');
 
   // 작업 모드
   const [workMode, setWorkMode] = useState<'marker' | 'room'>('marker');
@@ -169,11 +176,16 @@ const Drawings = () => {
           setUploadedImage(data.imageUrl || '');
           setMarkers(data.markers || []);
           setRooms(data.rooms || []);
+          // 네이버도면 필드 로드
+          setNaverType(data.naverType || '');
+          setNaverArea(data.naverArea || '');
         } else {
           // Clear current data if no saved data exists
           setUploadedImage('');
           setMarkers([]);
           setRooms([]);
+          setNaverType('');
+          setNaverArea('');
         }
         // Reset view mode when switching drawings
         setViewMode('full');
@@ -189,6 +201,8 @@ const Drawings = () => {
         setUploadedImage('');
         setMarkers([]);
         setRooms([]);
+        setNaverType('');
+        setNaverArea('');
         setViewMode('full');
         setSelectedRoomId(null);
         isLoadingRef.current = false;
@@ -211,7 +225,9 @@ const Drawings = () => {
         imageUrl: uploadedImage,
         markers,
         rooms,
-        lastModified: new Date()
+        lastModified: new Date(),
+        naverType,
+        naverArea
       };
 
       // IndexedDB에 저장 (비동기)
@@ -220,7 +236,7 @@ const Drawings = () => {
         alert('도면 저장 중 오류가 발생했습니다.');
       });
     }
-  }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms]);
+  }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverType, naverArea]);
 
   // 이미지 업로드 (원본 화질 유지)
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -592,22 +608,50 @@ const Drawings = () => {
     <div className="h-full flex flex-col">
       {/* 상단 헤더 */}
       <div className="bg-white border-b px-6 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="w-80">
-            <select
-              value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="input w-full"
-            >
-              <option value="">프로젝트를 선택하세요</option>
-              {projects
-                .filter(p => p.status !== 'completed')
-                .map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-            </select>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-80">
+              <select
+                value={selectedProject}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                className="input w-full"
+              >
+                <option value="">프로젝트를 선택하세요</option>
+                {projects
+                  .filter(p => p.status !== 'completed')
+                  .map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {/* 네이버도면 전용 입력 필드 */}
+            {selectedDrawingType === '네이버도면' && selectedProject && (
+              <>
+                <div className="flex flex-col">
+                  <label className="text-xs text-gray-500 mb-1">타입</label>
+                  <input
+                    type="text"
+                    value={naverType}
+                    onChange={(e) => setNaverType(e.target.value)}
+                    placeholder="예: 136E㎡ / 41E평"
+                    className="input w-56 text-sm"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-xs text-gray-500 mb-1">공급/전용</label>
+                  <input
+                    type="text"
+                    value={naverArea}
+                    onChange={(e) => setNaverArea(e.target.value)}
+                    placeholder="예: 136.21㎡/101.97㎡(전용률 75%)"
+                    className="input w-80 text-sm"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           {viewMode === 'room' && selectedRoom ? (
