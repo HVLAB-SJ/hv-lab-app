@@ -771,12 +771,22 @@ const Drawings = () => {
                         draggable={false}
                         style={
                           viewMode === 'room' && selectedRoom
-                            ? {
-                                objectFit: 'none',
-                                objectPosition: `${-selectedRoom.x}% ${-selectedRoom.y}%`,
-                                transform: `scale(${100 / selectedRoom.width}, ${100 / selectedRoom.height})`,
-                                transformOrigin: 'center center'
-                              }
+                            ? (() => {
+                                // 비율 유지를 위해 더 큰 scale 값 사용
+                                const scaleX = 100 / selectedRoom.width;
+                                const scaleY = 100 / selectedRoom.height;
+                                const scale = Math.max(scaleX, scaleY);
+
+                                // 영역의 중심점 계산
+                                const centerX = selectedRoom.x + selectedRoom.width / 2;
+                                const centerY = selectedRoom.y + selectedRoom.height / 2;
+
+                                return {
+                                  objectFit: 'none',
+                                  transform: `scale(${scale}) translate(${(50 - centerX) / scale}%, ${(50 - centerY) / scale}%)`,
+                                  transformOrigin: '0 0'
+                                };
+                              })()
                             : undefined
                         }
                       />
