@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import { FileImage, Trash2, Square, ZoomIn, ArrowLeft, Edit2 } from 'lucide-react';
+import { drawingStorage } from '../utils/drawingStorage';
 
 // 도면 종류
 const DRAWING_TYPES = [
@@ -101,6 +102,21 @@ const Drawings = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isLoadingRef = useRef(false); // 데이터 로딩 중 플래그
+  const hasMigratedRef = useRef(false); // 마이그레이션 완료 플래그
+
+  // localStorage에서 IndexedDB로 데이터 마이그레이션 (최초 1회만)
+  useEffect(() => {
+    if (user?.id && !hasMigratedRef.current) {
+      hasMigratedRef.current = true;
+      drawingStorage.migrateFromLocalStorage(user.id).then(count => {
+        if (count > 0) {
+          console.log(`✅ ${count}개의 도면을 IndexedDB로 마이그레이션했습니다.`);
+        }
+      }).catch(error => {
+        console.error('마이그레이션 실패:', error);
+      });
+    }
+  }, [user?.id]);
 
   // Load from localStorage when user and projects are ready (only if not selected)
   useEffect(() => {
@@ -145,30 +161,37 @@ const Drawings = () => {
     if (user?.id && selectedProject && selectedDrawingType) {
       isLoadingRef.current = true; // 로딩 시작
       const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
-      const savedData = localStorage.getItem(key);
-      if (savedData) {
-        try {
-          const data: DrawingData = JSON.parse(savedData);
+
+      // IndexedDB에서 데이터 로드 (비동기)
+      drawingStorage.getItem(key).then(data => {
+        if (data) {
           setUploadedImage(data.imageUrl || '');
           setMarkers(data.markers || []);
           setRooms(data.rooms || []);
-        } catch (error) {
-          console.error('Failed to load drawing data:', error);
+        } else {
+          // Clear current data if no saved data exists
+          setUploadedImage('');
+          setMarkers([]);
+          setRooms([]);
         }
-      } else {
-        // Clear current data if no saved data exists
+        // Reset view mode when switching drawings
+        setViewMode('full');
+        setSelectedRoomId(null);
+
+        // 로딩 완료 - 다음 렌더 사이클에서 저장 가능하도록 설정
+        setTimeout(() => {
+          isLoadingRef.current = false;
+        }, 0);
+      }).catch(error => {
+        console.error('Failed to load drawing data:', error);
+        // 에러 발생 시에도 초기화
         setUploadedImage('');
         setMarkers([]);
         setRooms([]);
-      }
-      // Reset view mode when switching drawings
-      setViewMode('full');
-      setSelectedRoomId(null);
-
-      // 로딩 완료 - 다음 렌더 사이클에서 저장 가능하도록 설정
-      setTimeout(() => {
+        setViewMode('full');
+        setSelectedRoomId(null);
         isLoadingRef.current = false;
-      }, 0);
+      });
     }
   }, [user?.id, selectedProject, selectedDrawingType]);
 
@@ -190,16 +213,11 @@ const Drawings = () => {
         lastModified: new Date()
       };
 
-      try {
-        localStorage.setItem(key, JSON.stringify(data));
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-          alert('저장 공간이 부족합니다. 이미지를 삭제하거나 더 작은 이미지를 사용해주세요.');
-          console.error('localStorage quota exceeded:', error);
-        } else {
-          console.error('Failed to save drawing data:', error);
-        }
-      }
+      // IndexedDB에 저장 (비동기)
+      drawingStorage.setItem(key, data, user.id).catch(error => {
+        console.error('Failed to save drawing data:', error);
+        alert('도면 저장 중 오류가 발생했습니다.');
+      });
     }
   }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms]);
 
@@ -278,10 +296,12 @@ const Drawings = () => {
       setViewMode('full');
       setSelectedRoomId(null);
 
-      // localStorage에서도 삭제
+      // IndexedDB에서도 삭제
       if (user?.id && selectedProject && selectedDrawingType) {
         const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
-        localStorage.removeItem(key);
+        drawingStorage.removeItem(key).catch(error => {
+          console.error('Failed to delete drawing:', error);
+        });
       }
     }
   };
@@ -290,18 +310,8 @@ const Drawings = () => {
   const handleClearAllDrawings = () => {
     if (confirm('⚠️ 경고: 모든 프로젝트의 모든 도면 데이터를 삭제합니다.\n\n계속하시겠습니까?')) {
       if (confirm('정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-        try {
-          // localStorage에서 drawing- 으로 시작하는 모든 키 삭제
-          const keysToRemove: string[] = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('drawing-')) {
-              keysToRemove.push(key);
-            }
-          }
-
-          keysToRemove.forEach(key => localStorage.removeItem(key));
-
+        // IndexedDB의 모든 도면 데이터 삭제
+        drawingStorage.clearAll().then(count => {
           // 현재 상태 초기화
           setUploadedImage('');
           setMarkers([]);
@@ -309,11 +319,11 @@ const Drawings = () => {
           setViewMode('full');
           setSelectedRoomId(null);
 
-          alert(`✅ ${keysToRemove.length}개의 도면 데이터가 삭제되었습니다.`);
-        } catch (error) {
+          alert(`✅ ${count}개의 도면 데이터가 삭제되었습니다.`);
+        }).catch(error => {
           console.error('Failed to clear drawings:', error);
           alert('데이터 삭제 중 오류가 발생했습니다.');
-        }
+        });
       }
     }
   };
