@@ -299,8 +299,11 @@ const Drawings = () => {
   const handleImageWheel = (e: React.WheelEvent) => {
     e.preventDefault();
 
-    const delta = e.deltaY * -0.01;
-    const newScale = Math.min(Math.max(0.5, imageScale + delta), 5);
+    // 부드러운 확대/축소를 위한 배율 방식 사용
+    const zoomSpeed = 0.05; // 5%씩 확대/축소 (더 부드러운 조절)
+    const direction = e.deltaY > 0 ? -1 : 1;
+    const scaleFactor = 1 + (direction * zoomSpeed);
+    const newScale = Math.min(Math.max(0.5, imageScale * scaleFactor), 5);
 
     // 마우스 위치 기준으로 확대/축소
     const rect = e.currentTarget.getBoundingClientRect();
