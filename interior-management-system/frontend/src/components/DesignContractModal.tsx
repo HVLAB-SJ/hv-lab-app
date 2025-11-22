@@ -150,90 +150,95 @@ const DesignContractModal = ({ projectName, onClose }: DesignContractModalProps)
           </div>
 
           {/* 디자인 계약서 출력 양식 - 인쇄 시만 표시 */}
-          <div className="hidden print:block p-12">
-            <div className="space-y-8">
+          <div className="hidden print:block p-16">
+            <div className="space-y-16">
               {/* 제목 */}
-              <h1 className="text-3xl font-bold text-gray-900">디자인 작업 의뢰서</h1>
+              <h1 className="text-2xl font-bold text-gray-900">디자인 작업 의뢰서</h1>
 
               {/* 계약 내용 */}
-              <div className="space-y-6 text-base">
-                <div className="flex items-baseline py-3">
-                  <span className="font-medium w-40">1. 성      함 :</span>
+              <div className="space-y-8 text-base leading-relaxed">
+                <div className="flex items-baseline">
+                  <span className="w-48">1. 성&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;함 :</span>
                   <span className="flex-1">{formData.clientName}</span>
                 </div>
 
-                <div className="flex items-baseline py-3">
-                  <span className="font-medium w-40">2. 전화번호 :</span>
+                <div className="flex items-baseline">
+                  <span className="w-48">2. 전화번호 :</span>
                   <span className="flex-1">{formData.phoneNumber}</span>
                 </div>
 
-                <div className="flex items-baseline py-3">
-                  <span className="font-medium w-40">3. 공사장소 :</span>
+                <div className="flex items-baseline">
+                  <span className="w-48">3. 공사장소 :</span>
                   <span className="flex-1">{formData.address}</span>
                 </div>
 
-                <div className="flex items-baseline py-3">
-                  <span className="font-medium w-40">3. 공사기간 :</span>
+                <div className="flex items-baseline">
+                  <span className="w-48">3. 공사기간 :</span>
                   <span className="flex-1">
                     {formData.startDate && formData.endDate ? (
                       <>
-                        {format(new Date(formData.startDate), 'yyyy년    MM월    dd일', { locale: ko })} ~ {format(new Date(formData.endDate), 'yyyy년    MM월    dd일', { locale: ko })} (미정)
+                        {format(new Date(formData.startDate), 'yyyy년', { locale: ko })}&nbsp;&nbsp;&nbsp;{format(new Date(formData.startDate), 'MM월', { locale: ko })}&nbsp;&nbsp;&nbsp;{format(new Date(formData.startDate), 'dd일', { locale: ko })} ~ {format(new Date(formData.endDate), 'yyyy년', { locale: ko })}&nbsp;&nbsp;&nbsp;{format(new Date(formData.endDate), 'MM월', { locale: ko })}&nbsp;&nbsp;&nbsp;{format(new Date(formData.endDate), 'dd일', { locale: ko })} (미정)
                       </>
                     ) : '미정'}
                   </span>
                 </div>
 
-                <div className="flex items-baseline py-3">
-                  <span className="font-medium w-40">5. 공사면적 :</span>
+                <div className="flex items-baseline">
+                  <span className="w-48">5. 공사면적 :</span>
                   <span className="flex-1">{formData.area}</span>
                 </div>
 
-                <div className="flex items-baseline py-3">
-                  <span className="font-medium w-40">6. 디자인비 :</span>
-                  <span className="flex-1">
-                    {formData.designFee ? `${formatCurrency(formData.designFee)}원` : ''} (부가세별도)
-                    {formData.bankAccount && (
-                      <div className="mt-2 ml-40">{formData.bankAccount}</div>
-                    )}
-                  </span>
+                <div className="flex flex-col">
+                  <div className="flex items-baseline">
+                    <span className="w-48">6. 디자인비 :</span>
+                    <span className="flex-1">
+                      {formData.designFee ? `${formatCurrency(formData.designFee)}원` : ''} (부가세별도)
+                    </span>
+                  </div>
+                  {formData.bankAccount && (
+                    <div className="ml-48 mt-2 text-center">{formData.bankAccount}</div>
+                  )}
                 </div>
               </div>
 
               {/* 도급자 */}
-              <div className="mt-12 space-y-2">
-                <div className="text-lg font-bold">* 도 급 자</div>
-                <div className="ml-6 space-y-1">
-                  <div>주 소 : {formData.address}</div>
-                  <div className="flex items-center gap-8">
-                    <span>성 명 : {formData.clientName}</span>
-                    <span>(인)</span>
+              <div className="mt-20 space-y-3">
+                <div className="text-base font-bold">*&nbsp;도&nbsp;급&nbsp;자</div>
+                <div className="ml-8 space-y-2 text-base">
+                  <div>주&nbsp;소 : {formData.address}</div>
+                  <div className="flex items-center">
+                    <span>성&nbsp;명 : {formData.clientName?.split('').join('    ')}</span>
+                    <span className="ml-8">(인)</span>
                   </div>
                 </div>
               </div>
 
               {/* 수급자 */}
-              <div className="mt-8 space-y-2">
-                <div className="text-lg font-bold">* 수 급 자</div>
-                <div className="ml-6 space-y-1">
-                  <div>주 소 : {formData.companyAddress}</div>
-                  <div>상 호 : HV LAB (에이치브이랩)</div>
-                  <div className="flex items-center gap-8">
-                    <span>대 표 : {formData.representative}</span>
-                    <div className="inline-block w-12 h-12 border border-red-500 text-red-500 flex items-center justify-center text-xs font-bold">
-                      (인)
+              <div className="mt-12 space-y-3">
+                <div className="text-base font-bold">*&nbsp;수&nbsp;급&nbsp;자</div>
+                <div className="ml-8 space-y-2 text-base">
+                  <div>주&nbsp;소 : {formData.companyAddress}</div>
+                  <div>상&nbsp;호 : HV LAB (에이치브이랩)</div>
+                  <div className="flex items-center">
+                    <span>대&nbsp;표 : {formData.representative}</span>
+                    <div className="ml-8 inline-flex items-center justify-center w-14 h-14 border-2 border-red-600">
+                      <span className="text-red-600 text-xs font-bold leading-tight text-center">
+                        에이치<br/>브이랩
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* 하단 경계선 */}
-              <div className="border-t-2 border-gray-900 mt-16 pt-8 flex justify-between items-end">
-                <div className="text-2xl font-bold">
-                  H<span className="inline-block w-8 border-b-4 border-gray-900 mx-1"></span>
+              <div className="border-t-[3px] border-gray-900 mt-32 pt-12 flex justify-between items-end">
+                <div className="flex items-center">
+                  <span className="text-4xl font-bold">H</span>
+                  <span className="inline-block w-12 h-1 bg-gray-900 mx-2"></span>
                 </div>
-                <div className="text-right space-y-1">
-                  <div className="text-sm">ARCHITECTURE & INTERIOR</div>
-                  <div className="text-2xl font-bold">HV LAB</div>
+                <div className="text-right">
+                  <div className="text-xs tracking-widest mb-1">ARCHITECTURE & INTERIOR</div>
+                  <div className="text-3xl font-bold">HV LAB</div>
                 </div>
               </div>
             </div>
