@@ -2,11 +2,11 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Trash2, Calendar, Edit, X, Upload, ImageIcon } from 'lucide-react';
-import ASRequestModal from '../components/ASRequestModal';
 import { useDataStore, type ASRequest } from '../store/dataStore';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
+import { useForm } from 'react-hook-form';
 
 // Format time to Korean format (14:00 -> 오후 2시, 02:00 -> 오전 2시)
 const formatTimeKorean = (time: string): string => {
@@ -17,6 +17,8 @@ const formatTimeKorean = (time: string): string => {
   const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
   return `${period} ${displayHours}시`;
 };
+
+const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '안팀'];
 
 const AfterService = () => {
   const { user } = useAuth();
@@ -36,7 +38,6 @@ const AfterService = () => {
     : asRequests;
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ASRequest | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
   const [editingDate, setEditingDate] = useState<{
@@ -50,6 +51,17 @@ const AfterService = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImage, setModalImage] = useState<string>('');
 
+  // 폼 관련 state
+  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [customMember, setCustomMember] = useState('');
+  const [visitTimePeriod, setVisitTimePeriod] = useState<'오전' | '오후'>('오전');
+  const [visitTimeHour, setVisitTimeHour] = useState<number>(9);
+  const [visitTimeMinute, setVisitTimeMinute] = useState<number>(0);
+
+  // 공사완료된 프로젝트만 필터링
+  const completedProjects = filteredProjects.filter(p => p.status === 'completed');
+
   // Load AS requests from API on mount
   useEffect(() => {
     loadASRequestsFromAPI().catch(error => {
@@ -58,15 +70,45 @@ const AfterService = () => {
     });
   }, [loadASRequestsFromAPI]);
 
-  // 헤더의 + 버튼 클릭 이벤트 수신
+  // 선택된 요청이 변경되면 폼에 값 설정
   useEffect(() => {
-    const handleHeaderAddButton = () => {
-      handleAddRequest();
-    };
+    if (selectedRequest) {
+      setValue('project', selectedRequest.project);
+      setValue('client', selectedRequest.client);
+      setValue('siteAddress', selectedRequest.siteAddress);
+      setValue('entrancePassword', selectedRequest.entrancePassword);
+      setValue('description', selectedRequest.description);
+      if (selectedRequest.requestDate) {
+        setValue('requestDate', new Date(selectedRequest.requestDate).toISOString().split('T')[0]);
+      }
+      if (selectedRequest.scheduledVisitDate) {
+        setValue('scheduledVisitDate', new Date(selectedRequest.scheduledVisitDate).toISOString().split('T')[0]);
+      }
+      if (selectedRequest.scheduledVisitTime) {
+        const [hoursStr, minutesStr] = selectedRequest.scheduledVisitTime.split(':');
+        const hours = parseInt(hoursStr, 10);
+        const minutes = parseInt(minutesStr, 10);
 
-    window.addEventListener('headerAddButtonClick', handleHeaderAddButton);
-    return () => window.removeEventListener('headerAddButtonClick', handleHeaderAddButton);
-  }, []);
+        if (hours >= 12) {
+          setVisitTimePeriod('오후');
+          setVisitTimeHour(hours === 12 ? 12 : hours - 12);
+        } else {
+          setVisitTimePeriod('오전');
+          setVisitTimeHour(hours === 0 ? 12 : hours);
+        }
+        setVisitTimeMinute(minutes);
+      }
+      setSelectedMembers(selectedRequest.assignedTo || []);
+    } else {
+      // 폼 초기화
+      reset();
+      setSelectedMembers([]);
+      setVisitTimePeriod('오전');
+      setVisitTimeHour(9);
+      setVisitTimeMinute(0);
+      setCustomMember('');
+    }
+  }, [selectedRequest, setValue, reset]);
 
   useEffect(() => {
     if (editingDate && inputRef.current) {
@@ -74,42 +116,84 @@ const AfterService = () => {
     }
   }, [editingDate]);
 
-  const handleAddRequest = () => {
+  const handleResetForm = () => {
     setSelectedRequest(null);
-    setIsModalOpen(true);
+    reset();
+    setSelectedMembers([]);
+    setVisitTimePeriod('오전');
+    setVisitTimeHour(9);
+    setVisitTimeMinute(0);
+    setCustomMember('');
   };
 
-  const handleSaveRequest = async (data: Partial<ASRequest>) => {
+  const onSubmit = async (data: any) => {
     try {
+      // Convert time to HH:mm format
+      let hours24 = visitTimeHour;
+      if (visitTimePeriod === '오후' && visitTimeHour !== 12) {
+        hours24 = visitTimeHour + 12;
+      } else if (visitTimePeriod === '오전' && visitTimeHour === 12) {
+        hours24 = 0;
+      }
+      const timeString = `${hours24.toString().padStart(2, '0')}:${visitTimeMinute.toString().padStart(2, '0')}`;
+
+      const formData = {
+        ...data,
+        requestDate: new Date(data.requestDate),
+        scheduledVisitDate: data.scheduledVisitDate ? new Date(data.scheduledVisitDate) : undefined,
+        scheduledVisitTime: timeString,
+        assignedTo: selectedMembers,
+      };
+
       if (selectedRequest) {
         // Update existing request
-        await updateASRequestInAPI(selectedRequest.id, data);
+        await updateASRequestInAPI(selectedRequest.id, formData);
         toast.success('AS 요청이 수정되었습니다');
       } else {
         // Add new request
         const newRequest: ASRequest = {
           id: '',
-          ...data,
+          ...formData,
         };
         await addASRequestToAPI(newRequest);
         toast.success('AS 요청이 추가되었습니다');
       }
-      setIsModalOpen(false);
+
+      handleResetForm();
     } catch (error) {
       console.error('Failed to save AS request:', error);
       toast.error('AS 요청 저장에 실패했습니다');
     }
   };
 
+  const toggleMember = (member: string) => {
+    setSelectedMembers(prev =>
+      prev.includes(member)
+        ? prev.filter(m => m !== member)
+        : [...prev, member]
+    );
+  };
+
+  const addCustomMember = () => {
+    if (customMember.trim() && !selectedMembers.includes(customMember.trim())) {
+      setSelectedMembers(prev => [...prev, customMember.trim()]);
+      setCustomMember('');
+    }
+  };
+
+  const removeMember = (member: string) => {
+    setSelectedMembers(prev => prev.filter(m => m !== member));
+  };
+
   const handleEdit = (request: ASRequest) => {
     setSelectedRequest(request);
-    setIsModalOpen(true);
+    // 모바일에서는 상단으로 스크롤
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id: string, projectName: string) => {
     if (window.confirm(`"${projectName}" AS 요청을 삭제하시겠습니까?\n\n삭제된 내역은 복구할 수 없습니다.`)) {
       try {
-        // 백엔드에서 AS 요청과 관련 일정을 모두 삭제합니다
         await deleteASRequestFromAPI(id);
         toast.success('AS 요청이 삭제되었습니다');
       } catch (error) {
@@ -120,12 +204,10 @@ const AfterService = () => {
   };
 
   const handleDateClick = (requestId: string, field: 'requestDate' | 'scheduledVisitDate') => {
-    // 방문예정일의 경우 기본 시간 설정
     if (field === 'scheduledVisitDate') {
       const request = asRequests.find(r => r.id === requestId);
       let defaultTime = { period: '오전' as '오전' | '오후', hour: 9, minute: 0 };
 
-      // 기존 시간이 있으면 파싱
       if (request?.scheduledVisitTime) {
         const [hoursStr, minutesStr] = request.scheduledVisitTime.split(':');
         const hours = parseInt(hoursStr, 10);
@@ -157,7 +239,6 @@ const AfterService = () => {
         [editingDate.field]: newDate
       };
 
-      // 방문예정일이고 시간 정보가 있는 경우
       if (editingDate.field === 'scheduledVisitDate' && timeValue) {
         let hours24 = timeValue.hour;
         if (timeValue.period === '오후' && timeValue.hour !== 12) {
@@ -190,7 +271,6 @@ const AfterService = () => {
           const reader = new FileReader();
           reader.onload = (event) => {
             const base64 = event.target?.result as string;
-            // 현재 호버된 카드나 선택된 요청에 이미지 추가
             const targetId = selectedRequestForImage || (e.target as HTMLElement).closest('[data-request-id]')?.getAttribute('data-request-id');
             if (targetId) {
               const request = requests.find(r => r.id === targetId);
@@ -214,13 +294,11 @@ const AfterService = () => {
     return () => document.removeEventListener('paste', handlePaste);
   }, [handlePaste]);
 
-  // 이미지 클릭 시 모달 열기
   const handleImageClick = (imageUrl: string) => {
     setModalImage(imageUrl);
     setShowImageModal(true);
   };
 
-  // 드래그 앤 드롭 처리
   const handleDragOver = (e: React.DragEvent, requestId?: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -274,14 +352,11 @@ const AfterService = () => {
         status: newStatus
       };
 
-      // 완료 상태로 변경 시 완료일 설정
       if (newStatus === 'completed') {
         updateData.completionDate = new Date();
       } else if (newStatus === 'pending') {
-        // 진행중으로 변경 시 완료일 제거
         updateData.completionDate = undefined;
       } else if (newStatus === 'revisit') {
-        // 재방문으로 변경 시 방문예정일만 초기화 (요청일은 그대로 유지)
         updateData.scheduledVisitDate = undefined;
         updateData.completionDate = undefined;
       }
@@ -316,7 +391,6 @@ const AfterService = () => {
                           req.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           req.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // 탭에 따른 필터링
     if (activeTab === 'completed') {
       return matchesSearch && req.status === 'completed';
     } else {
@@ -325,894 +399,554 @@ const AfterService = () => {
   });
 
   return (
-    <div className="space-y-3 md:space-y-4">
-      {/* Tabs and Add Button */}
-      <div className="border-b border-gray-200 flex items-center justify-between">
-        <nav className="flex space-x-4 md:space-x-8">
-          <button
-            onClick={() => setActiveTab('active')}
-            className={`py-2 md:py-3 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
-              activeTab === 'active'
-                ? 'border-gray-700 text-gray-700'
-                : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            진행중
-            <span className={`ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold ${
-              activeTab === 'active' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
-            }`}>
-              {requests.filter(r => r.status !== 'completed').length}
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab('completed')}
-            className={`py-2 md:py-3 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
-              activeTab === 'completed'
-                ? 'border-gray-700 text-gray-700'
-                : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            AS 완료
-            <span className={`ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold ${
-              activeTab === 'completed' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
-            }`}>
-              {requests.filter(r => r.status === 'completed').length}
-            </span>
-          </button>
-        </nav>
-        <button
-          onClick={handleAddRequest}
-          className="hidden md:block btn btn-primary px-4 py-2"
-        >
-          +AS 요청
-        </button>
-      </div>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {/* 좌측: AS 요청 폼 */}
+      <div className="lg:col-span-4">
+        <div className="card p-4 sticky top-4">
+          <h2 className="text-lg font-semibold mb-4">
+            {selectedRequest ? 'AS 요청 수정' : 'AS 요청 추가'}
+          </h2>
 
-      {/* Search */}
-      <div>
-        <input
-          type="text"
-          placeholder="검색..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-        />
-      </div>
-
-      {/* Mobile Card View */}
-      <div className="md:hidden grid grid-cols-1 gap-3">
-        {filteredRequests.map((request) => (
-          <div
-            key={request.id}
-            data-request-id={request.id}
-            className="card p-3 md:p-4 hover:border-gray-400 transition-colors"
-            onDragOver={(e) => handleDragOver(e, request.id)}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, request.id)}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  {getStatusBadge(request.status)}
-                </div>
-                <h3 className="font-bold text-base text-gray-900">{request.project}</h3>
-                <p className="text-sm text-gray-600 mt-0.5">{request.client}님</p>
-              </div>
-              <div className="flex items-center space-x-1">
-                <button
-                  onClick={() => handleEdit(request)}
-                  className="text-gray-600 hover:text-gray-700 p-1 -mt-1"
-                >
-                  <Edit className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(request.id, request.project)}
-                  className="text-rose-600 hover:text-rose-700 p-1 -mt-1"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2 text-sm">
-              <div>
-                <p className="text-xs text-gray-500">현장주소</p>
-                <p className="text-gray-900 mt-0.5">{request.siteAddress}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500">AS 내용</p>
-                <p className="text-gray-900 mt-0.5">{request.description}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500">담당자</p>
-                <p className="text-gray-900 mt-0.5">
-                  {request.assignedTo && request.assignedTo.length > 0
-                    ? request.assignedTo.join(', ')
-                    : '\u00A0'}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">요청일</p>
-                  <div className="relative inline-block">
-                    {editingDate?.requestId === request.id && editingDate?.field === 'requestDate' && (
-                      <input
-                        ref={inputRef}
-                        type="date"
-                        defaultValue={format(request.requestDate, 'yyyy-MM-dd')}
-                        onChange={(e) => handleDateChange(e.target.value)}
-                        onBlur={() => setEditingDate(null)}
-                        className="absolute left-0 top-0 w-auto h-auto opacity-0 z-50"
-                        style={{ pointerEvents: 'auto' }}
-                      />
-                    )}
-                    <button
-                      onClick={() => handleDateClick(request.id, 'requestDate')}
-                      className="flex items-center space-x-1 text-xs text-gray-900 hover:text-gray-600 transition-colors"
-                    >
-                      <Calendar className="h-3 w-3" />
-                      <span>{format(request.requestDate, 'MM.dd (eee)', { locale: ko })}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">방문예정일</p>
-                  <div className="relative inline-block">
-                    {editingDate?.requestId === request.id && editingDate?.field === 'scheduledVisitDate' && (
-                      <div className="absolute left-0 top-0 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-3" style={{ minWidth: '280px' }}>
-                        <div className="space-y-3">
-                          {/* 날짜 선택 */}
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">날짜</label>
-                            <input
-                              ref={inputRef}
-                              type="date"
-                              defaultValue={request.scheduledVisitDate ? format(request.scheduledVisitDate, 'yyyy-MM-dd') : ''}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                              onChange={(e) => {
-                                const newDate = e.target.value;
-                                const timeValue = editingDate.time || { period: '오전', hour: 9, minute: 0 };
-                                handleDateChange(newDate, timeValue);
-                              }}
-                            />
-                          </div>
-
-                          {/* 시간 선택 */}
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">시간</label>
-                            <div className="flex items-center gap-2">
-                              {/* AM/PM 선택 */}
-                              <div className="flex gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오전' } } : null)}
-                                  className={`px-2 py-1 text-xs rounded border transition-colors ${
-                                    editingDate?.time?.period === '오전'
-                                      ? 'bg-gray-900 text-white border-gray-900'
-                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                  }`}
-                                >
-                                  오전
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오후' } } : null)}
-                                  className={`px-2 py-1 text-xs rounded border transition-colors ${
-                                    editingDate?.time?.period === '오후'
-                                      ? 'bg-gray-900 text-white border-gray-900'
-                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                  }`}
-                                >
-                                  오후
-                                </button>
-                              </div>
-
-                              {/* Hour 선택 */}
-                              <select
-                                value={editingDate?.time?.hour || 9}
-                                onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, hour: parseInt(e.target.value) } } : null)}
-                                className="px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                              >
-                                {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((hour) => (
-                                  <option key={hour} value={hour}>
-                                    {hour}시
-                                  </option>
-                                ))}
-                              </select>
-
-                              {/* Minute 선택 */}
-                              <select
-                                value={editingDate?.time?.minute || 0}
-                                onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, minute: parseInt(e.target.value) } } : null)}
-                                className="px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                              >
-                                {[0, 10, 20, 30, 40, 50].map((minute) => (
-                                  <option key={minute} value={minute}>
-                                    {minute}분
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-
-                          {/* 확인/취소 버튼 */}
-                          <div className="flex justify-end gap-2 pt-2 border-t">
-                            <button
-                              type="button"
-                              onClick={() => setEditingDate(null)}
-                              className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                            >
-                              취소
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const dateInput = inputRef.current;
-                                if (dateInput && editingDate?.time) {
-                                  handleDateChange(dateInput.value, editingDate.time);
-                                }
-                              }}
-                              className="px-3 py-1 text-xs bg-gray-900 text-white rounded hover:bg-gray-800"
-                            >
-                              확인
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <button
-                      onClick={() => handleDateClick(request.id, 'scheduledVisitDate')}
-                      className="flex items-center space-x-1 text-xs text-gray-900 hover:text-gray-600 transition-colors"
-                    >
-                      <Calendar className="h-3 w-3" />
-                      <span>
-                        {request.scheduledVisitDate ? format(request.scheduledVisitDate, 'MM.dd (eee)', { locale: ko }) : '미정'}
-                        {request.scheduledVisitTime && ` ${formatTimeKorean(request.scheduledVisitTime)}`}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status change buttons */}
-              {request.status !== 'completed' && (
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                  <button
-                    onClick={() => handleStatusChange(request.id, 'completed')}
-                    className="flex-1 px-3 py-2 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    AS 완료
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(request.id, 'revisit')}
-                    className="flex-1 px-3 py-2 text-xs font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                  >
-                    재방문
-                  </button>
-                </div>
-              )}
-              {request.status === 'completed' && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <button
-                    onClick={() => handleStatusChange(request.id, 'pending')}
-                    className="w-full px-3 py-2 text-xs font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors mb-2"
-                  >
-                    진행중으로 변경
-                  </button>
-                  <p className="text-xs text-gray-500 text-center">
-                    {request.completionDate && `완료일: ${format(request.completionDate, 'yyyy.MM.dd', { locale: ko })}`}
-                  </p>
-                </div>
-              )}
-
-              {/* 이미지 표시 영역 - 모바일 */}
-              {request.images && request.images.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <p className="text-xs text-gray-500 mb-2">첨부 이미지 ({request.images.length})</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {request.images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`AS 이미지 ${idx + 1}`}
-                        className="w-full h-20 object-cover rounded cursor-pointer hover:opacity-75"
-                        onClick={() => handleImageClick(img)}
-                      />
-                    ))}
-                  </div>
-                </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Project & Client */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                프로젝트명 * (공사완료 현장)
+              </label>
+              <select
+                {...register('project', { required: '프로젝트를 선택하세요' })}
+                className="input text-sm"
+                onChange={(e) => {
+                  const selectedProject = completedProjects.find(p => p.name === e.target.value);
+                  if (selectedProject) {
+                    setValue('client', selectedProject.client);
+                    setValue('siteAddress', selectedProject.location);
+                    setValue('entrancePassword', selectedProject.entrancePassword || '');
+                  }
+                }}
+              >
+                <option value="">선택하세요</option>
+                {completedProjects.map((project) => (
+                  <option key={project.id} value={project.name}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              {errors.project && (
+                <p className="mt-1 text-xs text-red-600">{String(errors.project.message)}</p>
               )}
             </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Tablet & Desktop Multi-Column Card View */}
-      <div className="hidden md:grid md:grid-cols-2 desktop:grid-cols-3 gap-4">
-        {/* 첫 번째, 두 번째 열: AS 요청 카드 (desktop: 2열, tablet: 1열) */}
-        {(() => {
-          const midPoint = Math.ceil(filteredRequests.length / 2);
-          const firstHalf = filteredRequests.slice(0, midPoint);
-          const secondHalf = filteredRequests.slice(midPoint);
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                고객명 *
+              </label>
+              <input
+                {...register('client', { required: '고객명을 입력하세요' })}
+                type="text"
+                className="input text-sm"
+              />
+              {errors.client && (
+                <p className="mt-1 text-xs text-red-600">{String(errors.client.message)}</p>
+              )}
+            </div>
 
-          return (
-            <>
-              {/* 첫 번째 열 - 태블릿에서는 모든 프로젝트, 데스크톱에서는 절반만 */}
-              <div className="space-y-4">
-                {(window.innerWidth >= 1400 ? firstHalf : filteredRequests).map((request) => (
-                  <div
-                    key={request.id}
-                    data-request-id={request.id}
-                    onClick={() => setSelectedRequestForImage(request.id)}
-                    className={`card p-4 cursor-pointer transition-all ${
-                      selectedRequestForImage === request.id
-                        ? 'ring-2 ring-blue-500 bg-blue-50'
-                        : 'hover:border-gray-400'
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                현장주소 *
+              </label>
+              <input
+                {...register('siteAddress', { required: '현장주소를 입력하세요' })}
+                type="text"
+                className="input text-sm"
+              />
+              {errors.siteAddress && (
+                <p className="mt-1 text-xs text-red-600">{String(errors.siteAddress.message)}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                공동현관 비밀번호
+              </label>
+              <input
+                {...register('entrancePassword')}
+                type="text"
+                className="input text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                내용
+              </label>
+              <textarea
+                {...register('description')}
+                rows={3}
+                className="input text-sm"
+              />
+            </div>
+
+            {/* Assigned Members */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                담당자 (중복 선택 가능)
+              </label>
+
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {TEAM_MEMBERS.map((member) => (
+                  <button
+                    key={member}
+                    type="button"
+                    onClick={() => toggleMember(member)}
+                    className={`px-2.5 py-1.5 rounded border transition-colors text-xs ${
+                      selectedMembers.includes(member)
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {getStatusBadge(request.status)}
-                        </div>
-                        <h3 className="font-bold text-base text-gray-900">{request.project}</h3>
-                        <p className="text-sm text-gray-600 mt-0.5">{request.client}님</p>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(request);
-                          }}
-                          className="text-gray-600 hover:text-gray-700 p-1"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(request.id, request.project);
-                          }}
-                          className="text-rose-600 hover:text-rose-700 p-1"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <p className="text-xs text-gray-500">현장주소</p>
-                        <p className="text-gray-900 mt-0.5">{request.siteAddress}</p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-gray-500">AS 내용</p>
-                        <p className="text-gray-900 mt-0.5">{request.description}</p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-gray-500">담당자</p>
-                        <p className="text-gray-900 mt-0.5">
-                          {request.assignedTo && request.assignedTo.length > 0
-                            ? request.assignedTo.join(', ')
-                            : '\u00A0'}
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 pt-2">
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">요청일</p>
-                          <div className="relative inline-block">
-                            {editingDate?.requestId === request.id && editingDate?.field === 'requestDate' && (
-                              <input
-                                ref={inputRef}
-                                type="date"
-                                defaultValue={format(request.requestDate, 'yyyy-MM-dd')}
-                                onChange={(e) => handleDateChange(e.target.value)}
-                                onBlur={() => setEditingDate(null)}
-                                className="absolute left-0 top-0 w-auto h-auto opacity-0 z-50"
-                                style={{ pointerEvents: 'auto' }}
-                              />
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDateClick(request.id, 'requestDate');
-                              }}
-                              className="flex items-center space-x-1 text-xs text-gray-900 hover:text-gray-600 transition-colors"
-                            >
-                              <Calendar className="h-3 w-3" />
-                              <span>{format(request.requestDate, 'MM.dd (eee)', { locale: ko })}</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">방문예정일</p>
-                          <div className="relative inline-block">
-                            {editingDate?.requestId === request.id && editingDate?.field === 'scheduledVisitDate' && (
-                              <div className="absolute left-0 top-0 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-3" style={{ minWidth: '280px' }}>
-                                <div className="space-y-3">
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">날짜</label>
-                                    <input
-                                      ref={inputRef}
-                                      type="date"
-                                      defaultValue={request.scheduledVisitDate ? format(request.scheduledVisitDate, 'yyyy-MM-dd') : ''}
-                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                      onChange={(e) => {
-                                        const newDate = e.target.value;
-                                        const timeValue = editingDate.time || { period: '오전', hour: 9, minute: 0 };
-                                        handleDateChange(newDate, timeValue);
-                                      }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">시간</label>
-                                    <div className="flex items-center gap-2">
-                                      <div className="flex gap-1">
-                                        <button
-                                          type="button"
-                                          onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오전' } } : null)}
-                                          className={`px-2 py-1 text-xs rounded border transition-colors ${
-                                            editingDate?.time?.period === '오전'
-                                              ? 'bg-gray-900 text-white border-gray-900'
-                                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                          }`}
-                                        >
-                                          오전
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오후' } } : null)}
-                                          className={`px-2 py-1 text-xs rounded border transition-colors ${
-                                            editingDate?.time?.period === '오후'
-                                              ? 'bg-gray-900 text-white border-gray-900'
-                                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                          }`}
-                                        >
-                                          오후
-                                        </button>
-                                      </div>
-                                      <select
-                                        value={editingDate?.time?.hour || 9}
-                                        onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, hour: parseInt(e.target.value) } } : null)}
-                                        className="px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                      >
-                                        {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((hour) => (
-                                          <option key={hour} value={hour}>
-                                            {hour}시
-                                          </option>
-                                        ))}
-                                      </select>
-                                      <select
-                                        value={editingDate?.time?.minute || 0}
-                                        onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, minute: parseInt(e.target.value) } } : null)}
-                                        className="px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                      >
-                                        {[0, 10, 20, 30, 40, 50].map((minute) => (
-                                          <option key={minute} value={minute}>
-                                            {minute}분
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-end gap-2 pt-2 border-t">
-                                    <button
-                                      type="button"
-                                      onClick={() => setEditingDate(null)}
-                                      className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                                    >
-                                      취소
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const dateInput = inputRef.current;
-                                        if (dateInput && editingDate?.time) {
-                                          handleDateChange(dateInput.value, editingDate.time);
-                                        }
-                                      }}
-                                      className="px-3 py-1 text-xs bg-gray-900 text-white rounded hover:bg-gray-800"
-                                    >
-                                      확인
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDateClick(request.id, 'scheduledVisitDate');
-                              }}
-                              className="flex items-center space-x-1 text-xs text-gray-900 hover:text-gray-600 transition-colors"
-                            >
-                              <Calendar className="h-3 w-3" />
-                              <span>
-                                {request.scheduledVisitDate ? format(request.scheduledVisitDate, 'MM.dd (eee)', { locale: ko }) : '미정'}
-                                {request.scheduledVisitTime && ` ${formatTimeKorean(request.scheduledVisitTime)}`}
-                              </span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Status change buttons */}
-                      {request.status !== 'completed' && (
-                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(request.id, 'completed');
-                            }}
-                            className="flex-1 px-3 py-2 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
-                          >
-                            AS 완료
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(request.id, 'revisit');
-                            }}
-                            className="flex-1 px-3 py-2 text-xs font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                          >
-                            재방문
-                          </button>
-                        </div>
-                      )}
-                      {request.status === 'completed' && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(request.id, 'pending');
-                            }}
-                            className="w-full px-3 py-2 text-xs font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors mb-2"
-                          >
-                            진행중으로 변경
-                          </button>
-                          <p className="text-xs text-gray-500 text-center">
-                            {request.completionDate && `완료일: ${format(request.completionDate, 'yyyy.MM.dd', { locale: ko })}`}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    {member}
+                  </button>
                 ))}
+
+                {selectedMembers
+                  .filter(member => !TEAM_MEMBERS.includes(member))
+                  .map((member) => (
+                    <button
+                      key={member}
+                      type="button"
+                      onClick={() => removeMember(member)}
+                      className="px-2.5 py-1.5 rounded border transition-colors text-xs bg-gray-900 text-white border-gray-900 hover:bg-gray-800"
+                    >
+                      {member} ×
+                    </button>
+                  ))
+                }
               </div>
 
-              {/* 두 번째 열 - 데스크톱에서만 표시 */}
-              <div className="space-y-4 hidden desktop:block">
-                {secondHalf.map((request) => (
-                  <div
-                    key={request.id}
-                    data-request-id={request.id}
-                    onClick={() => setSelectedRequestForImage(request.id)}
-                    className={`card p-4 cursor-pointer transition-all ${
-                      selectedRequestForImage === request.id
-                        ? 'ring-2 ring-blue-500 bg-blue-50'
-                        : 'hover:border-gray-400'
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customMember}
+                  onChange={(e) => setCustomMember(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addCustomMember();
+                    }
+                  }}
+                  placeholder="직접 입력"
+                  className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-gray-500"
+                />
+                <button
+                  type="button"
+                  onClick={addCustomMember}
+                  className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
+                >
+                  추가
+                </button>
+              </div>
+            </div>
+
+            {/* Request Date & Scheduled Visit Date */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  요청일
+                </label>
+                <input
+                  {...register('requestDate')}
+                  type="date"
+                  className="input text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  방문예정일
+                </label>
+                <input
+                  {...register('scheduledVisitDate')}
+                  type="date"
+                  className="input text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Scheduled Visit Time */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                방문 시간
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setVisitTimePeriod('오전')}
+                    className={`px-2 py-1.5 text-xs rounded border transition-colors ${
+                      visitTimePeriod === '오전'
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {getStatusBadge(request.status)}
-                        </div>
-                        <h3 className="font-bold text-base text-gray-900">{request.project}</h3>
-                        <p className="text-sm text-gray-600 mt-0.5">{request.client}님</p>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(request);
-                          }}
-                          className="text-gray-600 hover:text-gray-700 p-1"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(request.id, request.project);
-                          }}
-                          className="text-rose-600 hover:text-rose-700 p-1"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <p className="text-xs text-gray-500">현장주소</p>
-                        <p className="text-gray-900 mt-0.5">{request.siteAddress}</p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-gray-500">AS 내용</p>
-                        <p className="text-gray-900 mt-0.5">{request.description}</p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-gray-500">담당자</p>
-                        <p className="text-gray-900 mt-0.5">
-                          {request.assignedTo && request.assignedTo.length > 0
-                            ? request.assignedTo.join(', ')
-                            : '\u00A0'}
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 pt-2">
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">요청일</p>
-                          <div className="relative inline-block">
-                            {editingDate?.requestId === request.id && editingDate?.field === 'requestDate' && (
-                              <input
-                                ref={inputRef}
-                                type="date"
-                                defaultValue={format(request.requestDate, 'yyyy-MM-dd')}
-                                onChange={(e) => handleDateChange(e.target.value)}
-                                onBlur={() => setEditingDate(null)}
-                                className="absolute left-0 top-0 w-auto h-auto opacity-0 z-50"
-                                style={{ pointerEvents: 'auto' }}
-                              />
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDateClick(request.id, 'requestDate');
-                              }}
-                              className="flex items-center space-x-1 text-xs text-gray-900 hover:text-gray-600 transition-colors"
-                            >
-                              <Calendar className="h-3 w-3" />
-                              <span>{format(request.requestDate, 'MM.dd (eee)', { locale: ko })}</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">방문예정일</p>
-                          <div className="relative inline-block">
-                            {editingDate?.requestId === request.id && editingDate?.field === 'scheduledVisitDate' && (
-                              <div className="absolute left-0 top-0 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-3" style={{ minWidth: '280px' }}>
-                                <div className="space-y-3">
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">날짜</label>
-                                    <input
-                                      ref={inputRef}
-                                      type="date"
-                                      defaultValue={request.scheduledVisitDate ? format(request.scheduledVisitDate, 'yyyy-MM-dd') : ''}
-                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                      onChange={(e) => {
-                                        const newDate = e.target.value;
-                                        const timeValue = editingDate.time || { period: '오전', hour: 9, minute: 0 };
-                                        handleDateChange(newDate, timeValue);
-                                      }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">시간</label>
-                                    <div className="flex items-center gap-2">
-                                      <div className="flex gap-1">
-                                        <button
-                                          type="button"
-                                          onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오전' } } : null)}
-                                          className={`px-2 py-1 text-xs rounded border transition-colors ${
-                                            editingDate?.time?.period === '오전'
-                                              ? 'bg-gray-900 text-white border-gray-900'
-                                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                          }`}
-                                        >
-                                          오전
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오후' } } : null)}
-                                          className={`px-2 py-1 text-xs rounded border transition-colors ${
-                                            editingDate?.time?.period === '오후'
-                                              ? 'bg-gray-900 text-white border-gray-900'
-                                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                          }`}
-                                        >
-                                          오후
-                                        </button>
-                                      </div>
-                                      <select
-                                        value={editingDate?.time?.hour || 9}
-                                        onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, hour: parseInt(e.target.value) } } : null)}
-                                        className="px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                      >
-                                        {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((hour) => (
-                                          <option key={hour} value={hour}>
-                                            {hour}시
-                                          </option>
-                                        ))}
-                                      </select>
-                                      <select
-                                        value={editingDate?.time?.minute || 0}
-                                        onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, minute: parseInt(e.target.value) } } : null)}
-                                        className="px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                      >
-                                        {[0, 10, 20, 30, 40, 50].map((minute) => (
-                                          <option key={minute} value={minute}>
-                                            {minute}분
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-end gap-2 pt-2 border-t">
-                                    <button
-                                      type="button"
-                                      onClick={() => setEditingDate(null)}
-                                      className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                                    >
-                                      취소
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const dateInput = inputRef.current;
-                                        if (dateInput && editingDate?.time) {
-                                          handleDateChange(dateInput.value, editingDate.time);
-                                        }
-                                      }}
-                                      className="px-3 py-1 text-xs bg-gray-900 text-white rounded hover:bg-gray-800"
-                                    >
-                                      확인
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDateClick(request.id, 'scheduledVisitDate');
-                              }}
-                              className="flex items-center space-x-1 text-xs text-gray-900 hover:text-gray-600 transition-colors"
-                            >
-                              <Calendar className="h-3 w-3" />
-                              <span>
-                                {request.scheduledVisitDate ? format(request.scheduledVisitDate, 'MM.dd (eee)', { locale: ko }) : '미정'}
-                                {request.scheduledVisitTime && ` ${formatTimeKorean(request.scheduledVisitTime)}`}
-                              </span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Status change buttons */}
-                      {request.status !== 'completed' && (
-                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(request.id, 'completed');
-                            }}
-                            className="flex-1 px-3 py-2 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
-                          >
-                            AS 완료
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(request.id, 'revisit');
-                            }}
-                            className="flex-1 px-3 py-2 text-xs font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                          >
-                            재방문
-                          </button>
-                        </div>
-                      )}
-                      {request.status === 'completed' && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(request.id, 'pending');
-                            }}
-                            className="w-full px-3 py-2 text-xs font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors mb-2"
-                          >
-                            진행중으로 변경
-                          </button>
-                          <p className="text-xs text-gray-500 text-center">
-                            {request.completionDate && `완료일: ${format(request.completionDate, 'yyyy.MM.dd', { locale: ko })}`}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          );
-        })()}
-
-        {/* 세 번째 열: 이미지 업로드 영역 */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <h3 className="font-semibold text-gray-900 mb-4">이미지</h3>
-
-          {selectedRequestForImage ? (
-            <div
-              onDragOver={(e) => handleDragOver(e, selectedRequestForImage)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, selectedRequestForImage)}
-            >
-              {/* 업로드된 이미지들 (스크롤) */}
-              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-                {requests.find(r => r.id === selectedRequestForImage)?.images?.map((image, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={image}
-                      alt={`AS 이미지 ${index + 1}`}
-                      onClick={() => handleImageClick(image)}
-                      className="w-full h-auto object-contain cursor-pointer rounded-lg border border-gray-200"
-                    />
-                    <button
-                      onClick={() => {
-                        const request = requests.find(r => r.id === selectedRequestForImage);
-                        if (request) {
-                          const updatedImages = request.images?.filter((_, i) => i !== index) || [];
-                          updateASRequestInAPI(selectedRequestForImage, { images: updatedImages });
-                          toast.success('이미지가 삭제되었습니다');
-                        }
-                      }}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-
-                {/* 이미지 추가 안내 */}
-                <div
-                  className={`w-full min-h-[200px] border-2 border-dashed rounded-lg p-6 text-center transition-colors flex flex-col items-center justify-center ${
-                    isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm font-medium text-gray-700">
-                    {requests.find(r => r.id === selectedRequestForImage)?.images?.length ? '이미지 추가' : '이미지 업로드'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">이미지를 드래그하거나 Ctrl+V로 붙여넣기</p>
-                  {requests.find(r => r.id === selectedRequestForImage)?.images?.length > 0 && (
-                    <p className="text-xs text-blue-600 mt-2 font-medium">
-                      현재 {requests.find(r => r.id === selectedRequestForImage)?.images?.length}장
-                    </p>
-                  )}
+                    오전
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVisitTimePeriod('오후')}
+                    className={`px-2 py-1.5 text-xs rounded border transition-colors ${
+                      visitTimePeriod === '오후'
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    오후
+                  </button>
                 </div>
+
+                <select
+                  value={visitTimeHour}
+                  onChange={(e) => setVisitTimeHour(parseInt(e.target.value))}
+                  className="px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((hour) => (
+                    <option key={hour} value={hour}>
+                      {hour}시
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={visitTimeMinute}
+                  onChange={(e) => setVisitTimeMinute(parseInt(e.target.value))}
+                  className="px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  {[0, 10, 20, 30, 40, 50].map((minute) => (
+                    <option key={minute} value={minute}>
+                      {minute}분
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-          ) : (
-            <div className="h-full min-h-[400px] flex items-center justify-center">
-              <div className="text-center text-gray-400">
-                <ImageIcon className="h-16 w-16 mx-auto mb-4" />
-                <p className="text-lg font-medium">AS 요청을 선택하세요</p>
-                <p className="text-sm mt-2">선택하면 이미지를 업로드할 수 있습니다</p>
-              </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-2">
+              {selectedRequest && (
+                <button
+                  type="button"
+                  onClick={handleResetForm}
+                  className="flex-1 btn btn-outline text-sm py-2"
+                >
+                  취소
+                </button>
+              )}
+              <button
+                type="submit"
+                className="flex-1 btn btn-primary text-sm py-2"
+              >
+                {selectedRequest ? '수정' : '추가'}
+              </button>
             </div>
-          )}
+          </form>
         </div>
       </div>
 
-      {/* AS Request Modal */}
-      {isModalOpen && (
-        <ASRequestModal
-          request={selectedRequest}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSaveRequest}
-        />
-      )}
+      {/* 우측: AS 요청 목록 */}
+      <div className="lg:col-span-8 space-y-4">
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-4 md:space-x-8">
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`py-2 md:py-3 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
+                activeTab === 'active'
+                  ? 'border-gray-700 text-gray-700'
+                  : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              진행중
+              <span className={`ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold ${
+                activeTab === 'active' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
+                {requests.filter(r => r.status !== 'completed').length}
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('completed')}
+              className={`py-2 md:py-3 px-1 border-b-2 font-medium text-xs md:text-sm transition-colors whitespace-nowrap ${
+                activeTab === 'completed'
+                  ? 'border-gray-700 text-gray-700'
+                  : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              AS 완료
+              <span className={`ml-1 md:ml-2 py-0.5 px-1.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold ${
+                activeTab === 'completed' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
+                {requests.filter(r => r.status === 'completed').length}
+              </span>
+            </button>
+          </nav>
+        </div>
+
+        {/* Search */}
+        <div>
+          <input
+            type="text"
+            placeholder="검색..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
+          />
+        </div>
+
+        {/* AS Request Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredRequests.map((request) => (
+            <div
+              key={request.id}
+              data-request-id={request.id}
+              className="card p-4 hover:border-gray-400 transition-colors"
+              onDragOver={(e) => handleDragOver(e, request.id)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, request.id)}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    {getStatusBadge(request.status)}
+                  </div>
+                  <h3 className="font-bold text-base text-gray-900">{request.project}</h3>
+                  <p className="text-sm text-gray-600 mt-0.5">{request.client}님</p>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => handleEdit(request)}
+                    className="text-gray-600 hover:text-gray-700 p-1"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(request.id, request.project)}
+                    className="text-rose-600 hover:text-rose-700 p-1"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-sm">
+                <div>
+                  <p className="text-xs text-gray-500">현장주소</p>
+                  <p className="text-gray-900 mt-0.5">{request.siteAddress}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-500">AS 내용</p>
+                  <p className="text-gray-900 mt-0.5">{request.description}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-500">담당자</p>
+                  <p className="text-gray-900 mt-0.5">
+                    {request.assignedTo && request.assignedTo.length > 0
+                      ? request.assignedTo.join(', ')
+                      : '\u00A0'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">요청일</p>
+                    <div className="relative inline-block">
+                      {editingDate?.requestId === request.id && editingDate?.field === 'requestDate' && (
+                        <input
+                          ref={inputRef}
+                          type="date"
+                          defaultValue={format(request.requestDate, 'yyyy-MM-dd')}
+                          onChange={(e) => handleDateChange(e.target.value)}
+                          onBlur={() => setEditingDate(null)}
+                          className="absolute left-0 top-0 w-auto h-auto opacity-0 z-50"
+                          style={{ pointerEvents: 'auto' }}
+                        />
+                      )}
+                      <button
+                        onClick={() => handleDateClick(request.id, 'requestDate')}
+                        className="flex items-center space-x-1 text-xs text-gray-900 hover:text-gray-600 transition-colors"
+                      >
+                        <Calendar className="h-3 w-3" />
+                        <span>{format(request.requestDate, 'MM.dd (eee)', { locale: ko })}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">방문예정일</p>
+                    <div className="relative inline-block">
+                      {editingDate?.requestId === request.id && editingDate?.field === 'scheduledVisitDate' && (
+                        <div className="absolute left-0 top-0 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-3" style={{ minWidth: '280px' }}>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">날짜</label>
+                              <input
+                                ref={inputRef}
+                                type="date"
+                                defaultValue={request.scheduledVisitDate ? format(request.scheduledVisitDate, 'yyyy-MM-dd') : ''}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                onChange={(e) => {
+                                  const newDate = e.target.value;
+                                  const timeValue = editingDate.time || { period: '오전' as const, hour: 9, minute: 0 };
+                                  handleDateChange(newDate, timeValue);
+                                }}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">시간</label>
+                              <div className="flex items-center gap-2">
+                                <div className="flex gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오전' } } : null)}
+                                    className={`px-2 py-1 text-xs rounded border transition-colors ${
+                                      editingDate?.time?.period === '오전'
+                                        ? 'bg-gray-900 text-white border-gray-900'
+                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    오전
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, period: '오후' } } : null)}
+                                    className={`px-2 py-1 text-xs rounded border transition-colors ${
+                                      editingDate?.time?.period === '오후'
+                                        ? 'bg-gray-900 text-white border-gray-900'
+                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    오후
+                                  </button>
+                                </div>
+
+                                <select
+                                  value={editingDate?.time?.hour || 9}
+                                  onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, hour: parseInt(e.target.value) } } : null)}
+                                  className="px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                >
+                                  {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((hour) => (
+                                    <option key={hour} value={hour}>
+                                      {hour}시
+                                    </option>
+                                  ))}
+                                </select>
+
+                                <select
+                                  value={editingDate?.time?.minute || 0}
+                                  onChange={(e) => setEditingDate(prev => prev ? { ...prev, time: { ...prev.time!, minute: parseInt(e.target.value) } } : null)}
+                                  className="px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                >
+                                  {[0, 10, 20, 30, 40, 50].map((minute) => (
+                                    <option key={minute} value={minute}>
+                                      {minute}분
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2 border-t">
+                              <button
+                                type="button"
+                                onClick={() => setEditingDate(null)}
+                                className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                              >
+                                취소
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const dateInput = inputRef.current;
+                                  if (dateInput && editingDate?.time) {
+                                    handleDateChange(dateInput.value, editingDate.time);
+                                  }
+                                }}
+                                className="px-3 py-1 text-xs bg-gray-900 text-white rounded hover:bg-gray-800"
+                              >
+                                확인
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => handleDateClick(request.id, 'scheduledVisitDate')}
+                        className="flex items-center space-x-1 text-xs text-gray-900 hover:text-gray-600 transition-colors"
+                      >
+                        <Calendar className="h-3 w-3" />
+                        <span>
+                          {request.scheduledVisitDate ? format(request.scheduledVisitDate, 'MM.dd (eee)', { locale: ko }) : '미정'}
+                          {request.scheduledVisitTime && ` ${formatTimeKorean(request.scheduledVisitTime)}`}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status change buttons */}
+                {request.status !== 'completed' && (
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => handleStatusChange(request.id, 'completed')}
+                      className="flex-1 px-3 py-2 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                    >
+                      AS 완료
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(request.id, 'revisit')}
+                      className="flex-1 px-3 py-2 text-xs font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                      재방문
+                    </button>
+                  </div>
+                )}
+                {request.status === 'completed' && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => handleStatusChange(request.id, 'pending')}
+                      className="w-full px-3 py-2 text-xs font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors mb-2"
+                    >
+                      진행중으로 변경
+                    </button>
+                    <p className="text-xs text-gray-500 text-center">
+                      {request.completionDate && `완료일: ${format(request.completionDate, 'yyyy.MM.dd', { locale: ko })}`}
+                    </p>
+                  </div>
+                )}
+
+                {/* 이미지 표시 영역 */}
+                {request.images && request.images.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 mb-2">첨부 이미지 ({request.images.length})</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {request.images.map((img, idx) => (
+                        <img
+                          key={idx}
+                          src={img}
+                          alt={`AS 이미지 ${idx + 1}`}
+                          className="w-full h-20 object-cover rounded cursor-pointer hover:opacity-75"
+                          onClick={() => handleImageClick(img)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* 이미지 팝업 모달 */}
       {showImageModal && (
