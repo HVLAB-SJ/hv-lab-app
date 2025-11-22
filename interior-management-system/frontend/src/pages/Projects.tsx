@@ -10,6 +10,7 @@ import ProjectModal from '../components/ProjectModal';
 import MeetingNotesModal from '../components/MeetingNotesModal';
 import CustomerRequestsModal from '../components/CustomerRequestsModal';
 import SitePasswordModal from '../components/SitePasswordModal';
+import DesignContractModal from '../components/DesignContractModal';
 import toast from 'react-hot-toast';
 
 type TabStatus = 'planning' | 'in-progress' | 'completed' | 'all';
@@ -30,6 +31,7 @@ const Projects = () => {
   const [showMeetingNotesModal, setShowMeetingNotesModal] = useState(false);
   const [showCustomerRequestsModal, setShowCustomerRequestsModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDesignContractModal, setShowDesignContractModal] = useState(false);
   const [selectedProjectForNotes, setSelectedProjectForNotes] = useState<Project | null>(null);
 
   // Helper functions for counting and checking NEW items
@@ -166,6 +168,11 @@ const Projects = () => {
   const handleOpenPassword = (project: Project) => {
     setSelectedProjectForNotes(project);
     setShowPasswordModal(true);
+  };
+
+  const handleOpenDesignContract = (project: Project) => {
+    setSelectedProjectForNotes(project);
+    setShowDesignContractModal(true);
   };
 
   const handleSavePasswords = async (entrancePassword: string, sitePassword: string) => {
@@ -425,11 +432,21 @@ const Projects = () => {
             <h3 className="font-bold text-base md:text-lg text-gray-900">{project.name}</h3>
             <p className="text-xs md:text-sm text-gray-600 mt-1">{project.client}님</p>
           </div>
-          <div className="flex flex-col items-end">
-            <StatusDropdown project={project} />
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-2">
+              {project.status === 'planning' && (
+                <button
+                  onClick={() => handleOpenDesignContract(project)}
+                  className="px-2 py-1 text-xs font-medium text-white bg-gray-700 hover:bg-gray-800 rounded transition-colors"
+                >
+                  디자인 계약서
+                </button>
+              )}
+              <StatusDropdown project={project} />
+            </div>
             <button
               onClick={() => handleEdit(project)}
-              className="text-xs text-gray-600 hover:text-gray-900 mt-2"
+              className="text-xs text-gray-600 hover:text-gray-900"
             >
               수정
             </button>
@@ -646,7 +663,17 @@ const Projects = () => {
                       ) : '미정'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusDropdown project={project} />
+                      <div className="flex items-center gap-2">
+                        {project.status === 'planning' && (
+                          <button
+                            onClick={() => handleOpenDesignContract(project)}
+                            className="px-2 py-1 text-xs font-medium text-white bg-gray-700 hover:bg-gray-800 rounded transition-colors"
+                          >
+                            디자인 계약서
+                          </button>
+                        )}
+                        <StatusDropdown project={project} />
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -775,6 +802,16 @@ const Projects = () => {
             setSelectedProjectForNotes(null);
           }}
           onSave={handleSavePasswords}
+        />
+      )}
+
+      {showDesignContractModal && selectedProjectForNotes && (
+        <DesignContractModal
+          projectName={selectedProjectForNotes.name}
+          onClose={() => {
+            setShowDesignContractModal(false);
+            setSelectedProjectForNotes(null);
+          }}
         />
       )}
     </div>
