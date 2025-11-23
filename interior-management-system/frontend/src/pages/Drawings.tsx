@@ -746,11 +746,131 @@ const Drawings = () => {
   // 선택된 영역
   const selectedRoom = rooms.find(r => r.id === selectedRoomId);
 
+  // 도면 종류에서 "도면" 제거하는 함수
+  const removeDrawingText = (text: string) => {
+    return text.replace('도면', '');
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* 상단 헤더 */}
       <div className="bg-white border-b px-6 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between gap-4">
+        {/* 모바일 레이아웃 */}
+        <div className="md:hidden">
+          {/* 첫 번째 줄: 공사도면 + 프로젝트 선택 */}
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-900">공사도면</h2>
+            <div className="flex-1 max-w-[200px] ml-3">
+              <select
+                value={selectedProject}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                className="input w-full text-sm"
+              >
+                <option value="">프로젝트 선택</option>
+                {projects
+                  .filter(p => p.status !== 'completed')
+                  .map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+
+          {/* 두 번째 줄: 도면 종류 버튼들 */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {DRAWING_TYPES.map((type) => (
+              <button
+                key={type}
+                onClick={() => setSelectedDrawingType(type)}
+                className={`px-3 py-1.5 rounded text-sm whitespace-nowrap flex-shrink-0 transition-colors ${
+                  selectedDrawingType === type
+                    ? 'bg-gray-900 text-white font-medium'
+                    : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                }`}
+              >
+                {removeDrawingText(type)}
+              </button>
+            ))}
+          </div>
+
+          {/* 네이버도면 전용 입력 필드 (모바일) */}
+          {selectedDrawingType === '네이버도면' && selectedProject && (
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-600">타입</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={naverTypeSqm}
+                    onChange={(e) => setNaverTypeSqm(e.target.value)}
+                    placeholder="예: 136E"
+                    className="input w-20 h-[36px] text-sm"
+                  />
+                  <span className="text-xs font-medium text-gray-700">㎡</span>
+                </div>
+                <span className="text-gray-400">/</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={naverTypePyeong}
+                    onChange={(e) => setNaverTypePyeong(e.target.value)}
+                    placeholder="예: 41E"
+                    className="input w-16 h-[36px] text-sm"
+                  />
+                  <span className="text-xs font-medium text-gray-700">평</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-600">공급/전용</span>
+                <input
+                  type="text"
+                  value={naverArea}
+                  onChange={(e) => setNaverArea(e.target.value)}
+                  placeholder="예: 136.21㎡/101.97㎡"
+                  className="input flex-1 h-[36px] text-sm"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 이미지 변경/삭제 버튼 (모바일) */}
+          {viewMode === 'room' && selectedRoom ? (
+            <div className="flex items-center justify-between mt-3">
+              <button
+                onClick={handleBackToFull}
+                className="btn btn-outline text-sm"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                전체 보기
+              </button>
+              <span className="text-base font-semibold text-gray-900">{selectedRoom.name}</span>
+            </div>
+          ) : (
+            uploadedImage && selectedProject && (
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-2 rounded border border-gray-300 hover:bg-gray-100 transition-colors"
+                  title="이미지 변경"
+                >
+                  <Edit2 className="w-4 h-4 text-gray-700" />
+                </button>
+                <button
+                  onClick={handleDeleteImage}
+                  className="p-2 rounded border border-red-300 hover:bg-red-50 transition-colors"
+                  title="이미지 삭제"
+                >
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </button>
+              </div>
+            )
+          )}
+        </div>
+
+        {/* 데스크톱 레이아웃 */}
+        <div className="hidden md:flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-80">
               <select
@@ -769,7 +889,7 @@ const Drawings = () => {
               </select>
             </div>
 
-            {/* 네이버도면 전용 입력 필드 */}
+            {/* 네이버도면 전용 입력 필드 (데스크톱) */}
             {selectedDrawingType === '네이버도면' && selectedProject && (
               <>
                 <div className="flex items-center gap-2">
@@ -852,8 +972,8 @@ const Drawings = () => {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* 좌측: 도면 종류 및 영역 목록 - 항상 표시 */}
-        <div className="w-48 bg-white border-r flex-shrink-0 overflow-y-auto">
+        {/* 좌측: 도면 종류 및 영역 목록 - 데스크톱에서만 표시 */}
+        <div className="hidden md:block w-48 bg-white border-r flex-shrink-0 overflow-y-auto">
           <div className="p-4">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">도면 종류</h3>
             <div className="space-y-1 mb-6">
