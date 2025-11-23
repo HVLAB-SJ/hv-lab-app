@@ -1313,18 +1313,28 @@ const Schedule = () => {
     }
   }), [CustomDateHeaderWrapper, CustomEventWrapper]);
 
-  // 선택된 날짜의 일정 필터링 및 정렬 (주 단위)
+  // 선택된 날짜의 일정 필터링 및 정렬 (모바일: 당일만, 태블릿: 주 단위)
   const selectedDateEvents = React.useMemo(() => {
     if (!selectedDate) return [];
 
-    // 선택된 날짜가 속한 주의 시작일과 종료일 계산
-    const weekStart = moment(selectedDate).startOf('week'); // 일요일
-    const weekEnd = moment(selectedDate).endOf('week'); // 토요일
+    let filtered;
 
-    const filtered = filteredEvents.filter(event => {
-      const eventDate = moment(event.start);
-      return eventDate.isSameOrAfter(weekStart, 'day') && eventDate.isSameOrBefore(weekEnd, 'day');
-    });
+    if (isMobileView) {
+      // 모바일: 선택한 날짜의 일정만 표시
+      filtered = filteredEvents.filter(event => {
+        const eventDate = moment(event.start);
+        return eventDate.isSame(selectedDate, 'day');
+      });
+    } else {
+      // 태블릿/데스크톱: 선택된 날짜가 속한 주의 시작일과 종료일 계산
+      const weekStart = moment(selectedDate).startOf('week'); // 일요일
+      const weekEnd = moment(selectedDate).endOf('week'); // 토요일
+
+      filtered = filteredEvents.filter(event => {
+        const eventDate = moment(event.start);
+        return eventDate.isSameOrAfter(weekStart, 'day') && eventDate.isSameOrBefore(weekEnd, 'day');
+      });
+    }
 
     const sorted = [...filtered].sort((a, b) => {
       // 사용자 할당 여부 확인
@@ -1362,7 +1372,7 @@ const Schedule = () => {
     })));
 
     return sorted;
-  }, [selectedDate, filteredEvents, user, userNameWithoutSurname]);
+  }, [selectedDate, filteredEvents, user, userNameWithoutSurname, isMobileView]);
 
   // 날짜 셀에 일정 개수 data attribute 추가 및 선택된 날짜 스타일 적용
   useEffect(() => {
@@ -1662,7 +1672,10 @@ const Schedule = () => {
               <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold text-gray-900">
-                    {moment(selectedDate).startOf('week').format('MM월 DD일')} - {moment(selectedDate).endOf('week').format('MM월 DD일')}
+                    {isMobileView
+                      ? moment(selectedDate).format('MM월 DD일 (ddd)')
+                      : `${moment(selectedDate).startOf('week').format('MM월 DD일')} - ${moment(selectedDate).endOf('week').format('MM월 DD일')}`
+                    }
                   </p>
                   {/* 공휴일 표시 */}
                   {holidays[moment(selectedDate).format('YYYY-MM-DD')] && (
