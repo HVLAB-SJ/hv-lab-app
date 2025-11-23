@@ -757,34 +757,31 @@ const Drawings = () => {
       <div className="bg-white border-b px-6 py-3 flex-shrink-0">
         {/* 모바일 레이아웃 */}
         <div className="md:hidden">
-          {/* 첫 번째 줄: 공사도면 + 프로젝트 선택 */}
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-900">공사도면</h2>
-            <div className="flex-1 max-w-[200px] ml-3">
-              <select
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                className="input w-full text-sm"
-              >
-                <option value="">프로젝트 선택</option>
-                {projects
-                  .filter(p => p.status !== 'completed')
-                  .map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
+          {/* 첫 번째 줄: 프로젝트 선택 (우측 정렬) */}
+          <div className="flex justify-end mb-3">
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="input max-w-[200px] text-sm"
+            >
+              <option value="">프로젝트 선택</option>
+              {projects
+                .filter(p => p.status !== 'completed')
+                .map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+            </select>
           </div>
 
-          {/* 두 번째 줄: 도면 종류 버튼들 */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {/* 도면 종류 버튼들 (3행 그리드) */}
+          <div className="grid grid-cols-5 gap-2 mb-3">
             {DRAWING_TYPES.map((type) => (
               <button
                 key={type}
                 onClick={() => setSelectedDrawingType(type)}
-                className={`px-3 py-1.5 rounded text-sm whitespace-nowrap flex-shrink-0 transition-colors ${
+                className={`px-2 py-1.5 rounded text-xs whitespace-nowrap transition-colors ${
                   selectedDrawingType === type
                     ? 'bg-gray-900 text-white font-medium'
                     : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
