@@ -99,6 +99,12 @@ const ExecutionHistory = () => {
     images: [] as string[]
   });
 
+  // 실행내역별 메모 저장을 위한 상태
+  const [executionMemos, setExecutionMemos] = useState<Record<string, string>>(() => {
+    const stored = localStorage.getItem('executionMemos');
+    return stored ? JSON.parse(stored) : {};
+  });
+
   // 초기 데이터 로드 및 프로젝트 설정
   useEffect(() => {
     loadPaymentsFromAPI().catch(error => {
@@ -134,6 +140,11 @@ const ExecutionHistory = () => {
   useEffect(() => {
     localStorage.setItem('hiddenPaymentIds', JSON.stringify(hiddenPaymentIds));
   }, [hiddenPaymentIds]);
+
+  // executionMemos가 변경될 때마다 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
+  }, [executionMemos]);
 
   // 항목명 입력 시 기존 실행내역에서 추천
   useEffect(() => {
@@ -1186,6 +1197,23 @@ const ExecutionHistory = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* 메모 입력 필드 추가 */}
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">메모</label>
+                    <textarea
+                      value={executionMemos[selectedRecord] || ''}
+                      onChange={(e) => {
+                        setExecutionMemos(prev => ({
+                          ...prev,
+                          [selectedRecord]: e.target.value
+                        }));
+                      }}
+                      placeholder="메모를 입력하세요..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-none"
+                      rows={3}
+                    />
+                  </div>
 
                   {images.length > 0 ? (
                     // 이미지가 있을 때

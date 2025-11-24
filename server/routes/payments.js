@@ -227,6 +227,8 @@ router.put('/:id', authenticateToken, (req, res) => {
   console.log('Request body:', req.body);
 
   const {
+    project,
+    project_id,
     vendor_name,
     description,
     amount,
@@ -248,13 +250,16 @@ router.put('/:id', authenticateToken, (req, res) => {
   // 날짜 처리 (requestDate 또는 request_date)
   const dateToUpdate = requestDate || request_date;
 
+  // 프로젝트 ID 처리 (project 또는 project_id)
+  const projectToUpdate = project || project_id;
+
   // Build SQL dynamically based on whether date should be updated
   let sql;
   let params;
 
   if (dateToUpdate) {
     sql = `UPDATE payment_requests
-     SET vendor_name = ?, description = ?, amount = ?,
+     SET project_id = ?, vendor_name = ?, description = ?, amount = ?,
          account_holder = ?, bank_name = ?, account_number = ?,
          notes = ?, item_name = ?,
          material_amount = ?, labor_amount = ?,
@@ -264,6 +269,7 @@ router.put('/:id', authenticateToken, (req, res) => {
          updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`;
     params = [
+      projectToUpdate || null,
       vendor_name || '',
       description || '',
       amount,
@@ -283,7 +289,7 @@ router.put('/:id', authenticateToken, (req, res) => {
     ];
   } else {
     sql = `UPDATE payment_requests
-     SET vendor_name = ?, description = ?, amount = ?,
+     SET project_id = ?, vendor_name = ?, description = ?, amount = ?,
          account_holder = ?, bank_name = ?, account_number = ?,
          notes = ?, item_name = ?,
          material_amount = ?, labor_amount = ?,
@@ -292,6 +298,7 @@ router.put('/:id', authenticateToken, (req, res) => {
          updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`;
     params = [
+      projectToUpdate || null,
       vendor_name || '',
       description || '',
       amount,
