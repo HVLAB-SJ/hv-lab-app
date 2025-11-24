@@ -176,33 +176,51 @@ const ExecutionHistory = () => {
     const items = e.clipboardData?.items;
     if (!items) return;
 
+    // 이미지 파일만 필터링
+    const imageFiles: File[] = [];
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
         e.preventDefault();
         const blob = items[i].getAsFile();
         if (blob) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const base64 = event.target?.result as string;
-
-            // 실제 레코드에 이미지 추가
-            const record = executionRecords.find(r => r.id === selectedRecord);
-            if (record) {
-              const updatedImages = [...(record.images || []), base64];
-              updateExecutionRecord(selectedRecord, { images: updatedImages });
-            } else {
-              // 결제요청 레코드인 경우 별도 저장소에 저장
-              setPaymentRecordImages(prev => ({
-                ...prev,
-                [selectedRecord]: [...(prev[selectedRecord] || []), base64]
-              }));
-            }
-            toast.success('이미지가 추가되었습니다');
-          };
-          reader.readAsDataURL(blob);
+          imageFiles.push(blob);
         }
       }
     }
+
+    if (imageFiles.length === 0) return;
+
+    // 모든 이미지를 Promise로 처리
+    Promise.all(
+      imageFiles.map(file => {
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const base64 = event.target?.result as string;
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      })
+    ).then(newImages => {
+      // 실제 레코드에 이미지 추가
+      const record = executionRecords.find(r => r.id === selectedRecord);
+      if (record) {
+        const updatedImages = [...(record.images || []), ...newImages];
+        updateExecutionRecord(selectedRecord, { images: updatedImages });
+      } else {
+        // 결제요청 레코드인 경우 별도 저장소에 저장
+        setPaymentRecordImages(prev => ({
+          ...prev,
+          [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
+        }));
+      }
+      toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+    }).catch(error => {
+      console.error('이미지 처리 중 오류:', error);
+      toast.error('이미지 추가 중 오류가 발생했습니다');
+    });
   }, [selectedRecord, executionRecords, updateExecutionRecord]);
 
   useEffect(() => {
