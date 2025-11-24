@@ -754,7 +754,7 @@ const Drawings = () => {
   return (
     <div className="h-full flex flex-col">
       {/* 상단 헤더 */}
-      <div className="bg-white border-b px-6 py-3 flex-shrink-0">
+      <div className="bg-white border-b px-3 md:px-6 py-3 flex-shrink-0">
         {/* 모바일 레이아웃 */}
         <div className="md:hidden">
           {/* 첫 번째 줄: 프로젝트 선택 (우측 정렬) */}
@@ -792,45 +792,6 @@ const Drawings = () => {
             ))}
           </div>
 
-          {/* 네이버도면 전용 입력 필드 (모바일) */}
-          {selectedDrawingType === '네이버도면' && selectedProject && (
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-gray-600">타입</span>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="text"
-                    value={naverTypeSqm}
-                    onChange={(e) => setNaverTypeSqm(e.target.value)}
-                    placeholder="예: 136E"
-                    className="input w-20 h-[36px] text-sm"
-                  />
-                  <span className="text-xs font-medium text-gray-700">㎡</span>
-                </div>
-                <span className="text-gray-400">/</span>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="text"
-                    value={naverTypePyeong}
-                    onChange={(e) => setNaverTypePyeong(e.target.value)}
-                    placeholder="예: 41E"
-                    className="input w-16 h-[36px] text-sm"
-                  />
-                  <span className="text-xs font-medium text-gray-700">평</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-gray-600">공급/전용</span>
-                <input
-                  type="text"
-                  value={naverArea}
-                  onChange={(e) => setNaverArea(e.target.value)}
-                  placeholder="예: 136.21㎡/101.97㎡"
-                  className="input flex-1 h-[36px] text-sm"
-                />
-              </div>
-            </div>
-          )}
 
           {/* 이미지 변경/삭제 버튼 (모바일) */}
           {viewMode === 'room' && selectedRoom ? (
@@ -968,7 +929,7 @@ const Drawings = () => {
         />
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* 좌측: 도면 종류 및 영역 목록 - 데스크톱에서만 표시 */}
         <div className="hidden md:block w-48 bg-white border-r flex-shrink-0 overflow-y-auto">
           <div className="p-4">
@@ -1049,8 +1010,52 @@ const Drawings = () => {
           {/* 중앙: 작업 영역 */}
           <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
             <div className="flex-1 flex flex-col overflow-hidden">
+              {/* 모바일에서 네이버 도면 입력 필드 */}
+              {selectedDrawingType === '네이버도면' && selectedProject && (
+                <div className="md:hidden bg-white border-b px-3 py-3">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">평면도 타입</label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={naverTypeSqm}
+                            onChange={(e) => setNaverTypeSqm(e.target.value)}
+                            placeholder="136E"
+                            className="input w-24 h-[36px] text-sm"
+                          />
+                          <span className="text-xs font-medium text-gray-700">㎡</span>
+                        </div>
+                        <span className="text-gray-400">/</span>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={naverTypePyeong}
+                            onChange={(e) => setNaverTypePyeong(e.target.value)}
+                            placeholder="41E"
+                            className="input w-20 h-[36px] text-sm"
+                          />
+                          <span className="text-xs font-medium text-gray-700">평</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">면적 정보</label>
+                      <input
+                        type="text"
+                        value={naverArea}
+                        onChange={(e) => setNaverArea(e.target.value)}
+                        placeholder="136.21㎡/101.97㎡ (전용률 75%)"
+                        className="input w-full h-[36px] text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 캔버스 영역 */}
-              <div className="overflow-hidden p-6" style={{ height: 'calc(100vh - 280px)' }}>
+              <div className={`overflow-hidden p-3 md:p-6 flex-1`}>
                 {uploadedImage ? (
                   <div className="relative w-full h-full bg-white rounded-lg shadow-lg overflow-hidden">
                     <div
@@ -1067,14 +1072,9 @@ const Drawings = () => {
                         ref={imageRef}
                         src={uploadedImage}
                         alt="평면도"
-                        className="w-full h-full object-contain pointer-events-none select-none"
+                        className="w-full h-full object-contain select-none"
                         draggable={false}
-                        onClick={(e) => {
-                          // 마커나 영역 위에서 클릭하지 않았을 때만 팝업 열기
-                          if (e.target === e.currentTarget) {
-                            setShowImageModal(true);
-                          }
-                        }}
+                        onClick={() => setShowImageModal(true)}
                         style={
                           viewMode === 'room' && selectedRoom
                             ? (() => {
@@ -1255,8 +1255,8 @@ const Drawings = () => {
             </div>
           </div>
 
-          {/* 우측: 수량 집계 */}
-          <div className="w-80 bg-white border-l flex-shrink-0 overflow-y-auto">
+          {/* 우측: 수량 집계 - 데스크톱에서만 우측, 모바일에서는 하단 */}
+          <div className="w-full md:w-80 bg-white border-t md:border-t-0 md:border-l flex-shrink-0 overflow-y-auto">
             <div className="p-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-4">수량 집계</h3>
               {selectedDrawingType === '전기도면' && (
