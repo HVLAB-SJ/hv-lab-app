@@ -105,6 +105,11 @@ const ExecutionHistory = () => {
     return stored ? JSON.parse(stored) : {};
   });
 
+  // 금액 분할 모드 상태
+  const [splitModeRecord, setSplitModeRecord] = useState<string | null>(null);
+  const [splitMaterialCost, setSplitMaterialCost] = useState<number | ''>('');
+  const [splitLaborCost, setSplitLaborCost] = useState<number | ''>('');
+
   // 초기 데이터 로드 및 프로젝트 설정
   useEffect(() => {
     loadPaymentsFromAPI().catch(error => {
@@ -1103,28 +1108,114 @@ const ExecutionHistory = () => {
                   {/* 결제요청 금액 분할 기능 */}
                   {fullRecord?.type === 'payment' && (
                     <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          {(fullRecord as any).quickText ? (
-                            <>
-                              <p className="text-sm font-semibold text-blue-900 mb-2">자동 채우기 원본:</p>
-                              <p className="text-sm text-blue-800 whitespace-pre-wrap">{(fullRecord as any).quickText}</p>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm font-semibold text-blue-900 mb-2">결제요청 금액:</p>
-                              <p className="text-sm text-blue-800">
-                                총 {fullRecord.totalAmount?.toLocaleString()}원
-                                {fullRecord.itemName && ` (${fullRecord.itemName})`}
-                              </p>
-                            </>
-                          )}
+                      {/* 원본 텍스트 또는 금액 정보 */}
+                      {(fullRecord as any).quickText ? (
+                        <>
+                          <p className="text-sm font-semibold text-blue-900 mb-2">자동 채우기 원본:</p>
+                          <p className="text-sm text-blue-800 whitespace-pre-wrap mb-2">{(fullRecord as any).quickText}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm font-semibold text-blue-900 mb-1">결제요청 금액:</p>
+                          <p className="text-sm text-blue-800 mb-2">
+                            총 {fullRecord.totalAmount?.toLocaleString()}원
+                            {fullRecord.itemName && ` (${fullRecord.itemName})`}
+                          </p>
+                        </>
+                      )}
+
+                      {/* 금액 분할 입력 영역 */}
+                      {splitModeRecord === selectedRecord ? (
+                        <div className="mt-3 pt-3 border-t border-blue-200">
+                          <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                              <label className="block text-xs font-medium text-blue-900 mb-1">자재비</label>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={splitMaterialCost === '' ? '' : splitMaterialCost.toLocaleString()}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/,/g, '').replace(/[^0-9]/g, '');
+                                  const numValue = value === '' ? '' : parseInt(value, 10);
+                                  setSplitMaterialCost(numValue);
+                                  // 인건비 자동 계산
+                                  const totalAmount = fullRecord.totalAmount || 0;
+                                  if (numValue !== '') {
+                                    setSplitLaborCost(Math.max(0, totalAmount - numValue));
+                                  } else {
+                                    setSplitLaborCost('');
+                                  }
+                                }}
+                                placeholder="0"
+                                className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-blue-900 mb-1">인건비</label>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={splitLaborCost === '' ? '' : splitLaborCost.toLocaleString()}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/,/g, '').replace(/[^0-9]/g, '');
+                                  const numValue = value === '' ? '' : parseInt(value, 10);
+                                  setSplitLaborCost(numValue);
+                                  // 자재비 자동 계산
+                                  const totalAmount = fullRecord.totalAmount || 0;
+                                  if (numValue !== '') {
+                                    setSplitMaterialCost(Math.max(0, totalAmount - numValue));
+                                  } else {
+                                    setSplitMaterialCost('');
+                                  }
+                                }}
+                                placeholder="0"
+                                className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                // 폼에 자동 입력
+                                setFormData(prev => ({
+                                  ...prev,
+                                  project: fullRecord.project,
+                                  date: format(new Date(fullRecord.date), 'yyyy-MM-dd'),
+                                  process: fullRecord.process || '',
+                                  itemName: fullRecord.itemName || '',
+                                  materialCost: splitMaterialCost || 0,
+                                  laborCost: splitLaborCost || 0
+                                }));
+                                // 분할 모드 종료
+                                setSplitModeRecord(null);
+                                setSplitMaterialCost('');
+                                setSplitLaborCost('');
+                                // 폼 뷰로 전환
+                                setMobileView('form');
+                                toast.success('금액이 입력되었습니다. 저장 버튼을 눌러주세요.');
+                              }}
+                              className="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                              입력 적용
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSplitModeRecord(null);
+                                setSplitMaterialCost('');
+                                setSplitLaborCost('');
+                              }}
+                              className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              취소
+                            </button>
+                          </div>
                         </div>
+                      ) : (
                         <button
                           onClick={() => {
-                            // 원본 텍스트를 기반으로 금액 분할 제안
-                            const quickText = (fullRecord as any).quickText || fullRecord.itemName || '';
+                            // 금액 분할 모드 시작
                             const totalAmount = fullRecord.totalAmount || 0;
+                            const quickText = (fullRecord as any).quickText || fullRecord.itemName || '';
 
                             // 자재비/인건비 키워드 확인
                             const hasMaterial = quickText.includes('자재') || quickText.includes('재료');
@@ -1143,27 +1234,15 @@ const ExecutionHistory = () => {
                               laborRatio = 1;
                             }
 
-                            const suggestedMaterial = Math.round(totalAmount * materialRatio);
-                            const suggestedLabor = Math.round(totalAmount * laborRatio);
-
-                            // 폼에 자동 입력
-                            setFormData(prev => ({
-                              ...prev,
-                              project: fullRecord.project,
-                              date: format(new Date(fullRecord.date), 'yyyy-MM-dd'),
-                              process: fullRecord.process || '',
-                              itemName: fullRecord.itemName || '',
-                              materialCost: suggestedMaterial,
-                              laborCost: suggestedLabor
-                            }));
-
-                            toast.success(`금액 분할 제안: 자재비 ${suggestedMaterial.toLocaleString()}원, 인건비 ${suggestedLabor.toLocaleString()}원`);
+                            setSplitMaterialCost(Math.round(totalAmount * materialRatio));
+                            setSplitLaborCost(Math.round(totalAmount * laborRatio));
+                            setSplitModeRecord(selectedRecord);
                           }}
-                          className="ml-3 px-3 py-1.5 text-xs font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap"
+                          className="w-full px-3 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
                         >
                           금액 분할
                         </button>
-                      </div>
+                      )}
                     </div>
                   )}
 
