@@ -2,68 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { type Contractor } from '../store/dataStore';
 import { X, Edit2, Trash2, Search } from 'lucide-react';
 import contractorService from '../services/contractorService';
-
-// List of Korean position titles (ordered by length to match longer ones first)
-const positions = [
-  '대표이사', '부사장', '전무', '상무', '이사', '실장', '부장', '차장', '과장', '대리',
-  '주임', '사원', '팀장', '소장', '대표', '사장', '회장', '반장', '현장', '본부장',
-  '팀원', '파트장', '조장', '감독', '기사', '수석', '책임'
-];
-
-// Extract Korean position title from name (e.g., "김혁실장" -> "실장", "염동호 사장님" -> "사장", "성정현 반장" -> "반장")
-const extractPosition = (name: string): string => {
-  // Remove "님" suffix first if present
-  const cleanName = name.replace(/님$/g, '').trim();
-
-  // Check if position is separated by space (e.g., "성정현 반장")
-  const parts = cleanName.split(' ');
-  if (parts.length >= 2) {
-    const lastPart = parts[parts.length - 1];
-    for (const position of positions) {
-      if (lastPart === position) {
-        return position;
-      }
-    }
-  }
-
-  // Check if position is attached to the name (e.g., "김혁실장")
-  for (const position of positions) {
-    if (cleanName.endsWith(position)) {
-      return position;
-    }
-  }
-
-  return '';
-};
-
-// Remove position from name (e.g., "김혁실장" -> "김혁", "염동호 사장님" -> "염동호", "성정현 반장" -> "성정현")
-const removePosition = (name: string): string => {
-  if (!name) return name;
-
-  // Remove "님" suffix first if present
-  const cleanName = name.replace(/님$/g, '').trim();
-
-  // Check if position is separated by space
-  const parts = cleanName.split(' ');
-  if (parts.length >= 2) {
-    const lastPart = parts[parts.length - 1];
-    for (const position of positions) {
-      if (lastPart === position) {
-        // Return everything except the last part (position)
-        return parts.slice(0, -1).join(' ').trim();
-      }
-    }
-  }
-
-  // Remove position if found at the end (attached to name)
-  for (const position of positions) {
-    if (cleanName.endsWith(position)) {
-      return cleanName.substring(0, cleanName.length - position.length).trim();
-    }
-  }
-
-  return cleanName;
-};
+import { removePosition, extractPosition } from '../utils/formatters';
 
 export default function Contractors() {
   const [contractors, setContractors] = useState<Contractor[]>([]);

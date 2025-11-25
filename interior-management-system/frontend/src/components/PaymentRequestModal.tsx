@@ -5,48 +5,13 @@ import { useDataStore, type Payment } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import contractorService from '../services/contractorService';
 import type { PaymentRequestFormData, Contractor } from '../types/forms';
+import { removePosition } from '../utils/formatters';
 
 interface PaymentRequestModalProps {
   payment: Payment | null;
   onClose: () => void;
   onSave: (data: PaymentRequestFormData) => void;
 }
-
-// List of Korean position titles (same as in Contractors.tsx)
-const positions = [
-  '대표이사', '부사장', '전무', '상무', '이사', '실장', '부장', '차장', '과장', '대리',
-  '주임', '사원', '팀장', '소장', '대표', '사장', '회장', '반장', '현장', '본부장',
-  '팀원', '파트장', '조장', '감독', '기사', '수석', '책임'
-];
-
-// Remove position from name (same logic as Contractors.tsx)
-const removePosition = (name: string): string => {
-  if (!name) return name;
-
-  // Remove "님" suffix first if present
-  const cleanName = name.replace(/님$/g, '').trim();
-
-  // Check if position is separated by space
-  const parts = cleanName.split(' ');
-  if (parts.length >= 2) {
-    const lastPart = parts[parts.length - 1];
-    for (const position of positions) {
-      if (lastPart === position) {
-        // Return everything except the last part (position)
-        return parts.slice(0, -1).join(' ').trim();
-      }
-    }
-  }
-
-  // Remove position if found at the end (attached to name)
-  for (const position of positions) {
-    if (cleanName.endsWith(position)) {
-      return cleanName.substring(0, cleanName.length - position.length).trim();
-    }
-  }
-
-  return cleanName;
-};
 
 const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalProps) => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm();

@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
+import { formatTimeKorean } from '../utils/formatters';
 
 // Moment 한국어 로케일 설정
 moment.updateLocale('ko', {
@@ -423,22 +424,6 @@ const Schedule = () => {
   const getProjectColor = (projectName: string) => {
     const index = projects.findIndex(p => p.name === projectName);
     return index >= 0 ? projectColors[index % projectColors.length] : '#e8e2ea';
-  };
-
-  // Format time to Korean format (14:30 -> 오후 2시 30분)
-  const formatTimeKorean = (time: string): string => {
-    if (!time || time === '-') return '';
-    const [hoursStr, minutesStr] = time.split(':');
-    const hours = parseInt(hoursStr, 10);
-    const minutes = parseInt(minutesStr, 10);
-    const period = hours >= 12 ? '오후' : '오전';
-    const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
-
-    // 분이 0이면 시만 표시, 아니면 분까지 표시
-    if (minutes === 0) {
-      return `${period} ${displayHours}시`;
-    }
-    return `${period} ${displayHours}시 ${minutes}분`;
   };
 
   // Store 데이터를 Calendar 이벤트 형식으로 변환

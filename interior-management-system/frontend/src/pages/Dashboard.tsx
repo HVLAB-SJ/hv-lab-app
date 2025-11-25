@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Calendar, Clock, Plus } from 'lucide-react';
 import { useState } from 'react';
 import ScheduleModal from '../components/ScheduleModal';
+import { formatTimeKorean } from '../utils/formatters';
 
 const ALL_TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '안팀'];
 
@@ -32,17 +33,6 @@ const Dashboard = () => {
   // 사용자 이름에서 성 제거 (마지막 2글자만 사용)
   // 예: "김상준" → "상준", "상준" → "상준"
   const userNameWithoutSurname = user?.name ? user.name.slice(-2) : null;
-
-  // 시간을 한국어 형식으로 변환 (14:30 -> 오후 2시 30분)
-  const formatTimeKorean = (time: string): string => {
-    if (!time || time === '-') return '';
-    const [hoursStr, minutesStr] = time.split(':');
-    const hours = parseInt(hoursStr, 10);
-    const minutes = parseInt(minutesStr, 10);
-    const period = hours >= 12 ? '오후' : '오전';
-    const displayHours = hours % 12 || 12;
-    return minutes > 0 ? `${period} ${displayHours}시 ${minutes}분` : `${period} ${displayHours}시`;
-  };
 
   // 로그인한 사용자를 맨 앞으로 정렬
   // 안팀 사용자는 자신의 업무만 표시

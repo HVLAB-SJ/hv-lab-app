@@ -26,72 +26,34 @@ const Layout = () => {
   const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
   const [inProgressASCount, setInProgressASCount] = useState(0);
 
-  // Load pending work requests count for current user
+  // Load all badge counts in a single effect (optimized)
   useEffect(() => {
-    const loadPendingWorkRequests = async () => {
-      if (!user) return;
+    if (!user) return;
 
+    const loadAllBadgeCounts = async () => {
       try {
-        const workRequests = await workRequestService.getAllWorkRequests();
-        // Count work requests that are assigned to current user and have 'pending' status
-        const pendingCount = workRequests.filter(
-          req => req.assignedTo === user.name && req.status === 'pending'
-        ).length;
-        setPendingWorkRequestCount(pendingCount);
+        const [workRequests, payments, asRequests] = await Promise.all([
+          workRequestService.getAllWorkRequests(),
+          paymentService.getAllPayments(),
+          asRequestService.getAllASRequests()
+        ]);
+
+        setPendingWorkRequestCount(
+          workRequests.filter(req => req.assignedTo === user.name && req.status === 'pending').length
+        );
+        setPendingPaymentCount(
+          payments.filter(payment => payment.status === 'pending').length
+        );
+        setInProgressASCount(
+          asRequests.filter(req => req.status === 'in-progress').length
+        );
       } catch (error) {
-        console.error('Failed to load pending work requests:', error);
+        console.error('Failed to load badge counts:', error);
       }
     };
 
-    loadPendingWorkRequests();
-    // Refresh every 30 seconds
-    const interval = setInterval(loadPendingWorkRequests, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
-
-  // Load pending payment requests count
-  useEffect(() => {
-    const loadPendingPayments = async () => {
-      if (!user) return;
-
-      try {
-        const payments = await paymentService.getAllPayments();
-        // Count payments with 'pending' status
-        const pendingCount = payments.filter(
-          payment => payment.status === 'pending'
-        ).length;
-        setPendingPaymentCount(pendingCount);
-      } catch (error) {
-        console.error('Failed to load pending payments:', error);
-      }
-    };
-
-    loadPendingPayments();
-    // Refresh every 30 seconds
-    const interval = setInterval(loadPendingPayments, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
-
-  // Load in-progress AS requests count
-  useEffect(() => {
-    const loadInProgressAS = async () => {
-      if (!user) return;
-
-      try {
-        const asRequests = await asRequestService.getAllASRequests();
-        // Count AS requests with 'in-progress' status
-        const inProgressCount = asRequests.filter(
-          req => req.status === 'in-progress'
-        ).length;
-        setInProgressASCount(inProgressCount);
-      } catch (error) {
-        console.error('Failed to load in-progress AS requests:', error);
-      }
-    };
-
-    loadInProgressAS();
-    // Refresh every 30 seconds
-    const interval = setInterval(loadInProgressAS, 30000);
+    loadAllBadgeCounts();
+    const interval = setInterval(loadAllBadgeCounts, 30000);
     return () => clearInterval(interval);
   }, [user]);
 

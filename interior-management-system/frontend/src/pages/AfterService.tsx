@@ -7,16 +7,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useForm } from 'react-hook-form';
-
-// Format time to Korean format (14:00 -> 오후 2시, 02:00 -> 오전 2시)
-const formatTimeKorean = (time: string): string => {
-  if (!time) return '';
-  const [hoursStr] = time.split(':');
-  const hours = parseInt(hoursStr, 10);
-  const period = hours >= 12 ? '오후' : '오전';
-  const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
-  return `${period} ${displayHours}시`;
-};
+import { formatTimeKorean } from '../utils/formatters';
 
 const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '안팀'];
 

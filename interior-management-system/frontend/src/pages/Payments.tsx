@@ -10,6 +10,7 @@ import { ko } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import contractorService from '../services/contractorService';
 import CashReceiptModal from '../components/CashReceiptModal';
+import { removePosition } from '../utils/formatters';
 
 // 협력업체 타입 정의
 interface Contractor {
@@ -26,34 +27,6 @@ interface Contractor {
   createdAt: Date;
   updatedAt: Date;
 }
-
-// List of Korean position titles
-const positions = [
-  '대표이사', '부사장', '전무', '상무', '이사', '실장', '부장', '차장', '과장', '대리',
-  '주임', '사원', '팀장', '소장', '대표', '사장', '회장', '반장', '현장', '본부장',
-  '팀원', '파트장', '조장', '감독', '기사', '수석', '책임'
-];
-
-// Remove position from name
-const removePosition = (name: string): string => {
-  if (!name) return name;
-  const cleanName = name.replace(/님$/g, '').trim();
-  const parts = cleanName.split(' ');
-  if (parts.length >= 2) {
-    const lastPart = parts[parts.length - 1];
-    for (const position of positions) {
-      if (lastPart === position) {
-        return parts.slice(0, -1).join(' ').trim();
-      }
-    }
-  }
-  for (const position of positions) {
-    if (cleanName.endsWith(position)) {
-      return cleanName.substring(0, cleanName.length - position.length).trim();
-    }
-  }
-  return cleanName;
-};
 
 // 공정 목록
 const PROCESS_LIST = [

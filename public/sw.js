@@ -78,13 +78,28 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
    * See https://goo.gl/S9QRab
    */
   workbox.precacheAndRoute([{
-    "url": "assets/index-CGMugg8s.js",
+    "url": "assets/index-BQOzfOyv.js",
     "revision": null
   }, {
     "url": "assets/index-Zt1qF4YP.css",
     "revision": null
   }, {
-    "url": "assets/workbox-window.prod.es5-B9K5rw8f.js",
+    "url": "assets/vendor-calendar-DqwdyRUc.js",
+    "revision": null
+  }, {
+    "url": "assets/vendor-data-DnrWA4-l.js",
+    "revision": null
+  }, {
+    "url": "assets/vendor-date-C9fRflHV.js",
+    "revision": null
+  }, {
+    "url": "assets/vendor-react-CJkdEoL9.js",
+    "revision": null
+  }, {
+    "url": "assets/vendor-ui-0VFjegII.js",
+    "revision": null
+  }, {
+    "url": "assets/workbox-window.prod.es5-DMXp7Fa7.js",
     "revision": null
   }, {
     "url": "favicon.png",
@@ -100,7 +115,7 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "revision": "13c8dc084d8e721d3dbb3d62d72ae126"
   }, {
     "url": "index.html",
-    "revision": "d5d9808ad146ac137133985776617285"
+    "revision": "a38db5f4d94386ba7d6a433b15df1d07"
   }, {
     "url": "vite.svg",
     "revision": "8e3a10e157f75ada21ab742c022d5430"
