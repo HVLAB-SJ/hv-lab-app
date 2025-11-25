@@ -433,35 +433,44 @@ const ExecutionHistory = () => {
     }
 
     const files = Array.from(e.target?.files || []);
-    const newImages: string[] = [];
     const imageFiles = files.filter(f => f.type.startsWith('image/'));
 
     if (imageFiles.length === 0) return;
 
-    imageFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        newImages.push(base64);
-
-        if (newImages.length === imageFiles.length) {
-          // 실제 레코드에 이미지 추가
-          const record = executionRecords.find(r => r.id === selectedRecord);
-          if (record) {
-            const updatedImages = [...(record.images || []), ...newImages];
-            updateExecutionRecord(selectedRecord, { images: updatedImages });
-          } else {
-            // 결제요청 레코드인 경우 별도 저장소에 저장
-            setPaymentRecordImages(prev => ({
-              ...prev,
-              [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
-            }));
-          }
-          toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
-        }
-      };
-      reader.readAsDataURL(file);
+    // 모든 이미지를 Promise로 처리 (모바일 호환성 개선)
+    Promise.all(
+      imageFiles.map(file => {
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const base64 = event.target?.result as string;
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      })
+    ).then(newImages => {
+      // 실제 레코드에 이미지 추가
+      const record = executionRecords.find(r => r.id === selectedRecord);
+      if (record) {
+        const updatedImages = [...(record.images || []), ...newImages];
+        updateExecutionRecord(selectedRecord, { images: updatedImages });
+      } else {
+        // 결제요청 레코드인 경우 별도 저장소에 저장
+        setPaymentRecordImages(prev => ({
+          ...prev,
+          [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
+        }));
+      }
+      toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+    }).catch(error => {
+      console.error('이미지 처리 중 오류:', error);
+      toast.error('이미지 추가 중 오류가 발생했습니다');
     });
+
+    // input 초기화 (같은 파일 재선택 가능하도록)
+    e.target.value = '';
   };
 
   // 이미지 삭제
