@@ -9,10 +9,57 @@ const generateId = () => {
   return crypto.randomBytes(16).toString('hex');
 };
 
+// 테이블 존재 여부 확인 및 생성 (한 번만 실행)
+let tableChecked = false;
+const ensureTableExists = () => {
+  return new Promise((resolve, reject) => {
+    if (tableChecked) {
+      resolve();
+      return;
+    }
+
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS drawings (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        image_url TEXT,
+        markers TEXT DEFAULT '[]',
+        rooms TEXT DEFAULT '[]',
+        naver_type_sqm TEXT,
+        naver_type_pyeong TEXT,
+        naver_area TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(project_id, type)
+      )
+    `;
+
+    db.run(createTableQuery, (err) => {
+      if (err) {
+        console.error('Failed to create drawings table:', err);
+        reject(err);
+        return;
+      }
+      console.log('✅ drawings table ensured');
+      tableChecked = true;
+      resolve();
+    });
+  });
+};
+
 // 도면 조회 (projectId, type으로 조회)
-router.get('/:projectId/:type', authenticateToken, (req, res) => {
+router.get('/:projectId/:type', authenticateToken, async (req, res) => {
   const { projectId, type } = req.params;
   const decodedType = decodeURIComponent(type);
+
+  // 테이블 존재 확인
+  try {
+    await ensureTableExists();
+  } catch (err) {
+    console.error('Failed to ensure drawings table:', err);
+    return res.status(500).json({ error: '테이블 생성 실패' });
+  }
 
   const query = `
     SELECT * FROM drawings
@@ -83,11 +130,19 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
 });
 
 // 도면 생성 또는 업데이트 (upsert)
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   const { projectId, type, imageUrl, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea } = req.body;
 
   if (!projectId || !type) {
     return res.status(400).json({ error: 'projectId와 type은 필수입니다' });
+  }
+
+  // 테이블 존재 확인
+  try {
+    await ensureTableExists();
+  } catch (err) {
+    console.error('Failed to ensure drawings table:', err);
+    return res.status(500).json({ error: '테이블 생성 실패' });
   }
 
   const now = new Date().toISOString();
