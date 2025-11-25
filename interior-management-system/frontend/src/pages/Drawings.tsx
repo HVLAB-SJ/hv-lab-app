@@ -125,6 +125,52 @@ const Drawings = () => {
   const hasMigratedRef = useRef(false); // 마이그레이션 완료 플래그
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // 저장 디바운스용
 
+  // 이미지 압축 함수 (현장일지와 동일한 방식)
+  const compressImage = (file: File, maxWidth: number = 1920, maxHeight: number = 1080, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // 비율 유지하면서 크기 조정
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width *= ratio;
+            height *= ratio;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Canvas context not available'));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error('Failed to compress image'));
+              return;
+            }
+            const blobReader = new FileReader();
+            blobReader.onload = () => resolve(blobReader.result as string);
+            blobReader.readAsDataURL(blob);
+          }, file.type, quality);
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
   // 로컬 저장소(localStorage/IndexedDB)에서 서버로 데이터 마이그레이션 (최초 1회만)
   useEffect(() => {
     if (user?.id && !hasMigratedRef.current) {
@@ -273,34 +319,35 @@ const Drawings = () => {
     };
   }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea]);
 
-  // 이미지 파일 처리 함수 (공통)
-  const processImageFile = (file: File) => {
+  // 이미지 파일 처리 함수 (공통) - 현장일지와 동일한 압축 방식 적용
+  const processImageFile = async (file: File) => {
     // 이미지 파일 체크
     if (!file.type.startsWith('image/')) {
       alert('이미지 파일만 업로드할 수 있습니다.');
       return;
     }
 
-    // 파일 크기 체크 (20MB 제한 - IndexedDB는 용량이 충분함)
+    // 파일 크기 체크 (20MB 제한)
     if (file.size > 20 * 1024 * 1024) {
       alert('파일 크기가 너무 큽니다. 20MB 이하의 이미지를 선택해주세요.');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
+    try {
+      // 이미지 압축 (현장일지와 동일: 1920x1080, quality 0.8)
+      const compressedImage = await compressImage(file, 1920, 1080, 0.8);
 
       // Base64 크기 체크
-      const sizeInBytes = (dataUrl.length * 3) / 4;
+      const sizeInBytes = (compressedImage.length * 3) / 4;
       const sizeInMB = sizeInBytes / (1024 * 1024);
 
-      console.log(`이미지 크기: ${sizeInMB.toFixed(2)}MB (원본 화질 유지)`);
+      console.log(`이미지 크기: ${sizeInMB.toFixed(2)}MB (압축됨)`);
 
-      // 원본 이미지를 그대로 저장 (압축 없음)
-      setUploadedImage(dataUrl);
-    };
-    reader.readAsDataURL(file);
+      setUploadedImage(compressedImage);
+    } catch (error) {
+      console.error('이미지 압축 실패:', error);
+      alert('이미지 처리에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   // 이미지 업로드 (파일 선택)
