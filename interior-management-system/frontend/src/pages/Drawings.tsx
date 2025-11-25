@@ -239,8 +239,8 @@ const Drawings = () => {
         clearTimeout(saveTimeoutRef.current);
       }
 
-      // 1초 디바운스로 서버 요청 최적화
-      saveTimeoutRef.current = setTimeout(() => {
+      // 500ms 디바운스로 서버 요청 최적화
+      saveTimeoutRef.current = setTimeout(async () => {
         const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
         const data: DrawingData = {
           type: selectedDrawingType,
@@ -254,12 +254,15 @@ const Drawings = () => {
           naverArea
         };
 
-        // 서버에 저장 (비동기)
-        drawingStorage.setItem(key, data, user.id).catch(error => {
+        try {
+          // 서버에 저장 (비동기)
+          await drawingStorage.setItem(key, data, user.id);
+          console.log('✅ 도면 저장 완료');
+        } catch (error) {
           console.error('Failed to save drawing data:', error);
-          // 저장 실패 시 조용히 로그만 남김 (서버 오류는 일시적일 수 있음)
-        });
-      }, 1000);
+          alert('도면 저장에 실패했습니다. 서버 연결을 확인해주세요.');
+        }
+      }, 500);
     }
 
     // 컴포넌트 언마운트 시 타이머 정리
