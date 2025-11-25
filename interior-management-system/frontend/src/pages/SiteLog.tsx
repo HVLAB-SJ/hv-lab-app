@@ -60,6 +60,9 @@ const SiteLog = () => {
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
 
+  // 저장되지 않은 변경사항 여부
+  const hasUnsavedChanges = saveStatus === 'unsaved';
+
   // 프로젝트 초기값 설정 (사용자별 마지막 선택 복원)
   useEffect(() => {
     if (projects.length > 0 && !selectedProject) {
