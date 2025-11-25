@@ -96,6 +96,7 @@ const paymentService = {
   updatePayment: async (id: string, data: Partial<PaymentData>): Promise<PaymentResponse> => {
     // Convert to backend format (camelCase -> snake_case)
     const backendData: Record<string, unknown> = {};
+    if ((data as any).projectId !== undefined) backendData.project = (data as any).projectId;
     if (data.purpose !== undefined) backendData.description = data.purpose;
     if (data.amount !== undefined) backendData.amount = data.amount;
     if (data.process !== undefined) backendData.vendor_name = data.process;

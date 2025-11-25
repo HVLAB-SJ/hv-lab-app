@@ -413,8 +413,16 @@ export const useDataStore = create<DataStore>()(
       if (updatedPayment.status && Object.keys(updatedPayment).length === 1) {
         await paymentService.updatePaymentStatus(id, updatedPayment.status);
       } else {
+        // Convert project name to project ID
+        let projectId = updatedPayment.project;
+        if (updatedPayment.project) {
+          const state = get();
+          const project = state.projects.find(p => p.name === updatedPayment.project);
+          projectId = project ? project.id : updatedPayment.project;
+        }
+
         await paymentService.updatePayment(id, {
-          projectId: updatedPayment.project,
+          projectId: projectId,
           purpose: updatedPayment.purpose,
           process: updatedPayment.process,
           itemName: updatedPayment.itemName,
