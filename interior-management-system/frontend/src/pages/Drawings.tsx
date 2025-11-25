@@ -123,14 +123,15 @@ const Drawings = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isLoadingRef = useRef(false); // 데이터 로딩 중 플래그
   const hasMigratedRef = useRef(false); // 마이그레이션 완료 플래그
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // 저장 디바운스용
 
-  // localStorage에서 IndexedDB로 데이터 마이그레이션 (최초 1회만)
+  // 로컬 저장소(localStorage/IndexedDB)에서 서버로 데이터 마이그레이션 (최초 1회만)
   useEffect(() => {
     if (user?.id && !hasMigratedRef.current) {
       hasMigratedRef.current = true;
       drawingStorage.migrateFromLocalStorage(user.id).then(count => {
         if (count > 0) {
-          console.log(`✅ ${count}개의 도면을 IndexedDB로 마이그레이션했습니다.`);
+          console.log(`✅ ${count}개의 도면을 서버로 마이그레이션했습니다.`);
         }
       }).catch(error => {
         console.error('마이그레이션 실패:', error);
@@ -225,7 +226,7 @@ const Drawings = () => {
     }
   }, [user?.id, selectedProject, selectedDrawingType]);
 
-  // Save drawing data when image, markers, or rooms change
+  // Save drawing data when image, markers, or rooms change (with debounce)
   useEffect(() => {
     // 로딩 중이면 저장하지 않음 (무한 루프 방지)
     if (isLoadingRef.current) {
@@ -233,25 +234,40 @@ const Drawings = () => {
     }
 
     if (user?.id && selectedProject && selectedDrawingType && uploadedImage) {
-      const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
-      const data: DrawingData = {
-        type: selectedDrawingType,
-        projectId: selectedProject,
-        imageUrl: uploadedImage,
-        markers,
-        rooms,
-        lastModified: new Date(),
-        naverTypeSqm,
-        naverTypePyeong,
-        naverArea
-      };
+      // 이전 타이머 취소
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
 
-      // IndexedDB에 저장 (비동기)
-      drawingStorage.setItem(key, data, user.id).catch(error => {
-        console.error('Failed to save drawing data:', error);
-        alert('도면 저장 중 오류가 발생했습니다.');
-      });
+      // 1초 디바운스로 서버 요청 최적화
+      saveTimeoutRef.current = setTimeout(() => {
+        const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
+        const data: DrawingData = {
+          type: selectedDrawingType,
+          projectId: selectedProject,
+          imageUrl: uploadedImage,
+          markers,
+          rooms,
+          lastModified: new Date(),
+          naverTypeSqm,
+          naverTypePyeong,
+          naverArea
+        };
+
+        // 서버에 저장 (비동기)
+        drawingStorage.setItem(key, data, user.id).catch(error => {
+          console.error('Failed to save drawing data:', error);
+          // 저장 실패 시 조용히 로그만 남김 (서버 오류는 일시적일 수 있음)
+        });
+      }, 1000);
     }
+
+    // 컴포넌트 언마운트 시 타이머 정리
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea]);
 
   // 이미지 파일 처리 함수 (공통)
@@ -419,7 +435,7 @@ const Drawings = () => {
       setViewMode('full');
       setSelectedRoomId(null);
 
-      // IndexedDB에서도 삭제
+      // 서버에서도 삭제
       if (user?.id && selectedProject && selectedDrawingType) {
         const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
         drawingStorage.removeItem(key).catch(error => {
@@ -429,26 +445,9 @@ const Drawings = () => {
     }
   };
 
-  // 모든 도면 데이터 삭제
+  // 모든 도면 데이터 삭제 (서버 기반에서는 지원하지 않음)
   const handleClearAllDrawings = () => {
-    if (confirm('⚠️ 경고: 모든 프로젝트의 모든 도면 데이터를 삭제합니다.\n\n계속하시겠습니까?')) {
-      if (confirm('정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-        // IndexedDB의 모든 도면 데이터 삭제
-        drawingStorage.clearAll().then(count => {
-          // 현재 상태 초기화
-          setUploadedImage('');
-          setMarkers([]);
-          setRooms([]);
-          setViewMode('full');
-          setSelectedRoomId(null);
-
-          alert(`✅ ${count}개의 도면 데이터가 삭제되었습니다.`);
-        }).catch(error => {
-          console.error('Failed to clear drawings:', error);
-          alert('데이터 삭제 중 오류가 발생했습니다.');
-        });
-      }
-    }
+    alert('서버에 저장된 도면 데이터는 개별적으로 삭제해주세요.\n각 도면의 삭제 버튼을 사용하세요.');
   };
 
   // 캔버스 클릭/드래그 처리
