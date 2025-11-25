@@ -258,9 +258,11 @@ const Drawings = () => {
           // 서버에 저장 (비동기)
           await drawingStorage.setItem(key, data, user.id);
           console.log('✅ 도면 저장 완료');
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to save drawing data:', error);
-          alert('도면 저장에 실패했습니다. 서버 연결을 확인해주세요.');
+          const errorMsg = error.response?.data?.error || error.message || '알 수 없는 오류';
+          const statusCode = error.response?.status || '';
+          alert(`도면 저장 실패: ${statusCode ? `[${statusCode}] ` : ''}${errorMsg}`);
         }
       }, 500);
     }
@@ -273,8 +275,8 @@ const Drawings = () => {
     };
   }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea]);
 
-  // 이미지 압축 함수
-  const compressImage = (file: File, maxWidth: number = 1920, quality: number = 0.8): Promise<string> => {
+  // 이미지 압축 함수 (서버 저장을 위해 더 강하게 압축)
+  const compressImage = (file: File, maxWidth: number = 1600, quality: number = 0.6): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
