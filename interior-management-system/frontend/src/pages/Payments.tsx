@@ -104,6 +104,7 @@ const Payments = () => {
   const [detailPayment, setDetailPayment] = useState<PaymentRequest | null>(null);
   const [showCashReceiptModal, setShowCashReceiptModal] = useState(false);
   const [cashReceiptProject, setCashReceiptProject] = useState<string>('');
+  const [showCompletedSummaryModal, setShowCompletedSummaryModal] = useState(false);
 
   // 협력업체 관련 상태
   const [contractors, setContractors] = useState<Contractor[]>([]);
@@ -1594,12 +1595,40 @@ const Payments = () => {
     }
   };
 
+  // 프로젝트별 송금완료 내역 집계
+  const getCompletedPaymentsByProject = () => {
+    const completed = payments.filter(p => p.status === 'completed');
+    const projectSummary: Record<string, {
+      payments: PaymentRequest[],
+      totalAmount: number,
+      count: number
+    }> = {};
+
+    completed.forEach(payment => {
+      const project = payment.project || '프로젝트 미지정';
+      if (!projectSummary[project]) {
+        projectSummary[project] = {
+          payments: [],
+          totalAmount: 0,
+          count: 0
+        };
+      }
+      projectSummary[project].payments.push(payment);
+      projectSummary[project].totalAmount += payment.amount || 0;
+      projectSummary[project].count += 1;
+    });
+
+    return Object.entries(projectSummary).sort((a, b) => b[1].totalAmount - a[1].totalAmount);
+  };
+
   // 송금완료 처리
   const handleMarkAsCompleted = async (paymentId: string) => {
     try {
       await updatePaymentInAPI(paymentId, { status: 'completed' });
       toast.success('송금완료 처리되었습니다');
       setShowDetailModal(false);
+      // 프로젝트별 송금완료 내역 모달 표시
+      setShowCompletedSummaryModal(true);
     } catch (error) {
       toast.error('송금완료 처리 실패');
     }
@@ -2173,6 +2202,18 @@ const Payments = () => {
                   </span>
                 </button>
               </nav>
+              {/* 프로젝트별 내역 보기 버튼 */}
+              {statusFilter === 'completed' && (
+                <button
+                  onClick={() => setShowCompletedSummaryModal(true)}
+                  className="ml-3 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  프로젝트별 내역
+                </button>
+              )}
             </div>
           </div>
           <div className="border-b border-gray-200"></div>
@@ -2714,6 +2755,105 @@ const Payments = () => {
           projectName={cashReceiptProject}
           onClose={() => setShowCashReceiptModal(false)}
         />
+      )}
+
+      {/* 프로젝트별 송금완료 내역 모달 */}
+      {showCompletedSummaryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg w-full max-w-5xl max-h-[90vh] overflow-hidden m-4">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-900">프로젝트별 송금완료 내역</h2>
+              <button
+                onClick={() => setShowCompletedSummaryModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              {getCompletedPaymentsByProject().length > 0 ? (
+                <div className="space-y-6">
+                  {getCompletedPaymentsByProject().map(([projectName, data]) => (
+                    <div key={projectName} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">{projectName}</h3>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">총 {data.count}건</p>
+                          <p className="text-lg font-bold text-gray-900">
+                            ₩{data.totalAmount.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        {data.payments.slice(0, 5).map((payment) => (
+                          <div key={payment.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">
+                                {payment.itemName || payment.purpose || '항목명 없음'}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {format(new Date(payment.requestDate), 'yyyy.MM.dd', { locale: ko })}
+                                {payment.process && ` • ${payment.process}`}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-semibold text-gray-900">
+                                ₩{(payment.amount || 0).toLocaleString()}
+                              </p>
+                              {payment.bankInfo?.accountHolder && (
+                                <p className="text-xs text-gray-500">
+                                  {payment.bankInfo.accountHolder}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {data.payments.length > 5 && (
+                          <p className="text-sm text-gray-500 text-center py-2">
+                            ... 외 {data.payments.length - 5}건
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* 전체 합계 */}
+                  <div className="border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-gray-900">전체 합계</h3>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">
+                          총 {payments.filter(p => p.status === 'completed').length}건
+                        </p>
+                        <p className="text-xl font-bold text-blue-600">
+                          ₩{payments
+                            .filter(p => p.status === 'completed')
+                            .reduce((sum, p) => sum + (p.amount || 0), 0)
+                            .toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">송금완료된 내역이 없습니다.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t bg-gray-50">
+              <button
+                onClick={() => setShowCompletedSummaryModal(false)}
+                className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
