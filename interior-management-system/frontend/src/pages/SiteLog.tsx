@@ -370,7 +370,7 @@ const SiteLog = () => {
         toast.success('작업 내용이 저장되었습니다');
       }
 
-      setHasUnsavedChanges(false);
+      setSaveStatus('saved');
 
       // 목록 새로고침
       await loadSiteLogs();
@@ -742,29 +742,74 @@ const SiteLog = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     작업 내용
                   </label>
-                  <button
-                    onClick={handleSaveNotes}
-                    disabled={!hasUnsavedChanges || isSavingNotes}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      hasUnsavedChanges && !isSavingNotes
-                        ? 'bg-gray-700 text-white hover:bg-gray-800'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
-                    title={hasUnsavedChanges ? '저장하기' : '저장됨'}
-                  >
-                    <Check className="w-4 h-4" />
-                    <span>{isSavingNotes ? '저장 중...' : hasUnsavedChanges ? '저장' : '저장됨'}</span>
-                  </button>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    saveStatus === 'saving' ? 'text-blue-600 bg-blue-50' :
+                    saveStatus === 'unsaved' ? 'text-orange-600 bg-orange-50' :
+                    'text-green-600 bg-green-50'
+                  }`}>
+                    {saveStatus === 'saving' ? '저장 중...' :
+                     saveStatus === 'unsaved' ? '저장 대기...' :
+                     '자동 저장됨'}
+                  </span>
                 </div>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => {
-                    setFormData(prev => ({ ...prev, notes: e.target.value }));
-                    setHasUnsavedChanges(true);
+                    const newNotes = e.target.value;
+                    setFormData(prev => ({ ...prev, notes: newNotes }));
+                    setSaveStatus('unsaved');
+
+                    // 기존 타이머 취소
+                    if (autoSaveTimerRef.current) {
+                      clearTimeout(autoSaveTimerRef.current);
+                    }
+
+                    // 1초 후 자동 저장
+                    autoSaveTimerRef.current = setTimeout(async () => {
+                      if (!selectedProject) return;
+
+                      setSaveStatus('saving');
+                      try {
+                        const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+                        const existingLog = logs.find(log => {
+                          try {
+                            const logDate = log.date ? new Date(log.date) : null;
+                            return logDate && !isNaN(logDate.getTime()) &&
+                                   format(logDate, 'yyyy-MM-dd') === selectedDateStr &&
+                                   log.project === selectedProject;
+                          } catch {
+                            return false;
+                          }
+                        });
+
+                        if (existingLog) {
+                          await siteLogService.updateLog(existingLog.id, {
+                            project: existingLog.project,
+                            date: existingLog.date,
+                            images: existingLog.images,
+                            notes: newNotes
+                          });
+                        } else if (newNotes.trim()) {
+                          await siteLogService.createLog({
+                            project: selectedProject,
+                            date: selectedDate,
+                            images: formData.images,
+                            notes: newNotes,
+                            createdBy: user?.name || ''
+                          });
+                        }
+
+                        setSaveStatus('saved');
+                        await loadSiteLogs();
+                      } catch (error) {
+                        console.error('자동 저장 실패:', error);
+                        setSaveStatus('unsaved');
+                      }
+                    }, 1000);
                   }}
                   rows={10}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none"
-                  placeholder="오늘 진행한 작업 내용을 입력하세요"
+                  placeholder="오늘 진행한 작업 내용을 입력하세요 (자동 저장)"
                 />
               </div>
             </div>
