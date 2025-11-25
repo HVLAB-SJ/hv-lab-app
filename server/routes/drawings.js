@@ -1,0 +1,192 @@
+const express = require('express');
+const router = express.Router();
+const { db } = require('../config/database');
+const { authenticateToken } = require('../middleware/auth');
+const crypto = require('crypto');
+
+// UUID 대체 함수
+const generateId = () => {
+  return crypto.randomBytes(16).toString('hex');
+};
+
+// 도면 조회 (projectId, type으로 조회)
+router.get('/:projectId/:type', authenticateToken, (req, res) => {
+  const { projectId, type } = req.params;
+  const decodedType = decodeURIComponent(type);
+
+  const query = `
+    SELECT * FROM drawings
+    WHERE project_id = ? AND type = ?
+  `;
+
+  db.get(query, [projectId, decodedType], (err, drawing) => {
+    if (err) {
+      console.error('Failed to get drawing:', err);
+      return res.status(500).json({ error: '도면 조회 실패' });
+    }
+
+    if (!drawing) {
+      return res.status(404).json({ error: '도면을 찾을 수 없습니다' });
+    }
+
+    // Parse JSON strings
+    const parsedDrawing = {
+      id: drawing.id,
+      projectId: drawing.project_id,
+      type: drawing.type,
+      imageUrl: drawing.image_url,
+      markers: JSON.parse(drawing.markers || '[]'),
+      rooms: JSON.parse(drawing.rooms || '[]'),
+      naverTypeSqm: drawing.naver_type_sqm,
+      naverTypePyeong: drawing.naver_type_pyeong,
+      naverArea: drawing.naver_area,
+      createdAt: drawing.created_at,
+      updatedAt: drawing.updated_at
+    };
+
+    res.json(parsedDrawing);
+  });
+});
+
+// 프로젝트별 모든 도면 조회
+router.get('/project/:projectId', authenticateToken, (req, res) => {
+  const { projectId } = req.params;
+
+  const query = `
+    SELECT * FROM drawings
+    WHERE project_id = ?
+    ORDER BY type ASC
+  `;
+
+  db.all(query, [projectId], (err, drawings) => {
+    if (err) {
+      console.error('Failed to get project drawings:', err);
+      return res.status(500).json({ error: '도면 목록 조회 실패' });
+    }
+
+    const parsedDrawings = drawings.map(drawing => ({
+      id: drawing.id,
+      projectId: drawing.project_id,
+      type: drawing.type,
+      imageUrl: drawing.image_url,
+      markers: JSON.parse(drawing.markers || '[]'),
+      rooms: JSON.parse(drawing.rooms || '[]'),
+      naverTypeSqm: drawing.naver_type_sqm,
+      naverTypePyeong: drawing.naver_type_pyeong,
+      naverArea: drawing.naver_area,
+      createdAt: drawing.created_at,
+      updatedAt: drawing.updated_at
+    }));
+
+    res.json(parsedDrawings);
+  });
+});
+
+// 도면 생성 또는 업데이트 (upsert)
+router.post('/', authenticateToken, (req, res) => {
+  const { projectId, type, imageUrl, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea } = req.body;
+
+  if (!projectId || !type) {
+    return res.status(400).json({ error: 'projectId와 type은 필수입니다' });
+  }
+
+  const now = new Date().toISOString();
+
+  // 기존 도면이 있는지 확인
+  const checkQuery = `SELECT id FROM drawings WHERE project_id = ? AND type = ?`;
+
+  db.get(checkQuery, [projectId, type], (err, existing) => {
+    if (err) {
+      console.error('Failed to check existing drawing:', err);
+      return res.status(500).json({ error: '도면 확인 실패' });
+    }
+
+    if (existing) {
+      // 업데이트
+      const updateQuery = `
+        UPDATE drawings
+        SET image_url = ?, markers = ?, rooms = ?, naver_type_sqm = ?, naver_type_pyeong = ?, naver_area = ?, updated_at = ?
+        WHERE id = ?
+      `;
+
+      db.run(
+        updateQuery,
+        [imageUrl, JSON.stringify(markers || []), JSON.stringify(rooms || []), naverTypeSqm, naverTypePyeong, naverArea, now, existing.id],
+        function(err) {
+          if (err) {
+            console.error('Failed to update drawing:', err);
+            return res.status(500).json({ error: '도면 업데이트 실패' });
+          }
+
+          res.json({
+            id: existing.id,
+            projectId,
+            type,
+            imageUrl,
+            markers: markers || [],
+            rooms: rooms || [],
+            naverTypeSqm,
+            naverTypePyeong,
+            naverArea,
+            updatedAt: now
+          });
+        }
+      );
+    } else {
+      // 신규 생성
+      const id = generateId();
+      const insertQuery = `
+        INSERT INTO drawings (id, project_id, type, image_url, markers, rooms, naver_type_sqm, naver_type_pyeong, naver_area, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      db.run(
+        insertQuery,
+        [id, projectId, type, imageUrl, JSON.stringify(markers || []), JSON.stringify(rooms || []), naverTypeSqm, naverTypePyeong, naverArea, now, now],
+        function(err) {
+          if (err) {
+            console.error('Failed to create drawing:', err);
+            return res.status(500).json({ error: '도면 생성 실패' });
+          }
+
+          res.status(201).json({
+            id,
+            projectId,
+            type,
+            imageUrl,
+            markers: markers || [],
+            rooms: rooms || [],
+            naverTypeSqm,
+            naverTypePyeong,
+            naverArea,
+            createdAt: now,
+            updatedAt: now
+          });
+        }
+      );
+    }
+  });
+});
+
+// 도면 삭제
+router.delete('/:projectId/:type', authenticateToken, (req, res) => {
+  const { projectId, type } = req.params;
+  const decodedType = decodeURIComponent(type);
+
+  const query = `DELETE FROM drawings WHERE project_id = ? AND type = ?`;
+
+  db.run(query, [projectId, decodedType], function(err) {
+    if (err) {
+      console.error('Failed to delete drawing:', err);
+      return res.status(500).json({ error: '도면 삭제 실패' });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ error: '도면을 찾을 수 없습니다' });
+    }
+
+    res.json({ message: '도면이 삭제되었습니다' });
+  });
+});
+
+module.exports = router;
