@@ -115,8 +115,12 @@ const Drawings = () => {
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  // 파일 드래그 상태
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isLoadingRef = useRef(false); // 데이터 로딩 중 플래그
   const hasMigratedRef = useRef(false); // 마이그레이션 완료 플래그
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // 저장 디바운스용
@@ -268,6 +272,117 @@ const Drawings = () => {
       }
     };
   }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea]);
+
+  // 이미지 압축 함수
+  const compressImage = (file: File, maxWidth: number = 1920, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // 최대 너비 제한
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Canvas context not available'));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => reject(new Error('Image load failed'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('File read failed'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // 이미지 파일 처리 함수
+  const processImageFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    try {
+      const compressedImage = await compressImage(file);
+      setUploadedImage(compressedImage);
+    } catch (error) {
+      console.error('이미지 처리 실패:', error);
+      alert('이미지 처리에 실패했습니다.');
+    }
+  };
+
+  // 파일 선택 핸들러
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+    // Reset input value to allow re-uploading same file
+    e.target.value = '';
+  };
+
+  // 클립보드 붙여넣기 핸들러
+  const handlePaste = (e: ClipboardEvent) => {
+    if (!selectedProject) return;
+
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (file) {
+          processImageFile(file);
+          break;
+        }
+      }
+    }
+  };
+
+  // 드래그 앤 드롭 핸들러
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingFile(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingFile(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingFile(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  // 클립보드 이벤트 리스너
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [selectedProject]);
 
   // 이미지 확대/축소 핸들러 (마우스 위치 기준)
   const handleImageWheel = (e: React.WheelEvent) => {
@@ -1026,9 +1141,36 @@ const Drawings = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full bg-white rounded-lg shadow-lg text-gray-500">
-                    <FileImage className="w-20 h-20 mb-4 text-gray-400" />
-                    <p className="text-base font-semibold text-gray-600">도면이 없습니다</p>
+                  <div
+                    className={`flex flex-col items-center justify-center h-full bg-white rounded-lg shadow-lg text-gray-500 transition-all ${
+                      isDraggingFile ? 'border-4 border-dashed border-blue-500 bg-blue-50' : ''
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <FileImage className={`w-20 h-20 mb-4 transition-colors ${
+                      isDraggingFile ? 'text-blue-500' : 'text-gray-400'
+                    }`} />
+                    <p className="text-base mb-2 font-semibold">
+                      {isDraggingFile ? '이미지를 여기에 놓으세요' : '도면 이미지를 업로드하세요'}
+                    </p>
+                    <p className="text-sm mb-4 text-gray-400">
+                      파일 선택, 드래그 앤 드롭, 또는 Ctrl+V로 붙여넣기
+                    </p>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-6 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                    >
+                      파일 선택
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
                   </div>
                 )}
               </div>
