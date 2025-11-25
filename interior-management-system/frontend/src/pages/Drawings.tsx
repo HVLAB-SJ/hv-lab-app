@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
-import { FileImage, Trash2, Square, ZoomIn, ArrowLeft, Edit2, X } from 'lucide-react';
+import { FileImage, Trash2, Square, ArrowLeft, X } from 'lucide-react';
 import { drawingStorage } from '../utils/drawingStorage';
 
 // 도면 종류
@@ -108,9 +108,6 @@ const Drawings = () => {
   const [newRoomName, setNewRoomName] = useState('');
   const [pendingRoom, setPendingRoom] = useState<Omit<Room, 'id' | 'name'> | null>(null);
 
-  // 드래그 앤 드롭 상태
-  const [isDraggingFile, setIsDraggingFile] = useState(false);
-
   // 이미지 팝업 상태
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageScale, setImageScale] = useState(1);
@@ -120,56 +117,9 @@ const Drawings = () => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const isLoadingRef = useRef(false); // 데이터 로딩 중 플래그
   const hasMigratedRef = useRef(false); // 마이그레이션 완료 플래그
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // 저장 디바운스용
-
-  // 이미지 압축 함수 (현장일지와 동일한 방식)
-  const compressImage = (file: File, maxWidth: number = 1920, maxHeight: number = 1080, quality: number = 0.8): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-
-          // 비율 유지하면서 크기 조정
-          if (width > maxWidth || height > maxHeight) {
-            const ratio = Math.min(maxWidth / width, maxHeight / height);
-            width *= ratio;
-            height *= ratio;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            reject(new Error('Canvas context not available'));
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-          canvas.toBlob((blob) => {
-            if (!blob) {
-              reject(new Error('Failed to compress image'));
-              return;
-            }
-            const blobReader = new FileReader();
-            blobReader.onload = () => resolve(blobReader.result as string);
-            blobReader.readAsDataURL(blob);
-          }, file.type, quality);
-        };
-        img.onerror = () => reject(new Error('Failed to load image'));
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
-  };
 
   // 로컬 저장소(localStorage/IndexedDB)에서 서버로 데이터 마이그레이션 (최초 1회만)
   useEffect(() => {
@@ -319,48 +269,6 @@ const Drawings = () => {
     };
   }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea]);
 
-  // 이미지 파일 처리 함수 (공통) - 현장일지와 동일한 압축 방식 적용
-  const processImageFile = async (file: File) => {
-    // 이미지 파일 체크
-    if (!file.type.startsWith('image/')) {
-      alert('이미지 파일만 업로드할 수 있습니다.');
-      return;
-    }
-
-    // 파일 크기 체크 (20MB 제한)
-    if (file.size > 20 * 1024 * 1024) {
-      alert('파일 크기가 너무 큽니다. 20MB 이하의 이미지를 선택해주세요.');
-      return;
-    }
-
-    try {
-      // 이미지 압축 (현장일지와 동일: 1920x1080, quality 0.8)
-      const compressedImage = await compressImage(file, 1920, 1080, 0.8);
-
-      // Base64 크기 체크
-      const sizeInBytes = (compressedImage.length * 3) / 4;
-      const sizeInMB = sizeInBytes / (1024 * 1024);
-
-      console.log(`이미지 크기: ${sizeInMB.toFixed(2)}MB (압축됨)`);
-
-      setUploadedImage(compressedImage);
-    } catch (error) {
-      console.error('이미지 압축 실패:', error);
-      alert('이미지 처리에 실패했습니다. 다시 시도해주세요.');
-    }
-  };
-
-  // 이미지 업로드 (파일 선택)
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      processImageFile(file);
-    }
-
-    // 파일 입력 초기화 (같은 파일 재선택 가능하도록)
-    e.target.value = '';
-  };
-
   // 이미지 확대/축소 핸들러 (마우스 위치 기준)
   const handleImageWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -415,89 +323,6 @@ const Drawings = () => {
     setImageScale(1);
     setImagePosition({ x: 0, y: 0 });
     setIsDraggingImage(false);
-  };
-
-  // 클립보드에서 이미지 붙여넣기
-  const handlePaste = (e: ClipboardEvent) => {
-    if (!selectedProject) return;
-
-    const items = e.clipboardData?.items;
-    if (!items) return;
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        if (file) {
-          e.preventDefault();
-          processImageFile(file);
-          break;
-        }
-      }
-    }
-  };
-
-  // 드래그 앤 드롭 핸들러
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (selectedProject && !isDraggingFile) {
-      setIsDraggingFile(true);
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // 실제로 영역을 벗어났는지 확인
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDraggingFile(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingFile(false);
-
-    if (!selectedProject) return;
-
-    const files = e.dataTransfer?.files;
-    if (files && files.length > 0) {
-      processImageFile(files[0]);
-    }
-  };
-
-  // 붙여넣기 이벤트 리스너 등록
-  useEffect(() => {
-    window.addEventListener('paste', handlePaste);
-    return () => {
-      window.removeEventListener('paste', handlePaste);
-    };
-  }, [selectedProject]);
-
-  // 이미지 삭제
-  const handleDeleteImage = () => {
-    if (confirm('이미지를 삭제하시겠습니까? 마커와 영역 데이터도 함께 삭제됩니다.')) {
-      setUploadedImage('');
-      setMarkers([]);
-      setRooms([]);
-      setViewMode('full');
-      setSelectedRoomId(null);
-
-      // 서버에서도 삭제
-      if (user?.id && selectedProject && selectedDrawingType) {
-        const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
-        drawingStorage.removeItem(key).catch(error => {
-          console.error('Failed to delete drawing:', error);
-        });
-      }
-    }
-  };
-
-  // 모든 도면 데이터 삭제 (서버 기반에서는 지원하지 않음)
-  const handleClearAllDrawings = () => {
-    alert('서버에 저장된 도면 데이터는 개별적으로 삭제해주세요.\n각 도면의 삭제 버튼을 사용하세요.');
   };
 
   // 캔버스 클릭/드래그 처리
@@ -842,8 +667,8 @@ const Drawings = () => {
           </div>
 
 
-          {/* 이미지 변경/삭제 버튼 (모바일) */}
-          {viewMode === 'room' && selectedRoom ? (
+          {/* 영역 보기 모드일 때 전체 보기 버튼 (모바일) */}
+          {viewMode === 'room' && selectedRoom && (
             <div className="flex items-center justify-between mt-3">
               <button
                 onClick={handleBackToFull}
@@ -854,25 +679,6 @@ const Drawings = () => {
               </button>
               <span className="text-base font-semibold text-gray-900">{selectedRoom.name}</span>
             </div>
-          ) : (
-            uploadedImage && selectedProject && (
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="p-2 rounded border border-gray-300 hover:bg-gray-100 transition-colors"
-                  title="이미지 변경"
-                >
-                  <Edit2 className="w-4 h-4 text-gray-700" />
-                </button>
-                <button
-                  onClick={handleDeleteImage}
-                  className="p-2 rounded border border-red-300 hover:bg-red-50 transition-colors"
-                  title="이미지 삭제"
-                >
-                  <Trash2 className="w-4 h-4 text-red-600" />
-                </button>
-              </div>
-            )
           )}
         </div>
 
@@ -937,7 +743,7 @@ const Drawings = () => {
             )}
           </div>
 
-          {viewMode === 'room' && selectedRoom ? (
+          {viewMode === 'room' && selectedRoom && (
             <div className="flex items-center gap-3">
               <button
                 onClick={handleBackToFull}
@@ -948,34 +754,8 @@ const Drawings = () => {
               </button>
               <span className="text-lg font-semibold text-gray-900">{selectedRoom.name}</span>
             </div>
-          ) : (
-            uploadedImage && selectedProject && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="p-2 rounded border border-gray-300 hover:bg-gray-100 transition-colors"
-                  title="이미지 변경"
-                >
-                  <Edit2 className="w-5 h-5 text-gray-700" />
-                </button>
-                <button
-                  onClick={handleDeleteImage}
-                  className="p-2 rounded border border-red-300 hover:bg-red-50 transition-colors"
-                  title="이미지 삭제"
-                >
-                  <Trash2 className="w-5 h-5 text-red-600" />
-                </button>
-              </div>
-            )
           )}
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          className="hidden"
-        />
       </div>
 
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
@@ -1246,29 +1026,9 @@ const Drawings = () => {
                     </div>
                   </div>
                 ) : (
-                  <div
-                    className={`flex flex-col items-center justify-center h-full bg-white rounded-lg shadow-lg text-gray-500 transition-all ${
-                      isDraggingFile ? 'border-4 border-dashed border-blue-500 bg-blue-50' : ''
-                    }`}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                  >
-                    <FileImage className={`w-20 h-20 mb-4 transition-colors ${
-                      isDraggingFile ? 'text-blue-500' : 'text-gray-400'
-                    }`} />
-                    <p className="text-base mb-2 font-semibold">
-                      {isDraggingFile ? '이미지를 여기에 놓으세요' : '도면 이미지를 업로드하세요'}
-                    </p>
-                    <p className="text-sm mb-4 text-gray-400">
-                      파일 선택, 드래그 앤 드롭, 또는 Ctrl+V로 붙여넣기
-                    </p>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-6 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                    >
-                      파일 선택
-                    </button>
+                  <div className="flex flex-col items-center justify-center h-full bg-white rounded-lg shadow-lg text-gray-500">
+                    <FileImage className="w-20 h-20 mb-4 text-gray-400" />
+                    <p className="text-base font-semibold text-gray-600">도면이 없습니다</p>
                   </div>
                 )}
               </div>
