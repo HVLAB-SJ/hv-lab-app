@@ -395,6 +395,12 @@ const ExecutionHistory = () => {
     }));
     setIncludeVat(false); // 부가세 체크 초기화
     setIncludeTaxDeduction(false); // 세금공제 체크 초기화
+
+    // 모바일에서는 리스트 뷰로 전환하고 새 레코드 선택
+    if (isMobileDevice) {
+      setSelectedRecord(newRecord.id);
+      setMobileView('list');
+    }
   };
 
   // 공정별 합계 계산 (상세)
