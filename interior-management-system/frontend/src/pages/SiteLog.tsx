@@ -58,7 +58,7 @@ const SiteLog = () => {
   const [editingLogId, setEditingLogId] = useState<string | null>(null);
   const logFileInputRef = useRef<HTMLInputElement>(null);
   const [isSavingNotes, setIsSavingNotes] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
 
   // 프로젝트 초기값 설정 (사용자별 마지막 선택 복원)
   useEffect(() => {
@@ -118,7 +118,7 @@ const SiteLog = () => {
     } else {
       setFormData(prev => ({ ...prev, notes: '' }));
     }
-    setHasUnsavedChanges(false);
+    setSaveStatus('saved');
   }, [selectedDate, selectedProject, logs]);
 
   const loadSiteLogs = async () => {

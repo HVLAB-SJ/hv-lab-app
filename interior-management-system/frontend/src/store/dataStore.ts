@@ -222,7 +222,7 @@ interface DataStore {
 
 export const useDataStore = create<DataStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
   projects: [],
 
   schedules: [],
