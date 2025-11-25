@@ -60,8 +60,16 @@ const SiteLog = () => {
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
 
+  // 최신 logs 상태를 참조하기 위한 ref (stale closure 방지)
+  const logsRef = useRef<SiteLog[]>([]);
+
   // 저장되지 않은 변경사항 여부
   const hasUnsavedChanges = saveStatus === 'unsaved';
+
+  // logs가 변경될 때마다 ref 업데이트
+  useEffect(() => {
+    logsRef.current = logs;
+  }, [logs]);
 
   // 프로젝트 초기값 설정 (사용자별 마지막 선택 복원)
   useEffect(() => {
@@ -771,7 +779,8 @@ const SiteLog = () => {
                       setSaveStatus('saving');
                       try {
                         const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-                        const existingLog = logs.find(log => {
+                        // logsRef.current를 사용하여 최신 logs 상태 참조 (stale closure 방지)
+                        const existingLog = logsRef.current.find(log => {
                           try {
                             const logDate = log.date ? new Date(log.date) : null;
                             return logDate && !isNaN(logDate.getTime()) &&
