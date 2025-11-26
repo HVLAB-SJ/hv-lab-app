@@ -52,7 +52,14 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
       requestedBy,
       bankInfo,
       notes,
-      attachments
+      attachments,
+      materialAmount,
+      laborAmount,
+      originalMaterialAmount,
+      originalLaborAmount,
+      applyTaxDeduction,
+      includesVAT,
+      quickText
     } = req.body;
 
     // Validate project exists or create temp one
@@ -85,6 +92,13 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
       process,
       itemName,
       amount,
+      materialAmount: materialAmount || 0,
+      laborAmount: laborAmount || 0,
+      originalMaterialAmount: originalMaterialAmount || 0,
+      originalLaborAmount: originalLaborAmount || 0,
+      applyTaxDeduction: applyTaxDeduction || false,
+      includesVAT: includesVAT || false,
+      quickText: quickText || '',
       category,
       urgency: urgency || 'normal',
       bankInfo,

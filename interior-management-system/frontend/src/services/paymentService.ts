@@ -18,9 +18,11 @@ export interface PaymentData {
   attachments?: File[];
   materialAmount?: number;
   laborAmount?: number;
+  originalMaterialAmount?: number;
   originalLaborAmount?: number;
   applyTaxDeduction?: boolean;
   includesVAT?: boolean;
+  quickText?: string;
 }
 
 export interface PaymentResponse {
@@ -42,9 +44,11 @@ export interface PaymentResponse {
   item_name?: string;
   material_amount?: number;
   labor_amount?: number;
+  original_material_amount?: number;
   original_labor_amount?: number;
   apply_tax_deduction?: number;
   includes_vat?: number;
+  quick_text?: string;  // 자동으로 항목 채우기에 입력했던 원본 텍스트
   notes: string;
   status: 'pending' | 'reviewing' | 'approved' | 'on-hold' | 'rejected' | 'completed';
   created_at: string;
@@ -82,10 +86,11 @@ const paymentService = {
       itemName: data.itemName || '',
       materialAmount: data.materialAmount || 0,
       laborAmount: data.laborAmount || 0,
+      originalMaterialAmount: data.originalMaterialAmount || 0,
       originalLaborAmount: data.originalLaborAmount || 0,
       applyTaxDeduction: data.applyTaxDeduction || false,
       includesVAT: data.includesVAT || false,
-      quickText: (data as any).quickText || ''  // 원본 텍스트 추가
+      quickText: data.quickText || ''  // 원본 텍스트 추가
     };
     console.log('[paymentService.createPayment] Sending to backend:', requestData);
     const response = await api.post('/payments', requestData);
