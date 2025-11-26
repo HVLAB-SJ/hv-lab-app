@@ -527,26 +527,26 @@ const AfterService = () => {
             </div>
 
             {/* Request Date & Scheduled Visit Date */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
                   요청일
                 </label>
                 <input
                   {...register('requestDate')}
                   type="date"
-                  className="input text-sm"
+                  className="w-full px-2 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
                   방문예정일
                 </label>
                 <input
                   {...register('scheduledVisitDate')}
                   type="date"
-                  className="input text-sm"
+                  className="w-full px-2 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 />
               </div>
             </div>
