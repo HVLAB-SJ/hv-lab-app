@@ -164,9 +164,14 @@ const SortableSpecBookItem = ({
       {/* 하단: 텍스트 정보 */}
       <div className="p-2 pt-1.5 flex flex-col flex-1">
         <div className="flex items-start justify-between mb-1">
-          <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
-            {item.category}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
+              {item.category}
+            </span>
+            {item.brand && (
+              <span className="text-xs text-gray-500">{item.brand}</span>
+            )}
+          </div>
           {item.grade && (
             <span className={`hidden md:inline-block px-1 py-0.5 text-[10px] rounded ${getGradeColor(item.grade)}`}>
               {formatGradeRange(item.grade)}
@@ -176,9 +181,6 @@ const SortableSpecBookItem = ({
         <div className="flex items-baseline justify-between gap-1 mt-auto">
           <div className="flex items-baseline gap-1 min-w-0">
             <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
-            {item.brand && (
-              <span className="text-xs text-gray-600 flex-shrink-0">{item.brand}</span>
-            )}
           </div>
           {item.price && (
             <span className="hidden md:inline text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
@@ -1324,9 +1326,14 @@ const SpecBook = () => {
                   </div>
                   <div className="p-2 pt-1.5 flex flex-col flex-1">
                     <div className="flex items-start justify-between mb-1">
-                      <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
-                        {item.category}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
+                          {item.category}
+                        </span>
+                        {item.brand && (
+                          <span className="text-xs text-gray-500">{item.brand}</span>
+                        )}
+                      </div>
                       {item.grade && (
                         <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${getGradeColor(item.grade)}`}>
                           {formatGradeRange(item.grade)}
@@ -1336,9 +1343,6 @@ const SpecBook = () => {
                     <div className="flex items-baseline justify-between gap-1 mt-auto">
                       <div className="flex items-baseline gap-1 min-w-0">
                         <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
-                        {item.brand && (
-                          <span className="text-xs text-gray-600 flex-shrink-0">{item.brand}</span>
-                        )}
                       </div>
                       {item.price && (
                         <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
@@ -1487,9 +1491,14 @@ const SpecBook = () => {
                         </div>
                         <div className="p-2 pt-1.5 flex flex-col flex-1">
                           <div className="flex items-start justify-between mb-1">
-                            <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
-                              {item.category}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="inline-block px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
+                                {item.category}
+                              </span>
+                              {item.brand && (
+                                <span className="text-xs text-gray-500">{item.brand}</span>
+                              )}
+                            </div>
                             {item.grade && (
                               <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${getGradeColor(item.grade)}`}>
                                 {formatGradeRange(item.grade)}
@@ -1499,9 +1508,6 @@ const SpecBook = () => {
                           <div className="flex items-baseline justify-between gap-1 mt-auto">
                             <div className="flex items-baseline gap-1 min-w-0">
                               <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
-                              {item.brand && (
-                                <span className="text-xs text-gray-600 flex-shrink-0">{item.brand}</span>
-                              )}
                             </div>
                             {item.price && (
                               <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
