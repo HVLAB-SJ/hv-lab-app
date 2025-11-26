@@ -276,7 +276,8 @@ const Drawings = () => {
   }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea]);
 
   // 이미지 압축 함수 (서버 저장을 위해 더 강하게 압축)
-  const compressImage = (file: File, maxWidth: number = 1600, quality: number = 0.6): Promise<string> => {
+  // maxWidth: 1200px, quality: 0.5로 설정하여 서버 저장 시 크기 최소화
+  const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.5): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -292,6 +293,13 @@ const Drawings = () => {
             width = maxWidth;
           }
 
+          // 최대 높이도 제한 (세로로 긴 이미지 대응)
+          const maxHeight = 1600;
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+          }
+
           canvas.width = width;
           canvas.height = height;
 
@@ -303,6 +311,11 @@ const Drawings = () => {
 
           ctx.drawImage(img, 0, 0, width, height);
           const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+
+          // 압축된 이미지 크기 로깅
+          const sizeKB = Math.round(compressedDataUrl.length / 1024);
+          console.log(`📸 이미지 압축 완료: ${width}x${height}px, ${sizeKB}KB`);
+
           resolve(compressedDataUrl);
         };
         img.onerror = () => reject(new Error('Image load failed'));

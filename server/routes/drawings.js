@@ -133,16 +133,28 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
   const { projectId, type, imageUrl, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea } = req.body;
 
+  // 요청 데이터 로깅
+  const imageSize = imageUrl ? Math.round(imageUrl.length / 1024) : 0;
+  console.log(`[drawings] POST request - projectId: ${projectId}, type: ${type}, imageSize: ${imageSize}KB`);
+
   if (!projectId || !type) {
     return res.status(400).json({ error: 'projectId와 type은 필수입니다' });
+  }
+
+  // 이미지 크기 제한 (10MB = 약 10,000KB in base64)
+  if (imageSize > 10000) {
+    console.warn(`[drawings] 이미지 크기 초과: ${imageSize}KB`);
+    return res.status(413).json({
+      error: `이미지 크기가 너무 큽니다 (${imageSize}KB). 10MB 이하로 압축해주세요.`
+    });
   }
 
   // 테이블 존재 확인
   try {
     await ensureTableExists();
   } catch (err) {
-    console.error('Failed to ensure drawings table:', err);
-    return res.status(500).json({ error: '테이블 생성 실패' });
+    console.error('[drawings] Failed to ensure drawings table:', err);
+    return res.status(500).json({ error: '테이블 생성 실패', details: err.message });
   }
 
   const now = new Date().toISOString();
@@ -169,8 +181,12 @@ router.post('/', authenticateToken, async (req, res) => {
         [imageUrl, JSON.stringify(markers || []), JSON.stringify(rooms || []), naverTypeSqm, naverTypePyeong, naverArea, now, existing.id],
         function(err) {
           if (err) {
-            console.error('Failed to update drawing:', err);
-            return res.status(500).json({ error: '도면 업데이트 실패' });
+            console.error('[drawings] Failed to update drawing:', err);
+            return res.status(500).json({
+              error: '도면 업데이트 실패',
+              details: err.message,
+              code: err.code
+            });
           }
 
           res.json({
@@ -200,8 +216,12 @@ router.post('/', authenticateToken, async (req, res) => {
         [id, projectId, type, imageUrl, JSON.stringify(markers || []), JSON.stringify(rooms || []), naverTypeSqm, naverTypePyeong, naverArea, now, now],
         function(err) {
           if (err) {
-            console.error('Failed to create drawing:', err);
-            return res.status(500).json({ error: '도면 생성 실패' });
+            console.error('[drawings] Failed to create drawing:', err);
+            return res.status(500).json({
+              error: '도면 생성 실패',
+              details: err.message,
+              code: err.code
+            });
           }
 
           res.status(201).json({
