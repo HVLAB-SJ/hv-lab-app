@@ -722,7 +722,7 @@ const SiteLog = () => {
         {/* 달력 */}
         <div className="desktop:flex-shrink-0">
           {/* 프로젝트 선택 및 캘린더 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[38vh] desktop:max-h-full overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[32vh] desktop:max-h-full overflow-y-auto">
             {/* 프로젝트 선택 - 데스크톱만 */}
             <div className="mb-4 hidden desktop:block">
               <select
@@ -902,7 +902,6 @@ const SiteLog = () => {
         >
           <div className="flex items-center justify-between mb-4 desktop:flex-shrink-0">
             <h2 className="text-lg font-semibold flex items-center gap-4">
-              <span>{format(selectedDate, 'yyyy년 M월 d일', { locale: ko })} 현장일지</span>
               <span className="text-sm font-normal text-gray-600">작성자: {user?.name || '알 수 없음'}</span>
             </h2>
             <div className="flex items-center gap-2">
