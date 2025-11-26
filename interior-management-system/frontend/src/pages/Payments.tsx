@@ -1394,7 +1394,8 @@ const Payments = () => {
       accountHolder: payment.bankInfo?.accountHolder || '',
       bankName: payment.bankInfo?.bankName || '',
       accountNumber: payment.bankInfo?.accountNumber || '',
-      images: payment.attachments || []
+      images: payment.attachments || [],
+      quickText: (payment as any).quickText || ''  // quickText 복원
     });
 
     // VAT 및 세금공제 체크박스 설정
