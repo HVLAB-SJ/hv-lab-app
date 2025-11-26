@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import clsx from 'clsx';
-import { Trash2, Calendar, AlertCircle } from 'lucide-react';
+import { Trash2, Calendar } from 'lucide-react';
 import workRequestService from '../services/workRequestService';
 import toast from 'react-hot-toast';
 import { useDataStore } from '../store/dataStore';
@@ -36,7 +36,6 @@ const WorkRequest = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<TabStatus>('pending');
-  const [filterPriority, setFilterPriority] = useState<string>('all');
   const [editingDate, setEditingDate] = useState<{
     requestId: string;
     field: 'requestDate' | 'dueDate';
@@ -57,7 +56,6 @@ const WorkRequest = () => {
     requestedBy: user?.name || '',
     assignedTo: ''
   });
-  const [isUrgent, setIsUrgent] = useState(false);
   const [customRequestType, setCustomRequestType] = useState('');
   const [editingRequest, setEditingRequest] = useState<WorkRequest | null>(null);
   const [showMobileForm, setShowMobileForm] = useState(false);
@@ -214,7 +212,6 @@ const WorkRequest = () => {
       requestedBy: request.requestedBy,
       assignedTo: request.assignedTo
     });
-    setIsUrgent(request.priority === 'high');
     setShowMobileForm(true); // Show form in mobile mode when editing
   };
 
@@ -256,7 +253,7 @@ const WorkRequest = () => {
           requestedBy: formData.requestedBy,
           assignedTo: formData.assignedTo,
           status: editingRequest.status,
-          priority: isUrgent ? 'high' : 'medium'
+          priority: 'medium'
         });
 
         const updatedRequest: WorkRequest = {
@@ -339,7 +336,7 @@ const WorkRequest = () => {
           requestedBy: formData.requestedBy,
           assignedTo: formData.assignedTo,
           status: 'pending',
-          priority: isUrgent ? 'high' : 'medium'
+          priority: 'medium'
         });
 
         const newRequest: WorkRequest = {
@@ -612,10 +609,6 @@ const WorkRequest = () => {
       );
     }
 
-    if (filterPriority !== 'all') {
-      filtered = filtered.filter(req => req.priority === filterPriority);
-    }
-
     return filtered;
   };
 
@@ -785,24 +778,6 @@ const WorkRequest = () => {
               </div>
             </div>
 
-            {/* Urgent Toggle */}
-            <div>
-              <button
-                type="button"
-                onClick={() => setIsUrgent(!isUrgent)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all w-full ${
-                  isUrgent
-                    ? 'bg-rose-50 border-rose-500 text-rose-700'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <AlertCircle className={`h-5 w-5 ${isUrgent ? 'text-rose-600' : 'text-gray-400'}`} />
-                <span className="font-medium">
-                  {isUrgent ? '긴급 업무입니다' : '긴급 업무로 표시'}
-                </span>
-              </button>
-            </div>
-
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t">
               {editingRequest && (
@@ -865,16 +840,6 @@ const WorkRequest = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
             />
-            <select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-            >
-              <option value="all">모든 우선순위</option>
-              <option value="high">긴급</option>
-              <option value="medium">보통</option>
-              <option value="low">낮음</option>
-            </select>
           </div>
 
           {/* Table */}
@@ -1190,7 +1155,7 @@ const WorkRequest = () => {
                 </div>
 
                 {/* Dates */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       요청일 *
@@ -1200,7 +1165,7 @@ const WorkRequest = () => {
                       value={formData.requestDate}
                       onChange={(e) => setFormData({ ...formData, requestDate: e.target.value })}
                       required
-                      className="w-full px-2 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white"
                     />
                   </div>
                   <div>
@@ -1212,7 +1177,7 @@ const WorkRequest = () => {
                       value={formData.dueDate}
                       onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                       required
-                      className="w-full px-2 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white"
                     />
                   </div>
                 </div>
@@ -1255,24 +1220,6 @@ const WorkRequest = () => {
                       ))}
                     </select>
                   </div>
-                </div>
-
-                {/* Urgent Toggle */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setIsUrgent(!isUrgent)}
-                    className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border transition-all w-full text-sm ${
-                      isUrgent
-                        ? 'bg-rose-50 border-rose-300 text-rose-700'
-                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <AlertCircle className={`h-4 w-4 ${isUrgent ? 'text-rose-600' : 'text-gray-400'}`} />
-                    <span className="font-medium">
-                      {isUrgent ? '긴급 업무입니다' : '긴급 업무로 표시'}
-                    </span>
-                  </button>
                 </div>
 
                 {/* Actions */}

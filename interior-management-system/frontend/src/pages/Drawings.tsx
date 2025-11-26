@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { FileImage, Trash2, Square, ArrowLeft, X } from 'lucide-react';
 import { drawingStorage } from '../utils/drawingStorage';
 
@@ -74,8 +74,8 @@ interface DrawingData {
 }
 
 const Drawings = () => {
-  const { projects } = useDataStore();
   const { user } = useAuth();
+  const projects = useFilteredProjects();
 
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [selectedDrawingType, setSelectedDrawingType] = useState('네이버도면');
