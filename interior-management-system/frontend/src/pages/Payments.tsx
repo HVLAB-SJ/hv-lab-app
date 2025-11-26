@@ -1858,9 +1858,9 @@ const Payments = () => {
                 <button
                   type="button"
                   onClick={handleQuickTextParse}
-                  className="flex-1 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium"
+                  className="flex-1 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium text-center"
                 >
-                  자동으로 항목 채우기
+                  자동 채우기
                 </button>
               </div>
               {/* 이미지 미리보기 */}
