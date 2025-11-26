@@ -129,7 +129,8 @@ const Payments = () => {
     bankName: '',
     accountNumber: '',
     images: [] as string[],
-    quickText: '' // 빠른 입력을 위한 텍스트
+    quickText: '', // 빠른 입력을 위한 텍스트
+    quickImages: [] as string[] // 청구 내역 이미지
   });
 
   // 협력업체 로드
@@ -1361,7 +1362,8 @@ const Payments = () => {
         bankName: '',
         accountNumber: '',
         images: [],
-        quickText: ''
+        quickText: '',
+        quickImages: []
       }));
       setIncludeVat(false);
       setIncludeTaxDeduction(false);
@@ -1799,17 +1801,94 @@ const Payments = () => {
               <textarea
                 value={formData.quickText}
                 onChange={(e) => setFormData({ ...formData, quickText: e.target.value })}
+                onPaste={(e) => {
+                  const items = e.clipboardData?.items;
+                  if (!items) return;
+                  for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                      e.preventDefault();
+                      const blob = items[i].getAsFile();
+                      if (blob) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const base64 = event.target?.result as string;
+                          setFormData(prev => ({
+                            ...prev,
+                            quickImages: [...prev.quickImages, base64]
+                          }));
+                        };
+                        reader.readAsDataURL(blob);
+                      }
+                      break;
+                    }
+                  }
+                }}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                placeholder="문자 혹은 카톡 내용을 붙여넣기 하세요"
+                placeholder="청구 내역 붙여넣기 (이미지도 Ctrl+V로 붙여넣기 가능)"
               />
-              <button
-                type="button"
-                onClick={handleQuickTextParse}
-                className="mt-2 w-full px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium"
-              >
-                자동으로 항목 채우기
-              </button>
+              {/* 이미지 업로드 버튼 */}
+              <div className="flex gap-2 mt-2">
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      files.forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const base64 = event.target?.result as string;
+                          setFormData(prev => ({
+                            ...prev,
+                            quickImages: [...prev.quickImages, base64]
+                          }));
+                        };
+                        reader.readAsDataURL(file);
+                      });
+                      e.target.value = '';
+                    }}
+                  />
+                  <div className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium text-center border border-gray-300">
+                    이미지 추가
+                  </div>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleQuickTextParse}
+                  className="flex-1 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium"
+                >
+                  자동으로 항목 채우기
+                </button>
+              </div>
+              {/* 이미지 미리보기 */}
+              {formData.quickImages.length > 0 && (
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  {formData.quickImages.map((img, idx) => (
+                    <div key={idx} className="relative group">
+                      <img
+                        src={img}
+                        alt={`청구내역 ${idx + 1}`}
+                        className="w-full h-20 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            quickImages: prev.quickImages.filter((_, i) => i !== idx)
+                          }));
+                        }}
+                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* 날짜 & 공정 */}
@@ -2119,7 +2198,8 @@ const Payments = () => {
                         bankName: '',
                         accountNumber: '',
                         images: [],
-                        quickText: ''
+                        quickText: '',
+                        quickImages: []
                       }));
                       setIncludeVat(false);
                       setIncludeTaxDeduction(false);
