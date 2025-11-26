@@ -215,6 +215,16 @@ const Payments = () => {
 
         try {
           await loadPaymentsFromAPI();
+
+          // 송금완료 전에 해당 결제요청의 quickText를 실행내역 메모로 저장
+          const payment = payments.find(p => p.id === String(completeId));
+          if (payment && (payment as any).quickText) {
+            const storedMemos = localStorage.getItem('executionMemos');
+            const executionMemos = storedMemos ? JSON.parse(storedMemos) : {};
+            executionMemos[String(completeId)] = (payment as any).quickText;
+            localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
+          }
+
           await updatePaymentInAPI(String(completeId), { status: 'completed' });
 
           toast.success('송금완료 처리되었습니다');
@@ -1570,6 +1580,15 @@ const Payments = () => {
   // 송금완료 처리
   const handleMarkAsCompleted = async (paymentId: string) => {
     try {
+      // 송금완료 전에 해당 결제요청의 quickText를 실행내역 메모로 저장
+      const payment = payments.find(p => p.id === paymentId);
+      if (payment && (payment as any).quickText) {
+        const storedMemos = localStorage.getItem('executionMemos');
+        const executionMemos = storedMemos ? JSON.parse(storedMemos) : {};
+        executionMemos[paymentId] = (payment as any).quickText;
+        localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
+      }
+
       await updatePaymentInAPI(paymentId, { status: 'completed' });
       toast.success('송금완료 처리되었습니다');
       setShowDetailModal(false);
