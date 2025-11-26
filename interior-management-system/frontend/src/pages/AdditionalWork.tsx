@@ -7,6 +7,7 @@ import additionalWorkService from '../services/additionalWorkService';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
+import { useDataStore } from '../store/dataStore';
 
 interface AdditionalWork {
   id: string;
@@ -27,6 +28,7 @@ interface ProjectGroup {
 const AdditionalWork = () => {
   const { user } = useAuth();
   const filteredProjects = useFilteredProjects();
+  const { constructionPayments } = useDataStore();
   const [additionalWorks, setAdditionalWorks] = useState<AdditionalWork[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWork, setSelectedWork] = useState<AdditionalWork | null>(null);
@@ -39,6 +41,16 @@ const AdditionalWork = () => {
   const [workImages, setWorkImages] = useState<Record<string, string[]>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showMobileForm, setShowMobileForm] = useState(false);
+  const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
+
+  // 공사대금 완납된 프로젝트 목록 계산
+  const completedProjects = constructionPayments
+    .filter(cp => {
+      const totalAmount = (cp.contractAmount || 0) + (cp.additionalAmount || 0);
+      const received = cp.payments?.reduce((sum: number, p: { amount: number }) => sum + p.amount, 0) || 0;
+      return totalAmount > 0 && received >= totalAmount;
+    })
+    .map(cp => cp.project);
 
   // 입력 폼 상태
   const [formData, setFormData] = useState({
@@ -277,7 +289,8 @@ const AdditionalWork = () => {
   const filteredWorks = additionalWorks.filter(work => {
     const matchesSearch = (work.project?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                           (work.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    const matchesCompleted = !showOnlyCompleted || completedProjects.includes(work.project);
+    return matchesSearch && matchesCompleted;
   });
 
   // 프로젝트별로 그룹핑
@@ -412,10 +425,22 @@ const AdditionalWork = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <div className="flex justify-between items-center">
-                <span className="text-base font-semibold text-gray-700">전체 합계:</span>
-                <span className="text-lg font-bold text-gray-900">
-                  {totalAmount.toLocaleString()}원
-                </span>
+                <button
+                  onClick={() => setShowOnlyCompleted(!showOnlyCompleted)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    showOnlyCompleted
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  완납 프로젝트 ({completedProjects.length})
+                </button>
+                <div className="text-right">
+                  <span className="text-base font-semibold text-gray-700">전체 합계: </span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {totalAmount.toLocaleString()}원
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -660,10 +685,22 @@ const AdditionalWork = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <div className="flex justify-between items-center">
-              <span className="font-medium text-gray-700">전체 합계:</span>
-              <span className="text-lg font-bold text-gray-900">
-                {totalAmount.toLocaleString()}원
-              </span>
+              <button
+                onClick={() => setShowOnlyCompleted(!showOnlyCompleted)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  showOnlyCompleted
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                완납 ({completedProjects.length})
+              </button>
+              <div>
+                <span className="font-medium text-gray-700">합계: </span>
+                <span className="text-lg font-bold text-gray-900">
+                  {totalAmount.toLocaleString()}원
+                </span>
+              </div>
             </div>
           </div>
         </div>
