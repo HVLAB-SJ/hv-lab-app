@@ -706,33 +706,28 @@ const AdditionalWork = () => {
           </div>
         )}
 
-        {/* 미납/완납 탭 및 검색 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-          <div className="space-y-3">
-            {/* 미납/완납 탭 */}
-            <div className="flex border-b border-gray-200">
-              <button
-                onClick={() => setShowOnlyCompleted(false)}
-                className={`flex-1 py-2 text-xs font-medium border-b-2 transition-colors ${
-                  !showOnlyCompleted
-                    ? 'border-gray-900 text-gray-900'
-                    : 'border-transparent text-gray-500'
-                }`}
-              >
-                미납 ({additionalWorks.filter(w => !completedProjects.includes(w.project)).length > 0 ? projectGroups.filter(g => !completedProjects.includes(g.projectName)).length : 0})
-              </button>
-              <button
-                onClick={() => setShowOnlyCompleted(true)}
-                className={`flex-1 py-2 text-xs font-medium border-b-2 transition-colors ${
-                  showOnlyCompleted
-                    ? 'border-gray-900 text-gray-900'
-                    : 'border-transparent text-gray-500'
-                }`}
-              >
-                완납 ({completedProjects.length})
-              </button>
-            </div>
-          </div>
+        {/* 미납/완납 탭 */}
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setShowOnlyCompleted(false)}
+            className={`flex-1 py-2 text-xs font-medium border-b-2 transition-colors ${
+              !showOnlyCompleted
+                ? 'border-gray-900 text-gray-900'
+                : 'border-transparent text-gray-500'
+            }`}
+          >
+            미납 ({additionalWorks.filter(w => !completedProjects.includes(w.project)).length > 0 ? projectGroups.filter(g => !completedProjects.includes(g.projectName)).length : 0})
+          </button>
+          <button
+            onClick={() => setShowOnlyCompleted(true)}
+            className={`flex-1 py-2 text-xs font-medium border-b-2 transition-colors ${
+              showOnlyCompleted
+                ? 'border-gray-900 text-gray-900'
+                : 'border-transparent text-gray-500'
+            }`}
+          >
+            완납 ({completedProjects.length})
+          </button>
         </div>
 
         {/* 프로젝트별 추가내역 */}
