@@ -1703,12 +1703,14 @@ const Schedule = () => {
 
                       return sortedDates.map((dateKey) => (
                         <div key={dateKey} className="border-b border-gray-100 last:border-b-0">
-                          {/* 날짜 헤더 */}
-                          <div className="px-3 py-2 bg-gray-50 sticky top-0 z-10">
-                            <p className="text-xs font-semibold text-gray-700">
-                              {moment(dateKey).format('MM월 DD일 (ddd)')}
-                            </p>
-                          </div>
+                          {/* 날짜 헤더 - 주간 보기에서만 표시 (모바일 일간 보기에서는 상단에 이미 표시됨) */}
+                          {!isMobileView && (
+                            <div className="px-3 py-2 bg-gray-50 sticky top-0 z-10">
+                              <p className="text-xs font-semibold text-gray-700">
+                                {moment(dateKey).format('MM월 DD일 (ddd)')}
+                              </p>
+                            </div>
+                          )}
                           {/* 해당 날짜의 일정들 */}
                           <div className="divide-y divide-gray-100">
                             {eventsByDate[dateKey].map((event) => {
