@@ -611,6 +611,17 @@ const AdditionalWork = () => {
 
       {/* 모바일 레이아웃 */}
       <div className="desktop:hidden space-y-3">
+        {/* 헤더 + 버튼 */}
+        <div className="flex items-center justify-end">
+          <button
+            type="button"
+            onClick={() => setShowMobileForm(!showMobileForm)}
+            className="text-xl font-bold text-gray-700 hover:text-gray-900 transition-colors px-2"
+          >
+            {showMobileForm ? '×' : '+'}
+          </button>
+        </div>
+
         {/* 추가내역 등록 폼 */}
         {showMobileForm && (
           <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -777,13 +788,6 @@ const AdditionalWork = () => {
           </div>
         ))}
 
-        {/* 추가내역 등록 토글 버튼 */}
-        <button
-          onClick={() => setShowMobileForm(!showMobileForm)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-gray-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-800 transition-transform"
-        >
-          {showMobileForm ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
-        </button>
       </div>
 
       {/* 수정/추가 모달 */}
