@@ -694,14 +694,30 @@ const SiteLog = () => {
 
   return (
     <div className="desktop:grid desktop:grid-cols-12 desktop:gap-4 desktop:h-[calc(100vh-140px)] space-y-3 desktop:space-y-0">
+      {/* 모바일 상단 헤더 - 프로젝트 선택 */}
+      <div className="desktop:hidden flex items-center justify-between mb-1">
+        <h1 className="text-lg font-bold text-gray-900">현장일지</h1>
+        <select
+          value={selectedProject}
+          onChange={(e) => setSelectedProject(e.target.value)}
+          className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 max-w-[200px]"
+        >
+          {projects.map(project => (
+            <option key={project.id} value={project.name}>
+              {project.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* 좌측: 달력 + 일지작성 (데스크톱에서 상하 배치) */}
       <div className="desktop:col-span-4 desktop:flex desktop:flex-col desktop:gap-4 desktop:h-full space-y-3 desktop:space-y-0">
         {/* 달력 */}
         <div className="desktop:flex-shrink-0">
           {/* 프로젝트 선택 및 캘린더 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[45vh] desktop:max-h-full overflow-y-auto">
-            {/* 프로젝트 선택 */}
-            <div className="mb-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[38vh] desktop:max-h-full overflow-y-auto">
+            {/* 프로젝트 선택 - 데스크톱만 */}
+            <div className="mb-4 hidden desktop:block">
               <select
                 value={selectedProject}
                 onChange={(e) => setSelectedProject(e.target.value)}
@@ -778,9 +794,6 @@ const SiteLog = () => {
 
               {/* 작업 내용 (메모) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  작업 내용
-                </label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => {
