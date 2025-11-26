@@ -114,6 +114,7 @@ router.post('/', authenticateToken, async (req, res) => {
   console.log('  - description:', description);
   console.log('  - vendor_name:', vendor_name);
   console.log('  - itemName:', itemName);
+  console.log('  - images:', images ? `${images.length}개` : 'none');
 
   // Convert project name to project_id if necessary
   let finalProjectId = project_id;

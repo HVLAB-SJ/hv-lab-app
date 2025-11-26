@@ -316,35 +316,50 @@ export const useDataStore = create<DataStore>()(
   loadPaymentsFromAPI: async () => {
     try {
       const apiPayments = await paymentService.getAllPayments();
-      const payments: Payment[] = apiPayments.map((p: PaymentResponse) => ({
-        id: String(p.id),
-        project: p.project_name,
-        purpose: p.description,
-        process: p.vendor_name,
-        itemName: p.item_name || '',
-        amount: p.amount,
-        materialAmount: p.material_amount || 0,
-        laborAmount: p.labor_amount || 0,
-        originalMaterialAmount: p.original_material_amount || 0,
-        originalLaborAmount: p.original_labor_amount || 0,
-        applyTaxDeduction: p.apply_tax_deduction === 1,
-        includesVAT: p.includes_vat === 1,
-        quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
-        images: p.images ? JSON.parse(p.images) : [],  // 이미지 배열
-        category: p.request_type as Payment['category'],
-        status: p.status,
-        urgency: 'normal' as Payment['urgency'],
-        requestedBy: p.requester_name,
-        requestDate: new Date(p.created_at),
-        approvalDate: p.approved_at ? new Date(p.approved_at) : undefined,
-        bankInfo: {
-          accountHolder: p.account_holder || '',
-          bankName: p.bank_name || '',
-          accountNumber: p.account_number || ''
-        },
-        attachments: [],
-        notes: p.notes || ''
-      }));
+      console.log('[loadPaymentsFromAPI] Raw API response sample:', apiPayments[0]);
+      const payments: Payment[] = apiPayments.map((p: PaymentResponse) => {
+        if (p.images) {
+          console.log(`[loadPaymentsFromAPI] Payment ${p.id} has images:`, p.images.substring(0, 100));
+        }
+        return {
+          id: String(p.id),
+          project: p.project_name,
+          purpose: p.description,
+          process: p.vendor_name,
+          itemName: p.item_name || '',
+          amount: p.amount,
+          materialAmount: p.material_amount || 0,
+          laborAmount: p.labor_amount || 0,
+          originalMaterialAmount: p.original_material_amount || 0,
+          originalLaborAmount: p.original_labor_amount || 0,
+          applyTaxDeduction: p.apply_tax_deduction === 1,
+          includesVAT: p.includes_vat === 1,
+          quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
+          images: (() => {
+            if (!p.images) return [];
+            try {
+              const parsed = JSON.parse(p.images);
+              return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              console.error('이미지 파싱 오류:', e, p.images);
+              return [];
+            }
+          })(),
+          category: p.request_type as Payment['category'],
+          status: p.status,
+          urgency: 'normal' as Payment['urgency'],
+          requestedBy: p.requester_name,
+          requestDate: new Date(p.created_at),
+          approvalDate: p.approved_at ? new Date(p.approved_at) : undefined,
+          bankInfo: {
+            accountHolder: p.account_holder || '',
+            bankName: p.bank_name || '',
+            accountNumber: p.account_number || ''
+          },
+          attachments: [],
+          notes: p.notes || ''
+        };
+      });
       set({ payments });
     } catch (error) {
       console.error('Failed to load payments from API:', error);
@@ -395,7 +410,16 @@ export const useDataStore = create<DataStore>()(
         applyTaxDeduction: p.apply_tax_deduction === 1,
         includesVAT: p.includes_vat === 1,
         quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
-        images: p.images ? JSON.parse(p.images) : [],  // 이미지 배열
+        images: (() => {
+          if (!p.images) return [];
+          try {
+            const parsed = JSON.parse(p.images);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch (e) {
+            console.error('이미지 파싱 오류:', e, p.images);
+            return [];
+          }
+        })(),
         category: p.request_type as Payment['category'],
         status: p.status,
         urgency: 'normal' as Payment['urgency'],
@@ -463,7 +487,16 @@ export const useDataStore = create<DataStore>()(
         applyTaxDeduction: p.apply_tax_deduction === 1,
         includesVAT: p.includes_vat === 1,
         quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
-        images: p.images ? JSON.parse(p.images) : [],  // 이미지 배열
+        images: (() => {
+          if (!p.images) return [];
+          try {
+            const parsed = JSON.parse(p.images);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch (e) {
+            console.error('이미지 파싱 오류:', e, p.images);
+            return [];
+          }
+        })(),
         category: p.request_type as Payment['category'],
         status: p.status,
         urgency: 'normal' as Payment['urgency'],

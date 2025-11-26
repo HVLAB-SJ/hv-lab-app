@@ -331,6 +331,9 @@ const ExecutionHistory = () => {
   // 승인된 결제요청을 실행내역 형식으로 변환
   // 이미 executionRecord가 생성된 payment와 숨긴 payment는 제외
   // 안팀 사용자인 경우 담당 프로젝트만 필터링
+  console.log('[ExecutionHistory] payments 배열:', payments.length, '개');
+  console.log('[ExecutionHistory] 이미지가 있는 payments:', payments.filter(p => p.images && p.images.length > 0).map(p => ({ id: p.id, imagesCount: p.images?.length })));
+
   const paymentRecords = payments
     .filter(p => {
       const statusMatch = (p.status === 'approved' || p.status === 'completed');
@@ -393,6 +396,12 @@ const ExecutionHistory = () => {
         quickText: (payment as any).quickText || ''  // 원본 텍스트 추가
       };
     });
+
+  // 디버그: paymentRecords의 이미지 확인
+  const recordsWithImages = paymentRecords.filter(r => r.images && r.images.length > 0);
+  if (recordsWithImages.length > 0) {
+    console.log('[ExecutionHistory] 이미지가 있는 paymentRecords:', recordsWithImages.map(r => ({ id: r.id, imagesCount: r.images.length })));
+  }
 
   // 실행내역 레코드 변환
   // 안팀 사용자인 경우 담당 프로젝트만 필터링

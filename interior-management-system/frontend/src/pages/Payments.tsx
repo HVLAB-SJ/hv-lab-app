@@ -1413,6 +1413,7 @@ const Payments = () => {
         };
 
         console.log('💰 Creating payment:', newPayment);
+        console.log('💰 Images in payment:', formData.quickImages?.length || 0, '개');
         await addPaymentToAPI(newPayment);
 
         toast.success('결제요청이 추가되었습니다');
