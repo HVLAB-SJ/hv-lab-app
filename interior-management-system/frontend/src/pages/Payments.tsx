@@ -1886,13 +1886,11 @@ const Payments = () => {
                       const blob = items[i].getAsFile();
                       if (blob) {
                         const reader = new FileReader();
-                        reader.onload = async (event) => {
+                        reader.onload = (event) => {
                           const base64 = event.target?.result as string;
-                          // 이미지 압축
-                          const compressed = await compressImage(base64, 800, 0.7);
                           setFormData(prev => ({
                             ...prev,
-                            quickImages: [...prev.quickImages, compressed]
+                            quickImages: [...prev.quickImages, base64]
                           }));
                         };
                         reader.readAsDataURL(blob);
@@ -1943,13 +1941,11 @@ const Payments = () => {
                       const files = Array.from(e.target.files || []);
                       files.forEach(file => {
                         const reader = new FileReader();
-                        reader.onload = async (event) => {
+                        reader.onload = (event) => {
                           const base64 = event.target?.result as string;
-                          // 이미지 압축
-                          const compressed = await compressImage(base64, 800, 0.7);
                           setFormData(prev => ({
                             ...prev,
-                            quickImages: [...prev.quickImages, compressed]
+                            quickImages: [...prev.quickImages, base64]
                           }));
                         };
                         reader.readAsDataURL(file);

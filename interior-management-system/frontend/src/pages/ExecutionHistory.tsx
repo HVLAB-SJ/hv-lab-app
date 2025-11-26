@@ -292,11 +292,9 @@ const ExecutionHistory = () => {
       imageFiles.map(file => {
         return new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = async (event) => {
+          reader.onload = (event) => {
             const base64 = event.target?.result as string;
-            // 이미지 압축
-            const compressed = await compressImage(base64, 800, 0.7);
-            resolve(compressed);
+            resolve(base64);
           };
           reader.onerror = reject;
           reader.readAsDataURL(file);
@@ -560,12 +558,10 @@ const ExecutionHistory = () => {
           return new Promise<string>((resolve, reject) => {
             try {
               const reader = new FileReader();
-              reader.onload = async (event) => {
+              reader.onload = (event) => {
                 const base64 = event.target?.result as string;
                 if (base64) {
-                  // 이미지 압축 (용량 절약)
-                  const compressed = await compressImage(base64, 800, 0.7);
-                  resolve(compressed);
+                  resolve(base64);
                 } else {
                   reject(new Error('이미지 읽기 실패'));
                 }
@@ -657,11 +653,9 @@ const ExecutionHistory = () => {
       imageFiles.map(file => {
         return new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = async (event) => {
+          reader.onload = (event) => {
             const base64 = event.target?.result as string;
-            // 이미지 압축
-            const compressed = await compressImage(base64, 800, 0.7);
-            resolve(compressed);
+            resolve(base64);
           };
           reader.onerror = reject;
           reader.readAsDataURL(file);
