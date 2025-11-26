@@ -699,7 +699,7 @@ const SiteLog = () => {
         {/* 달력 */}
         <div className="desktop:flex-shrink-0">
           {/* 프로젝트 선택 및 캘린더 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[70vh] desktop:max-h-full overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[45vh] desktop:max-h-full overflow-y-auto">
             {/* 프로젝트 선택 */}
             <div className="mb-4">
               <select
@@ -750,7 +750,7 @@ const SiteLog = () => {
                   <div
                     key={idx}
                     onClick={() => setSelectedDate(day.date)}
-                    className={`text-center p-2 text-xs cursor-pointer rounded transition-colors min-h-[48px] flex flex-col items-center justify-center ${
+                    className={`text-center p-1.5 desktop:p-2 text-xs cursor-pointer rounded transition-colors min-h-[36px] desktop:min-h-[48px] flex flex-col items-center justify-center ${
                       !isCurrentMonth ? 'text-gray-300' : 'text-gray-700'
                     } ${isToday ? 'bg-blue-100' : ''} ${
                       isSelected ? 'bg-gray-900 text-white' : 'hover:bg-gray-100'
@@ -769,7 +769,7 @@ const SiteLog = () => {
 
         {/* 일지작성 */}
         <div className="desktop:flex-1 desktop:min-h-0">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[70vh] desktop:h-full overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[30vh] desktop:h-full overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">
               {format(selectedDate, 'M월 d일')} 일지 작성
             </h2>
@@ -848,8 +848,8 @@ const SiteLog = () => {
                       }
                     }, 500);
                   }}
-                  rows={10}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none desktop:min-h-[200px]"
                   placeholder="오늘 진행한 작업 내용을 입력하세요"
                 />
               </div>
