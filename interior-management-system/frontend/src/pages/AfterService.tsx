@@ -41,6 +41,7 @@ const AfterService = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImage, setModalImage] = useState<string>('');
+  const [showMobileForm, setShowMobileForm] = useState(false);
 
   // 폼 관련 state
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
@@ -105,6 +106,25 @@ const AfterService = () => {
       inputRef.current.showPicker?.();
     }
   }, [editingDate]);
+
+  // 헤더의 + 버튼 클릭 이벤트 처리
+  useEffect(() => {
+    const handleHeaderAddClick = () => {
+      setShowMobileForm(prev => {
+        const newState = !prev;
+        window.dispatchEvent(new CustomEvent('mobileFormStateChange', { detail: { isOpen: newState } }));
+        return newState;
+      });
+    };
+
+    window.addEventListener('headerAddButtonClick', handleHeaderAddClick);
+    return () => window.removeEventListener('headerAddButtonClick', handleHeaderAddClick);
+  }, []);
+
+  // showMobileForm 상태 변경 시 Layout에 알림
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('mobileFormStateChange', { detail: { isOpen: showMobileForm } }));
+  }, [showMobileForm]);
 
   const handleResetForm = () => {
     setSelectedRequest(null);
@@ -391,7 +411,7 @@ const AfterService = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
       {/* 좌측: AS 요청 폼 */}
-      <div className="lg:col-span-1">
+      <div className={`lg:col-span-1 ${showMobileForm ? 'block' : 'hidden lg:block'}`}>
         <div className="card p-4 sticky top-4">
           <h2 className="text-lg font-semibold mb-4">
             {selectedRequest ? 'AS 요청 수정' : 'AS 요청 추가'}
