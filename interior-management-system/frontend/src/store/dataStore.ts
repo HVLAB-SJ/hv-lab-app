@@ -195,7 +195,7 @@ interface DataStore {
   deleteExecutionRecord: (id: string) => void;
   // API integration methods
   loadPaymentsFromAPI: () => Promise<void>;
-  addPaymentToAPI: (payment: Payment) => Promise<void>;
+  addPaymentToAPI: (payment: Payment) => Promise<string>; // Returns new payment ID
   updatePaymentInAPI: (id: string, payment: Partial<Payment>) => Promise<void>;
   deletePaymentFromAPI: (id: string) => Promise<void>;
   loadSchedulesFromAPI: () => Promise<void>;
@@ -373,7 +373,8 @@ export const useDataStore = create<DataStore>()(
         quickText: (payment as any).quickText || ''  // 원본 텍스트 추가
       };
       console.log('[addPaymentToAPI] Sending payment data:', paymentData);
-      await paymentService.createPayment(paymentData);
+      const result = await paymentService.createPayment(paymentData);
+      const newPaymentId = String(result.id);
 
       // Reload all payments from API to get the updated list
       const apiPayments = await paymentService.getAllPayments();
@@ -406,6 +407,7 @@ export const useDataStore = create<DataStore>()(
         notes: p.notes || ''
       }));
       set({ payments });
+      return newPaymentId;
     } catch (error) {
       console.error('Failed to add payment to API:', error);
       throw error;

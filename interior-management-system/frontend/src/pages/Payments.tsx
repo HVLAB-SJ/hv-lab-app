@@ -1345,7 +1345,16 @@ const Payments = () => {
         };
 
         console.log('💰 Creating payment:', newPayment);
-        await addPaymentToAPI(newPayment);
+        const newPaymentId = await addPaymentToAPI(newPayment);
+
+        // quickImages가 있으면 paymentRecordImages에 저장
+        if (formData.quickImages.length > 0) {
+          setPaymentRecordImages(prev => ({
+            ...prev,
+            [newPaymentId]: formData.quickImages
+          }));
+        }
+
         toast.success('결제요청이 추가되었습니다');
       }
 
@@ -1827,6 +1836,32 @@ const Payments = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="청구 내역 붙여넣기 (이미지도 Ctrl+V로 붙여넣기 가능)"
               />
+              {/* 이미지 미리보기 - 버튼 위에 표시 */}
+              {formData.quickImages.length > 0 && (
+                <div className="mt-2 mb-2 grid grid-cols-3 gap-2">
+                  {formData.quickImages.map((img, idx) => (
+                    <div key={idx} className="relative group">
+                      <img
+                        src={img}
+                        alt={`청구내역 ${idx + 1}`}
+                        className="w-full h-20 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            quickImages: prev.quickImages.filter((_, i) => i !== idx)
+                          }));
+                        }}
+                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               {/* 이미지 업로드 버튼 */}
               <div className="flex gap-2 mt-2">
                 <label className="flex-1 cursor-pointer">
@@ -1863,32 +1898,6 @@ const Payments = () => {
                   자동 채우기
                 </button>
               </div>
-              {/* 이미지 미리보기 */}
-              {formData.quickImages.length > 0 && (
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                  {formData.quickImages.map((img, idx) => (
-                    <div key={idx} className="relative group">
-                      <img
-                        src={img}
-                        alt={`청구내역 ${idx + 1}`}
-                        className="w-full h-20 object-cover rounded-lg border"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData(prev => ({
-                            ...prev,
-                            quickImages: prev.quickImages.filter((_, i) => i !== idx)
-                          }));
-                        }}
-                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* 날짜 & 공정 */}
