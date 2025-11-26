@@ -1406,21 +1406,14 @@ const Payments = () => {
             accountNumber: formData.accountNumber
           } : undefined,
           quickText: formData.quickText || '',  // 자동 채우기에 사용된 원본 텍스트 저장
+          images: formData.quickImages,  // 이미지를 서버에 저장
           attachments: [],
           createdAt: now,
           updatedAt: now
         };
 
         console.log('💰 Creating payment:', newPayment);
-        const newPaymentId = await addPaymentToAPI(newPayment);
-
-        // quickImages가 있으면 paymentRecordImages에 저장
-        if (formData.quickImages.length > 0) {
-          setPaymentRecordImages(prev => ({
-            ...prev,
-            [newPaymentId]: formData.quickImages
-          }));
-        }
+        await addPaymentToAPI(newPayment);
 
         toast.success('결제요청이 추가되었습니다');
       }

@@ -34,6 +34,7 @@ const addQuoteInquiryDeduplication = require('./server/migrations/add-quote-inqu
 const createSiteLogsTable = require('./server/migrations/create-site-logs-table');
 const addQuickTextColumn = require('./server/migrations/add-quick-text-column');
 const createDrawingsTable = require('./server/migrations/create-drawings-table');
+const addPaymentImagesColumn = require('./server/migrations/add-payment-images-column');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
@@ -48,6 +49,7 @@ addQuoteInquiryDeduplication().catch(console.error);
 createSiteLogsTable().catch(console.error);
 addQuickTextColumn().catch(console.error);
 createDrawingsTable().catch(console.error);
+addPaymentImagesColumn().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";

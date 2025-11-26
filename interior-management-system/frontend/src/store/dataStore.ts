@@ -70,6 +70,7 @@ export interface Payment {
   applyTaxDeduction?: boolean;
   includesVAT?: boolean;
   quickText?: string; // 자동으로 항목 채우기에 입력했던 원본 텍스트
+  images?: string[];  // 첨부 이미지 배열
   category: 'material' | 'labor' | 'equipment' | 'transport' | 'other';
   status: 'pending' | 'reviewing' | 'approved' | 'on-hold' | 'rejected' | 'completed';
   urgency: 'normal' | 'urgent' | 'emergency';
@@ -329,6 +330,7 @@ export const useDataStore = create<DataStore>()(
         applyTaxDeduction: p.apply_tax_deduction === 1,
         includesVAT: p.includes_vat === 1,
         quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
+        images: p.images ? JSON.parse(p.images) : [],  // 이미지 배열
         category: p.request_type as Payment['category'],
         status: p.status,
         urgency: 'normal' as Payment['urgency'],
@@ -370,7 +372,8 @@ export const useDataStore = create<DataStore>()(
         originalLaborAmount: payment.originalLaborAmount || 0,
         applyTaxDeduction: payment.applyTaxDeduction || false,
         includesVAT: payment.includesVAT || false,
-        quickText: (payment as any).quickText || ''  // 원본 텍스트 추가
+        quickText: (payment as any).quickText || '',  // 원본 텍스트 추가
+        images: payment.images || []  // 이미지 배열 추가
       };
       console.log('[addPaymentToAPI] Sending payment data:', paymentData);
       const result = await paymentService.createPayment(paymentData);
@@ -392,6 +395,7 @@ export const useDataStore = create<DataStore>()(
         applyTaxDeduction: p.apply_tax_deduction === 1,
         includesVAT: p.includes_vat === 1,
         quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
+        images: p.images ? JSON.parse(p.images) : [],  // 이미지 배열
         category: p.request_type as Payment['category'],
         status: p.status,
         urgency: 'normal' as Payment['urgency'],
@@ -459,6 +463,7 @@ export const useDataStore = create<DataStore>()(
         applyTaxDeduction: p.apply_tax_deduction === 1,
         includesVAT: p.includes_vat === 1,
         quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
+        images: p.images ? JSON.parse(p.images) : [],  // 이미지 배열
         category: p.request_type as Payment['category'],
         status: p.status,
         urgency: 'normal' as Payment['urgency'],

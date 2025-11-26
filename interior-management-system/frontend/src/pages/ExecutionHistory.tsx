@@ -388,7 +388,7 @@ const ExecutionHistory = () => {
         laborCost: laborSupplyAmount, // 인건비 (공급가액)
         vatAmount: vatAmount, // 부가세
         totalAmount: totalAmount, // 총액
-        images: paymentRecordImages[payment.id] || [],
+        images: payment.images || paymentRecordImages[payment.id] || [],  // 서버 이미지 우선
         notes: payment.notes,
         quickText: (payment as any).quickText || ''  // 원본 텍스트 추가
       };

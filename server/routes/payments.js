@@ -102,7 +102,8 @@ router.post('/', authenticateToken, async (req, res) => {
     originalLaborAmount,
     applyTaxDeduction,
     includesVAT,
-    quickText  // 자동 채우기에 사용된 원본 텍스트
+    quickText,  // 자동 채우기에 사용된 원본 텍스트
+    images  // 결제요청에 첨부된 이미지 배열
   } = req.body;
 
   // process 필드가 있으면 description으로 사용
@@ -161,8 +162,8 @@ router.post('/', authenticateToken, async (req, res) => {
      (project_id, user_id, request_type, vendor_name, description, amount,
       account_holder, bank_name, account_number, notes, item_name,
       material_amount, labor_amount, original_material_amount, original_labor_amount,
-      apply_tax_deduction, includes_vat, quick_text, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      apply_tax_deduction, includes_vat, quick_text, images, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
     [
       finalProjectId,
       req.user.id,
@@ -181,7 +182,8 @@ router.post('/', authenticateToken, async (req, res) => {
       originalLaborAmount || 0,
       applyTaxDeduction ? 1 : 0,
       includesVAT ? 1 : 0,
-      quickText || null
+      quickText || null,
+      images ? JSON.stringify(images) : null
     ],
     function(err) {
       if (err) {
