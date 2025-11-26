@@ -43,10 +43,28 @@ const AdditionalWork = () => {
   const [showMobileForm, setShowMobileForm] = useState(false);
   const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
 
-  // 공사대금 완납된 프로젝트 목록 계산
+  // 프로젝트별 추가내역 총 합계 계산
+  const calculateAdditionalWorkTotal = (projectName: string) => {
+    return additionalWorks
+      .filter(work => work.project === projectName)
+      .reduce((sum, work) => sum + work.amount, 0);
+  };
+
+  // 공사대금 완납된 프로젝트 목록 계산 (공사대금 페이지와 동일한 로직)
   const completedProjects = constructionPayments
     .filter(cp => {
-      const totalAmount = (cp.contractAmount || 0) + (cp.additionalAmount || 0);
+      const additionalWorkAmount = calculateAdditionalWorkTotal(cp.project);
+
+      // 부가세 계산
+      let totalWithVat: number;
+      if ((cp as any).vatType === 'amount') {
+        totalWithVat = (cp.totalAmount || 0) + ((cp as any).vatAmount || 0);
+      } else {
+        const vatAmount = (cp.totalAmount || 0) * (((cp as any).vatPercentage ?? 100) / 100) * 0.1;
+        totalWithVat = (cp.totalAmount || 0) + vatAmount;
+      }
+
+      const totalAmount = totalWithVat + additionalWorkAmount;
       const received = cp.payments?.reduce((sum: number, p: { amount: number }) => sum + p.amount, 0) || 0;
       return totalAmount > 0 && received >= totalAmount;
     })
