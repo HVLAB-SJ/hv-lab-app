@@ -142,6 +142,15 @@ const Drawings = () => {
   // Load from localStorage when user and projects are ready (only if not selected)
   useEffect(() => {
     if (user?.id && projects.length > 0 && !selectedProject) {
+      // 안팀 사용자인 경우 첫 번째 프로젝트 자동 선택
+      if (user.name === '안팀') {
+        const firstProject = projects.find(p => p.status !== 'completed');
+        if (firstProject) {
+          setSelectedProject(firstProject.id);
+        }
+        return;
+      }
+
       const savedProjectId = localStorage.getItem(`drawings-selected-project-${user.id}`);
 
       if (savedProjectId) {
@@ -151,7 +160,7 @@ const Drawings = () => {
         }
       }
     }
-  }, [user?.id, projects, selectedProject]);
+  }, [user?.id, user?.name, projects, selectedProject]);
 
   // Load drawing type from localStorage on mount
   useEffect(() => {
@@ -731,7 +740,7 @@ const Drawings = () => {
               onChange={(e) => setSelectedProject(e.target.value)}
               className="input max-w-[200px] text-sm"
             >
-              <option value="">프로젝트 선택</option>
+              {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
               {projects
                 .filter(p => p.status !== 'completed')
                 .map((project) => (
@@ -784,7 +793,7 @@ const Drawings = () => {
                 onChange={(e) => setSelectedProject(e.target.value)}
                 className="input w-full"
               >
-                <option value="">프로젝트를 선택하세요</option>
+                {user?.name !== '안팀' && <option value="">프로젝트를 선택하세요</option>}
                 {projects
                   .filter(p => p.status !== 'completed')
                   .map((project) => (
