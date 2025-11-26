@@ -1257,7 +1257,9 @@ const ExecutionHistory = () => {
                   <div className="mb-3">
                     <label className="block text-xs font-medium text-gray-700 mb-1">메모</label>
                     <textarea
-                      value={executionMemos[selectedRecord] || ''}
+                      value={executionMemos[selectedRecord] !== undefined
+                        ? executionMemos[selectedRecord]
+                        : ((fullRecord as any)?.quickText || fullRecord?.notes || '')}
                       onChange={(e) => {
                         setExecutionMemos(prev => ({
                           ...prev,
