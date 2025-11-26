@@ -1108,21 +1108,12 @@ const ExecutionHistory = () => {
                   {/* 결제요청 금액 분할 기능 */}
                   {fullRecord?.type === 'payment' && (
                     <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      {/* 원본 텍스트 또는 금액 정보 */}
-                      {(fullRecord as any).quickText ? (
-                        <>
-                          <p className="text-sm font-semibold text-gray-900 mb-2">자동 채우기 원본:</p>
-                          <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">{(fullRecord as any).quickText}</p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-sm font-semibold text-gray-900 mb-1">결제요청 금액:</p>
-                          <p className="text-sm text-gray-700 mb-2">
-                            총 {fullRecord.totalAmount?.toLocaleString()}원
-                            {fullRecord.itemName && ` (${fullRecord.itemName})`}
-                          </p>
-                        </>
-                      )}
+                      {/* 결제요청 금액 정보 */}
+                      <p className="text-sm font-semibold text-gray-900 mb-1">결제요청 금액:</p>
+                      <p className="text-sm text-gray-700 mb-2">
+                        총 {fullRecord.totalAmount?.toLocaleString()}원
+                        {fullRecord.itemName && ` (${fullRecord.itemName})`}
+                      </p>
 
                       {/* 금액 분할 입력 영역 */}
                       {splitModeRecord === selectedRecord ? (
