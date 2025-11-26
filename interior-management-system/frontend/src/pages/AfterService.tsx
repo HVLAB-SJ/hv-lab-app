@@ -679,7 +679,6 @@ const AfterService = () => {
                     {getStatusBadge(request.status)}
                   </div>
                   <h3 className="font-bold text-base text-gray-900">{request.project}</h3>
-                  <p className="text-sm text-gray-600 mt-0.5">{request.client}님</p>
                 </div>
                 <div className="flex items-center space-x-1">
                   <button
