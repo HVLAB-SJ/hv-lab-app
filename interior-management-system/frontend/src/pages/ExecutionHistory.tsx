@@ -7,6 +7,7 @@ import { Search, Trash2, ImageIcon, X, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import paymentService from '../services/paymentService';
 
 // 공정 목록
 const PROCESS_LIST = [
@@ -35,8 +36,7 @@ const ExecutionHistory = () => {
     loadPaymentsFromAPI,
     addExecutionRecord,
     deleteExecutionRecord,
-    updateExecutionRecord,
-    updatePaymentInAPI
+    updateExecutionRecord
   } = useDataStore();
   const { user } = useAuth();
   const projects = useFilteredProjects(); // 안팀 사용자는 담당 프로젝트만 표시
@@ -1180,11 +1180,12 @@ const ExecutionHistory = () => {
                                 const laborValue = splitLaborCost === '' ? 0 : splitLaborCost;
 
                                 try {
-                                  // 결제요청 내역 직접 업데이트
-                                  await updatePaymentInAPI(fullRecord.id, {
-                                    materialAmount: materialValue,
-                                    laborAmount: laborValue
-                                  });
+                                  // 결제요청 금액만 업데이트 (새로운 PATCH API 사용)
+                                  await paymentService.updatePaymentAmounts(
+                                    fullRecord.id,
+                                    materialValue,
+                                    laborValue
+                                  );
 
                                   // 결제요청 목록 다시 로드
                                   await loadPaymentsFromAPI();

@@ -420,6 +420,39 @@ router.post('/:id/reject', authenticateToken, isManager, (req, res) => {
   );
 });
 
+// 결제 요청 금액만 업데이트 (자재비/인건비 분할용)
+router.patch('/:id/amounts', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { materialAmount, laborAmount } = req.body;
+
+  console.log(`[PATCH /api/payments/:id/amounts] Updating payment ${id} amounts:`, { materialAmount, laborAmount });
+
+  db.run(
+    `UPDATE payment_requests
+     SET material_amount = ?,
+         labor_amount = ?,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [
+      materialAmount !== undefined ? materialAmount : 0,
+      laborAmount !== undefined ? laborAmount : 0,
+      id
+    ],
+    function(err) {
+      if (err) {
+        console.error('[PATCH /api/payments/:id/amounts] Database error:', err);
+        return res.status(500).json({ error: '금액 수정 실패', details: err.message });
+      }
+      if (this.changes === 0) {
+        return res.status(404).json({ error: '결제 요청을 찾을 수 없습니다.' });
+      }
+
+      console.log(`[PATCH /api/payments/:id/amounts] Successfully updated payment ${id}`);
+      res.json({ message: '금액이 수정되었습니다.' });
+    }
+  );
+});
+
 // 결제 상태 변경 (송금완료 등)
 router.put('/:id/status', authenticateToken, (req, res) => {
   const { id } = req.params;

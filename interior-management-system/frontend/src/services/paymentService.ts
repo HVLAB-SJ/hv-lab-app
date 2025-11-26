@@ -128,6 +128,12 @@ const paymentService = {
     return response.data;
   },
 
+  // Update payment amounts only (for split amounts)
+  updatePaymentAmounts: async (id: string, materialAmount: number, laborAmount: number): Promise<PaymentResponse> => {
+    const response = await api.patch(`/payments/${id}/amounts`, { materialAmount, laborAmount });
+    return response.data;
+  },
+
   // Delete payment
   deletePayment: async (id: string): Promise<void> => {
     await api.delete(`/payments/${id}`);
