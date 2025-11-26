@@ -53,12 +53,14 @@ router.get('/:projectId/:type', authenticateToken, async (req, res) => {
   const { projectId, type } = req.params;
   const decodedType = decodeURIComponent(type);
 
+  console.log(`[drawings] GET request - projectId: ${projectId}, type: ${decodedType}`);
+
   // 테이블 존재 확인
   try {
     await ensureTableExists();
   } catch (err) {
-    console.error('Failed to ensure drawings table:', err);
-    return res.status(500).json({ error: '테이블 생성 실패' });
+    console.error('[drawings] Failed to ensure drawings table:', err);
+    return res.status(500).json({ error: '테이블 생성 실패', details: err.message });
   }
 
   const query = `
@@ -68,36 +70,51 @@ router.get('/:projectId/:type', authenticateToken, async (req, res) => {
 
   db.get(query, [projectId, decodedType], (err, drawing) => {
     if (err) {
-      console.error('Failed to get drawing:', err);
-      return res.status(500).json({ error: '도면 조회 실패' });
+      console.error('[drawings] Failed to get drawing:', err);
+      return res.status(500).json({ error: '도면 조회 실패', details: err.message, code: err.code });
     }
 
     if (!drawing) {
       return res.status(404).json({ error: '도면을 찾을 수 없습니다' });
     }
 
-    // Parse JSON strings
-    const parsedDrawing = {
-      id: drawing.id,
-      projectId: drawing.project_id,
-      type: drawing.type,
-      imageUrl: drawing.image_url,
-      markers: JSON.parse(drawing.markers || '[]'),
-      rooms: JSON.parse(drawing.rooms || '[]'),
-      naverTypeSqm: drawing.naver_type_sqm,
-      naverTypePyeong: drawing.naver_type_pyeong,
-      naverArea: drawing.naver_area,
-      createdAt: drawing.created_at,
-      updatedAt: drawing.updated_at
-    };
+    // Parse JSON strings with error handling
+    try {
+      const parsedDrawing = {
+        id: drawing.id,
+        projectId: drawing.project_id,
+        type: drawing.type,
+        imageUrl: drawing.image_url,
+        markers: JSON.parse(drawing.markers || '[]'),
+        rooms: JSON.parse(drawing.rooms || '[]'),
+        naverTypeSqm: drawing.naver_type_sqm,
+        naverTypePyeong: drawing.naver_type_pyeong,
+        naverArea: drawing.naver_area,
+        createdAt: drawing.created_at,
+        updatedAt: drawing.updated_at
+      };
 
-    res.json(parsedDrawing);
+      res.json(parsedDrawing);
+    } catch (parseErr) {
+      console.error('[drawings] JSON parse error:', parseErr);
+      return res.status(500).json({ error: 'JSON 파싱 실패', details: parseErr.message });
+    }
   });
 });
 
 // 프로젝트별 모든 도면 조회
-router.get('/project/:projectId', authenticateToken, (req, res) => {
+router.get('/project/:projectId', authenticateToken, async (req, res) => {
   const { projectId } = req.params;
+
+  console.log(`[drawings] GET /project request - projectId: ${projectId}`);
+
+  // 테이블 존재 확인
+  try {
+    await ensureTableExists();
+  } catch (err) {
+    console.error('[drawings] Failed to ensure drawings table:', err);
+    return res.status(500).json({ error: '테이블 생성 실패', details: err.message });
+  }
 
   const query = `
     SELECT * FROM drawings
@@ -107,25 +124,30 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
 
   db.all(query, [projectId], (err, drawings) => {
     if (err) {
-      console.error('Failed to get project drawings:', err);
-      return res.status(500).json({ error: '도면 목록 조회 실패' });
+      console.error('[drawings] Failed to get project drawings:', err);
+      return res.status(500).json({ error: '도면 목록 조회 실패', details: err.message, code: err.code });
     }
 
-    const parsedDrawings = drawings.map(drawing => ({
-      id: drawing.id,
-      projectId: drawing.project_id,
-      type: drawing.type,
-      imageUrl: drawing.image_url,
-      markers: JSON.parse(drawing.markers || '[]'),
-      rooms: JSON.parse(drawing.rooms || '[]'),
-      naverTypeSqm: drawing.naver_type_sqm,
-      naverTypePyeong: drawing.naver_type_pyeong,
-      naverArea: drawing.naver_area,
-      createdAt: drawing.created_at,
-      updatedAt: drawing.updated_at
-    }));
+    try {
+      const parsedDrawings = drawings.map(drawing => ({
+        id: drawing.id,
+        projectId: drawing.project_id,
+        type: drawing.type,
+        imageUrl: drawing.image_url,
+        markers: JSON.parse(drawing.markers || '[]'),
+        rooms: JSON.parse(drawing.rooms || '[]'),
+        naverTypeSqm: drawing.naver_type_sqm,
+        naverTypePyeong: drawing.naver_type_pyeong,
+        naverArea: drawing.naver_area,
+        createdAt: drawing.created_at,
+        updatedAt: drawing.updated_at
+      }));
 
-    res.json(parsedDrawings);
+      res.json(parsedDrawings);
+    } catch (parseErr) {
+      console.error('[drawings] JSON parse error in project list:', parseErr);
+      return res.status(500).json({ error: 'JSON 파싱 실패', details: parseErr.message });
+    }
   });
 });
 
