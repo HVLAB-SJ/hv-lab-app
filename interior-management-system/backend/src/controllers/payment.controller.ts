@@ -163,6 +163,8 @@ export const updatePayment = async (req: Request, res: Response): Promise<void> 
       process,
       itemName,
       amount,
+      materialAmount,
+      laborAmount,
       category,
       urgency,
       bankInfo,
@@ -170,21 +172,27 @@ export const updatePayment = async (req: Request, res: Response): Promise<void> 
       status
     } = req.body;
 
+    // 업데이트할 필드만 포함하는 객체 생성
+    const updateFields: Record<string, any> = {};
+    if (purpose !== undefined) updateFields.purpose = purpose;
+    if (process !== undefined) updateFields.process = process;
+    if (itemName !== undefined) updateFields.itemName = itemName;
+    if (amount !== undefined) updateFields.amount = amount;
+    if (materialAmount !== undefined) updateFields.materialAmount = materialAmount;
+    if (laborAmount !== undefined) updateFields.laborAmount = laborAmount;
+    if (category !== undefined) updateFields.category = category;
+    if (urgency !== undefined) updateFields.urgency = urgency;
+    if (bankInfo !== undefined) updateFields.bankInfo = bankInfo;
+    if (notes !== undefined) updateFields.notes = notes;
+    if (status !== undefined) {
+      updateFields.status = status;
+      if (status === 'approved') updateFields.approvalDate = new Date();
+      if (status === 'completed') updateFields.completionDate = new Date();
+    }
+
     const payment = await Payment.findByIdAndUpdate(
       req.params.id,
-      {
-        purpose,
-        process,
-        itemName,
-        amount,
-        category,
-        urgency,
-        bankInfo,
-        notes,
-        status,
-        ...(status === 'approved' && { approvalDate: new Date() }),
-        ...(status === 'completed' && { completionDate: new Date() })
-      },
+      updateFields,
       { new: true, runValidators: true }
     )
       .populate('project', 'name');
