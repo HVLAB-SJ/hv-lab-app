@@ -35,7 +35,8 @@ const ExecutionHistory = () => {
     loadPaymentsFromAPI,
     addExecutionRecord,
     deleteExecutionRecord,
-    updateExecutionRecord
+    updateExecutionRecord,
+    updatePaymentInAPI
   } = useDataStore();
   const { user } = useAuth();
   const projects = useFilteredProjects(); // 안팀 사용자는 담당 프로젝트만 표시
@@ -1174,26 +1175,30 @@ const ExecutionHistory = () => {
                           </div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => {
-                                // 폼에 자동 입력
+                              onClick={async () => {
                                 const materialValue = splitMaterialCost === '' ? 0 : splitMaterialCost;
                                 const laborValue = splitLaborCost === '' ? 0 : splitLaborCost;
-                                setFormData(prev => ({
-                                  ...prev,
-                                  project: fullRecord.project,
-                                  date: format(new Date(fullRecord.date), 'yyyy-MM-dd'),
-                                  process: fullRecord.process || '',
-                                  itemName: fullRecord.itemName || '',
-                                  materialCost: materialValue,
-                                  laborCost: laborValue
-                                }));
-                                // 분할 모드 종료
-                                setSplitModeRecord(null);
-                                setSplitMaterialCost('');
-                                setSplitLaborCost('');
-                                // 폼 뷰로 전환
-                                setMobileView('form');
-                                toast.success('금액이 입력되었습니다. 저장 버튼을 눌러주세요.');
+
+                                try {
+                                  // 결제요청 내역 직접 업데이트
+                                  await updatePaymentInAPI(fullRecord.id, {
+                                    materialAmount: materialValue,
+                                    laborAmount: laborValue
+                                  });
+
+                                  // 결제요청 목록 다시 로드
+                                  await loadPaymentsFromAPI();
+
+                                  // 분할 모드 종료
+                                  setSplitModeRecord(null);
+                                  setSplitMaterialCost('');
+                                  setSplitLaborCost('');
+
+                                  toast.success('금액이 적용되었습니다.');
+                                } catch (error) {
+                                  console.error('금액 적용 실패:', error);
+                                  toast.error('금액 적용에 실패했습니다.');
+                                }
                               }}
                               className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gray-700 rounded-lg hover:bg-gray-800 transition-colors"
                             >

@@ -432,6 +432,8 @@ export const useDataStore = create<DataStore>()(
           process: updatedPayment.process,
           itemName: updatedPayment.itemName,
           amount: updatedPayment.amount,
+          materialAmount: updatedPayment.materialAmount,
+          laborAmount: updatedPayment.laborAmount,
           category: updatedPayment.category,
           urgency: updatedPayment.urgency,
           bankInfo: updatedPayment.bankInfo,
