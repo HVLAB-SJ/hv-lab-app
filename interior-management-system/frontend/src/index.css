@@ -275,6 +275,7 @@
   margin-bottom: 0 !important;
   flex: 0 0 auto !important;
   border: none !important;
+  border-bottom: 1px solid #e5e7eb !important;
 }
 
 /* 3. 날짜 셀 행 (주 단위) - 동적 높이 적용 */

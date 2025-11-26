@@ -307,8 +307,10 @@ const AdditionalWork = () => {
   const filteredWorks = additionalWorks.filter(work => {
     const matchesSearch = (work.project?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                           (work.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    const matchesCompleted = !showOnlyCompleted || completedProjects.includes(work.project);
-    return matchesSearch && matchesCompleted;
+    // 미납: completedProjects에 없는 것, 완납: completedProjects에 있는 것
+    const isCompleted = completedProjects.includes(work.project);
+    const matchesTab = showOnlyCompleted ? isCompleted : !isCompleted;
+    return matchesSearch && matchesTab;
   });
 
   // 프로젝트별로 그룹핑
@@ -432,9 +434,32 @@ const AdditionalWork = () => {
 
         {/* 중간: 추가내역 목록 */}
         <div className="md:col-span-4 lg:col-span-5 space-y-3 md:space-y-4">
-          {/* 검색 및 총액 */}
+          {/* 미납/완납 탭 및 검색 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div className="space-y-4">
+              {/* 미납/완납 탭 */}
+              <div className="flex border-b border-gray-200">
+                <button
+                  onClick={() => setShowOnlyCompleted(false)}
+                  className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    !showOnlyCompleted
+                      ? 'border-gray-900 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  미납 ({projectGroups.filter(g => !completedProjects.includes(g.projectName)).length})
+                </button>
+                <button
+                  onClick={() => setShowOnlyCompleted(true)}
+                  className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    showOnlyCompleted
+                      ? 'border-gray-900 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  완납 ({completedProjects.length})
+                </button>
+              </div>
               <input
                 type="text"
                 placeholder="프로젝트명 또는 내용으로 검색"
@@ -442,17 +467,7 @@ const AdditionalWork = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <div className="flex justify-between items-center">
-                <button
-                  onClick={() => setShowOnlyCompleted(!showOnlyCompleted)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    showOnlyCompleted
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  완납 프로젝트 ({completedProjects.length})
-                </button>
+              <div className="flex justify-end items-center">
                 <div className="text-right">
                   <span className="text-base font-semibold text-gray-700">전체 합계: </span>
                   <span className="text-lg font-bold text-gray-900">
@@ -692,9 +707,32 @@ const AdditionalWork = () => {
           </div>
         )}
 
-        {/* 검색 및 총액 */}
+        {/* 미납/완납 탭 및 검색 */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
           <div className="space-y-3">
+            {/* 미납/완납 탭 */}
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setShowOnlyCompleted(false)}
+                className={`flex-1 py-2 text-xs font-medium border-b-2 transition-colors ${
+                  !showOnlyCompleted
+                    ? 'border-gray-900 text-gray-900'
+                    : 'border-transparent text-gray-500'
+                }`}
+              >
+                미납 ({additionalWorks.filter(w => !completedProjects.includes(w.project)).length > 0 ? projectGroups.filter(g => !completedProjects.includes(g.projectName)).length : 0})
+              </button>
+              <button
+                onClick={() => setShowOnlyCompleted(true)}
+                className={`flex-1 py-2 text-xs font-medium border-b-2 transition-colors ${
+                  showOnlyCompleted
+                    ? 'border-gray-900 text-gray-900'
+                    : 'border-transparent text-gray-500'
+                }`}
+              >
+                완납 ({completedProjects.length})
+              </button>
+            </div>
             <input
               type="text"
               placeholder="프로젝트명 또는 내용으로 검색"
@@ -702,17 +740,7 @@ const AdditionalWork = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className="flex justify-between items-center">
-              <button
-                onClick={() => setShowOnlyCompleted(!showOnlyCompleted)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                  showOnlyCompleted
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-600'
-                }`}
-              >
-                완납 ({completedProjects.length})
-              </button>
+            <div className="flex justify-end">
               <div>
                 <span className="font-medium text-gray-700">합계: </span>
                 <span className="text-lg font-bold text-gray-900">

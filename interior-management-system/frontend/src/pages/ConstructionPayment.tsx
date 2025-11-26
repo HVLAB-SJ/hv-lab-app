@@ -558,7 +558,7 @@ const ConstructionPayment = () => {
         </nav>
         <button
           onClick={handleAddProject}
-          className="btn btn-primary px-4 py-2 whitespace-nowrap"
+          className="btn btn-primary px-4 py-2 whitespace-nowrap hidden md:block"
         >
           +프로젝트
         </button>
