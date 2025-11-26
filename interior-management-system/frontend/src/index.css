@@ -258,6 +258,7 @@
   line-height: 22px !important;
   font-size: 14px !important;
   font-weight: 600 !important;
+  border: none !important;
 }
 
 .rbc-month-view .rbc-month-header {
@@ -265,7 +266,7 @@
   min-height: 22px !important;
   margin: 0 0 0 0 !important;
   padding: 0 !important;
-  border-bottom: none !important;
+  border: none !important;
 }
 
 .rbc-month-view .rbc-row.rbc-month-header {
@@ -273,6 +274,7 @@
   min-height: 22px !important;
   margin-bottom: 0 !important;
   flex: 0 0 auto !important;
+  border: none !important;
 }
 
 /* 3. 날짜 셀 행 (주 단위) - 동적 높이 적용 */
