@@ -439,50 +439,74 @@ const ExecutionHistory = () => {
 
   // 파일 선택 처리
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!selectedRecord) {
-      toast.error('먼저 실행내역을 선택해주세요');
-      return;
-    }
-
-    const files = Array.from(e.target?.files || []);
-    const imageFiles = files.filter(f => f.type.startsWith('image/'));
-
-    if (imageFiles.length === 0) return;
-
-    // 모든 이미지를 Promise로 처리 (모바일 호환성 개선)
-    Promise.all(
-      imageFiles.map(file => {
-        return new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const base64 = event.target?.result as string;
-            resolve(base64);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      })
-    ).then(newImages => {
-      // 실제 레코드에 이미지 추가
-      const record = executionRecords.find(r => r.id === selectedRecord);
-      if (record) {
-        const updatedImages = [...(record.images || []), ...newImages];
-        updateExecutionRecord(selectedRecord, { images: updatedImages });
-      } else {
-        // 결제요청 레코드인 경우 별도 저장소에 저장
-        setPaymentRecordImages(prev => ({
-          ...prev,
-          [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
-        }));
+    try {
+      if (!selectedRecord) {
+        toast.error('먼저 실행내역을 선택해주세요');
+        return;
       }
-      toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
-    }).catch(error => {
-      console.error('이미지 처리 중 오류:', error);
-      toast.error('이미지 추가 중 오류가 발생했습니다');
-    });
 
-    // input 초기화 (같은 파일 재선택 가능하도록)
-    e.target.value = '';
+      const files = Array.from(e.target?.files || []);
+      if (files.length === 0) return;
+
+      const imageFiles = files.filter(f => f.type.startsWith('image/'));
+
+      if (imageFiles.length === 0) {
+        toast.error('이미지 파일만 선택해주세요');
+        return;
+      }
+
+      // 파일 크기 체크 (10MB 이상이면 경고)
+      const largeFiles = imageFiles.filter(f => f.size > 10 * 1024 * 1024);
+      if (largeFiles.length > 0) {
+        toast.error('10MB 이상의 이미지는 처리가 오래 걸릴 수 있습니다');
+      }
+
+      // 모든 이미지를 Promise로 처리 (모바일 호환성 개선)
+      Promise.all(
+        imageFiles.map(file => {
+          return new Promise<string>((resolve, reject) => {
+            try {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                const base64 = event.target?.result as string;
+                if (base64) {
+                  resolve(base64);
+                } else {
+                  reject(new Error('이미지 읽기 실패'));
+                }
+              };
+              reader.onerror = () => reject(new Error('FileReader 오류'));
+              reader.readAsDataURL(file);
+            } catch (err) {
+              reject(err);
+            }
+          });
+        })
+      ).then(newImages => {
+        // 실제 레코드에 이미지 추가
+        const record = executionRecords.find(r => r.id === selectedRecord);
+        if (record) {
+          const updatedImages = [...(record.images || []), ...newImages];
+          updateExecutionRecord(selectedRecord, { images: updatedImages });
+        } else {
+          // 결제요청 레코드인 경우 별도 저장소에 저장
+          setPaymentRecordImages(prev => ({
+            ...prev,
+            [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
+          }));
+        }
+        toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+      }).catch(error => {
+        console.error('이미지 처리 중 오류:', error);
+        toast.error('이미지 추가 중 오류가 발생했습니다');
+      });
+
+      // input 초기화 (같은 파일 재선택 가능하도록)
+      e.target.value = '';
+    } catch (error) {
+      console.error('파일 선택 처리 중 오류:', error);
+      toast.error('파일 선택 중 오류가 발생했습니다');
+    }
   };
 
   // 이미지 삭제
@@ -1301,6 +1325,7 @@ const ExecutionHistory = () => {
                   <label
                     htmlFor="image-file-input"
                     className={`block cursor-pointer ${images.length > 0 ? '' : 'flex-1'}`}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <div
                       className={`w-full border-2 border-dashed rounded-lg p-4 text-center transition-colors flex flex-col items-center justify-center ${
@@ -1567,12 +1592,22 @@ const ExecutionHistory = () => {
             >
               <X className="h-8 w-8" />
             </button>
-            <img
-              src={modalImage}
-              alt="원본 이미지"
-              className="max-w-full max-h-[90vh] object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
+            {modalImage ? (
+              <img
+                src={modalImage}
+                alt="원본 이미지"
+                className="max-w-full max-h-[90vh] object-contain"
+                onClick={(e) => e.stopPropagation()}
+                onError={() => {
+                  toast.error('이미지를 불러올 수 없습니다');
+                  setShowImageModal(false);
+                }}
+              />
+            ) : (
+              <div className="text-white text-center p-4">
+                <p>이미지를 불러올 수 없습니다</p>
+              </div>
+            )}
           </div>
         </div>
       )}
