@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import paymentService from '../services/paymentService';
+import { getAllImages, saveImages, migrateFromLocalStorage } from '../utils/imageStorage';
 
 // 이미지 압축 함수 (용량 줄이기)
 const compressImage = (base64: string, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
@@ -123,12 +124,9 @@ const ExecutionHistory = () => {
   const processButtonRef = useRef<HTMLButtonElement>(null);
   // 항목명 추천
   const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
-  // 결제요청 레코드의 이미지를 저장하는 별도의 상태 (페이지 이동 시에도 유지)
-  const [paymentRecordImages, setPaymentRecordImages] = useState<Record<string, string[]>>(() => {
-    // localStorage에서 이미지 복원
-    const stored = localStorage.getItem('paymentRecordImages');
-    return stored ? JSON.parse(stored) : {};
-  });
+  // 결제요청 레코드의 이미지를 저장하는 별도의 상태 (IndexedDB 사용으로 용량 제한 없음)
+  const [paymentRecordImages, setPaymentRecordImages] = useState<Record<string, string[]>>({});
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   // 실행내역에서 숨긴 결제요청 ID 저장
   const [hiddenPaymentIds, setHiddenPaymentIds] = useState<string[]>(() => {
     const stored = localStorage.getItem('hiddenPaymentIds');
@@ -200,13 +198,40 @@ const ExecutionHistory = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, [loadPaymentsFromAPI, projects]);
 
-  // paymentRecordImages가 변경될 때마다 localStorage에 저장
+  // IndexedDB에서 이미지 로드 (마운트 시 1회)
   useEffect(() => {
-    const saved = safeLocalStorageSet('paymentRecordImages', JSON.stringify(paymentRecordImages));
-    if (!saved) {
-      toast.error('저장 공간이 부족합니다. 오래된 이미지가 삭제될 수 있습니다.');
-    }
-  }, [paymentRecordImages]);
+    const loadImages = async () => {
+      try {
+        // 먼저 localStorage에서 마이그레이션
+        await migrateFromLocalStorage();
+        // IndexedDB에서 이미지 로드
+        const images = await getAllImages();
+        setPaymentRecordImages(images);
+        setImagesLoaded(true);
+      } catch (error) {
+        console.error('이미지 로드 실패:', error);
+        setImagesLoaded(true);
+      }
+    };
+    loadImages();
+  }, []);
+
+  // paymentRecordImages가 변경될 때마다 IndexedDB에 저장
+  const prevImagesRef = useRef<Record<string, string[]>>({});
+  useEffect(() => {
+    if (!imagesLoaded) return; // 초기 로드 전에는 저장하지 않음
+
+    // 변경된 레코드만 저장
+    Object.entries(paymentRecordImages).forEach(([recordId, images]) => {
+      if (JSON.stringify(prevImagesRef.current[recordId]) !== JSON.stringify(images)) {
+        saveImages(recordId, images).catch(error => {
+          console.error('이미지 저장 실패:', error);
+          toast.error('이미지 저장에 실패했습니다');
+        });
+      }
+    });
+    prevImagesRef.current = { ...paymentRecordImages };
+  }, [paymentRecordImages, imagesLoaded]);
 
   // hiddenPaymentIds가 변경될 때마다 localStorage에 저장
   useEffect(() => {

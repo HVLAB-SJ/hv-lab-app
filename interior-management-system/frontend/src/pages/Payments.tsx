@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import contractorService from '../services/contractorService';
 import CashReceiptModal from '../components/CashReceiptModal';
 import { removePosition } from '../utils/formatters';
+import { getAllImages, saveImages, migrateFromLocalStorage } from '../utils/imageStorage';
 
 // 이미지 압축 함수 (용량 줄이기)
 const compressImage = (base64: string, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
@@ -135,11 +136,9 @@ const Payments = () => {
   const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
   const [isItemNameFocused, setIsItemNameFocused] = useState(false);
 
-  // 결제요청 레코드의 이미지를 저장하는 별도의 상태
-  const [paymentRecordImages, setPaymentRecordImages] = useState<Record<string, string[]>>(() => {
-    const stored = localStorage.getItem('paymentRecordImages');
-    return stored ? JSON.parse(stored) : {};
-  });
+  // 결제요청 레코드의 이미지를 저장하는 별도의 상태 (IndexedDB 사용으로 용량 제한 없음)
+  const [paymentRecordImages, setPaymentRecordImages] = useState<Record<string, string[]>>({});
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   // 마지막 선택된 프로젝트 불러오기
   const getInitialProject = () => {
@@ -1117,13 +1116,37 @@ const Payments = () => {
     }
   }, [formData.accountHolder, payments, contractors, selectedContractorId]);
 
-  // paymentRecordImages가 변경될 때마다 localStorage에 저장
+  // IndexedDB에서 이미지 로드 (마운트 시 1회)
   useEffect(() => {
-    const saved = safeLocalStorageSet('paymentRecordImages', JSON.stringify(paymentRecordImages));
-    if (!saved) {
-      toast.error('저장 공간이 부족합니다. 일부 이미지가 저장되지 않을 수 있습니다.');
-    }
-  }, [paymentRecordImages]);
+    const loadImages = async () => {
+      try {
+        await migrateFromLocalStorage();
+        const images = await getAllImages();
+        setPaymentRecordImages(images);
+        setImagesLoaded(true);
+      } catch (error) {
+        console.error('이미지 로드 실패:', error);
+        setImagesLoaded(true);
+      }
+    };
+    loadImages();
+  }, []);
+
+  // paymentRecordImages가 변경될 때마다 IndexedDB에 저장
+  const prevImagesRef = useRef<Record<string, string[]>>({});
+  useEffect(() => {
+    if (!imagesLoaded) return;
+
+    Object.entries(paymentRecordImages).forEach(([recordId, images]) => {
+      if (JSON.stringify(prevImagesRef.current[recordId]) !== JSON.stringify(images)) {
+        saveImages(recordId, images).catch(error => {
+          console.error('이미지 저장 실패:', error);
+          toast.error('이미지 저장에 실패했습니다');
+        });
+      }
+    });
+    prevImagesRef.current = { ...paymentRecordImages };
+  }, [paymentRecordImages, imagesLoaded]);
 
   // 클립보드 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
