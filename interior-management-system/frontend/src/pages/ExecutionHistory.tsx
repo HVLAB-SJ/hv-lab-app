@@ -1259,7 +1259,7 @@ const ExecutionHistory = () => {
                       }}
                       placeholder="메모를 입력하세요..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-none"
-                      rows={3}
+                      rows={6}
                     />
                   </div>
 
