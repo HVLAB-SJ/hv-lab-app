@@ -41,6 +41,14 @@ class DrawingStorage {
   // 도면 데이터 저장 (이미지 URL 방식)
   async setItem(key: string, data: DrawingData, userId: string): Promise<void> {
     try {
+      console.log('[drawingStorage] 도면 저장 요청:', {
+        projectId: data.projectId,
+        type: data.type,
+        imageUrl: data.imageUrl ? 'provided' : 'none',
+        markersCount: data.markers?.length || 0,
+        roomsCount: data.rooms?.length || 0
+      });
+
       await api.post('/drawings', {
         projectId: data.projectId,
         type: data.type,
@@ -54,7 +62,14 @@ class DrawingStorage {
       console.log('✅ 도면 데이터 저장 성공');
     } catch (error: any) {
       console.error('서버 도면 저장 실패:', error);
-      throw error;
+      // 상세한 에러 정보 포함
+      const errorMsg = error.response?.data?.error || '저장 실패';
+      const errorDetails = error.response?.data?.details || error.message || '';
+      const statusCode = error.response?.status || '';
+      const fullError = new Error(`${errorMsg}${errorDetails ? ` (${errorDetails})` : ''}`);
+      (fullError as any).statusCode = statusCode;
+      (fullError as any).response = error.response;
+      throw fullError;
     }
   }
 
@@ -71,6 +86,8 @@ class DrawingStorage {
       // projectId와 type 추출
       const projectId = parts[2];
       const type = parts.slice(3).join('-'); // type에 하이픈이 있을 수 있음
+
+      console.log(`[drawingStorage] 도면 조회 요청: projectId=${projectId}, type=${type}`);
 
       const response = await api.get(`/drawings/${projectId}/${encodeURIComponent(type)}`);
 
@@ -90,6 +107,12 @@ class DrawingStorage {
     } catch (error: any) {
       // 404는 데이터가 없는 것이므로 null 반환
       if (error.response?.status === 404) {
+        console.log('[drawingStorage] 도면 데이터 없음 (404)');
+        return null;
+      }
+      // 500 에러도 데이터가 없는 것으로 간주 (테이블 초기화 문제 등)
+      if (error.response?.status === 500) {
+        console.warn('[drawingStorage] 서버 에러, 빈 데이터 반환:', error.response?.data);
         return null;
       }
       console.error('서버 도면 조회 실패:', error);

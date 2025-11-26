@@ -59,32 +59,50 @@ const ensureTableExists = () => {
       return;
     }
 
-    const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS drawings (
-        id TEXT PRIMARY KEY,
-        project_id TEXT NOT NULL,
-        type TEXT NOT NULL,
-        image_url TEXT,
-        markers TEXT DEFAULT '[]',
-        rooms TEXT DEFAULT '[]',
-        naver_type_sqm TEXT,
-        naver_type_pyeong TEXT,
-        naver_area TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(project_id, type)
-      )
-    `;
-
-    db.run(createTableQuery, (err) => {
-      if (err) {
-        console.error('[drawings] Failed to create table:', err);
-        reject(err);
+    // 먼저 테이블이 존재하는지 확인
+    db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='drawings'", (checkErr, row) => {
+      if (checkErr) {
+        console.error('[drawings] Error checking table existence:', checkErr);
+        reject(checkErr);
         return;
       }
-      console.log('✅ drawings table ensured');
-      tableChecked = true;
-      resolve();
+
+      if (row) {
+        // 테이블이 이미 존재함
+        console.log('✅ drawings table already exists');
+        tableChecked = true;
+        resolve();
+        return;
+      }
+
+      // 테이블이 없으면 생성
+      const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS drawings (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL,
+          type TEXT NOT NULL,
+          image_url TEXT,
+          markers TEXT DEFAULT '[]',
+          rooms TEXT DEFAULT '[]',
+          naver_type_sqm TEXT,
+          naver_type_pyeong TEXT,
+          naver_area TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(project_id, type)
+        )
+      `;
+
+      db.run(createTableQuery, (err) => {
+        if (err) {
+          console.error('[drawings] Failed to create table:', err);
+          reject(err);
+          return;
+        }
+        console.log('✅ drawings table created');
+        tableChecked = true;
+        resolve();
+      });
     });
   });
 };

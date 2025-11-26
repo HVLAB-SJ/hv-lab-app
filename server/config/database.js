@@ -777,6 +777,30 @@ const initDatabase = () => {
     }
   });
 
+  // 도면 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS drawings (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      image_url TEXT,
+      markers TEXT DEFAULT '[]',
+      rooms TEXT DEFAULT '[]',
+      naver_type_sqm TEXT,
+      naver_type_pyeong TEXT,
+      naver_area TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(project_id, type)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('❌ 도면 테이블 생성 실패:', err);
+    } else {
+      console.log('✓ 도면 테이블 생성 완료');
+    }
+  });
+
   // 기본 계정 생성 (테이블 생성 후 즉시 실행)
   // Use serialize to ensure tables are created before inserting users
   db.serialize(() => {
