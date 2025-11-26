@@ -891,7 +891,10 @@ const ExecutionHistory = () => {
                     className={`border rounded-lg p-4 ${
                       selectedRecord === record.id ? 'bg-blue-50 border-blue-300' : 'bg-white'
                     }`}
-                    onClick={() => setSelectedRecord(record.id)}
+                    onClick={() => {
+                      setSelectedRecord(record.id);
+                      setMobileView('image');
+                    }}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
