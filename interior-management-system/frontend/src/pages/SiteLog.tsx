@@ -694,13 +694,12 @@ const SiteLog = () => {
 
   return (
     <div className="desktop:grid desktop:grid-cols-12 desktop:gap-4 desktop:h-[calc(100vh-140px)] space-y-3 desktop:space-y-0">
-      {/* 모바일 상단 헤더 - 프로젝트 선택 */}
-      <div className="desktop:hidden flex items-center justify-between mb-1">
-        <h1 className="text-lg font-bold text-gray-900">현장일지</h1>
+      {/* 모바일 상단 - 프로젝트 선택 */}
+      <div className="desktop:hidden flex justify-end mb-2">
         <select
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
-          className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 max-w-[200px]"
+          className="px-3 py-2 text-sm bg-gray-900 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 font-medium"
         >
           {projects.map(project => (
             <option key={project.id} value={project.name}>
