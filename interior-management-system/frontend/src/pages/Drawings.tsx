@@ -275,70 +275,33 @@ const Drawings = () => {
     };
   }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea]);
 
-  // 이미지 압축 함수 (서버 저장을 위해 더 강하게 압축)
-  // maxWidth: 1200px, quality: 0.5로 설정하여 서버 저장 시 크기 최소화
-  const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.5): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
+  // 업로드 상태
+  const [isUploading, setIsUploading] = useState(false);
 
-          // 최대 너비 제한
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-
-          // 최대 높이도 제한 (세로로 긴 이미지 대응)
-          const maxHeight = 1600;
-          if (height > maxHeight) {
-            width = (width * maxHeight) / height;
-            height = maxHeight;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            reject(new Error('Canvas context not available'));
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-
-          // 압축된 이미지 크기 로깅
-          const sizeKB = Math.round(compressedDataUrl.length / 1024);
-          console.log(`📸 이미지 압축 완료: ${width}x${height}px, ${sizeKB}KB`);
-
-          resolve(compressedDataUrl);
-        };
-        img.onerror = () => reject(new Error('Image load failed'));
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = () => reject(new Error('File read failed'));
-      reader.readAsDataURL(file);
-    });
-  };
-
-  // 이미지 파일 처리 함수
+  // 이미지 파일 처리 함수 (서버 업로드 방식)
   const processImageFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       alert('이미지 파일만 업로드 가능합니다.');
       return;
     }
 
+    // 파일 크기 체크 (20MB)
+    if (file.size > 20 * 1024 * 1024) {
+      alert('파일 크기가 20MB를 초과합니다.');
+      return;
+    }
+
+    setIsUploading(true);
     try {
-      const compressedImage = await compressImage(file);
-      setUploadedImage(compressedImage);
-    } catch (error) {
-      console.error('이미지 처리 실패:', error);
-      alert('이미지 처리에 실패했습니다.');
+      // 서버에 파일 업로드
+      const imageUrl = await drawingStorage.uploadImage(file);
+      console.log(`📸 이미지 업로드 완료: ${imageUrl}`);
+      setUploadedImage(imageUrl);
+    } catch (error: any) {
+      console.error('이미지 업로드 실패:', error);
+      alert(error.message || '이미지 업로드에 실패했습니다.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -1164,21 +1127,37 @@ const Drawings = () => {
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                   >
-                    <FileImage className={`w-20 h-20 mb-4 transition-colors ${
-                      isDraggingFile ? 'text-blue-500' : 'text-gray-400'
-                    }`} />
-                    <p className="text-base mb-2 font-semibold">
-                      {isDraggingFile ? '이미지를 여기에 놓으세요' : '도면 이미지를 업로드하세요'}
-                    </p>
-                    <p className="text-sm mb-4 text-gray-400">
-                      파일 선택, 드래그 앤 드롭, 또는 Ctrl+V로 붙여넣기
-                    </p>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-6 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                    >
-                      파일 선택
-                    </button>
+                    {isUploading ? (
+                      <>
+                        <div className="w-20 h-20 mb-4 flex items-center justify-center">
+                          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                        <p className="text-base mb-2 font-semibold text-blue-600">
+                          이미지 업로드 중...
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          잠시만 기다려주세요
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <FileImage className={`w-20 h-20 mb-4 transition-colors ${
+                          isDraggingFile ? 'text-blue-500' : 'text-gray-400'
+                        }`} />
+                        <p className="text-base mb-2 font-semibold">
+                          {isDraggingFile ? '이미지를 여기에 놓으세요' : '도면 이미지를 업로드하세요'}
+                        </p>
+                        <p className="text-sm mb-4 text-gray-400">
+                          파일 선택, 드래그 앤 드롭, 또는 Ctrl+V로 붙여넣기
+                        </p>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="px-6 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                        >
+                          파일 선택
+                        </button>
+                      </>
+                    )}
                     <input
                       ref={fileInputRef}
                       type="file"

@@ -1,5 +1,5 @@
 // 서버 기반 도면 데이터 저장소
-// 모든 기기에서 동기화되는 서버 저장 방식
+// 파일 업로드 방식으로 이미지 저장
 
 import api from '../services/api';
 
@@ -17,7 +17,28 @@ interface DrawingData {
 }
 
 class DrawingStorage {
-  // 데이터 저장 (서버 API 호출)
+  // 이미지 파일 업로드
+  async uploadImage(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await api.post('/drawings/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      console.log('✅ 이미지 업로드 성공:', response.data.imageUrl);
+      return response.data.imageUrl;
+    } catch (error: any) {
+      console.error('이미지 업로드 실패:', error);
+      const errorMsg = error.response?.data?.error || error.message || '알 수 없는 오류';
+      throw new Error(`이미지 업로드 실패: ${errorMsg}`);
+    }
+  }
+
+  // 도면 데이터 저장 (이미지 URL 방식)
   async setItem(key: string, data: DrawingData, userId: string): Promise<void> {
     try {
       await api.post('/drawings', {
@@ -30,7 +51,8 @@ class DrawingStorage {
         naverTypePyeong: data.naverTypePyeong,
         naverArea: data.naverArea
       });
-    } catch (error) {
+      console.log('✅ 도면 데이터 저장 성공');
+    } catch (error: any) {
       console.error('서버 도면 저장 실패:', error);
       throw error;
     }
@@ -101,108 +123,29 @@ class DrawingStorage {
     return 0;
   }
 
-  // localStorage에서 서버로 데이터 마이그레이션
+  // localStorage에서 서버로 데이터 마이그레이션 (더 이상 사용 안함)
   async migrateFromLocalStorage(userId: string): Promise<number> {
-    let migratedCount = 0;
+    // 기존 localStorage 데이터 정리만 수행
+    let cleanedCount = 0;
+    const keysToRemove: string[] = [];
 
-    try {
-      // IndexedDB 마이그레이션도 시도
-      await this.migrateFromIndexedDB(userId);
-
-      // localStorage에서 drawing- 으로 시작하는 모든 키 찾기
-      const keysToMigrate: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('drawing-')) {
-          keysToMigrate.push(key);
-        }
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('drawing-')) {
+        keysToRemove.push(key);
       }
-
-      // 각 항목을 서버로 이동
-      for (const key of keysToMigrate) {
-        try {
-          const dataStr = localStorage.getItem(key);
-          if (dataStr) {
-            const data: DrawingData = JSON.parse(dataStr);
-            await this.setItem(key, data, userId);
-            localStorage.removeItem(key); // 마이그레이션 후 localStorage에서 삭제
-            migratedCount++;
-          }
-        } catch (error) {
-          console.error(`마이그레이션 실패 (${key}):`, error);
-        }
-      }
-
-      if (migratedCount > 0) {
-        console.log(`✅ ${migratedCount}개의 도면 데이터를 서버로 마이그레이션했습니다.`);
-      }
-    } catch (error) {
-      console.error('마이그레이션 중 오류:', error);
     }
 
-    return migratedCount;
-  }
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      cleanedCount++;
+    });
 
-  // IndexedDB에서 서버로 데이터 마이그레이션
-  private async migrateFromIndexedDB(userId: string): Promise<number> {
-    let migratedCount = 0;
-
-    try {
-      const DB_NAME = 'DrawingsDB';
-      const STORE_NAME = 'drawings';
-
-      // IndexedDB가 존재하는지 확인
-      const databases = await indexedDB.databases();
-      const dbExists = databases.some(db => db.name === DB_NAME);
-
-      if (!dbExists) {
-        return 0;
-      }
-
-      const db = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-      });
-
-      // 모든 데이터 가져오기
-      const items = await new Promise<any[]>((resolve, reject) => {
-        const transaction = db.transaction([STORE_NAME], 'readonly');
-        const store = transaction.objectStore(STORE_NAME);
-        const request = store.getAll();
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result || []);
-      });
-
-      // 각 항목을 서버로 마이그레이션
-      for (const item of items) {
-        try {
-          if (item.data && item.data.imageUrl) {
-            await this.setItem(item.key, item.data, userId);
-            migratedCount++;
-          }
-        } catch (error) {
-          console.error(`IndexedDB 마이그레이션 실패 (${item.key}):`, error);
-        }
-      }
-
-      // 마이그레이션 완료 후 IndexedDB 삭제
-      if (migratedCount > 0) {
-        db.close();
-        await new Promise<void>((resolve, reject) => {
-          const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
-          deleteRequest.onerror = () => reject(deleteRequest.error);
-          deleteRequest.onsuccess = () => resolve();
-        });
-        console.log(`✅ IndexedDB에서 ${migratedCount}개의 도면을 서버로 마이그레이션하고 로컬 DB를 삭제했습니다.`);
-      }
-
-      db.close();
-    } catch (error) {
-      console.error('IndexedDB 마이그레이션 중 오류:', error);
+    if (cleanedCount > 0) {
+      console.log(`✅ ${cleanedCount}개의 로컬 도면 데이터를 정리했습니다.`);
     }
 
-    return migratedCount;
+    return cleanedCount;
   }
 
   // 저장소 사용량 추정 (서버에서는 의미 없음)
