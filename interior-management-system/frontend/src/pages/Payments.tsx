@@ -1140,8 +1140,13 @@ const Payments = () => {
     return () => document.removeEventListener('paste', handlePaste);
   }, [handlePaste]);
 
+  // 안팀 사용자의 경우 본인 프로젝트만 필터링
+  const projectFilteredPayments = user?.name === '안팀'
+    ? payments.filter(payment => projects.some(p => p.name === payment.project))
+    : payments;
+
   // 결제요청 레코드 (최신순 정렬)
-  const allRecords = [...payments].sort((a, b) =>
+  const allRecords = [...projectFilteredPayments].sort((a, b) =>
     new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
   );
 

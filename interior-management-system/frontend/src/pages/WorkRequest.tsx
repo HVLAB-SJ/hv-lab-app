@@ -592,8 +592,13 @@ const WorkRequest = () => {
     }
   };
 
+  // 안팀 사용자의 경우 자신의 프로젝트만 필터링
+  const projectFilteredRequests = user?.name === '안팀'
+    ? requests.filter(req => projects.some(p => p.name === req.project))
+    : requests;
+
   const getFilteredRequests = () => {
-    let filtered = requests;
+    let filtered = projectFilteredRequests;
 
     if (activeTab !== 'all') {
       filtered = filtered.filter(r => r.status === activeTab);
@@ -617,10 +622,10 @@ const WorkRequest = () => {
   const filteredRequests = getFilteredRequests();
 
   const stats = {
-    pending: requests.filter(r => r.status === 'pending').length,
-    inProgress: requests.filter(r => r.status === 'in-progress').length,
-    completed: requests.filter(r => r.status === 'completed').length,
-    total: requests.length,
+    pending: projectFilteredRequests.filter(r => r.status === 'pending').length,
+    inProgress: projectFilteredRequests.filter(r => r.status === 'in-progress').length,
+    completed: projectFilteredRequests.filter(r => r.status === 'completed').length,
+    total: projectFilteredRequests.length,
   };
 
   return (

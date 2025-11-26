@@ -49,8 +49,13 @@ const AdditionalWork = () => {
       .reduce((sum, work) => sum + work.amount, 0);
   };
 
+  // 안팀 사용자인 경우 공사대금도 본인 프로젝트만 필터링
+  const filteredConstructionPayments = user?.name === '안팀'
+    ? constructionPayments.filter(cp => filteredProjects.some(p => p.name === cp.project))
+    : constructionPayments;
+
   // 공사대금 완납된 프로젝트 목록 계산 (공사대금 페이지와 동일한 로직)
-  const completedProjects = constructionPayments
+  const completedProjects = filteredConstructionPayments
     .filter(cp => {
       const additionalWorkAmount = calculateAdditionalWorkTotal(cp.project);
 
