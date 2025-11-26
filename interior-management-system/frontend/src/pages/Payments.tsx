@@ -1710,38 +1710,53 @@ const Payments = () => {
 
       {/* 모바일에서 탭 표시 */}
       <div className="lg:hidden border-b border-gray-200 mb-4">
-        <nav className="flex space-x-4">
-          <button
-            onClick={() => setMobileView('form')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              mobileView === 'form'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500'
-            }`}
+        <div className="flex items-center justify-between">
+          <nav className="flex space-x-4">
+            <button
+              onClick={() => setMobileView('form')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                mobileView === 'form'
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-500'
+              }`}
+            >
+              입력
+            </button>
+            <button
+              onClick={() => setMobileView('list')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                mobileView === 'list'
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-500'
+              }`}
+            >
+              내역
+            </button>
+            <button
+              onClick={() => setMobileView('image')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                mobileView === 'image'
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-500'
+              }`}
+            >
+              이미지
+            </button>
+          </nav>
+          {/* 프로젝트 필터 드롭다운 - 모바일용 */}
+          <select
+            value={projectFilter}
+            onChange={(e) => setProjectFilter(e.target.value)}
+            className="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white"
           >
-            입력
-          </button>
-          <button
-            onClick={() => setMobileView('list')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              mobileView === 'list'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500'
-            }`}
-          >
-            내역
-          </button>
-          <button
-            onClick={() => setMobileView('image')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              mobileView === 'image'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500'
-            }`}
-          >
-            이미지
-          </button>
-        </nav>
+            <option value="all">전체</option>
+            {projects.filter(p => p.status !== 'completed').map(project => (
+              <option key={project.id} value={project.name}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* 메인 컨텐츠 - 3열 레이아웃 */}
@@ -2165,11 +2180,11 @@ const Payments = () => {
                   </span>
                 </button>
               </nav>
-              {/* 프로젝트 필터 드롭다운 */}
+              {/* 프로젝트 필터 드롭다운 - 데스크톱용 (모바일에서는 상단 탭 영역에 표시) */}
               <select
                 value={projectFilter}
                 onChange={(e) => setProjectFilter(e.target.value)}
-                className="ml-3 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                className="hidden lg:block ml-3 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
               >
                 <option value="all">전체 프로젝트</option>
                 {projects.map(project => (

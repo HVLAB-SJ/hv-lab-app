@@ -744,39 +744,26 @@ const SiteLog = () => {
 
             <div className="space-y-4">
 
-              {/* 작업 내용 */}
+              {/* 작업 내용 (메모) */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    작업 내용
-                  </label>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    saveStatus === 'saving' ? 'text-blue-600 bg-blue-50' :
-                    saveStatus === 'unsaved' ? 'text-orange-600 bg-orange-50' :
-                    'text-green-600 bg-green-50'
-                  }`}>
-                    {saveStatus === 'saving' ? '저장 중...' :
-                     saveStatus === 'unsaved' ? '저장 대기...' :
-                     '자동 저장됨'}
-                  </span>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  작업 내용
+                </label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => {
                     const newNotes = e.target.value;
                     setFormData(prev => ({ ...prev, notes: newNotes }));
-                    setSaveStatus('unsaved');
 
                     // 기존 타이머 취소
                     if (autoSaveTimerRef.current) {
                       clearTimeout(autoSaveTimerRef.current);
                     }
 
-                    // 1초 후 자동 저장
+                    // 150ms 후 즉시 저장 (타이핑 중 과도한 요청 방지)
                     autoSaveTimerRef.current = setTimeout(async () => {
                       if (!selectedProject) return;
 
-                      setSaveStatus('saving');
                       try {
                         const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
                         // logsRef.current를 사용하여 최신 logs 상태 참조 (stale closure 방지)
@@ -808,17 +795,15 @@ const SiteLog = () => {
                           });
                         }
 
-                        setSaveStatus('saved');
                         await loadSiteLogs();
                       } catch (error) {
-                        console.error('자동 저장 실패:', error);
-                        setSaveStatus('unsaved');
+                        console.error('저장 실패:', error);
                       }
-                    }, 1000);
+                    }, 150);
                   }}
                   rows={10}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none"
-                  placeholder="오늘 진행한 작업 내용을 입력하세요 (자동 저장)"
+                  placeholder="오늘 진행한 작업 내용을 입력하세요"
                 />
               </div>
             </div>
