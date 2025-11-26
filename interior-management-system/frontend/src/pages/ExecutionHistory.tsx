@@ -9,6 +9,69 @@ import { ko } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import paymentService from '../services/paymentService';
 
+// 이미지 압축 함수 (용량 줄이기)
+const compressImage = (base64: string, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      // 최대 너비를 넘으면 비율에 맞게 축소
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+
+      // JPEG로 압축 (용량 절약)
+      const compressed = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressed);
+    };
+    img.onerror = () => resolve(base64); // 실패 시 원본 반환
+    img.src = base64;
+  });
+};
+
+// localStorage 안전하게 저장하는 함수
+const safeLocalStorageSet = (key: string, value: string): boolean => {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    console.error('localStorage 저장 실패:', e);
+    // 용량 초과 시 오래된 데이터 정리 시도
+    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+      try {
+        // paymentRecordImages가 너무 크면 일부 삭제
+        const stored = localStorage.getItem('paymentRecordImages');
+        if (stored) {
+          const data = JSON.parse(stored);
+          const keys = Object.keys(data);
+          if (keys.length > 5) {
+            // 오래된 5개 항목 삭제
+            const toRemove = keys.slice(0, keys.length - 5);
+            toRemove.forEach(k => delete data[k]);
+            localStorage.setItem('paymentRecordImages', JSON.stringify(data));
+            // 다시 시도
+            localStorage.setItem(key, value);
+            return true;
+          }
+        }
+      } catch {
+        // 정리도 실패하면 포기
+      }
+    }
+    return false;
+  }
+};
+
 // 공정 목록
 const PROCESS_LIST = [
   '가설',
@@ -139,7 +202,10 @@ const ExecutionHistory = () => {
 
   // paymentRecordImages가 변경될 때마다 localStorage에 저장
   useEffect(() => {
-    localStorage.setItem('paymentRecordImages', JSON.stringify(paymentRecordImages));
+    const saved = safeLocalStorageSet('paymentRecordImages', JSON.stringify(paymentRecordImages));
+    if (!saved) {
+      toast.error('저장 공간이 부족합니다. 오래된 이미지가 삭제될 수 있습니다.');
+    }
   }, [paymentRecordImages]);
 
   // hiddenPaymentIds가 변경될 때마다 localStorage에 저장
@@ -196,14 +262,16 @@ const ExecutionHistory = () => {
 
     if (imageFiles.length === 0) return;
 
-    // 모든 이미지를 Promise로 처리
+    // 모든 이미지를 Promise로 처리 (압축 포함)
     Promise.all(
       imageFiles.map(file => {
         return new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = (event) => {
+          reader.onload = async (event) => {
             const base64 = event.target?.result as string;
-            resolve(base64);
+            // 이미지 압축
+            const compressed = await compressImage(base64, 800, 0.7);
+            resolve(compressed);
           };
           reader.onerror = reject;
           reader.readAsDataURL(file);
@@ -467,10 +535,12 @@ const ExecutionHistory = () => {
           return new Promise<string>((resolve, reject) => {
             try {
               const reader = new FileReader();
-              reader.onload = (event) => {
+              reader.onload = async (event) => {
                 const base64 = event.target?.result as string;
                 if (base64) {
-                  resolve(base64);
+                  // 이미지 압축 (용량 절약)
+                  const compressed = await compressImage(base64, 800, 0.7);
+                  resolve(compressed);
                 } else {
                   reject(new Error('이미지 읽기 실패'));
                 }
@@ -553,34 +623,42 @@ const ExecutionHistory = () => {
     }
 
     const files = Array.from(e.dataTransfer.files);
-    const newImages: string[] = [];
     const imageFiles = files.filter(f => f.type.startsWith('image/'));
 
     if (imageFiles.length === 0) return;
 
-    imageFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        newImages.push(base64);
-
-        if (newImages.length === imageFiles.length) {
-          // 실제 레코드에 이미지 추가
-          const record = executionRecords.find(r => r.id === selectedRecord);
-          if (record) {
-            const updatedImages = [...(record.images || []), ...newImages];
-            updateExecutionRecord(selectedRecord, { images: updatedImages });
-          } else {
-            // 결제요청 레코드인 경우 별도 저장소에 저장
-            setPaymentRecordImages(prev => ({
-              ...prev,
-              [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
-            }));
-          }
-          toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
-        }
-      };
-      reader.readAsDataURL(file);
+    // 모든 이미지를 Promise로 처리 (압축 포함)
+    Promise.all(
+      imageFiles.map(file => {
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = async (event) => {
+            const base64 = event.target?.result as string;
+            // 이미지 압축
+            const compressed = await compressImage(base64, 800, 0.7);
+            resolve(compressed);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      })
+    ).then(newImages => {
+      // 실제 레코드에 이미지 추가
+      const record = executionRecords.find(r => r.id === selectedRecord);
+      if (record) {
+        const updatedImages = [...(record.images || []), ...newImages];
+        updateExecutionRecord(selectedRecord, { images: updatedImages });
+      } else {
+        // 결제요청 레코드인 경우 별도 저장소에 저장
+        setPaymentRecordImages(prev => ({
+          ...prev,
+          [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
+        }));
+      }
+      toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+    }).catch(error => {
+      console.error('이미지 처리 중 오류:', error);
+      toast.error('이미지 추가 중 오류가 발생했습니다');
     });
   };
 

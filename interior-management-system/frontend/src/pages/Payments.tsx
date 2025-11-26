@@ -12,6 +12,47 @@ import contractorService from '../services/contractorService';
 import CashReceiptModal from '../components/CashReceiptModal';
 import { removePosition } from '../utils/formatters';
 
+// 이미지 압축 함수 (용량 줄이기)
+const compressImage = (base64: string, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      // 최대 너비를 넘으면 비율에 맞게 축소
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+
+      // JPEG로 압축 (용량 절약)
+      const compressed = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressed);
+    };
+    img.onerror = () => resolve(base64); // 실패 시 원본 반환
+    img.src = base64;
+  });
+};
+
+// localStorage 안전하게 저장하는 함수
+const safeLocalStorageSet = (key: string, value: string): boolean => {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    console.error('localStorage 저장 실패:', e);
+    return false;
+  }
+};
+
 // 협력업체 타입 정의
 interface Contractor {
   id?: string;
@@ -1078,7 +1119,10 @@ const Payments = () => {
 
   // paymentRecordImages가 변경될 때마다 localStorage에 저장
   useEffect(() => {
-    localStorage.setItem('paymentRecordImages', JSON.stringify(paymentRecordImages));
+    const saved = safeLocalStorageSet('paymentRecordImages', JSON.stringify(paymentRecordImages));
+    if (!saved) {
+      toast.error('저장 공간이 부족합니다. 일부 이미지가 저장되지 않을 수 있습니다.');
+    }
   }, [paymentRecordImages]);
 
   // 클립보드 붙여넣기 처리
@@ -1819,11 +1863,13 @@ const Payments = () => {
                       const blob = items[i].getAsFile();
                       if (blob) {
                         const reader = new FileReader();
-                        reader.onload = (event) => {
+                        reader.onload = async (event) => {
                           const base64 = event.target?.result as string;
+                          // 이미지 압축
+                          const compressed = await compressImage(base64, 800, 0.7);
                           setFormData(prev => ({
                             ...prev,
-                            quickImages: [...prev.quickImages, base64]
+                            quickImages: [...prev.quickImages, compressed]
                           }));
                         };
                         reader.readAsDataURL(blob);
@@ -1874,11 +1920,13 @@ const Payments = () => {
                       const files = Array.from(e.target.files || []);
                       files.forEach(file => {
                         const reader = new FileReader();
-                        reader.onload = (event) => {
+                        reader.onload = async (event) => {
                           const base64 = event.target?.result as string;
+                          // 이미지 압축
+                          const compressed = await compressImage(base64, 800, 0.7);
                           setFormData(prev => ({
                             ...prev,
-                            quickImages: [...prev.quickImages, base64]
+                            quickImages: [...prev.quickImages, compressed]
                           }));
                         };
                         reader.readAsDataURL(file);
