@@ -33,8 +33,7 @@ const AdditionalWork = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWork, setSelectedWork] = useState<AdditionalWork | null>(null);
   const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+    const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [initialProject, setInitialProject] = useState<string | undefined>(undefined);
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImage, setModalImage] = useState<string | null>(null);
@@ -305,12 +304,9 @@ const AdditionalWork = () => {
   };
 
   const filteredWorks = additionalWorks.filter(work => {
-    const matchesSearch = (work.project?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-                          (work.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     // 미납: completedProjects에 없는 것, 완납: completedProjects에 있는 것
     const isCompleted = completedProjects.includes(work.project);
-    const matchesTab = showOnlyCompleted ? isCompleted : !isCompleted;
-    return matchesSearch && matchesTab;
+    return showOnlyCompleted ? isCompleted : !isCompleted;
   });
 
   // 프로젝트별로 그룹핑
@@ -352,8 +348,6 @@ const AdditionalWork = () => {
     }
     setExpandedProjects(newExpanded);
   };
-
-  const totalAmount = projectGroups.reduce((sum, group) => sum + group.totalAmount, 0);
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -459,21 +453,6 @@ const AdditionalWork = () => {
                 >
                   완납 ({completedProjects.length})
                 </button>
-              </div>
-              <input
-                type="text"
-                placeholder="프로젝트명 또는 내용으로 검색"
-                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <div className="flex justify-end items-center">
-                <div className="text-right">
-                  <span className="text-base font-semibold text-gray-700">전체 합계: </span>
-                  <span className="text-lg font-bold text-gray-900">
-                    {totalAmount.toLocaleString()}원
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -732,21 +711,6 @@ const AdditionalWork = () => {
               >
                 완납 ({completedProjects.length})
               </button>
-            </div>
-            <input
-              type="text"
-              placeholder="프로젝트명 또는 내용으로 검색"
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <div className="flex justify-end">
-              <div>
-                <span className="font-medium text-gray-700">합계: </span>
-                <span className="text-lg font-bold text-gray-900">
-                  {totalAmount.toLocaleString()}원
-                </span>
-              </div>
             </div>
           </div>
         </div>
