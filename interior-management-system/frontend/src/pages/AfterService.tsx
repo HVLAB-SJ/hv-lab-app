@@ -449,33 +449,9 @@ const AfterService = () => {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                고객명 *
-              </label>
-              <input
-                {...register('client', { required: '고객명을 입력하세요' })}
-                type="text"
-                className="input text-sm"
-              />
-              {errors.client && (
-                <p className="mt-1 text-xs text-red-600">{String(errors.client.message)}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                현장주소 *
-              </label>
-              <input
-                {...register('siteAddress', { required: '현장주소를 입력하세요' })}
-                type="text"
-                className="input text-sm"
-              />
-              {errors.siteAddress && (
-                <p className="mt-1 text-xs text-red-600">{String(errors.siteAddress.message)}</p>
-              )}
-            </div>
+            {/* Hidden fields for client and siteAddress - auto-filled from project */}
+            <input type="hidden" {...register('client')} />
+            <input type="hidden" {...register('siteAddress')} />
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
