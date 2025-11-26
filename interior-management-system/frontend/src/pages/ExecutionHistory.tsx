@@ -563,7 +563,6 @@ const ExecutionHistory = () => {
     <div className="space-y-3 md:space-y-4">
       {/* 모바일에서 프로젝트 선택 */}
       <div className="md:hidden mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트</label>
         <select
           value={formData.project}
           onChange={(e) => {

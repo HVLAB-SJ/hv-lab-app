@@ -28,8 +28,7 @@ const AfterService = () => {
     ? asRequests.filter(req => filteredProjectNames.includes(req.project))
     : asRequests;
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRequest, setSelectedRequest] = useState<ASRequest | null>(null);
+    const [selectedRequest, setSelectedRequest] = useState<ASRequest | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
   const [editingDate, setEditingDate] = useState<{
     requestId: string;
@@ -400,14 +399,10 @@ const AfterService = () => {
   };
 
   const filteredRequests = requests.filter(req => {
-    const matchesSearch = req.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          req.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          req.description.toLowerCase().includes(searchTerm.toLowerCase());
-
     if (activeTab === 'completed') {
-      return matchesSearch && req.status === 'completed';
+      return req.status === 'completed';
     } else {
-      return matchesSearch && req.status !== 'completed';
+      return req.status !== 'completed';
     }
   });
 
@@ -665,17 +660,6 @@ const AfterService = () => {
               </span>
             </button>
           </nav>
-        </div>
-
-        {/* Search */}
-        <div>
-          <input
-            type="text"
-            placeholder="검색..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-          />
         </div>
 
         {/* AS Request Cards */}

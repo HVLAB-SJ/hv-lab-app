@@ -116,7 +116,6 @@ const ConstructionPayment = () => {
     setRecords(normalizedRecords);
   }, [constructionPayments, projects]);
 
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<PaymentRecord | null>(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -514,19 +513,14 @@ const ConstructionPayment = () => {
       .reduce((sum, work) => sum + work.amount, 0);
   };
 
-  // 검색 및 탭 필터링
-  const filteredRecords = records
-    .filter(record =>
-      (record.project || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (record.client || '').toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter(record => {
-      if (activeTab === 'all') return true;
-      const remaining = calculateRemaining(record);
-      if (activeTab === 'completed') return remaining === 0;
-      if (activeTab === 'remaining') return remaining > 0;
-      return true;
-    });
+  // 탭 필터링
+  const filteredRecords = records.filter(record => {
+    if (activeTab === 'all') return true;
+    const remaining = calculateRemaining(record);
+    if (activeTab === 'completed') return remaining === 0;
+    if (activeTab === 'remaining') return remaining > 0;
+    return true;
+  });
 
   return (
     <div className="space-y-3 md:space-y-4">
@@ -562,17 +556,6 @@ const ConstructionPayment = () => {
         >
           +프로젝트
         </button>
-      </div>
-
-      {/* Search */}
-      <div>
-        <input
-          type="text"
-          placeholder="프로젝트 또는 고객명 검색..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-        />
       </div>
 
       {/* Records List */}
