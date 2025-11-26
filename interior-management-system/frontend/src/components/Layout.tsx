@@ -2,7 +2,7 @@ import { Outlet, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { Plus, BookOpen } from 'lucide-react';
+import { Plus, X, BookOpen } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
 import { useNotificationStore } from '../store/notificationStore';
 import workRequestService from '../services/workRequestService';
@@ -20,11 +20,27 @@ const Layout = () => {
   const { user, logout, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const [mobileFormOpen, setMobileFormOpen] = useState(false);
   const location = useLocation();
   const { unreadCount } = useNotificationStore();
   const [pendingWorkRequestCount, setPendingWorkRequestCount] = useState(0);
   const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
   const [inProgressASCount, setInProgressASCount] = useState(0);
+
+  // 페이지 변경 시 모바일 폼 상태 초기화
+  useEffect(() => {
+    setMobileFormOpen(false);
+  }, [location.pathname]);
+
+  // 모바일 폼 상태 변경 이벤트 리스너
+  useEffect(() => {
+    const handleFormStateChange = (e: CustomEvent<{ isOpen: boolean }>) => {
+      setMobileFormOpen(e.detail.isOpen);
+    };
+
+    window.addEventListener('mobileFormStateChange', handleFormStateChange as EventListener);
+    return () => window.removeEventListener('mobileFormStateChange', handleFormStateChange as EventListener);
+  }, []);
 
   // Load all badge counts in a single effect (optimized)
   useEffect(() => {
@@ -254,14 +270,14 @@ const Layout = () => {
 
             {/* Right side - Always aligned to the right */}
             <div className="flex items-center space-x-2 sm:space-x-6 ml-auto">
-              {/* Show + button if page has add action (mobile only) */}
+              {/* Show + or X button if page has add action (mobile only) */}
               {pageAction && (
                 <button
                   onClick={pageAction}
                   className="lg:hidden p-2 text-gray-900 hover:text-gray-700"
-                  aria-label="추가"
+                  aria-label={mobileFormOpen ? "닫기" : "추가"}
                 >
-                  <Plus className="h-6 w-6" />
+                  {mobileFormOpen ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
                 </button>
               )}
 

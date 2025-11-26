@@ -131,6 +131,25 @@ const WorkRequest = () => {
     }
   }, [editingPerson]);
 
+  // 헤더의 + 버튼 클릭 이벤트 처리
+  useEffect(() => {
+    const handleHeaderAddClick = () => {
+      setShowMobileForm(prev => {
+        const newState = !prev;
+        window.dispatchEvent(new CustomEvent('mobileFormStateChange', { detail: { isOpen: newState } }));
+        return newState;
+      });
+    };
+
+    window.addEventListener('headerAddButtonClick', handleHeaderAddClick);
+    return () => window.removeEventListener('headerAddButtonClick', handleHeaderAddClick);
+  }, []);
+
+  // showMobileForm 상태 변경 시 Layout에 알림
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('mobileFormStateChange', { detail: { isOpen: showMobileForm } }));
+  }, [showMobileForm]);
+
   const handleDelete = async (id: string, projectName: string) => {
     if (window.confirm(`"${projectName}" 업무요청을 삭제하시겠습니까?\n\n삭제된 내역은 복구할 수 없습니다.`)) {
       try {
@@ -1046,17 +1065,6 @@ const WorkRequest = () => {
 
       {/* 모바일 뷰 */}
       <div className="md:hidden space-y-3">
-        {/* 헤더 + 버튼 */}
-        <div className="flex items-center justify-end">
-          <button
-            type="button"
-            onClick={() => setShowMobileForm(!showMobileForm)}
-            className="text-xl font-bold text-gray-700 hover:text-gray-900 transition-colors px-2"
-          >
-            {showMobileForm ? '×' : '+'}
-          </button>
-        </div>
-
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="flex space-x-4 overflow-x-auto">

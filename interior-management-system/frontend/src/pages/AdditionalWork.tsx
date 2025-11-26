@@ -141,6 +141,26 @@ const AdditionalWork = () => {
     localStorage.setItem('additionalWorkImages', JSON.stringify(workImages));
   }, [workImages]);
 
+  // 헤더의 + 버튼 클릭 이벤트 처리
+  useEffect(() => {
+    const handleHeaderAddClick = () => {
+      setShowMobileForm(prev => {
+        const newState = !prev;
+        // Layout에 상태 변경 알림
+        window.dispatchEvent(new CustomEvent('mobileFormStateChange', { detail: { isOpen: newState } }));
+        return newState;
+      });
+    };
+
+    window.addEventListener('headerAddButtonClick', handleHeaderAddClick);
+    return () => window.removeEventListener('headerAddButtonClick', handleHeaderAddClick);
+  }, []);
+
+  // showMobileForm 상태 변경 시 Layout에 알림
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('mobileFormStateChange', { detail: { isOpen: showMobileForm } }));
+  }, [showMobileForm]);
+
   // 이미지 저장 함수
   const saveImagesToWork = async (workId: string, images: string[]) => {
     try {
@@ -462,7 +482,7 @@ const AdditionalWork = () => {
             {projectGroups.map(group => (
               <div key={group.projectName} className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div
-                  className="px-4 py-3.5 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                  className="px-4 py-3.5 border-b border-gray-200 flex items-center justify-between cursor-pointer bg-gray-100 hover:bg-gray-200"
                   onClick={() => toggleProject(group.projectName)}
                 >
                   <div className="flex items-center gap-3">
@@ -611,17 +631,6 @@ const AdditionalWork = () => {
 
       {/* 모바일 레이아웃 */}
       <div className="desktop:hidden space-y-3">
-        {/* 헤더 + 버튼 */}
-        <div className="flex items-center justify-end">
-          <button
-            type="button"
-            onClick={() => setShowMobileForm(!showMobileForm)}
-            className="text-xl font-bold text-gray-700 hover:text-gray-900 transition-colors px-2"
-          >
-            {showMobileForm ? '×' : '+'}
-          </button>
-        </div>
-
         {/* 추가내역 등록 폼 */}
         {showMobileForm && (
           <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -730,7 +739,7 @@ const AdditionalWork = () => {
         {projectGroups.map(group => (
           <div key={group.projectName} className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div
-              className="px-4 py-3 border-b border-gray-200 flex items-center justify-between"
+              className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-100"
               onClick={() => toggleProject(group.projectName)}
             >
               <div className="flex items-center gap-2">
