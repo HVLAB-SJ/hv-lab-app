@@ -1026,11 +1026,11 @@ const SiteLog = () => {
                   <div>
                     {/* 큰 드래그 영역 */}
                     <div
-                      className="rounded-lg p-12 text-center"
+                      className="rounded-lg p-4 pt-2 desktop:p-12 text-center"
                     >
-                      <Camera className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                      <p className="text-lg font-medium text-gray-700 mb-2">
-                        {format(selectedDate, 'M월 d일')} 현장 사진을 업로드하세요
+                      <Camera className="mx-auto h-12 w-12 desktop:h-16 desktop:w-16 text-gray-400 mb-2 desktop:mb-4" />
+                      <p className="text-sm desktop:text-lg font-medium text-gray-700 mb-2">
+                        현장 사진을 업로드하세요
                       </p>
                       <p className="hidden desktop:block text-sm text-gray-600 mb-4">
                         이미지를 이곳에 드래그하거나 클릭하여 선택
@@ -1048,9 +1048,9 @@ const SiteLog = () => {
                       />
                       <label
                         htmlFor="main-image-upload"
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                        className="inline-flex items-center px-3 py-1.5 desktop:px-4 desktop:py-2 border border-gray-300 rounded-lg text-xs desktop:text-sm text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
                       >
-                        <Upload className="h-4 w-4 mr-2" />
+                        <Upload className="h-3 w-3 desktop:h-4 desktop:w-4 mr-1.5 desktop:mr-2" />
                         파일 선택
                       </label>
                     </div>
