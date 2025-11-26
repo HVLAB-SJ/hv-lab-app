@@ -1744,19 +1744,21 @@ const Payments = () => {
               이미지
             </button>
           </nav>
-          {/* 프로젝트 필터 드롭다운 - 모바일용 */}
-          <select
-            value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-            className="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white"
-          >
-            <option value="all">전체</option>
-            {projects.filter(p => p.status !== 'completed').map(project => (
-              <option key={project.id} value={project.name}>
-                {project.name}
-              </option>
-            ))}
-          </select>
+          {/* 프로젝트 필터 드롭다운 - 모바일용 (송금완료 탭에서만 표시) */}
+          {mobileView === 'list' && statusFilter === 'completed' && (
+            <select
+              value={projectFilter}
+              onChange={(e) => setProjectFilter(e.target.value)}
+              className="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white"
+            >
+              <option value="all">전체</option>
+              {projects.filter(p => p.status !== 'completed').map(project => (
+                <option key={project.id} value={project.name}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 

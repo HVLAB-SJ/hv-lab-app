@@ -309,6 +309,7 @@ const SpecBook = () => {
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
   const subImagesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const initialSubImagesRef = useRef<string[]>([]);
+  const isMountedRef = useRef(true); // 컴포넌트 마운트 상태 추적
 
   // DnD 센서 설정
   const sensors = useSensors(
@@ -332,6 +333,14 @@ const SpecBook = () => {
       y: (touch1.clientY + touch2.clientY) / 2
     };
   };
+
+  // 컴포넌트 마운트/언마운트 추적
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     loadCategories();
@@ -425,12 +434,20 @@ const SpecBook = () => {
         response = await api.get(`/specbook/project/${selectedProject}`, { params });
       }
 
-      setItems(response.data);
+      // 컴포넌트가 아직 마운트되어 있을 때만 상태 업데이트
+      if (isMountedRef.current) {
+        setItems(response.data);
+      }
     } catch (error) {
       console.error('스펙북 아이템 로드 실패:', error);
-      toast.error('스펙북 아이템을 불러오는데 실패했습니다');
+      // 컴포넌트가 아직 마운트되어 있을 때만 에러 토스트 표시
+      if (isMountedRef.current) {
+        toast.error('스펙북 아이템을 불러오는데 실패했습니다');
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
