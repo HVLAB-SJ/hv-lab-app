@@ -138,14 +138,17 @@ const AfterService = () => {
 
   const onSubmit = async (data: any) => {
     try {
-      // Convert time to HH:mm format
-      let hours24 = visitTimeHour;
-      if (visitTimePeriod === '오후' && visitTimeHour !== 12) {
-        hours24 = visitTimeHour + 12;
-      } else if (visitTimePeriod === '오전' && visitTimeHour === 12) {
-        hours24 = 0;
+      // Convert time to HH:mm format (only if visit date is set)
+      let timeString: string | undefined = undefined;
+      if (data.scheduledVisitDate) {
+        let hours24 = visitTimeHour;
+        if (visitTimePeriod === '오후' && visitTimeHour !== 12) {
+          hours24 = visitTimeHour + 12;
+        } else if (visitTimePeriod === '오전' && visitTimeHour === 12) {
+          hours24 = 0;
+        }
+        timeString = `${hours24.toString().padStart(2, '0')}:${visitTimeMinute.toString().padStart(2, '0')}`;
       }
-      const timeString = `${hours24.toString().padStart(2, '0')}:${visitTimeMinute.toString().padStart(2, '0')}`;
 
       const formData = {
         ...data,
