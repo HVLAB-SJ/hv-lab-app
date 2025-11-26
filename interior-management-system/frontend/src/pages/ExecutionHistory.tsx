@@ -1263,9 +1263,9 @@ const ExecutionHistory = () => {
                     />
                   </div>
 
-                  {/* 이미지 그리드 - 현장일지 스타일 */}
+                  {/* 이미지 그리드 - 모바일 2열, 데스크탑 3열 */}
                   {images.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
                       {images.map((img, index) => (
                         <div key={index} className="relative group">
                           <img
@@ -1282,7 +1282,7 @@ const ExecutionHistory = () => {
                               e.stopPropagation();
                               removeImage(index);
                             }}
-                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                           >
                             <X className="h-3 w-3" />
                           </button>
