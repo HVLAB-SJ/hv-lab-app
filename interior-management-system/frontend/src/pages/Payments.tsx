@@ -1788,7 +1788,7 @@ const Payments = () => {
             </div>
 
             {/* 빠른 입력 */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div>
               <textarea
                 value={formData.quickText}
                 onChange={(e) => setFormData({ ...formData, quickText: e.target.value })}
