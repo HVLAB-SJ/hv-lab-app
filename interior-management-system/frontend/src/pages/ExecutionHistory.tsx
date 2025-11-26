@@ -1106,17 +1106,17 @@ const ExecutionHistory = () => {
                 <div className="h-full flex flex-col">
                   {/* 결제요청 금액 분할 기능 */}
                   {fullRecord?.type === 'payment' && (
-                    <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                       {/* 원본 텍스트 또는 금액 정보 */}
                       {(fullRecord as any).quickText ? (
                         <>
-                          <p className="text-sm font-semibold text-blue-900 mb-2">자동 채우기 원본:</p>
-                          <p className="text-sm text-blue-800 whitespace-pre-wrap mb-2">{(fullRecord as any).quickText}</p>
+                          <p className="text-sm font-semibold text-gray-900 mb-2">자동 채우기 원본:</p>
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">{(fullRecord as any).quickText}</p>
                         </>
                       ) : (
                         <>
-                          <p className="text-sm font-semibold text-blue-900 mb-1">결제요청 금액:</p>
-                          <p className="text-sm text-blue-800 mb-2">
+                          <p className="text-sm font-semibold text-gray-900 mb-1">결제요청 금액:</p>
+                          <p className="text-sm text-gray-700 mb-2">
                             총 {fullRecord.totalAmount?.toLocaleString()}원
                             {fullRecord.itemName && ` (${fullRecord.itemName})`}
                           </p>
@@ -1125,10 +1125,10 @@ const ExecutionHistory = () => {
 
                       {/* 금액 분할 입력 영역 */}
                       {splitModeRecord === selectedRecord ? (
-                        <div className="mt-3 pt-3 border-t border-blue-200">
+                        <div className="mt-3 pt-3 border-t border-gray-200">
                           <div className="grid grid-cols-2 gap-3 mb-3">
                             <div>
-                              <label className="block text-xs font-medium text-blue-900 mb-1">자재비</label>
+                              <label className="block text-xs font-medium text-gray-900 mb-1">자재비</label>
                               <input
                                 type="text"
                                 inputMode="numeric"
@@ -1146,11 +1146,11 @@ const ExecutionHistory = () => {
                                   }
                                 }}
                                 placeholder="0"
-                                className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                               />
                             </div>
                             <div>
-                              <label className="block text-xs font-medium text-blue-900 mb-1">인건비</label>
+                              <label className="block text-xs font-medium text-gray-900 mb-1">인건비</label>
                               <input
                                 type="text"
                                 inputMode="numeric"
@@ -1168,7 +1168,7 @@ const ExecutionHistory = () => {
                                   }
                                 }}
                                 placeholder="0"
-                                className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                               />
                             </div>
                           </div>
@@ -1176,14 +1176,16 @@ const ExecutionHistory = () => {
                             <button
                               onClick={() => {
                                 // 폼에 자동 입력
+                                const materialValue = splitMaterialCost === '' ? 0 : splitMaterialCost;
+                                const laborValue = splitLaborCost === '' ? 0 : splitLaborCost;
                                 setFormData(prev => ({
                                   ...prev,
                                   project: fullRecord.project,
                                   date: format(new Date(fullRecord.date), 'yyyy-MM-dd'),
                                   process: fullRecord.process || '',
                                   itemName: fullRecord.itemName || '',
-                                  materialCost: splitMaterialCost || 0,
-                                  laborCost: splitLaborCost || 0
+                                  materialCost: materialValue,
+                                  laborCost: laborValue
                                 }));
                                 // 분할 모드 종료
                                 setSplitModeRecord(null);
@@ -1193,7 +1195,7 @@ const ExecutionHistory = () => {
                                 setMobileView('form');
                                 toast.success('금액이 입력되었습니다. 저장 버튼을 눌러주세요.');
                               }}
-                              className="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                              className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gray-700 rounded-lg hover:bg-gray-800 transition-colors"
                             >
                               입력 적용
                             </button>
@@ -1237,7 +1239,7 @@ const ExecutionHistory = () => {
                             setSplitLaborCost(Math.round(totalAmount * laborRatio));
                             setSplitModeRecord(selectedRecord);
                           }}
-                          className="w-full px-3 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+                          className="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                         >
                           금액 분할
                         </button>
