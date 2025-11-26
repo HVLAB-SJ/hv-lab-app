@@ -60,7 +60,7 @@ const WorkRequest = () => {
   const [isUrgent, setIsUrgent] = useState(false);
   const [customRequestType, setCustomRequestType] = useState('');
   const [editingRequest, setEditingRequest] = useState<WorkRequest | null>(null);
-  const [showMobileForm, setShowMobileForm] = useState(true);
+  const [showMobileForm, setShowMobileForm] = useState(false);
 
   // Load work requests from API on mount
   useEffect(() => {
@@ -1079,7 +1079,23 @@ const WorkRequest = () => {
           </nav>
         </div>
 
+        {/* 업무요청 입력 토글 버튼 */}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setShowMobileForm(!showMobileForm)}
+            className="w-10 h-10 bg-gray-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors"
+          >
+            {showMobileForm ? (
+              <span className="text-xl font-bold leading-none">×</span>
+            ) : (
+              <span className="text-xl font-bold leading-none">+</span>
+            )}
+          </button>
+        </div>
+
         {/* 업무요청 입력 폼 */}
+        {showMobileForm && (
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           {editingRequest && (
             <h2 className="text-base font-semibold text-gray-900 mb-3">
@@ -1270,6 +1286,7 @@ const WorkRequest = () => {
                 </div>
               </form>
         </div>
+        )}
 
         {/* 업무요청 목록 */}
         {filteredRequests.map((request) => (
