@@ -1263,15 +1263,15 @@ const ExecutionHistory = () => {
                     />
                   </div>
 
-                  {images.length > 0 ? (
-                    // 이미지가 있을 때
-                    <div className="grid grid-cols-1 gap-3 flex-1 overflow-y-auto">
+                  {/* 이미지 그리드 - 현장일지 스타일 */}
+                  {images.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mb-3">
                       {images.map((img, index) => (
-                        <div key={index} className="relative group border rounded-lg overflow-hidden">
+                        <div key={index} className="relative group">
                           <img
                             src={img}
                             alt={`증빙 ${index + 1}`}
-                            className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                            className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity border"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleImageClick(img);
@@ -1282,30 +1282,37 @@ const ExecutionHistory = () => {
                               e.stopPropagation();
                               removeImage(index);
                             }}
-                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <X className="h-4 w-4" />
+                            <X className="h-3 w-3" />
                           </button>
+                          <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1.5 py-0.5 rounded">
+                            {index + 1}/{images.length}
+                          </div>
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    // 이미지가 없을 때 - 업로드 영역 표시
-                    <label
-                      htmlFor="image-file-input"
-                      className="h-full flex items-center justify-center cursor-pointer flex-1"
-                    >
-                      <div
-                        className={`w-full h-full min-h-[200px] border-2 border-dashed rounded-lg p-6 text-center transition-colors flex flex-col items-center justify-center ${
-                          isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                        <p className="text-sm font-medium text-gray-700">클릭하여 선택</p>
-                        <p className="text-xs text-gray-500 mt-1">또는 이미지를 드래그하거나 Ctrl+V로 붙여넣기</p>
-                      </div>
-                    </label>
                   )}
+
+                  {/* 이미지 추가 버튼 */}
+                  <label
+                    htmlFor="image-file-input"
+                    className={`block cursor-pointer ${images.length > 0 ? '' : 'flex-1'}`}
+                  >
+                    <div
+                      className={`w-full border-2 border-dashed rounded-lg p-4 text-center transition-colors flex flex-col items-center justify-center ${
+                        isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
+                      } ${images.length > 0 ? 'min-h-[80px]' : 'min-h-[200px]'}`}
+                    >
+                      <Upload className={`mx-auto text-gray-400 mb-1 ${images.length > 0 ? 'h-6 w-6' : 'h-10 w-10 mb-2'}`} />
+                      <p className="text-sm font-medium text-gray-700">
+                        {images.length > 0 ? '이미지 추가' : '클릭하여 선택'}
+                      </p>
+                      {images.length === 0 && (
+                        <p className="text-xs text-gray-500 mt-1">또는 이미지를 드래그하거나 Ctrl+V로 붙여넣기</p>
+                      )}
+                    </div>
+                  </label>
                 </div>
               );
             })() : (
