@@ -1046,6 +1046,17 @@ const WorkRequest = () => {
 
       {/* 모바일 뷰 */}
       <div className="md:hidden space-y-3">
+        {/* 헤더 + 버튼 */}
+        <div className="flex items-center justify-end">
+          <button
+            type="button"
+            onClick={() => setShowMobileForm(!showMobileForm)}
+            className="text-xl font-bold text-gray-700 hover:text-gray-900 transition-colors px-2"
+          >
+            {showMobileForm ? '×' : '+'}
+          </button>
+        </div>
+
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="flex space-x-4 overflow-x-auto">
@@ -1077,21 +1088,6 @@ const WorkRequest = () => {
               </button>
             ))}
           </nav>
-        </div>
-
-        {/* 업무요청 입력 토글 버튼 */}
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => setShowMobileForm(!showMobileForm)}
-            className="w-10 h-10 bg-gray-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors"
-          >
-            {showMobileForm ? (
-              <span className="text-xl font-bold leading-none">×</span>
-            ) : (
-              <span className="text-xl font-bold leading-none">+</span>
-            )}
-          </button>
         </div>
 
         {/* 업무요청 입력 폼 */}
