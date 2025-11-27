@@ -1451,46 +1451,58 @@ const Payments = () => {
 
   // 수정하기
   const handleEdit = (payment: PaymentRequest) => {
-    // 원본 금액 사용 (세금공제 적용 전 금액)
-    const originalMaterial = payment.originalMaterialAmount !== undefined
-      ? payment.originalMaterialAmount
-      : payment.materialAmount || 0;
-    const originalLabor = payment.originalLaborAmount !== undefined
-      ? payment.originalLaborAmount
-      : payment.laborAmount || 0;
+    try {
+      console.log('[handleEdit] Starting edit for payment:', payment.id);
 
-    // 폼 데이터 채우기
-    setFormData({
-      project: payment.project,
-      date: format(new Date(payment.requestDate), 'yyyy-MM-dd'),
-      process: payment.process || '',
-      itemName: payment.itemName || payment.purpose || '',
-      materialCost: originalMaterial > 0 ? originalMaterial.toString() : '',
-      laborCost: originalLabor > 0 ? originalLabor.toString() : '',
-      amount: payment.amount?.toString() || '',
-      accountHolder: payment.bankInfo?.accountHolder || '',
-      bankName: payment.bankInfo?.bankName || '',
-      accountNumber: payment.bankInfo?.accountNumber || '',
-      images: payment.attachments || [],
-      quickText: (payment as any).quickText || ''  // quickText 복원
-    });
+      // 원본 금액 사용 (세금공제 적용 전 금액)
+      const originalMaterial = payment.originalMaterialAmount !== undefined
+        ? payment.originalMaterialAmount
+        : payment.materialAmount || 0;
+      const originalLabor = payment.originalLaborAmount !== undefined
+        ? payment.originalLaborAmount
+        : payment.laborAmount || 0;
 
-    // VAT 및 세금공제 체크박스 설정
-    setIncludeVat(payment.includesVAT || false);
-    setIncludeTaxDeduction(payment.applyTaxDeduction || false);
+      // 폼 데이터 채우기
+      const newFormData = {
+        project: payment.project || '',
+        date: payment.requestDate ? format(new Date(payment.requestDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+        process: payment.process || '',
+        itemName: payment.itemName || payment.purpose || '',
+        materialCost: originalMaterial > 0 ? originalMaterial.toString() : '',
+        laborCost: originalLabor > 0 ? originalLabor.toString() : '',
+        amount: payment.amount?.toString() || '',
+        accountHolder: payment.bankInfo?.accountHolder || '',
+        bankName: payment.bankInfo?.bankName || '',
+        accountNumber: payment.bankInfo?.accountNumber || '',
+        images: payment.attachments || [],
+        quickText: (payment as any).quickText || '',  // quickText 복원
+        quickImages: (payment as any).images || []  // 서버 이미지 복원
+      };
 
-    // 선택된 레코드 설정
-    setSelectedRecord(payment.id);
+      console.log('[handleEdit] Setting form data:', newFormData);
+      setFormData(newFormData);
 
-    // 수정 모드 설정
-    setEditingPaymentId(payment.id);
+      // VAT 및 세금공제 체크박스 설정
+      setIncludeVat(payment.includesVAT || false);
+      setIncludeTaxDeduction(payment.applyTaxDeduction || false);
 
-    // 모바일에서는 폼 화면으로 전환
-    if (isMobileDevice) {
-      setMobileView('form');
+      // 선택된 레코드 설정
+      setSelectedRecord(payment.id);
+
+      // 수정 모드 설정
+      setEditingPaymentId(payment.id);
+
+      // 모바일에서는 폼 화면으로 전환
+      if (isMobileDevice) {
+        setMobileView('form');
+      }
+
+      console.log('[handleEdit] Edit setup complete');
+      toast.success('수정할 내역을 불러왔습니다');
+    } catch (error) {
+      console.error('[handleEdit] Error:', error);
+      toast.error('수정 데이터 로드 중 오류 발생');
     }
-
-    toast.success('수정할 내역을 불러왔습니다');
   };
 
   // 상세보기
