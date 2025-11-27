@@ -1220,7 +1220,9 @@ const ExecutionHistory = () => {
               if (!target.closest('img') && !target.closest('button') && selectedRecord) {
                 const images = (() => {
                   const record = executionRecords.find(r => r.id === selectedRecord);
-                  return record?.images || paymentRecordImages[selectedRecord] || [];
+                  const fullRecord = allRecords.find(r => r.id === selectedRecord);
+                  // fullRecord.images (서버 이미지) 우선
+                  return fullRecord?.images || record?.images || paymentRecordImages[selectedRecord] || [];
                 })();
 
                 // 이미지가 있을 때만 빈 공간 클릭 시 파일 선택 열기
@@ -1234,7 +1236,8 @@ const ExecutionHistory = () => {
             {selectedRecord ? (() => {
               const record = executionRecords.find(r => r.id === selectedRecord);
               const fullRecord = allRecords.find(r => r.id === selectedRecord);
-              const images = record?.images || paymentRecordImages[selectedRecord] || [];
+              // fullRecord.images (서버 이미지) 우선, 없으면 로컬 이미지 사용
+              const images = fullRecord?.images || record?.images || paymentRecordImages[selectedRecord] || [];
 
               return (
                 <div className="h-full flex flex-col">

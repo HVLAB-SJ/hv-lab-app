@@ -2693,7 +2693,10 @@ const Payments = () => {
             onClick={(e) => {
               const target = e.target as HTMLElement;
               if (!target.closest('img') && !target.closest('button') && selectedRecord) {
-                const images = paymentRecordImages[selectedRecord] || [];
+                const record = allRecords.find(r => r.id === selectedRecord);
+                const serverImages = (record as any)?.images || [];
+                const localImages = paymentRecordImages[selectedRecord] || [];
+                const images = serverImages.length > 0 ? serverImages : localImages;
                 if (images.length > 0) {
                   document.getElementById('image-file-input')?.click();
                 }
@@ -2701,7 +2704,11 @@ const Payments = () => {
             }}
           >
             {selectedRecord ? (() => {
-              const images = paymentRecordImages[selectedRecord] || [];
+              const record = allRecords.find(r => r.id === selectedRecord);
+              // 서버 이미지 우선, 없으면 로컬 이미지 사용
+              const serverImages = (record as any)?.images || [];
+              const localImages = paymentRecordImages[selectedRecord] || [];
+              const images = serverImages.length > 0 ? serverImages : localImages;
 
               return images.length > 0 ? (
                 <div className="grid grid-cols-1 gap-3">
