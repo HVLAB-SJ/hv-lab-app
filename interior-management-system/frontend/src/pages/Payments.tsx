@@ -2710,6 +2710,12 @@ const Payments = () => {
               const localImages = paymentRecordImages[selectedRecord] || [];
               const images = serverImages.length > 0 ? serverImages : localImages;
 
+              console.log('[Payments] selectedRecord:', selectedRecord);
+              console.log('[Payments] record found:', record ? 'yes' : 'no');
+              console.log('[Payments] record.images:', (record as any)?.images);
+              console.log('[Payments] serverImages:', serverImages.length);
+              console.log('[Payments] localImages:', localImages.length);
+
               return images.length > 0 ? (
                 <div className="grid grid-cols-1 gap-3">
                   {images.map((img, index) => (

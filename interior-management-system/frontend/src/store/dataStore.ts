@@ -336,10 +336,15 @@ export const useDataStore = create<DataStore>()(
           includesVAT: p.includes_vat === 1,
           quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
           images: (() => {
-            if (!p.images) return [];
+            if (!p.images) {
+              console.log(`[loadPaymentsFromAPI] Payment ${p.id}: no images field`);
+              return [];
+            }
             try {
               const parsed = JSON.parse(p.images);
-              return Array.isArray(parsed) ? parsed : [];
+              const result = Array.isArray(parsed) ? parsed : [];
+              console.log(`[loadPaymentsFromAPI] Payment ${p.id}: parsed ${result.length} images`);
+              return result;
             } catch (e) {
               console.error('이미지 파싱 오류:', e, p.images);
               return [];
