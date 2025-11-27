@@ -1170,6 +1170,15 @@ export const useDataStore = create<DataStore>()(
     }),
     {
       name: 'interior-management-storage',
+      // 이미지 데이터를 localStorage에서 제외 (용량 초과 방지)
+      partialize: (state) => ({
+        ...state,
+        // payments에서 images 필드 제거 (서버에 저장되므로 로컬에 불필요)
+        payments: state.payments.map(p => {
+          const { images, ...rest } = p;
+          return rest;
+        })
+      }),
       // Date 객체를 저장하고 복원하기 위한 커스텀 직렬화
       storage: {
         getItem: (name) => {
