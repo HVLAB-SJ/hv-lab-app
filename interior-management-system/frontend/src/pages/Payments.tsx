@@ -2451,38 +2451,13 @@ const Payments = () => {
                                         </h3>
                                       </div>
                                     </div>
-                                    <div className="flex items-start gap-2 ml-3 shrink-0">
-                                      <div className="text-right">
-                                        <p className="text-base font-bold text-gray-900">
-                                          {totalAmount.toLocaleString()}원
-                                        </p>
-                                        <p className="text-[10px] text-gray-400">
-                                          {record.requestedBy || '-'} · {format(new Date(record.requestDate), 'MM/dd', { locale: ko })}
-                                        </p>
-                                      </div>
-                                      <button
-                                        onClick={async (e) => {
-                                          e.stopPropagation();
-                                          if (window.confirm('이 결제요청을 삭제하시겠습니까?')) {
-                                            try {
-                                              await deletePaymentFromAPI(record.id);
-                                              toast.success('삭제되었습니다');
-                                            } catch (error: any) {
-                                              console.error('삭제 실패:', error);
-                                              if (error.response?.status === 404) {
-                                                toast.error('이미 삭제된 항목입니다. 목록을 새로고침합니다.');
-                                                await loadPaymentsFromAPI();
-                                              } else {
-                                                toast.error('삭제에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
-                                              }
-                                            }
-                                          }
-                                        }}
-                                        className="p-0.5 text-gray-300 hover:text-red-500 transition-colors"
-                                        title="삭제"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                      </button>
+                                    <div className="text-right ml-3 shrink-0">
+                                      <p className="text-base font-bold text-gray-900">
+                                        {totalAmount.toLocaleString()}원
+                                      </p>
+                                      <p className="text-[10px] text-gray-400">
+                                        {record.requestedBy || '-'} · {format(new Date(record.requestDate), 'MM/dd', { locale: ko })}
+                                      </p>
                                     </div>
                                   </div>
 
@@ -2527,7 +2502,7 @@ const Payments = () => {
                                             toast.success('삭제되었습니다');
                                           }
                                         }}
-                                        className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                        className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                                         title="삭제"
                                       >
                                         <Trash2 className="h-3.5 w-3.5" />
@@ -2645,7 +2620,7 @@ const Payments = () => {
                                 toast.success('삭제되었습니다');
                               }
                             }}
-                            className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                             title="삭제"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
