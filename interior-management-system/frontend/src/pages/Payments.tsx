@@ -1906,9 +1906,30 @@ const Payments = () => {
                     }
                   }
                 }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const files = Array.from(e.dataTransfer.files);
+                  const imageFiles = files.filter(f => f.type.startsWith('image/'));
+                  imageFiles.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const base64 = event.target?.result as string;
+                      setFormData(prev => ({
+                        ...prev,
+                        quickImages: [...prev.quickImages, base64]
+                      }));
+                    };
+                    reader.readAsDataURL(file);
+                  });
+                }}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                placeholder="청구 내역 붙여넣기 (이미지도 Ctrl+V로 붙여넣기 가능)"
+                placeholder={isMobileDevice ? "청구 내역 붙여넣기" : "청구 내역 붙여넣기 (이미지 드래그 또는 Ctrl+V)"}
               />
               {/* 이미지 미리보기 - 버튼 위에 표시 */}
               {formData.quickImages.length > 0 && (
