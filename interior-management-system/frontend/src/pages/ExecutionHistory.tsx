@@ -98,9 +98,10 @@ const ExecutionHistory = () => {
     payments,
     executionRecords,
     loadPaymentsFromAPI,
-    addExecutionRecord,
-    deleteExecutionRecord,
-    updateExecutionRecord
+    loadExecutionRecordsFromAPI,
+    addExecutionRecordToAPI,
+    deleteExecutionRecordFromAPI,
+    updateExecutionRecordInAPI
   } = useDataStore();
   const { user } = useAuth();
   const projects = useFilteredProjects(); // 안팀 사용자는 담당 프로젝트만 표시
@@ -178,6 +179,11 @@ const ExecutionHistory = () => {
       console.error('Failed to load payments:', error);
     });
 
+    // 실행내역 API에서 로드
+    loadExecutionRecordsFromAPI().catch(error => {
+      console.error('Failed to load execution records:', error);
+    });
+
     // 모바일 여부 확인
     const checkMobile = () => {
       setIsMobileDevice(window.innerWidth < 768);
@@ -196,7 +202,7 @@ const ExecutionHistory = () => {
     }
 
     return () => window.removeEventListener('resize', checkMobile);
-  }, [loadPaymentsFromAPI, projects]);
+  }, [loadPaymentsFromAPI, loadExecutionRecordsFromAPI, projects]);
 
   // IndexedDB에서 이미지 로드 (마운트 시 1회)
   useEffect(() => {
@@ -300,12 +306,16 @@ const ExecutionHistory = () => {
           reader.readAsDataURL(file);
         });
       })
-    ).then(newImages => {
+    ).then(async newImages => {
       // 실제 레코드에 이미지 추가
       const record = executionRecords.find(r => r.id === selectedRecord);
       if (record) {
         const updatedImages = [...(record.images || []), ...newImages];
-        updateExecutionRecord(selectedRecord, { images: updatedImages });
+        try {
+          await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
+        } catch (error) {
+          console.error('이미지 저장 실패:', error);
+        }
       } else {
         // 결제요청 레코드인 경우 별도 저장소에 저장
         setPaymentRecordImages(prev => ({
@@ -318,7 +328,7 @@ const ExecutionHistory = () => {
       console.error('이미지 처리 중 오류:', error);
       toast.error('이미지 추가 중 오류가 발생했습니다');
     });
-  }, [selectedRecord, executionRecords, updateExecutionRecord]);
+  }, [selectedRecord, executionRecords, updateExecutionRecordInAPI]);
 
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
@@ -436,7 +446,7 @@ const ExecutionHistory = () => {
   }, { material: 0, labor: 0, vat: 0, total: 0 });
 
   // 폼 저장
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.project) {
       toast.error('프로젝트를 선택해주세요');
       return;
@@ -486,26 +496,31 @@ const ExecutionHistory = () => {
       updatedAt: now
     };
 
-    addExecutionRecord(newRecord);
-    toast.success('실행내역이 추가되었습니다');
+    try {
+      const savedRecord = await addExecutionRecordToAPI(newRecord);
+      toast.success('실행내역이 추가되었습니다');
 
-    // 폼 초기화 (프로젝트는 유지)
-    setFormData(prev => ({
-      project: prev.project,  // 프로젝트 유지
-      date: format(new Date(), 'yyyy-MM-dd'),
-      process: '',
-      itemName: '',
-      materialCost: '',
-      laborCost: '',
-      images: []
-    }));
-    setIncludeVat(false); // 부가세 체크 초기화
-    setIncludeTaxDeduction(false); // 세금공제 체크 초기화
+      // 폼 초기화 (프로젝트는 유지)
+      setFormData(prev => ({
+        project: prev.project,  // 프로젝트 유지
+        date: format(new Date(), 'yyyy-MM-dd'),
+        process: '',
+        itemName: '',
+        materialCost: '',
+        laborCost: '',
+        images: []
+      }));
+      setIncludeVat(false); // 부가세 체크 초기화
+      setIncludeTaxDeduction(false); // 세금공제 체크 초기화
 
-    // 모바일에서는 리스트 뷰로 전환하고 새 레코드 선택
-    if (isMobileDevice) {
-      setSelectedRecord(newRecord.id);
-      setMobileView('list');
+      // 모바일에서는 리스트 뷰로 전환하고 새 레코드 선택
+      if (isMobileDevice) {
+        setSelectedRecord(savedRecord.id);
+        setMobileView('list');
+      }
+    } catch (error) {
+      console.error('실행내역 저장 실패:', error);
+      toast.error('실행내역 저장에 실패했습니다');
     }
   };
 
@@ -582,12 +597,16 @@ const ExecutionHistory = () => {
             }
           });
         })
-      ).then(newImages => {
+      ).then(async newImages => {
         // 실제 레코드에 이미지 추가
         const record = executionRecords.find(r => r.id === selectedRecord);
         if (record) {
           const updatedImages = [...(record.images || []), ...newImages];
-          updateExecutionRecord(selectedRecord, { images: updatedImages });
+          try {
+            await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
+          } catch (error) {
+            console.error('이미지 저장 실패:', error);
+          }
         } else {
           // 결제요청 레코드인 경우 별도 저장소에 저장
           setPaymentRecordImages(prev => ({
@@ -610,13 +629,17 @@ const ExecutionHistory = () => {
   };
 
   // 이미지 삭제
-  const removeImage = (index: number) => {
+  const removeImage = async (index: number) => {
     if (!selectedRecord) return;
 
     const record = executionRecords.find(r => r.id === selectedRecord);
     if (record) {
       const updatedImages = record.images?.filter((_, i) => i !== index) || [];
-      updateExecutionRecord(selectedRecord, { images: updatedImages });
+      try {
+        await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
+      } catch (error) {
+        console.error('이미지 삭제 실패:', error);
+      }
     } else {
       // 결제요청 레코드인 경우
       setPaymentRecordImages(prev => ({
@@ -670,12 +693,16 @@ const ExecutionHistory = () => {
           reader.readAsDataURL(file);
         });
       })
-    ).then(newImages => {
+    ).then(async newImages => {
       // 실제 레코드에 이미지 추가
       const record = executionRecords.find(r => r.id === selectedRecord);
       if (record) {
         const updatedImages = [...(record.images || []), ...newImages];
-        updateExecutionRecord(selectedRecord, { images: updatedImages });
+        try {
+          await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
+        } catch (error) {
+          console.error('이미지 저장 실패:', error);
+        }
       } else {
         // 결제요청 레코드인 경우 별도 저장소에 저장
         setPaymentRecordImages(prev => ({
@@ -1125,7 +1152,7 @@ const ExecutionHistory = () => {
               <div className="flex items-center justify-between md:justify-end gap-2">
                 {selectedRecord && (
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       // executionRecords에 있는 레코드 찾기
                       const execRecord = executionRecords.find(r => r.id === selectedRecord);
 
@@ -1135,9 +1162,14 @@ const ExecutionHistory = () => {
                       if (execRecord) {
                         // executionRecords에 있는 레코드는 삭제 가능
                         if (confirm('선택한 실행내역을 삭제하시겠습니까?')) {
-                          deleteExecutionRecord(selectedRecord);
-                          setSelectedRecord(null);
-                          toast.success('실행내역이 삭제되었습니다');
+                          try {
+                            await deleteExecutionRecordFromAPI(selectedRecord);
+                            setSelectedRecord(null);
+                            toast.success('실행내역이 삭제되었습니다');
+                          } catch (error) {
+                            console.error('실행내역 삭제 실패:', error);
+                            toast.error('실행내역 삭제에 실패했습니다');
+                          }
                         }
                       } else if (selectedItem?.type === 'payment') {
                         // payment 타입(결제요청)은 실행내역에서만 숨김

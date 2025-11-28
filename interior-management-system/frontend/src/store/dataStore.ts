@@ -6,6 +6,7 @@ import projectService, { type ProjectResponse } from '../services/projectService
 import contractorService, { type ContractorResponse } from '../services/contractorService';
 import asRequestService from '../services/asRequestService';
 import constructionPaymentService from '../services/constructionPaymentService';
+import executionRecordService, { type ExecutionRecordResponse } from '../services/executionRecordService';
 // import workRequestService from '../services/workRequestService';
 
 export interface MeetingNote {
@@ -219,6 +220,11 @@ interface DataStore {
   addASRequestToAPI: (asRequest: ASRequest) => Promise<ASRequest>;
   updateASRequestInAPI: (id: string, asRequest: Partial<ASRequest>) => Promise<void>;
   deleteASRequestFromAPI: (id: string) => Promise<void>;
+  // Execution Records API methods
+  loadExecutionRecordsFromAPI: () => Promise<void>;
+  addExecutionRecordToAPI: (record: ExecutionRecord) => Promise<ExecutionRecord>;
+  updateExecutionRecordInAPI: (id: string, record: Partial<ExecutionRecord>) => Promise<void>;
+  deleteExecutionRecordFromAPI: (id: string) => Promise<void>;
 }
 
 export const useDataStore = create<DataStore>()(
@@ -1176,6 +1182,114 @@ export const useDataStore = create<DataStore>()(
       set((state) => ({ asRequests: state.asRequests.filter((req) => req.id !== id) }));
     } catch (error) {
       console.error('Failed to delete AS request from API:', error);
+      throw error;
+    }
+  },
+
+  // Execution Records API methods
+  loadExecutionRecordsFromAPI: async () => {
+    try {
+      const apiRecords = await executionRecordService.getAllRecords();
+      console.log('[loadExecutionRecordsFromAPI] Loaded', apiRecords.length, 'records');
+      const records: ExecutionRecord[] = apiRecords.map((r: ExecutionRecordResponse) => ({
+        id: String(r.id),
+        project: r.project_name,
+        author: r.author || undefined,
+        date: new Date(r.date),
+        process: r.process || undefined,
+        itemName: r.item_name,
+        materialCost: r.material_cost || 0,
+        laborCost: r.labor_cost || 0,
+        vatAmount: r.vat_amount || 0,
+        totalAmount: r.total_amount || 0,
+        notes: r.notes || undefined,
+        paymentId: r.payment_id ? String(r.payment_id) : undefined,
+        createdAt: new Date(r.created_at),
+        updatedAt: new Date(r.updated_at)
+      }));
+      set({ executionRecords: records });
+    } catch (error) {
+      console.error('Failed to load execution records from API:', error);
+      throw error;
+    }
+  },
+
+  addExecutionRecordToAPI: async (record: ExecutionRecord) => {
+    try {
+      console.log('[addExecutionRecordToAPI] Adding:', record.itemName);
+      const apiRecord = await executionRecordService.createRecord({
+        project_name: record.project,
+        author: record.author,
+        date: record.date.toISOString().split('T')[0],
+        process: record.process,
+        item_name: record.itemName,
+        material_cost: record.materialCost,
+        labor_cost: record.laborCost,
+        vat_amount: record.vatAmount,
+        total_amount: record.totalAmount,
+        notes: record.notes,
+        payment_id: record.paymentId
+      });
+
+      const newRecord: ExecutionRecord = {
+        id: String(apiRecord.id),
+        project: apiRecord.project_name,
+        author: apiRecord.author || undefined,
+        date: new Date(apiRecord.date),
+        process: apiRecord.process || undefined,
+        itemName: apiRecord.item_name,
+        materialCost: apiRecord.material_cost || 0,
+        laborCost: apiRecord.labor_cost || 0,
+        vatAmount: apiRecord.vat_amount || 0,
+        totalAmount: apiRecord.total_amount || 0,
+        notes: apiRecord.notes || undefined,
+        paymentId: apiRecord.payment_id ? String(apiRecord.payment_id) : undefined,
+        createdAt: new Date(apiRecord.created_at),
+        updatedAt: new Date(apiRecord.updated_at)
+      };
+
+      set((state) => ({ executionRecords: [newRecord, ...state.executionRecords] }));
+      console.log('[addExecutionRecordToAPI] Added with ID:', newRecord.id);
+      return newRecord;
+    } catch (error) {
+      console.error('Failed to add execution record to API:', error);
+      throw error;
+    }
+  },
+
+  updateExecutionRecordInAPI: async (id: string, record: Partial<ExecutionRecord>) => {
+    try {
+      await executionRecordService.updateRecord(id, {
+        project_name: record.project,
+        author: record.author,
+        date: record.date?.toISOString().split('T')[0],
+        process: record.process,
+        item_name: record.itemName,
+        material_cost: record.materialCost,
+        labor_cost: record.laborCost,
+        vat_amount: record.vatAmount,
+        total_amount: record.totalAmount,
+        notes: record.notes,
+        payment_id: record.paymentId
+      });
+
+      set((state) => ({
+        executionRecords: state.executionRecords.map((r) =>
+          r.id === id ? { ...r, ...record, updatedAt: new Date() } : r
+        )
+      }));
+    } catch (error) {
+      console.error('Failed to update execution record in API:', error);
+      throw error;
+    }
+  },
+
+  deleteExecutionRecordFromAPI: async (id: string) => {
+    try {
+      await executionRecordService.deleteRecord(id);
+      set((state) => ({ executionRecords: state.executionRecords.filter((r) => r.id !== id) }));
+    } catch (error) {
+      console.error('Failed to delete execution record from API:', error);
       throw error;
     }
   }
