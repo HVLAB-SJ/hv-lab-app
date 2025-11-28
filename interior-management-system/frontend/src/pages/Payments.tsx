@@ -1937,8 +1937,8 @@ const Payments = () => {
                 </div>
               )}
               {/* 이미지 업로드 버튼 */}
-              <div className="flex gap-2 mt-2">
-                <label className="flex-1 cursor-pointer">
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <label className="cursor-pointer">
                   <input
                     type="file"
                     accept="image/*"
@@ -1960,14 +1960,14 @@ const Payments = () => {
                       e.target.value = '';
                     }}
                   />
-                  <div className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium text-center border border-gray-300">
+                  <div className="w-full h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium border border-gray-300">
                     이미지 추가
                   </div>
                 </label>
                 <button
                   type="button"
                   onClick={handleQuickTextParse}
-                  className="flex-1 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium text-center"
+                  className="h-10 flex items-center justify-center bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium"
                 >
                   자동 채우기
                 </button>
