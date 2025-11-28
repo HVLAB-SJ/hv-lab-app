@@ -305,7 +305,14 @@ export const useDataStore = create<DataStore>()(
   deleteASRequest: (id) => set((state) => ({ asRequests: state.asRequests.filter((req) => req.id !== id) })),
 
   setExecutionRecords: (executionRecords) => set({ executionRecords }),
-  addExecutionRecord: (executionRecord) => set((state) => ({ executionRecords: [executionRecord, ...state.executionRecords] })),
+  addExecutionRecord: (executionRecord) => {
+    console.log('[dataStore] 실행내역 추가:', executionRecord.id, executionRecord.itemName);
+    set((state) => {
+      const newRecords = [executionRecord, ...state.executionRecords];
+      console.log('[dataStore] 총 실행내역 수:', newRecords.length);
+      return { executionRecords: newRecords };
+    });
+  },
   updateExecutionRecord: (id, updatedExecutionRecord) =>
     set((state) => ({
       executionRecords: state.executionRecords.map((record) => (record.id === id ? { ...record, ...updatedExecutionRecord } : record))
@@ -1182,6 +1189,11 @@ export const useDataStore = create<DataStore>()(
         payments: state.payments.map(p => {
           const { images, ...rest } = p;
           return rest;
+        }),
+        // executionRecords에서 images 필드 제거 (용량 초과 방지)
+        executionRecords: state.executionRecords.map(r => {
+          const { images, ...rest } = r;
+          return rest;
         })
       }),
       // Date 객체를 저장하고 복원하기 위한 커스텀 직렬화
@@ -1264,8 +1276,16 @@ export const useDataStore = create<DataStore>()(
           };
         },
         setItem: (name, newValue) => {
-          const str = JSON.stringify(newValue);
-          localStorage.setItem(name, str);
+          try {
+            const str = JSON.stringify(newValue);
+            localStorage.setItem(name, str);
+          } catch (e) {
+            console.error('[dataStore] localStorage 저장 실패:', e);
+            // 용량 초과 시 오래된 데이터 정리 시도
+            if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+              console.warn('[dataStore] localStorage 용량 초과 - 일부 데이터 삭제 필요');
+            }
+          }
         },
         removeItem: (name) => localStorage.removeItem(name)
       }
