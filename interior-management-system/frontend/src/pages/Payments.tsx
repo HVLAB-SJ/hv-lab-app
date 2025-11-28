@@ -930,11 +930,12 @@ const Payments = () => {
     // 스마트 텍스트 분석
     const analysis = smartTextAnalysis(text);
 
-    // 폼 초기화 후 새로 채우기 (프로젝트, 날짜, quickText만 유지)
+    // 폼 초기화 후 새로 채우기 (프로젝트, 날짜, quickText, quickImages 유지)
     const updatedFormData: any = {
       project: formData.project,
       date: formData.date,
       quickText: formData.quickText,
+      quickImages: formData.quickImages || [], // quickImages 유지
       process: '',
       itemName: '',
       amount: '',
