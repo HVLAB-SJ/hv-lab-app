@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 
 type PaymentRequest = Payment;
-import { Search, Trash2, ImageIcon, X, Upload, FileText } from 'lucide-react';
+import { Search, Trash2, ImageIcon, X, Upload, FileText, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -2508,15 +2508,31 @@ const Payments = () => {
                                     <div className="text-xs text-gray-500 truncate flex-1">
                                       {accountInfo}
                                     </div>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleEdit(record);
-                                      }}
-                                      className="text-xs text-gray-600 hover:text-gray-900 ml-2 flex-shrink-0"
-                                    >
-                                      수정
-                                    </button>
+                                    <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleEdit(record);
+                                        }}
+                                        className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                                        title="수정"
+                                      >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          if (window.confirm('이 결제요청을 삭제하시겠습니까?')) {
+                                            await deletePaymentFromAPI(record.id);
+                                            toast.success('삭제되었습니다');
+                                          }
+                                        }}
+                                        className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                        title="삭제"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -2605,20 +2621,36 @@ const Payments = () => {
                         )}
                       </div>
 
-                      {/* 계좌정보 + 수정 버튼 */}
+                      {/* 계좌정보 + 수정/삭제 버튼 */}
                       <div className="flex items-center justify-between mb-2.5">
                         <div className="text-xs text-gray-500 truncate flex-1">
                           {accountInfo}
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(record);
-                          }}
-                          className="text-xs text-gray-600 hover:text-gray-900 ml-2 flex-shrink-0"
-                        >
-                          수정
-                        </button>
+                        <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(record);
+                            }}
+                            className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                            title="수정"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (window.confirm('이 결제요청을 삭제하시겠습니까?')) {
+                                await deletePaymentFromAPI(record.id);
+                                toast.success('삭제되었습니다');
+                              }
+                            }}
+                            className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="삭제"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       {/* 버튼 그룹 */}
