@@ -304,10 +304,34 @@ const Payments = () => {
           .map(p => p.bankInfo!.accountHolder.trim().toLowerCase())
       );
 
+      // 공정 매칭 함수 - "설비/미장"과 "설비공사" 같은 케이스도 매칭
+      const isProcessMatch = (formProcess: string, contractorProcess: string): boolean => {
+        const formLower = formProcess.toLowerCase();
+        const contractorLower = contractorProcess.toLowerCase();
+
+        // 직접 포함 관계 체크
+        if (formLower.includes(contractorLower) || contractorLower.includes(formLower)) {
+          return true;
+        }
+
+        // 슬래시로 분리된 공정 각각 체크 (예: "설비/미장" -> ["설비", "미장"])
+        const formParts = formLower.split('/').map(p => p.trim());
+
+        // "공사" 접미사 제거하고 비교 (예: "설비공사" -> "설비")
+        const contractorBase = contractorLower.replace(/공사$/, '').trim();
+
+        // 각 파트가 협력업체 공정의 기본 부분과 매칭되는지 확인
+        for (const part of formParts) {
+          if (part === contractorBase || contractorBase.includes(part) || part.includes(contractorBase)) {
+            return true;
+          }
+        }
+
+        return false;
+      };
+
       const filtered = contractors.filter(contractor => {
-        const processMatch =
-          contractor.process.toLowerCase().includes(formData.process.toLowerCase()) ||
-          formData.process.toLowerCase().includes(contractor.process.toLowerCase());
+        const processMatch = isProcessMatch(formData.process, contractor.process);
 
         if (!processMatch) return false;
 

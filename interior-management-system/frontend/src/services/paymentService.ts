@@ -112,10 +112,12 @@ const paymentService = {
     if (data.itemName !== undefined) backendData.itemName = data.itemName;
     if (data.materialAmount !== undefined) backendData.materialAmount = data.materialAmount;
     if (data.laborAmount !== undefined) backendData.laborAmount = data.laborAmount;
+    if (data.originalMaterialAmount !== undefined) backendData.originalMaterialAmount = data.originalMaterialAmount;
     if (data.originalLaborAmount !== undefined) backendData.originalLaborAmount = data.originalLaborAmount;
     if (data.applyTaxDeduction !== undefined) backendData.applyTaxDeduction = data.applyTaxDeduction;
     if (data.includesVAT !== undefined) backendData.includesVAT = data.includesVAT;
     if (data.notes !== undefined) backendData.notes = data.notes;
+    if ((data as any).requestDate !== undefined) backendData.requestDate = (data as any).requestDate;
     if (data.bankInfo !== undefined) {
       if (data.bankInfo.accountHolder) backendData.account_holder = data.bankInfo.accountHolder;
       if (data.bankInfo.bankName) backendData.bank_name = data.bankInfo.bankName;

@@ -482,10 +482,15 @@ export const useDataStore = create<DataStore>()(
           amount: updatedPayment.amount,
           materialAmount: updatedPayment.materialAmount,
           laborAmount: updatedPayment.laborAmount,
+          originalMaterialAmount: updatedPayment.originalMaterialAmount,
+          originalLaborAmount: updatedPayment.originalLaborAmount,
           category: updatedPayment.category,
           urgency: updatedPayment.urgency,
           bankInfo: updatedPayment.bankInfo,
-          notes: updatedPayment.notes
+          notes: updatedPayment.notes,
+          requestDate: updatedPayment.requestDate,
+          includesVAT: updatedPayment.includesVAT,
+          applyTaxDeduction: updatedPayment.applyTaxDeduction
         });
       }
 

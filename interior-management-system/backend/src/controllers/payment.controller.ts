@@ -165,11 +165,16 @@ export const updatePayment = async (req: Request, res: Response): Promise<void> 
       amount,
       materialAmount,
       laborAmount,
+      originalMaterialAmount,
+      originalLaborAmount,
       category,
       urgency,
       bankInfo,
       notes,
-      status
+      status,
+      requestDate,
+      includesVAT,
+      applyTaxDeduction
     } = req.body;
 
     // 업데이트할 필드만 포함하는 객체 생성
@@ -180,7 +185,12 @@ export const updatePayment = async (req: Request, res: Response): Promise<void> 
     if (amount !== undefined) updateFields.amount = amount;
     if (materialAmount !== undefined) updateFields.materialAmount = materialAmount;
     if (laborAmount !== undefined) updateFields.laborAmount = laborAmount;
+    if (originalMaterialAmount !== undefined) updateFields.originalMaterialAmount = originalMaterialAmount;
+    if (originalLaborAmount !== undefined) updateFields.originalLaborAmount = originalLaborAmount;
     if (category !== undefined) updateFields.category = category;
+    if (requestDate !== undefined) updateFields.requestDate = new Date(requestDate);
+    if (includesVAT !== undefined) updateFields.includesVAT = includesVAT;
+    if (applyTaxDeduction !== undefined) updateFields.applyTaxDeduction = applyTaxDeduction;
     if (urgency !== undefined) updateFields.urgency = urgency;
     if (bankInfo !== undefined) updateFields.bankInfo = bankInfo;
     if (notes !== undefined) updateFields.notes = notes;
