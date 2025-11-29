@@ -1324,12 +1324,28 @@ div.rbc-popup {
   }
 }
 
-/* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2줄 레이아웃 */
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
-  /* 이벤트 높이 - 고정 (일관된 행 정렬) */
+  /* 이벤트 컨테이너 - flexbox로 간격 없이 스택 */
+  .rbc-row-content,
+  .rbc-row-content-scrollable {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1px !important;
+    align-items: stretch !important;
+  }
+
+  /* 이벤트 행 - 내용에 맞게 자동 높이 */
+  .rbc-row-segment {
+    height: auto !important;
+    min-height: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* 이벤트 - 내용에 맞게 자동 높이 */
   .rbc-event {
-    min-height: 38px !important;
-    height: 38px !important;
+    height: auto !important;
+    min-height: auto !important;
     line-height: 1.2 !important;
     align-items: flex-start !important;
     padding: 2px 4px !important;
@@ -1340,13 +1356,6 @@ div.rbc-popup {
     white-space: normal !important;
     overflow: hidden !important;
     display: block !important;
-  }
-
-  /* 이벤트 세그먼트 높이 - 고정 */
-  .rbc-row-segment {
-    height: 40px !important;
-    min-height: 40px !important;
-    margin-bottom: 1px !important;
   }
 
   /* 월 행 최소 높이 */
