@@ -119,6 +119,7 @@ const Payments = () => {
   const [detailPayment, setDetailPayment] = useState<PaymentRequest | null>(null);
   const [showCashReceiptModal, setShowCashReceiptModal] = useState(false);
   const [cashReceiptProject, setCashReceiptProject] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false); // 중복 제출 방지
 
   // 협력업체 관련 상태
   const [contractors, setContractors] = useState<Contractor[]>([]);
@@ -1342,6 +1343,12 @@ const Payments = () => {
 
   // 폼 저장
   const handleSave = async () => {
+    // 중복 제출 방지
+    if (isSubmitting) {
+      console.log('💰 Already submitting, ignoring click');
+      return;
+    }
+
     console.log('💰 handleSave called');
     console.log('💰 Current user:', user);
     console.log('💰 Form data:', formData);
@@ -1363,6 +1370,8 @@ const Payments = () => {
       toast.error('금액을 입력해주세요');
       return;
     }
+
+    setIsSubmitting(true); // 제출 시작
 
     try {
       // 3.3% 세금공제 시 금액에 0.967 적용
@@ -1471,6 +1480,8 @@ const Payments = () => {
     } catch (error) {
       console.error('💰 Payment save error:', error);
       toast.error('결제요청 저장에 실패했습니다: ' + (error as Error).message);
+    } finally {
+      setIsSubmitting(false); // 제출 완료 (성공/실패 모두)
     }
   };
 
@@ -2347,10 +2358,15 @@ const Payments = () => {
                     console.log('💰 Form data:', formData);
                     handleSave();
                   }}
-                  className="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 active:bg-gray-950 touch-manipulation font-medium text-base"
+                  disabled={isSubmitting}
+                  className={`w-full py-3 rounded-lg touch-manipulation font-medium text-base ${
+                    isSubmitting
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-950'
+                  }`}
                   style={{ minHeight: '48px', position: 'relative', zIndex: 101, WebkitTapHighlightColor: 'transparent' }}
                 >
-                  {editingPaymentId ? '수정완료' : '결제요청'}
+                  {isSubmitting ? '처리중...' : (editingPaymentId ? '수정완료' : '결제요청')}
                 </button>
               </div>
             </div>
