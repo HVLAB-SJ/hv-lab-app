@@ -928,7 +928,7 @@ const ExecutionHistory = () => {
                     reader.readAsDataURL(file);
                   });
                 }}
-                rows={3}
+                rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder={isMobileDevice ? "내역 붙여넣기" : "내역 붙여넣기 (이미지 드래그 또는 Ctrl+V)"}
               />
@@ -940,7 +940,7 @@ const ExecutionHistory = () => {
                       <img
                         src={img}
                         alt={`이미지 ${idx + 1}`}
-                        className="w-full h-16 object-cover rounded-lg border"
+                        className="w-full h-20 object-cover rounded-lg border"
                       />
                       <button
                         type="button"
@@ -982,14 +982,14 @@ const ExecutionHistory = () => {
                       e.target.value = '';
                     }}
                   />
-                  <div className="w-full h-9 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium border border-gray-300">
+                  <div className="w-full h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium border border-gray-300">
                     이미지 추가
                   </div>
                 </label>
                 <button
                   type="button"
                   onClick={handleQuickTextParse}
-                  className="h-9 flex items-center justify-center bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium"
+                  className="h-10 flex items-center justify-center bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium"
                 >
                   자동 채우기
                 </button>
