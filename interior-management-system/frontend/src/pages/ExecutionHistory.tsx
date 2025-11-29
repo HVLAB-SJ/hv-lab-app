@@ -1246,8 +1246,8 @@ const ExecutionHistory = () => {
                         {record.author || '-'}
                       </td>
                       <td className="px-3 py-3 text-gray-600 exec-date-col">
-                        <span className="portrait:hidden landscape:inline ipad-xl:!inline">{format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}</span>
-                        <span className="portrait:inline landscape:hidden ipad-xl:!hidden whitespace-nowrap">{format(new Date(record.date), 'MM-dd (EEE)', { locale: ko })}</span>
+                        <span className="exec-date-full">{format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}</span>
+                        <span className="exec-date-short whitespace-nowrap">{format(new Date(record.date), 'MM-dd (EEE)', { locale: ko })}</span>
                       </td>
                       <td className="px-3 py-3 text-gray-600 exec-process-col">
                         {record.process || '-'}
@@ -1265,8 +1265,8 @@ const ExecutionHistory = () => {
                         {(record.vatAmount || 0).toLocaleString()}
                       </td>
                       <td className="px-3 py-3 text-right font-semibold exec-total-col">
-                        <span className="portrait:inline landscape:hidden ipad-xl:hidden">{(record.totalAmount || 0).toLocaleString()}</span>
-                        <span className="portrait:hidden landscape:inline ipad-xl:!inline">{(record.totalAmount || 0).toLocaleString()}원</span>
+                        <span className="exec-total-full">{(record.totalAmount || 0).toLocaleString()}원</span>
+                        <span className="exec-total-short">{(record.totalAmount || 0).toLocaleString()}</span>
                       </td>
                     </tr>
                   ))}

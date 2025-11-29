@@ -1530,6 +1530,14 @@ div.rbc-popup {
   display: none;
 }
 
+/* 기본: 실행내역 날짜/총액 - 가로모드는 전체형식 표시 */
+.exec-date-short {
+  display: none;
+}
+.exec-total-short {
+  display: none;
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 실행내역 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 전체 컨테이너: 세로 레이아웃 */
@@ -1692,6 +1700,22 @@ div.rbc-popup {
   .exec-th-total,
   .exec-total-col {
     width: 20% !important;
+  }
+
+  /* 세로모드: 날짜 짧은 형식만 표시 */
+  .exec-date-full {
+    display: none !important;
+  }
+  .exec-date-short {
+    display: inline !important;
+  }
+
+  /* 세로모드: 총액 짧은 형식만 표시 */
+  .exec-total-full {
+    display: none !important;
+  }
+  .exec-total-short {
+    display: inline !important;
   }
 }
 
