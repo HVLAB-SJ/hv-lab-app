@@ -1518,6 +1518,11 @@ div.rbc-popup {
   .specbook-drop-text-portrait {
     display: inline !important;
   }
+
+  /* 세로모드에서 드롭 영역 위 프로젝트 선택 표시 */
+  .specbook-drop-project-select {
+    display: block !important;
+  }
 }
 
 /* 기본: portrait 텍스트 숨김 (가로모드) */
