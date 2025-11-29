@@ -1740,6 +1740,25 @@ div.rbc-popup {
   }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 가견적서 레이아웃 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  .estimate-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  .estimate-form {
+    width: 100% !important;
+    order: 1 !important;
+  }
+
+  .estimate-result {
+    width: 100% !important;
+    order: 2 !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 이벤트 행 내부 - 여백 제거 */
