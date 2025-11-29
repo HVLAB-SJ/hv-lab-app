@@ -848,9 +848,9 @@ const ExecutionHistory = () => {
         <div className={`execution-form md:col-span-2 ipad:col-span-2 ipad-lg:col-span-2 ipad-xl:col-span-2 ipad-2xl:col-span-2 bg-white rounded-lg border p-3 md:p-4 overflow-y-auto ${
           mobileView !== 'form' ? 'hidden md:block' : ''
         }`}>
-          <div className="space-y-4 w-full">
+          <div className="execution-form-inner space-y-4 w-full">
             {/* 프로젝트 - 태블릿/데스크톱에서만 표시 */}
-            <div className="hidden md:block">
+            <div className="exec-project hidden md:block">
               <select
                 value={formData.project}
                 onChange={(e) => {
@@ -870,7 +870,7 @@ const ExecutionHistory = () => {
             </div>
 
             {/* 빠른 입력 */}
-            <div>
+            <div className="exec-quick-input">
               <textarea
                 value={formData.quickText}
                 onChange={(e) => setFormData({ ...formData, quickText: e.target.value })}
@@ -986,7 +986,7 @@ const ExecutionHistory = () => {
             </div>
 
             {/* 날짜 & 공정 */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="exec-date-process grid grid-cols-2 gap-2">
               {/* 날짜 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1022,7 +1022,7 @@ const ExecutionHistory = () => {
             </div>
 
             {/* 항목명 */}
-            <div className="relative">
+            <div className="exec-item-name relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">항목명</label>
               <input
                 type="text"
@@ -1051,7 +1051,7 @@ const ExecutionHistory = () => {
             </div>
 
             {/* 금액 입력 */}
-            <div className="space-y-2">
+            <div className="exec-amounts space-y-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">자재비</label>
                 <input
@@ -1110,7 +1110,11 @@ const ExecutionHistory = () => {
                 </div>
               </div>
 
-              <div className="pt-2 border-t">
+            </div>
+
+            {/* 총액 및 내역추가 */}
+            <div className="exec-total-submit">
+              <div className="exec-total pt-2 border-t">
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium">총액</span>
                   <div className="text-right">
@@ -1131,7 +1135,7 @@ const ExecutionHistory = () => {
               </div>
 
               {/* 내역추가 버튼 */}
-              <div className="my-6" style={{ marginTop: '20px' }}>
+              <div className="exec-submit my-6" style={{ marginTop: '20px' }}>
                 <button
                   onClick={handleSave}
                   className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
@@ -1142,7 +1146,7 @@ const ExecutionHistory = () => {
             </div>
 
             {/* 총계 표시 - 태블릿/데스크톱에서만 표시 */}
-            <div className="hidden md:block bg-gray-50 rounded-lg p-3 md:p-4 space-y-2 md:mt-8 lg:mt-[114.67px]">
+            <div className="exec-summary hidden md:block bg-gray-50 rounded-lg p-3 md:p-4 space-y-2 md:mt-8 lg:mt-[114.67px]">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">자재비 총합:</span>
                 <span className="text-sm font-medium text-gray-900">{projectTotals.material.toLocaleString()}원</span>
@@ -1162,7 +1166,7 @@ const ExecutionHistory = () => {
             </div>
 
             {/* 검색 및 공정별 합계 버튼 - 데스크톱 전용 */}
-            <div className="hidden ipad-xl:block mt-4 space-y-2">
+            <div className="exec-search hidden ipad-xl:block mt-4 space-y-2">
               <div className="relative">
                 <input
                   type="text"

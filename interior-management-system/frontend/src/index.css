@@ -1545,25 +1545,104 @@ div.rbc-popup {
     width: 100% !important;
     max-height: none !important;
     overflow: visible !important;
+    padding: 1rem !important;
   }
 
-  /* 입력 폼 내부: 가로 배치 */
-  .execution-form > div {
+  /* 입력 폼 내부 컨테이너: 그리드 레이아웃 */
+  .execution-form-inner {
+    display: grid !important;
+    grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr !important;
+    gap: 0.75rem !important;
+    align-items: start !important;
+  }
+
+  /* 프로젝트 선택 */
+  .exec-project {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  /* 빠른 입력 (textarea) */
+  .exec-quick-input {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  .exec-quick-input textarea {
+    height: 80px !important;
+    min-height: 80px !important;
+  }
+
+  /* 날짜 & 공정 */
+  .exec-date-process {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
     display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 1rem !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
   }
 
-  .execution-form > div > div {
-    flex: 1 1 200px !important;
-    min-width: 150px !important;
+  .exec-date-process > div {
+    width: 100% !important;
+  }
+
+  /* 항목명 */
+  .exec-item-name {
+    grid-column: 4 !important;
+    grid-row: 1 !important;
+  }
+
+  /* 금액 입력 */
+  .exec-amounts {
+    grid-column: 5 !important;
+    grid-row: 1 !important;
+  }
+
+  .exec-amounts > div {
+    margin-bottom: 0.25rem !important;
+  }
+
+  .exec-amounts > .flex.items-center.gap-4 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.25rem !important;
+  }
+
+  /* 총액 및 내역추가 컨테이너 */
+  .exec-total-submit {
+    grid-column: 6 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  /* 총액 */
+  .exec-total {
+    border-top: none !important;
+    padding-top: 0 !important;
+  }
+
+  /* 내역추가 버튼 */
+  .exec-submit {
+    margin: 0 !important;
+  }
+
+  /* 총계 표시 영역 숨김 */
+  .exec-summary {
+    display: none !important;
+  }
+
+  /* 검색 및 공정별 합계 버튼 숨김 */
+  .exec-search {
+    display: none !important;
   }
 
   /* 실행내역 목록: 중단 전체 너비 */
   .execution-list {
     width: 100% !important;
-    flex: 1 !important;
-    min-height: 200px !important;
+    flex: 1.5 !important;
+    min-height: 250px !important;
   }
 
   /* 이미지 영역: 하단 전체 너비 */
