@@ -90,13 +90,13 @@ const Dashboard = () => {
             const isCurrentUser = member === userNameWithoutSurname;
 
             return (
-              <div key={member} className={`card p-3 sm:p-4 md:p-5 lg:p-4 ${isCurrentUser ? 'bg-neutral-50/80 border-l-[3px] border-l-neutral-600 shadow-sm' : ''}`}>
+              <div key={member} className={`card p-3 sm:p-4 md:p-5 lg:p-4 ${isCurrentUser ? 'bg-gray-50/50 ring-1 ring-gray-300' : ''}`}>
                 {/* 헤더 */}
-                <div className={`flex items-center justify-between mb-4 pb-3 border-b ${isCurrentUser ? 'border-neutral-200' : 'border-gray-200'}`}>
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-lg md:text-lg text-gray-900">{member}</h3>
                     {isCurrentUser && (
-                      <span className="text-xs px-2 py-0.5 bg-neutral-600 text-white rounded font-medium tracking-wide">MY</span>
+                      <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-600 rounded font-medium">나</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
