@@ -265,7 +265,12 @@ const SpecBook = () => {
   const { user } = useAuth();
   const filteredProjects = useFilteredProjects();
   const isAnTeamUser = user?.name === '안팀';
-  const [view, setView] = useState<'library' | 'project'>(isAnTeamUser ? 'project' : 'library');
+  const [view, setView] = useState<'library' | 'project'>(() => {
+    // 안팀 사용자이거나 저장된 프로젝트가 있으면 'project' 뷰로 시작
+    if (isAnTeamUser) return 'project';
+    const savedProject = localStorage.getItem('specBook_lastProject');
+    return savedProject ? 'project' : 'library';
+  });
   const [items, setItems] = useState<SpecBookItem[]>([]);
   const [allLibraryItems, setAllLibraryItems] = useState<SpecBookItem[]>([]); // 전체 라이브러리 아이템 (수량 계산용)
   const [allProjectItems, setAllProjectItems] = useState<SpecBookItem[]>([]); // 전체 프로젝트 아이템 (수량 계산용)
