@@ -1,0 +1,16 @@
+# Railway 빌드 시 제외할 파일/폴더
+interior-management-system/frontend/node_modules
+interior-management-system/frontend/dist
+interior-management-system/backend
+*.log
+.git
+.gitignore
+*.md
+.vscode
+.idea
+*.test.js
+*.spec.js
+__tests__
+coverage
+.env.local
+.env.development

@@ -1,0 +1,12 @@
+# Nixpacks 빌드 최적화 설정
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm install --prefer-offline --no-audit --no-fund --omit=dev"]
+
+[phases.build]
+cmds = ["echo 'Skipping build - frontend pre-built'"]
+
+[start]
+cmd = "node server.js"

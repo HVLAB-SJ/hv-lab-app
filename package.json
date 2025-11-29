@@ -12,8 +12,9 @@
     "deploy:railway": "railway up",
     "deploy:full": "npm run build && git add . && git commit -m \"Build and deploy\" && git push origin production-stable:main && railway up",
     "deploy:old": "deploy.bat",
-    "build": "cd interior-management-system/frontend && rm -rf node_modules/.cache && npm ci && npm run build && cd ../.. && cp -r interior-management-system/frontend/dist/* public/",
+    "build": "echo 'Frontend already built in public/ folder - skipping'",
     "build:frontend": "cd interior-management-system/frontend && npm run build",
+    "build:full": "cd interior-management-system/frontend && rm -rf node_modules/.cache && npm ci && npm run build && cd ../.. && cp -r interior-management-system/frontend/dist/* public/",
     "railway:deploy": "git add . && git commit -m \"Deploy to Railway\" && git push && railway up",
     "auto-deploy": "cd interior-management-system/frontend && npm run build && cd ../.. && powershell -Command \"Copy-Item -Path 'interior-management-system/frontend/dist/*' -Destination 'public/' -Recurse -Force\" && git add . && git commit -m \"Auto deploy: Frontend build\" && git push"
   },
@@ -48,7 +49,6 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "mongodb": "^6.20.0",
     "nodemon": "^3.1.10"
   }
 }
