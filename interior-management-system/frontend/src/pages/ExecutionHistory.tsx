@@ -838,17 +838,6 @@ const ExecutionHistory = () => {
               이미지
             </button>
           </nav>
-          {/* 검색 입력 */}
-          <div className="relative mr-1">
-            <input
-              type="text"
-              placeholder="검색"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-28 pl-8 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
-            />
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          </div>
         </div>
       </div>
 
