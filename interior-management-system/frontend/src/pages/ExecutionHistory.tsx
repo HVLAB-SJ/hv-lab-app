@@ -1675,8 +1675,16 @@ const ExecutionHistory = () => {
 
       {/* 공정별 합계 모달 */}
       {showProcessSummary && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-t-2xl md:rounded-lg w-full md:max-w-4xl max-h-[85vh] md:max-h-[80vh] overflow-hidden md:m-4">
+        <div
+          className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black bg-opacity-50"
+          onClick={(e) => {
+            // 데스크탑에서만 배경 클릭 시 닫기 (768px 이상)
+            if (window.innerWidth >= 768 && e.target === e.currentTarget) {
+              setShowProcessSummary(false);
+            }
+          }}
+        >
+          <div className="bg-white rounded-t-2xl md:rounded-lg w-full md:max-w-4xl max-h-[85vh] md:max-h-[80vh] overflow-hidden md:m-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 md:p-5 lg:p-6 border-b">
               <h2 className="text-lg md:text-lg lg:text-xl font-bold text-gray-900">공정별 합계</h2>
               <button
