@@ -1033,6 +1033,18 @@ const Payments = () => {
       updatedFormData.process = analysis.vendor;
     }
 
+    // 텍스트에서 PROCESS_LIST에 있는 공정명 찾기 (공정이 아직 설정되지 않은 경우)
+    if (!updatedFormData.process) {
+      const textLower = text.toLowerCase();
+      for (const process of PROCESS_LIST) {
+        // 공정명이 텍스트에 포함되어 있는지 확인
+        if (textLower.includes(process.toLowerCase())) {
+          updatedFormData.process = process;
+          break; // 첫 번째 매칭되는 공정만 사용
+        }
+      }
+    }
+
     // 항목명 설정
     if (analysis.itemName) {
       updatedFormData.itemName = analysis.itemName;
