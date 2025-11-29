@@ -1553,7 +1553,7 @@ div.rbc-popup {
     width: 100% !important;
     max-height: none !important;
     overflow: visible !important;
-    padding: 0.75rem 1rem !important;
+    padding: 1rem 1.25rem !important;
   }
 
   /* 폼 내부: CSS Grid 2행 레이아웃 */
@@ -1561,7 +1561,7 @@ div.rbc-popup {
     display: grid !important;
     grid-template-columns: 120px 90px 90px 1fr 100px 100px auto auto auto !important;
     grid-template-rows: auto auto !important;
-    gap: 0.5rem 0.75rem !important;
+    gap: 0.75rem 0.75rem !important;
     align-items: end !important;
   }
 
@@ -1624,8 +1624,8 @@ div.rbc-popup {
   }
   .exec-quick-input textarea {
     flex: 1 !important;
-    height: 36px !important;
-    min-height: 36px !important;
+    height: 40px !important;
+    min-height: 40px !important;
     resize: none !important;
   }
   .exec-quick-input .grid.grid-cols-3 { display: none !important; }
@@ -1653,8 +1653,8 @@ div.rbc-popup {
   .execution-form-inner input,
   .execution-form-inner select,
   .execution-form-inner button[type="button"] {
-    height: 36px !important;
-    padding: 0.4rem 0.5rem !important;
+    height: 38px !important;
+    padding: 0.5rem 0.5rem !important;
     font-size: 0.85rem !important;
   }
 
