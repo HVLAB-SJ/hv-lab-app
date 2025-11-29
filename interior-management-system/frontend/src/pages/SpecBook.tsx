@@ -272,7 +272,10 @@ const SpecBook = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<number | null>(null);
+  const [selectedProject, setSelectedProject] = useState<number | null>(() => {
+    const saved = localStorage.getItem('specBook_lastProject');
+    return saved ? Number(saved) : null;
+  });
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<SpecBookItem | null>(null);
   const [formData, setFormData] = useState({
@@ -365,6 +368,13 @@ const SpecBook = () => {
     }
   }, [view, selectedProject]);
 
+  // 선택한 프로젝트 localStorage에 저장
+  useEffect(() => {
+    if (selectedProject) {
+      localStorage.setItem('specBook_lastProject', String(selectedProject));
+    }
+  }, [selectedProject]);
+
   const loadCategories = async () => {
     try {
       const response = await api.get('/specbook/categories');
@@ -383,6 +393,18 @@ const SpecBook = () => {
       }));
       console.log('프로젝트 목록 로드됨:', mappedProjects.length, '개', mappedProjects);
       setProjects(mappedProjects);
+
+      // localStorage에서 저장된 프로젝트 확인
+      const savedProjectId = localStorage.getItem('specBook_lastProject');
+      if (savedProjectId && mappedProjects.length > 0) {
+        const savedId = Number(savedProjectId);
+        const projectExists = mappedProjects.find(p => p.id === savedId);
+        if (projectExists) {
+          setSelectedProject(savedId);
+          setView('project');
+          return;
+        }
+      }
 
       // 안팀 사용자인 경우 첫 번째 프로젝트 자동 선택
       if (isAnTeamUser && mappedProjects.length > 0 && !selectedProject) {
