@@ -984,6 +984,44 @@ const ExecutionHistory = () => {
         <div className={`bg-white rounded-lg border overflow-hidden flex flex-col w-full desktop:col-span-6 ${
           mobileView !== 'list' ? 'hidden md:flex' : ''
         }`}>
+          {/* 모바일 상단: 검색, 합계, 공정별 합계 버튼 */}
+          {mobileView === 'list' && (
+            <div className="md:hidden border-b bg-gray-50 p-2 space-y-2">
+              {/* 검색 입력창 */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="검색..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              </div>
+
+              {/* 합계 정보 - 컴팩트 2행 */}
+              <div className="bg-white rounded-lg px-3 py-2 border text-xs">
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-500">자재비 <span className="font-medium text-gray-900">{projectTotals.material.toLocaleString()}</span></span>
+                  <span className="text-gray-500">인건비 <span className="font-medium text-gray-900">{projectTotals.labor.toLocaleString()}</span></span>
+                  <span className="text-gray-500">부가세 <span className="font-medium text-gray-900">{projectTotals.vat.toLocaleString()}</span></span>
+                </div>
+                <div className="flex justify-between items-center mt-1 pt-1 border-t border-gray-100">
+                  <span className="font-bold text-gray-900">총 합계</span>
+                  <span className="font-bold text-gray-900">{projectTotals.total.toLocaleString()}원</span>
+                </div>
+              </div>
+
+              {/* 공정별 합계 버튼 */}
+              <button
+                onClick={() => setShowProcessSummary(true)}
+                className="w-full py-1.5 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+              >
+                공정별 합계
+              </button>
+            </div>
+          )}
+
           {/* 모바일: 카드 형식, 데스크톱: 테이블 형식 */}
           <div className="flex-1 overflow-auto">
             {filteredRecords.length > 0 ? (
@@ -1040,12 +1078,12 @@ const ExecutionHistory = () => {
                 </tbody>
               </table>
 
-              {/* 모바일 카드 뷰 */}
-              <div className="md:hidden space-y-3 p-3">
+              {/* 모바일 카드 뷰 - 컴팩트 레이아웃 */}
+              <div className="md:hidden space-y-1.5 p-2">
                 {filteredRecords.map((record) => (
                   <div
                     key={record.id}
-                    className={`border rounded-lg p-4 ${
+                    className={`border rounded-lg px-3 py-2 ${
                       selectedRecord === record.id ? 'bg-blue-50 border-blue-300' : 'bg-white'
                     }`}
                     onClick={() => {
@@ -1053,33 +1091,19 @@ const ExecutionHistory = () => {
                       setMobileView('image');
                     }}
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{record.itemName}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {record.process || '-'} • {record.author || '-'}
-                        </p>
-                      </div>
-                      <p className="text-sm font-bold text-gray-900">
-                        ₩{(record.totalAmount || 0).toLocaleString()}
+                    {/* 1행: 항목명 + 총액 */}
+                    <div className="flex justify-between items-center">
+                      <p className="font-medium text-gray-900 text-sm truncate flex-1 mr-2">{record.itemName}</p>
+                      <p className="text-sm font-bold text-gray-900 shrink-0">
+                        {(record.totalAmount || 0).toLocaleString()}원
                       </p>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {format(new Date(record.date), 'MM.dd (EEE)', { locale: ko })}
-                    </div>
-                    <div className="mt-2 pt-2 border-t grid grid-cols-3 gap-2 text-xs">
-                      <div>
-                        <span className="text-gray-500">자재비</span>
-                        <p className="font-medium">₩{(record.materialCost || 0).toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">인건비</span>
-                        <p className="font-medium">₩{(record.laborCost || 0).toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">부가세</span>
-                        <p className="font-medium">₩{(record.vatAmount || 0).toLocaleString()}</p>
-                      </div>
+                    {/* 2행: 공정, 작성자, 날짜 + 자재비/인건비/부가세 */}
+                    <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
+                      <span>{record.process || '-'} · {record.author || '-'} · {format(new Date(record.date), 'MM.dd', { locale: ko })}</span>
+                      <span className="text-gray-400">
+                        자{(record.materialCost || 0).toLocaleString()} / 인{(record.laborCost || 0).toLocaleString()} / 부{(record.vatAmount || 0).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -1092,50 +1116,11 @@ const ExecutionHistory = () => {
             )}
           </div>
 
-          {/* 하단 검색 및 공정별 합계 버튼 영역 */}
-          <div className="border-t bg-gray-50 p-3">
-            {/* 모바일에서만 검색 입력창을 먼저 표시 */}
-            {mobileView === 'list' && (
-              <>
-                {/* 모바일 검색 입력창 */}
-                <div className="md:hidden mb-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="검색..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
-                    />
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  </div>
-                </div>
-
-                {/* 모바일 총계 표시 */}
-                <div className="md:hidden bg-white rounded-lg p-3 mb-3 space-y-2 border">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">자재비 총합:</span>
-                    <span className="text-sm font-medium text-gray-900">{projectTotals.material.toLocaleString()}원</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">인건비 총합:</span>
-                    <span className="text-sm font-medium text-gray-900">{projectTotals.labor.toLocaleString()}원</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">부가세 총합:</span>
-                    <span className="text-sm font-medium text-gray-900">{projectTotals.vat.toLocaleString()}원</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    <span className="text-sm font-bold text-gray-900">총 합계:</span>
-                    <span className="text-base font-bold text-gray-900">{projectTotals.total.toLocaleString()}원</span>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+          {/* 하단 검색 및 공정별 합계 버튼 영역 - 태블릿/데스크톱 전용 */}
+          <div className="hidden md:block border-t bg-gray-50 p-3">
+            <div className="flex flex-row items-center gap-3">
               {/* 태블릿/데스크톱 검색 입력창 */}
-              <div className="hidden md:block flex-1 md:max-w-sm">
+              <div className="flex-1 max-w-sm">
                 <div className="relative">
                   <input
                     type="text"
@@ -1149,7 +1134,7 @@ const ExecutionHistory = () => {
               </div>
 
               {/* 버튼들 */}
-              <div className="flex items-center justify-between md:justify-end gap-2">
+              <div className="flex items-center justify-end gap-2">
                 {selectedRecord && (
                   <button
                     onClick={async () => {
