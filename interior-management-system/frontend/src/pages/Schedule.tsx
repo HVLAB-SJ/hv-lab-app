@@ -245,9 +245,14 @@ const CustomDateHeader = React.memo(({
 // 커스텀 이벤트 컴포넌트도 밖으로 이동
 const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: { id: string; name: string; role: string } | null }) => {
   const attendees = event.assignedTo || [];
-  const [isTablet, setIsTablet] = useState(
-    window.innerWidth >= 768 && window.innerWidth < 1024
-  );
+  // 태블릿 또는 세로방향 데스크탑 모니터 감지
+  const checkVerticalLayout = () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    // 태블릿 (768~1024) 또는 세로방향 데스크탑 (height > width이고 width >= 768)
+    return (width >= 768 && width < 1024) || (width >= 1024 && height > width);
+  };
+  const [useVerticalLayout, setUseVerticalLayout] = useState(checkVerticalLayout);
   const [showTooltip, setShowTooltip] = useState(false);
 
   // 사용자 이름에서 성 제거
@@ -259,14 +264,14 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+      setUseVerticalLayout(checkVerticalLayout());
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 태블릿에서는 세로 레이아웃으로 표시
-  if (isTablet) {
+  // 태블릿 또는 세로방향 데스크탑에서는 세로 레이아웃으로 표시
+  if (useVerticalLayout) {
     return (
       <div
         className="w-full relative block"
