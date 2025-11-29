@@ -1651,6 +1651,48 @@ div.rbc-popup {
     flex: 1 !important;
     min-height: 200px !important;
   }
+
+  /* 테이블 컬럼 너비 조정 */
+  .exec-th-author,
+  .exec-author-col {
+    width: 6% !important;
+    white-space: nowrap !important;
+  }
+
+  .exec-th-date,
+  .exec-date-col {
+    width: 10% !important;
+  }
+
+  .exec-th-process,
+  .exec-process-col {
+    width: 10% !important;
+  }
+
+  .exec-th-item,
+  .exec-item-col {
+    width: 24% !important;
+  }
+
+  .exec-th-material,
+  .exec-material-col {
+    width: 10% !important;
+  }
+
+  .exec-th-labor,
+  .exec-labor-col {
+    width: 10% !important;
+  }
+
+  .exec-th-vat,
+  .exec-vat-col {
+    width: 10% !important;
+  }
+
+  .exec-th-total,
+  .exec-total-col {
+    width: 20% !important;
+  }
 }
 
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */

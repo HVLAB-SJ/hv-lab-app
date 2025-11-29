@@ -1223,16 +1223,16 @@ const ExecutionHistory = () => {
               <>
                 {/* 태블릿/데스크톱 테이블 뷰 */}
                 <table className="hidden md:table w-full">
-                <thead className="bg-gray-50 sticky top-0">
+                <thead className="bg-gray-50 sticky top-0 exec-table-header">
                   <tr className="text-left text-sm text-gray-700 border-b">
-                    <th className="px-3 py-3 font-medium w-[6%]">작성자</th>
-                    <th className="px-3 py-3 font-medium w-[13%]">날짜</th>
-                    <th className="px-3 py-3 font-medium w-[10%]">공정</th>
-                    <th className="px-3 py-3 font-medium w-[19%]">항목명</th>
-                    <th className="px-3 py-3 font-medium text-right w-[13%]">자재비</th>
-                    <th className="px-3 py-3 font-medium text-right w-[13%]">인건비</th>
-                    <th className="px-3 py-3 font-medium text-right w-[13%]">부가세</th>
-                    <th className="px-3 py-3 font-medium text-right w-[13%]">총액</th>
+                    <th className="px-3 py-3 font-medium exec-th-author">작성자</th>
+                    <th className="px-3 py-3 font-medium exec-th-date">날짜</th>
+                    <th className="px-3 py-3 font-medium exec-th-process">공정</th>
+                    <th className="px-3 py-3 font-medium exec-th-item">항목명</th>
+                    <th className="px-3 py-3 font-medium text-right exec-th-material">자재비</th>
+                    <th className="px-3 py-3 font-medium text-right exec-th-labor">인건비</th>
+                    <th className="px-3 py-3 font-medium text-right exec-th-vat">부가세</th>
+                    <th className="px-3 py-3 font-medium text-right exec-th-total">총액</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -1242,29 +1242,29 @@ const ExecutionHistory = () => {
                       className={`hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === record.id ? 'bg-blue-50' : ''}`}
                       onClick={() => setSelectedRecord(record.id)}
                     >
-                      <td className="px-3 py-3 text-gray-600">
+                      <td className="px-3 py-3 text-gray-600 whitespace-nowrap exec-author-col">
                         {record.author || '-'}
                       </td>
-                      <td className="px-3 py-3 text-gray-600">
-                        <span className="portrait:block landscape:hidden ipad-xl:hidden">{format(new Date(record.date), 'MM-dd', { locale: ko })}</span>
+                      <td className="px-3 py-3 text-gray-600 exec-date-col">
                         <span className="portrait:hidden landscape:inline ipad-xl:!inline">{format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}</span>
+                        <span className="portrait:inline landscape:hidden ipad-xl:!hidden whitespace-nowrap">{format(new Date(record.date), 'MM-dd (EEE)', { locale: ko })}</span>
                       </td>
-                      <td className="px-3 py-3 text-gray-600">
+                      <td className="px-3 py-3 text-gray-600 exec-process-col">
                         {record.process || '-'}
                       </td>
-                      <td className="px-3 py-3 font-medium">
+                      <td className="px-3 py-3 font-medium exec-item-col">
                         {record.itemName}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3 text-right exec-material-col">
                         {(record.materialCost || 0).toLocaleString()}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3 text-right exec-labor-col">
                         {(record.laborCost || 0).toLocaleString()}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3 text-right exec-vat-col">
                         {(record.vatAmount || 0).toLocaleString()}
                       </td>
-                      <td className="px-3 py-3 text-right font-semibold">
+                      <td className="px-3 py-3 text-right font-semibold exec-total-col">
                         <span className="portrait:inline landscape:hidden ipad-xl:hidden">{(record.totalAmount || 0).toLocaleString()}</span>
                         <span className="portrait:hidden landscape:inline ipad-xl:!inline">{(record.totalAmount || 0).toLocaleString()}원</span>
                       </td>
