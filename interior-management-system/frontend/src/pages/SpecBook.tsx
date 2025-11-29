@@ -1335,7 +1335,7 @@ const SpecBook = () => {
                         )}
                       </div>
                       {item.grade && (
-                        <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${getGradeColor(item.grade)}`}>
+                        <span className={`hidden md:inline-block px-1.5 py-0.5 text-xs rounded ${getGradeColor(item.grade)}`}>
                           {formatGradeRange(item.grade)}
                         </span>
                       )}
@@ -1345,7 +1345,7 @@ const SpecBook = () => {
                         <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
                       </div>
                       {item.price && (
-                        <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
+                        <span className="hidden md:inline text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
                       )}
                     </div>
                   </div>
@@ -1500,7 +1500,7 @@ const SpecBook = () => {
                               )}
                             </div>
                             {item.grade && (
-                              <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${getGradeColor(item.grade)}`}>
+                              <span className={`hidden md:inline-block px-1.5 py-0.5 text-xs rounded ${getGradeColor(item.grade)}`}>
                                 {formatGradeRange(item.grade)}
                               </span>
                             )}
@@ -1510,7 +1510,7 @@ const SpecBook = () => {
                               <h3 className="font-semibold text-xs text-gray-900 truncate">{item.name}</h3>
                             </div>
                             {item.price && (
-                              <span className="text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
+                              <span className="hidden md:inline text-xs text-gray-900 font-medium flex-shrink-0">{item.price}원</span>
                             )}
                           </div>
                         </div>
