@@ -739,38 +739,51 @@ const ExecutionHistory = () => {
 
       {/* 모바일에서 탭 표시 */}
       <div className="md:hidden border-b border-gray-200 mb-4">
-        <nav className="flex space-x-4">
-          <button
-            onClick={() => setMobileView('form')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              mobileView === 'form'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500'
-            }`}
-          >
-            입력
-          </button>
-          <button
-            onClick={() => setMobileView('list')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              mobileView === 'list'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500'
-            }`}
-          >
-            내역
-          </button>
-          <button
-            onClick={() => setMobileView('image')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              mobileView === 'image'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500'
-            }`}
-          >
-            이미지
-          </button>
-        </nav>
+        <div className="flex items-center justify-between">
+          <nav className="flex space-x-4">
+            <button
+              onClick={() => setMobileView('form')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                mobileView === 'form'
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-500'
+              }`}
+            >
+              입력
+            </button>
+            <button
+              onClick={() => setMobileView('list')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                mobileView === 'list'
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-500'
+              }`}
+            >
+              내역
+            </button>
+            <button
+              onClick={() => setMobileView('image')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                mobileView === 'image'
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-500'
+              }`}
+            >
+              이미지
+            </button>
+          </nav>
+          {/* 검색 입력 */}
+          <div className="relative mr-1">
+            <input
+              type="text"
+              placeholder="검색"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-28 pl-8 pr-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+            />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          </div>
+        </div>
       </div>
 
       {/* 메인 컨텐츠 - 태블릿: 수직 배치, 데스크톱: 3열 레이아웃 */}
@@ -984,21 +997,9 @@ const ExecutionHistory = () => {
         <div className={`bg-white rounded-lg border overflow-hidden flex flex-col w-full desktop:col-span-6 ${
           mobileView !== 'list' ? 'hidden md:flex' : ''
         }`}>
-          {/* 모바일 상단: 검색, 합계, 공정별 합계 버튼 */}
+          {/* 모바일 상단: 합계, 공정별 합계 버튼 */}
           {mobileView === 'list' && (
             <div className="md:hidden border-b bg-gray-50 p-2 space-y-2">
-              {/* 검색 입력창 */}
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="검색..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
-
               {/* 합계 정보 - 컴팩트 2행 */}
               <div className="bg-white rounded-lg px-3 py-2 border text-xs">
                 <div className="flex justify-between gap-2">
@@ -1098,12 +1099,15 @@ const ExecutionHistory = () => {
                         {(record.totalAmount || 0).toLocaleString()}원
                       </p>
                     </div>
-                    {/* 2행: 공정, 작성자, 날짜 + 자재비/인건비/부가세 */}
+                    {/* 2행: 공정, 작성자, 날짜 */}
                     <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
                       <span>{record.process || '-'} · {record.author || '-'} · {format(new Date(record.date), 'MM.dd', { locale: ko })}</span>
-                      <span className="text-gray-400">
-                        자{(record.materialCost || 0).toLocaleString()} / 인{(record.laborCost || 0).toLocaleString()} / 부{(record.vatAmount || 0).toLocaleString()}
-                      </span>
+                    </div>
+                    {/* 3행: 자재비/인건비/부가세 */}
+                    <div className="flex justify-end gap-2 mt-0.5 text-[10px] text-gray-400">
+                      <span>자재비 {(record.materialCost || 0).toLocaleString()}</span>
+                      <span>인건비 {(record.laborCost || 0).toLocaleString()}</span>
+                      <span>부가세 {(record.vatAmount || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 ))}
