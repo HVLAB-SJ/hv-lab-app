@@ -1326,29 +1326,32 @@ div.rbc-popup {
 
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
-  /* 이벤트 컨테이너 - flexbox로 간격 없이 스택 */
-  .rbc-row-content,
-  .rbc-row-content-scrollable {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 1px !important;
-    align-items: stretch !important;
+  /* 이벤트 행 내부 - 여백 제거 */
+  .rbc-row-content .rbc-row,
+  .rbc-row-content-scrollable .rbc-row {
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  /* 이벤트 행 - 내용에 맞게 자동 높이 */
+  /* 이벤트 세그먼트 - 여백 제거 */
   .rbc-row-segment {
     height: auto !important;
-    min-height: auto !important;
-    flex-shrink: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 0 1px 0 !important;
   }
 
   /* 이벤트 - 내용에 맞게 자동 높이 */
   .rbc-event {
     height: auto !important;
-    min-height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     line-height: 1.2 !important;
     align-items: flex-start !important;
     padding: 2px 4px !important;
+    margin: 0 !important;
   }
 
   .rbc-event-content {
