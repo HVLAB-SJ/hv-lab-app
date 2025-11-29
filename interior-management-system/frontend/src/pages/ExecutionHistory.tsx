@@ -159,7 +159,9 @@ const ExecutionHistory = () => {
     itemName: '',
     materialCost: '' as number | string,
     laborCost: '' as number | string,
-    images: [] as string[]
+    images: [] as string[],
+    quickText: '',
+    quickImages: [] as string[]
   });
 
   // 실행내역별 메모 저장을 위한 상태
@@ -445,6 +447,68 @@ const ExecutionHistory = () => {
     return acc;
   }, { material: 0, labor: 0, vat: 0, total: 0 });
 
+  // 빠른 입력 자동 채우기
+  const handleQuickTextParse = () => {
+    const text = formData.quickText;
+    if (!text.trim()) {
+      toast.error('붙여넣기한 내용이 없습니다');
+      return;
+    }
+
+    // 숫자 추출 (콤마 포함)
+    const numberMatches = text.match(/[\d,]+/g);
+    const numbers = numberMatches
+      ? numberMatches.map(n => parseInt(n.replace(/,/g, ''), 10)).filter(n => n > 0)
+      : [];
+
+    // 공정 추출
+    let detectedProcess = '';
+    for (const process of PROCESS_LIST) {
+      if (text.includes(process)) {
+        detectedProcess = process;
+        break;
+      }
+    }
+
+    // 항목명 추출 (첫 줄 또는 의미 있는 텍스트)
+    const lines = text.split('\n').filter(l => l.trim());
+    let detectedItemName = '';
+    if (lines.length > 0) {
+      // 숫자만 있는 줄이 아닌 첫 번째 줄을 항목명으로
+      for (const line of lines) {
+        const cleanLine = line.trim();
+        if (cleanLine && !/^[\d,\s원]+$/.test(cleanLine)) {
+          detectedItemName = cleanLine.substring(0, 50); // 최대 50자
+          break;
+        }
+      }
+    }
+
+    // 금액 설정 (가장 큰 금액을 자재비로)
+    let materialCost = '';
+    let laborCost = '';
+    if (numbers.length > 0) {
+      const sortedNumbers = [...numbers].sort((a, b) => b - a);
+      materialCost = String(sortedNumbers[0]);
+      if (sortedNumbers.length > 1) {
+        laborCost = String(sortedNumbers[1]);
+      }
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      process: detectedProcess || prev.process,
+      itemName: detectedItemName || prev.itemName,
+      materialCost: materialCost || prev.materialCost,
+      laborCost: laborCost || prev.laborCost,
+      images: [...prev.images, ...prev.quickImages],
+      quickText: '',
+      quickImages: []
+    }));
+
+    toast.success('자동 채우기 완료');
+  };
+
   // 폼 저장
   const handleSave = async () => {
     if (!formData.project) {
@@ -508,7 +572,9 @@ const ExecutionHistory = () => {
         itemName: '',
         materialCost: '',
         laborCost: '',
-        images: []
+        images: [],
+        quickText: '',
+        quickImages: []
       }));
       setIncludeVat(false); // 부가세 체크 초기화
       setIncludeTaxDeduction(false); // 세금공제 체크 초기화
@@ -813,6 +879,122 @@ const ExecutionHistory = () => {
                   <option key={project.id} value={project.name}>{project.name}</option>
                 ))}
               </select>
+            </div>
+
+            {/* 빠른 입력 */}
+            <div>
+              <textarea
+                value={formData.quickText}
+                onChange={(e) => setFormData({ ...formData, quickText: e.target.value })}
+                onPaste={(e) => {
+                  const items = e.clipboardData?.items;
+                  if (!items) return;
+                  for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                      e.preventDefault();
+                      const blob = items[i].getAsFile();
+                      if (blob) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const base64 = event.target?.result as string;
+                          setFormData(prev => ({
+                            ...prev,
+                            quickImages: [...prev.quickImages, base64]
+                          }));
+                        };
+                        reader.readAsDataURL(blob);
+                      }
+                      break;
+                    }
+                  }
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const files = Array.from(e.dataTransfer.files);
+                  const imageFiles = files.filter(f => f.type.startsWith('image/'));
+                  imageFiles.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const base64 = event.target?.result as string;
+                      setFormData(prev => ({
+                        ...prev,
+                        quickImages: [...prev.quickImages, base64]
+                      }));
+                    };
+                    reader.readAsDataURL(file);
+                  });
+                }}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                placeholder={isMobileDevice ? "내역 붙여넣기" : "내역 붙여넣기 (이미지 드래그 또는 Ctrl+V)"}
+              />
+              {/* 이미지 미리보기 */}
+              {formData.quickImages.length > 0 && (
+                <div className="mt-2 mb-2 grid grid-cols-3 gap-2">
+                  {formData.quickImages.map((img, idx) => (
+                    <div key={idx} className="relative group">
+                      <img
+                        src={img}
+                        alt={`이미지 ${idx + 1}`}
+                        className="w-full h-16 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            quickImages: prev.quickImages.filter((_, i) => i !== idx)
+                          }));
+                        }}
+                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* 이미지 추가 & 자동 채우기 버튼 */}
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      files.forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const base64 = event.target?.result as string;
+                          setFormData(prev => ({
+                            ...prev,
+                            quickImages: [...prev.quickImages, base64]
+                          }));
+                        };
+                        reader.readAsDataURL(file);
+                      });
+                      e.target.value = '';
+                    }}
+                  />
+                  <div className="w-full h-9 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium border border-gray-300">
+                    이미지 추가
+                  </div>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleQuickTextParse}
+                  className="h-9 flex items-center justify-center bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium"
+                >
+                  자동 채우기
+                </button>
+              </div>
             </div>
 
             {/* 날짜 & 공정 */}
