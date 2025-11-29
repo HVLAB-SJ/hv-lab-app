@@ -1160,6 +1160,26 @@ const ExecutionHistory = () => {
                 <span className="text-base font-bold text-gray-900">{projectTotals.total.toLocaleString()}원</span>
               </div>
             </div>
+
+            {/* 검색 및 공정별 합계 버튼 - 데스크톱 전용 */}
+            <div className="hidden ipad-xl:block mt-4 space-y-2">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="검색..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              </div>
+              <button
+                onClick={() => setShowProcessSummary(true)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
+              >
+                공정별 합계
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1287,8 +1307,8 @@ const ExecutionHistory = () => {
             )}
           </div>
 
-          {/* 하단 검색 및 공정별 합계 버튼 영역 - 태블릿/데스크톱 전용 */}
-          <div className="hidden md:block border-t bg-gray-50 p-3">
+          {/* 하단 검색 및 공정별 합계 버튼 영역 - 태블릿 전용 (데스크톱은 왼쪽 카드에 표시) */}
+          <div className="hidden md:block ipad-xl:hidden border-t bg-gray-50 p-3">
             <div className="flex flex-row items-center gap-3">
               {/* 태블릿/데스크톱 검색 입력창 */}
               <div className="flex-1 max-w-sm">
