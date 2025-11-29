@@ -1379,6 +1379,18 @@ div.rbc-popup {
     height: 100% !important;
     min-height: 0 !important;
   }
+
+  /* 일지작성 카드 내부 flex 구조 */
+  .site-log-notes > div {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* textarea가 남은 공간 채우기 */
+  .site-log-textarea {
+    flex: 1 !important;
+    min-height: 150px !important;
+  }
 }
 
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */

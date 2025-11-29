@@ -827,87 +827,84 @@ const SiteLog = () => {
 
         {/* 일지작성 */}
         <div className="site-log-notes desktop:flex-1 desktop:min-h-0">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[30vh] desktop:h-full overflow-y-auto">
-            <h2 className="text-lg font-semibold mb-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[30vh] desktop:h-full desktop:flex desktop:flex-col overflow-hidden">
+            <h2 className="text-lg font-semibold mb-4 flex-shrink-0">
               {format(selectedDate, 'M월 d일')} 일지 작성
             </h2>
 
-            <div className="space-y-4">
-
+            <div className="flex-1 min-h-0 flex flex-col">
               {/* 작업 내용 (메모) */}
-              <div>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => {
-                    const newNotes = e.target.value;
-                    const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-                    const noteKey = `${selectedProject}_${selectedDateStr}`;
+              <textarea
+                value={formData.notes}
+                onChange={(e) => {
+                  const newNotes = e.target.value;
+                  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+                  const noteKey = `${selectedProject}_${selectedDateStr}`;
 
-                    // 즉시 상태 업데이트 (localStorage도 자동 저장됨)
-                    setFormData(prev => ({ ...prev, notes: newNotes }));
-                    setSiteLogNotes(prev => ({ ...prev, [noteKey]: newNotes }));
+                  // 즉시 상태 업데이트 (localStorage도 자동 저장됨)
+                  setFormData(prev => ({ ...prev, notes: newNotes }));
+                  setSiteLogNotes(prev => ({ ...prev, [noteKey]: newNotes }));
 
-                    // 기존 타이머 취소
-                    if (autoSaveTimerRef.current) {
-                      clearTimeout(autoSaveTimerRef.current);
-                    }
+                  // 기존 타이머 취소
+                  if (autoSaveTimerRef.current) {
+                    clearTimeout(autoSaveTimerRef.current);
+                  }
 
-                    // 500ms 후 서버에 백그라운드 저장 (로컬 저장은 이미 완료)
-                    autoSaveTimerRef.current = setTimeout(async () => {
-                      if (!selectedProject) return;
+                  // 500ms 후 서버에 백그라운드 저장 (로컬 저장은 이미 완료)
+                  autoSaveTimerRef.current = setTimeout(async () => {
+                    if (!selectedProject) return;
 
-                      try {
-                        // logsRef.current를 사용하여 최신 logs 상태 참조 (stale closure 방지)
-                        const existingLog = logsRef.current.find(log => {
-                          try {
-                            const logDate = log.date ? new Date(log.date) : null;
-                            return logDate && !isNaN(logDate.getTime()) &&
-                                   format(logDate, 'yyyy-MM-dd') === selectedDateStr &&
-                                   log.project === selectedProject;
-                          } catch {
-                            return false;
-                          }
+                    try {
+                      // logsRef.current를 사용하여 최신 logs 상태 참조 (stale closure 방지)
+                      const existingLog = logsRef.current.find(log => {
+                        try {
+                          const logDate = log.date ? new Date(log.date) : null;
+                          return logDate && !isNaN(logDate.getTime()) &&
+                                 format(logDate, 'yyyy-MM-dd') === selectedDateStr &&
+                                 log.project === selectedProject;
+                        } catch {
+                          return false;
+                        }
+                      });
+
+                      if (existingLog) {
+                        await siteLogService.updateLog(existingLog.id, {
+                          project: existingLog.project,
+                          date: existingLog.date,
+                          images: existingLog.images,
+                          notes: newNotes
                         });
-
-                        if (existingLog) {
-                          await siteLogService.updateLog(existingLog.id, {
-                            project: existingLog.project,
-                            date: existingLog.date,
-                            images: existingLog.images,
-                            notes: newNotes
-                          });
-                        } else if (newNotes.trim()) {
-                          const newLog = await siteLogService.createLog({
+                      } else if (newNotes.trim()) {
+                        const newLog = await siteLogService.createLog({
+                          project: selectedProject,
+                          date: selectedDate,
+                          images: formData.images,
+                          notes: newNotes,
+                          createdBy: user?.name || ''
+                        });
+                        // 새로 생성된 로그를 로컬 상태에 추가
+                        if (newLog) {
+                          setLogs(prev => [...prev, {
+                            id: newLog._id || newLog.id,
                             project: selectedProject,
                             date: selectedDate,
                             images: formData.images,
                             notes: newNotes,
-                            createdBy: user?.name || ''
-                          });
-                          // 새로 생성된 로그를 로컬 상태에 추가
-                          if (newLog) {
-                            setLogs(prev => [...prev, {
-                              id: newLog._id || newLog.id,
-                              project: selectedProject,
-                              date: selectedDate,
-                              images: formData.images,
-                              notes: newNotes,
-                              createdBy: user?.name || '',
-                              createdAt: new Date()
-                            }]);
-                          }
+                            createdBy: user?.name || '',
+                            createdAt: new Date()
+                          }]);
                         }
-                        // loadSiteLogs 호출 제거 - 로컬 상태가 덮어쓰여지는 것 방지
-                      } catch (error) {
-                        console.error('서버 저장 실패:', error);
                       }
-                    }, 500);
-                  }}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none desktop:min-h-[200px]"
-                  placeholder="오늘 진행한 작업 내용을 입력하세요"
-                />
-              </div>
+                      // loadSiteLogs 호출 제거 - 로컬 상태가 덮어쓰여지는 것 방지
+                    } catch (error) {
+                      console.error('서버 저장 실패:', error);
+                    }
+                  }, 500);
+                }}
+                rows={4}
+                className="site-log-textarea w-full h-full flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none desktop:min-h-[200px]"
+                placeholder="오늘 진행한 작업 내용을 입력하세요"
+              />
             </div>
           </div>
         </div>
