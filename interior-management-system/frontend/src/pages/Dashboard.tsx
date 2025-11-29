@@ -90,7 +90,7 @@ const Dashboard = () => {
             const isCurrentUser = member === userNameWithoutSurname;
 
             return (
-              <div key={member} className={`card p-3 sm:p-4 md:p-5 lg:p-4 ${isCurrentUser ? 'bg-gray-50/50 ring-1 ring-gray-300' : ''}`}>
+              <div key={member} className={`card p-3 sm:p-4 md:p-5 lg:p-4 ${isCurrentUser ? 'bg-white ring-1 ring-gray-300' : 'bg-transparent'}`}>
                 {/* 헤더 */}
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
                   <div className="flex items-center gap-2">
