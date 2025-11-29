@@ -1103,7 +1103,7 @@ const ExecutionHistory = () => {
                     <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
                       <span>{record.process || '-'} · {record.author || '-'} · {format(new Date(record.date), 'MM.dd', { locale: ko })}</span>
                       <span className="text-[10px] text-gray-400">
-                        자재 {(record.materialCost || 0).toLocaleString()} · 인건 {(record.laborCost || 0).toLocaleString()} · 부가세 {(record.vatAmount || 0).toLocaleString()}
+                        자재비 {(record.materialCost || 0).toLocaleString()} · 인건비 {(record.laborCost || 0).toLocaleString()} · 부가세 {(record.vatAmount || 0).toLocaleString()}
                       </span>
                     </div>
                   </div>
