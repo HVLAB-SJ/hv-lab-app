@@ -857,9 +857,9 @@ const ExecutionHistory = () => {
 
         {/* 입력 폼 (2열) */}
         <div className={`md:col-span-2 ipad:col-span-2 ipad-lg:col-span-2 ipad-xl:col-span-2 ipad-2xl:col-span-2 bg-white rounded-lg border p-3 md:p-4 overflow-y-auto ${
-          mobileView !== 'form' ? 'hidden md:flex' : 'flex'
+          mobileView !== 'form' ? 'hidden md:block' : ''
         }`}>
-          <div className="space-y-4 overflow-y-auto flex-shrink-0">
+          <div className="space-y-4 w-full">
             {/* 프로젝트 - 태블릿/데스크톱에서만 표시 */}
             <div className="hidden md:block">
               <select
