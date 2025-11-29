@@ -2202,53 +2202,57 @@ const Payments = () => {
 
             {/* 계좌 정보 */}
             <div className="border-t pt-3 space-y-2">
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">예금주</label>
                 <input
                   type="text"
                   value={formData.accountHolder}
                   onChange={(e) => setFormData({ ...formData, accountHolder: e.target.value })}
                   onFocus={handleAccountHolderFocus}
+                  onBlur={() => {
+                    // 클릭 이벤트가 처리될 시간을 주기 위해 지연
+                    setTimeout(() => setAccountSuggestions([]), 200);
+                  }}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="예금주명을 입력하세요"
                 />
-              </div>
 
-              {/* 송금완료 내역에서 찾은 계좌정보 추천 - 추천 협력업체에서 선택한 경우 숨김 */}
-              {accountSuggestions.length > 0 && !selectedContractorId && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <label className="block text-sm font-medium text-blue-900 mb-2">이전 송금 내역</label>
-                  <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {accountSuggestions.map((account, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => {
-                          setFormData(prev => ({
-                            ...prev,
-                            accountHolder: account.accountHolder,
-                            bankName: account.bankName,
-                            accountNumber: account.accountNumber
-                          }));
-                          setAccountSuggestions([]);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-lg border border-blue-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition-colors"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-medium text-sm text-gray-900">
-                              {account.accountHolder}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-0.5">
-                              {account.bankName} {account.accountNumber}
+                {/* 송금완료 내역에서 찾은 계좌정보 추천 - absolute로 레이아웃 시프트 방지 */}
+                {accountSuggestions.length > 0 && !selectedContractorId && (
+                  <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-blue-50 border border-blue-200 rounded-lg p-3 shadow-lg">
+                    <label className="block text-sm font-medium text-blue-900 mb-2">이전 송금 내역</label>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {accountSuggestions.map((account, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              accountHolder: account.accountHolder,
+                              bankName: account.bankName,
+                              accountNumber: account.accountNumber
+                            }));
+                            setAccountSuggestions([]);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-lg border border-blue-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium text-sm text-gray-900">
+                                {account.accountHolder}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-0.5">
+                                {account.bankName} {account.accountNumber}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">은행</label>
