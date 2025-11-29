@@ -1174,8 +1174,8 @@ const ExecutionHistory = () => {
           </div>
         </div>
 
-        {/* 중앙: 실행내역 목록 - 테이블 형식 (6열) */}
-        <div className={`md:col-span-4 ipad:col-span-4 ipad-lg:col-span-4 ipad-xl:col-span-6 ipad-2xl:col-span-6 bg-white rounded-lg border overflow-hidden flex flex-col ${
+        {/* 중앙: 실행내역 목록 - 테이블 형식 (4열) */}
+        <div className={`md:col-span-4 ipad:col-span-4 ipad-lg:col-span-4 ipad-xl:col-span-4 ipad-2xl:col-span-4 bg-white rounded-lg border overflow-hidden flex flex-col ${
           mobileView !== 'list' ? 'hidden md:flex' : ''
         }`}>
           {/* 모바일 상단: 합계, 공정별 합계 버튼 */}
@@ -1368,9 +1368,9 @@ const ExecutionHistory = () => {
           </div>
         </div>
 
-        {/* 오른쪽: 이미지 업로드 및 뷰어 (4열) */}
+        {/* 오른쪽: 이미지 업로드 및 뷰어 (6열) */}
         <div
-          className={`md:col-span-6 ipad:col-span-6 ipad-lg:col-span-6 ipad-xl:col-span-4 ipad-2xl:col-span-4 bg-white rounded-lg border flex flex-col overflow-hidden ${
+          className={`md:col-span-6 ipad:col-span-6 ipad-lg:col-span-6 ipad-xl:col-span-6 ipad-2xl:col-span-6 bg-white rounded-lg border flex flex-col overflow-hidden ${
             mobileView !== 'image' ? 'hidden md:flex' : ''
           }`}
           onDragOver={handleDragOver}
