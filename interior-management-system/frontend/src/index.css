@@ -1759,6 +1759,96 @@ div.rbc-popup {
   }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 결제요청 레이아웃 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  .payment-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    height: calc(100vh - 220px) !important;
+  }
+
+  /* 입력 폼: 상단 */
+  .payment-form {
+    width: 100% !important;
+    order: 1 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 1rem !important;
+  }
+
+  .payment-form > .space-y-4 {
+    display: grid !important;
+    grid-template-columns: 120px 1fr auto !important;
+    gap: 0.75rem !important;
+    align-items: start !important;
+  }
+
+  /* 프로젝트 선택 보이기 */
+  .payment-form .hidden.lg\\:block:first-child {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  /* 빠른입력 */
+  .payment-form > .space-y-4 > div:nth-child(2) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  .payment-form textarea {
+    height: 50px !important;
+    min-height: 50px !important;
+  }
+
+  /* 빠른입력 이미지 미리보기 숨김 */
+  .payment-form .grid.grid-cols-3 {
+    display: none !important;
+  }
+
+  /* 빠른입력 버튼 */
+  .payment-form .grid.grid-cols-2.gap-2.mt-2 {
+    display: flex !important;
+    gap: 0.5rem !important;
+    margin-top: 0.5rem !important;
+  }
+
+  /* 날짜/공정/업체 등 나머지 필드 숨김 (세로모드에서는 빠른입력만) */
+  .payment-form > .space-y-4 > div:nth-child(n+3) {
+    display: none !important;
+  }
+
+  /* 결제요청 버튼만 표시 */
+  .payment-form > .space-y-4 > div:last-child {
+    display: block !important;
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+  }
+
+  .payment-form > .space-y-4 > div:last-child button {
+    height: 50px !important;
+    padding: 0 1.5rem !important;
+  }
+
+  /* 결제요청 목록: 중단 */
+  .payment-list {
+    width: 100% !important;
+    order: 2 !important;
+    flex: 1.5 !important;
+    min-height: 250px !important;
+  }
+
+  /* 이미지 영역: 하단 */
+  .payment-images {
+    display: flex !important;
+    width: 100% !important;
+    order: 3 !important;
+    flex: 1 !important;
+    min-height: 150px !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 이벤트 행 내부 - 여백 제거 */
