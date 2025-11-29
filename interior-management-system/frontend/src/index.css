@@ -1556,84 +1556,135 @@ div.rbc-popup {
     padding: 1rem !important;
   }
 
-  /* 입력 폼 내부 컨테이너: 그리드 레이아웃 */
+  /* 입력 폼 내부 컨테이너: flex 세로 배치 */
   .execution-form-inner {
-    display: grid !important;
-    grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
     gap: 0.75rem !important;
-    align-items: start !important;
+  }
+
+  /* 1행: 프로젝트 + 빠른입력을 flex로 */
+  .execution-form-inner > .exec-project,
+  .execution-form-inner > .exec-quick-input {
+    display: inline-block !important;
   }
 
   /* 프로젝트 선택 */
   .exec-project {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
+    width: 15% !important;
+    float: left !important;
+    margin-right: 1rem !important;
   }
 
-  /* 빠른 입력 (textarea) */
+  /* 빠른 입력 */
   .exec-quick-input {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
+    width: calc(85% - 1rem) !important;
+    float: left !important;
   }
 
   .exec-quick-input textarea {
-    height: 80px !important;
-    min-height: 80px !important;
+    height: 50px !important;
+    min-height: 50px !important;
   }
 
-  /* 날짜 & 공정 */
+  /* 이미지 미리보기 숨김 */
+  .exec-quick-input .grid.grid-cols-3 {
+    display: none !important;
+  }
+
+  /* 버튼 그리드 인라인으로 */
+  .exec-quick-input .grid.grid-cols-2 {
+    display: inline-flex !important;
+    gap: 0.5rem !important;
+    margin-top: 0.5rem !important;
+  }
+
+  .exec-quick-input .grid.grid-cols-2 > * {
+    width: auto !important;
+    padding: 0.4rem 1rem !important;
+  }
+
+  /* 날짜 & 공정: 2행 시작 */
   .exec-date-process {
-    grid-column: 3 !important;
-    grid-row: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.25rem !important;
+    clear: both !important;
+    display: inline-flex !important;
+    gap: 0.5rem !important;
+    width: auto !important;
+    float: left !important;
+    margin-right: 1rem !important;
   }
 
   .exec-date-process > div {
-    width: 100% !important;
+    width: auto !important;
+    min-width: 100px !important;
+  }
+
+  .exec-date-process label {
+    font-size: 0.75rem !important;
   }
 
   /* 항목명 */
   .exec-item-name {
-    grid-column: 4 !important;
-    grid-row: 1 !important;
+    display: inline-block !important;
+    width: 200px !important;
+    float: left !important;
+    margin-right: 1rem !important;
+  }
+
+  .exec-item-name label {
+    font-size: 0.75rem !important;
   }
 
   /* 금액 입력 */
   .exec-amounts {
-    grid-column: 5 !important;
-    grid-row: 1 !important;
+    display: inline-flex !important;
+    gap: 0.5rem !important;
+    float: left !important;
+    align-items: flex-end !important;
+    flex-wrap: wrap !important;
   }
 
   .exec-amounts > div {
-    margin-bottom: 0.25rem !important;
+    width: auto !important;
+    min-width: 100px !important;
   }
 
+  .exec-amounts label {
+    font-size: 0.75rem !important;
+  }
+
+  /* 체크박스 행 */
   .exec-amounts > .flex.items-center.gap-4 {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 0.25rem !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+    margin-top: 0.25rem !important;
+    gap: 1rem !important;
+    font-size: 0.85rem !important;
   }
 
-  /* 총액 및 내역추가 컨테이너 */
+  /* 총액 및 내역추가 */
   .exec-total-submit {
-    grid-column: 6 !important;
-    grid-row: 1 !important;
+    clear: both !important;
     display: flex !important;
-    flex-direction: column !important;
-    gap: 0.5rem !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    padding-top: 0.75rem !important;
+    border-top: 1px solid #e5e7eb !important;
+    margin-top: 0.5rem !important;
   }
 
-  /* 총액 */
   .exec-total {
-    border-top: none !important;
-    padding-top: 0 !important;
+    border: none !important;
+    padding: 0 !important;
   }
 
-  /* 내역추가 버튼 */
   .exec-submit {
     margin: 0 !important;
+  }
+
+  .exec-submit button {
+    padding: 0.5rem 2rem !important;
   }
 
   /* 총계 표시 영역 숨김 */
@@ -1641,82 +1692,40 @@ div.rbc-popup {
     display: none !important;
   }
 
-  /* 검색 및 공정별 합계 버튼 숨김 */
+  /* 검색 영역 숨김 */
   .exec-search {
     display: none !important;
   }
 
-  /* 실행내역 목록: 중단 전체 너비 */
+  /* 실행내역 목록 */
   .execution-list {
     width: 100% !important;
     flex: 1.5 !important;
     min-height: 250px !important;
   }
 
-  /* 이미지 영역: 하단 전체 너비 */
+  /* 이미지 영역 */
   .execution-images {
     width: 100% !important;
     flex: 1 !important;
     min-height: 200px !important;
   }
 
-  /* 테이블 컬럼 너비 조정 */
-  .exec-th-author,
-  .exec-author-col {
-    width: 6% !important;
-    white-space: nowrap !important;
-  }
+  /* 테이블 컬럼 너비 */
+  .exec-th-author, .exec-author-col { width: 6% !important; white-space: nowrap !important; }
+  .exec-th-date, .exec-date-col { width: 10% !important; }
+  .exec-th-process, .exec-process-col { width: 10% !important; }
+  .exec-th-item, .exec-item-col { width: 24% !important; }
+  .exec-th-material, .exec-material-col { width: 10% !important; }
+  .exec-th-labor, .exec-labor-col { width: 10% !important; }
+  .exec-th-vat, .exec-vat-col { width: 10% !important; }
+  .exec-th-total, .exec-total-col { width: 20% !important; }
 
-  .exec-th-date,
-  .exec-date-col {
-    width: 10% !important;
-  }
-
-  .exec-th-process,
-  .exec-process-col {
-    width: 10% !important;
-  }
-
-  .exec-th-item,
-  .exec-item-col {
-    width: 24% !important;
-  }
-
-  .exec-th-material,
-  .exec-material-col {
-    width: 10% !important;
-  }
-
-  .exec-th-labor,
-  .exec-labor-col {
-    width: 10% !important;
-  }
-
-  .exec-th-vat,
-  .exec-vat-col {
-    width: 10% !important;
-  }
-
-  .exec-th-total,
-  .exec-total-col {
-    width: 20% !important;
-  }
-
-  /* 세로모드: 날짜 짧은 형식만 표시 */
-  .exec-date-full {
-    display: none !important;
-  }
-  .exec-date-short {
-    display: inline !important;
-  }
-
-  /* 세로모드: 총액 짧은 형식만 표시 */
-  .exec-total-full {
-    display: none !important;
-  }
-  .exec-total-short {
-    display: inline !important;
-  }
+  /* 날짜/총액 형식 */
+  .exec-date-full { display: none !important; }
+  .exec-date-short { display: inline !important; }
+  .exec-total-full { display: none !important; }
+  .exec-total-short { display: inline !important; }
 }
 
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
