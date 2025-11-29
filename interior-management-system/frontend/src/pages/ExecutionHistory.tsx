@@ -1099,15 +1099,12 @@ const ExecutionHistory = () => {
                         {(record.totalAmount || 0).toLocaleString()}원
                       </p>
                     </div>
-                    {/* 2행: 공정, 작성자, 날짜 */}
+                    {/* 2행: 공정, 작성자, 날짜 + 자재비/인건비/부가세 */}
                     <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
                       <span>{record.process || '-'} · {record.author || '-'} · {format(new Date(record.date), 'MM.dd', { locale: ko })}</span>
-                    </div>
-                    {/* 3행: 자재비/인건비/부가세 */}
-                    <div className="flex justify-end gap-2 mt-0.5 text-[10px] text-gray-400">
-                      <span>자재비 {(record.materialCost || 0).toLocaleString()}</span>
-                      <span>인건비 {(record.laborCost || 0).toLocaleString()}</span>
-                      <span>부가세 {(record.vatAmount || 0).toLocaleString()}</span>
+                      <span className="text-[10px] text-gray-400">
+                        자재 {(record.materialCost || 0).toLocaleString()} · 인건 {(record.laborCost || 0).toLocaleString()} · 부가세 {(record.vatAmount || 0).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 ))}
