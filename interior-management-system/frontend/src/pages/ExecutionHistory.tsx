@@ -852,11 +852,11 @@ const ExecutionHistory = () => {
         </div>
       </div>
 
-      {/* 메인 컨텐츠 - 태블릿: 수직 배치, 데스크톱: 3열 레이아웃 */}
-      <div className="flex flex-col desktop:grid desktop:grid-cols-12 gap-3 md:gap-4">
+      {/* 메인 컨텐츠 - 3열 레이아웃 */}
+      <div className="grid grid-cols-1 md:grid-cols-6 ipad:grid-cols-6 ipad-lg:grid-cols-6 ipad-xl:grid-cols-12 ipad-2xl:grid-cols-12 gap-3 md:gap-4">
 
-        {/* 입력 폼 - 태블릿: 전체 너비, 데스크톱: 2열 */}
-        <div className={`bg-white rounded-lg border p-3 md:p-4 flex flex-col overflow-hidden w-full desktop:col-span-2 ${
+        {/* 입력 폼 (2열) */}
+        <div className={`md:col-span-2 ipad:col-span-2 ipad-lg:col-span-2 ipad-xl:col-span-2 ipad-2xl:col-span-2 bg-white rounded-lg border p-3 md:p-4 overflow-y-auto ${
           mobileView !== 'form' ? 'hidden md:flex' : 'flex'
         }`}>
           <div className="space-y-4 overflow-y-auto flex-shrink-0">
@@ -1175,7 +1175,7 @@ const ExecutionHistory = () => {
         </div>
 
         {/* 중앙: 실행내역 목록 - 테이블 형식 (6열) */}
-        <div className={`bg-white rounded-lg border overflow-hidden flex flex-col w-full desktop:col-span-6 ${
+        <div className={`md:col-span-4 ipad:col-span-4 ipad-lg:col-span-4 ipad-xl:col-span-6 ipad-2xl:col-span-6 bg-white rounded-lg border overflow-hidden flex flex-col ${
           mobileView !== 'list' ? 'hidden md:flex' : ''
         }`}>
           {/* 모바일 상단: 합계, 공정별 합계 버튼 */}
@@ -1370,7 +1370,7 @@ const ExecutionHistory = () => {
 
         {/* 오른쪽: 이미지 업로드 및 뷰어 (4열) */}
         <div
-          className={`bg-white rounded-lg border flex flex-col overflow-hidden w-full desktop:col-span-4 ${
+          className={`md:col-span-6 ipad:col-span-6 ipad-lg:col-span-6 ipad-xl:col-span-4 ipad-2xl:col-span-4 bg-white rounded-lg border flex flex-col overflow-hidden ${
             mobileView !== 'image' ? 'hidden md:flex' : ''
           }`}
           onDragOver={handleDragOver}
