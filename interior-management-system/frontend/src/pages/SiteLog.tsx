@@ -25,7 +25,17 @@ interface DayData {
 
 const SiteLog = () => {
   const { user } = useAuth();
-  const projects = useFilteredProjects();
+  const allProjects = useFilteredProjects();
+  const [includeCompleted, setIncludeCompleted] = useState(() => {
+    const saved = localStorage.getItem('siteLog_includeCompleted');
+    return saved === 'true';
+  });
+
+  // 완료된 프로젝트 필터링
+  const projects = includeCompleted
+    ? allProjects
+    : allProjects.filter(p => p.status !== 'completed');
+
   const [logs, setLogs] = useState<SiteLog[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,6 +91,11 @@ const SiteLog = () => {
   useEffect(() => {
     localStorage.setItem('siteLogNotes', JSON.stringify(siteLogNotes));
   }, [siteLogNotes]);
+
+  // includeCompleted 설정 저장
+  useEffect(() => {
+    localStorage.setItem('siteLog_includeCompleted', String(includeCompleted));
+  }, [includeCompleted]);
 
   // 프로젝트 초기값 설정 (사용자별 마지막 선택 복원)
   useEffect(() => {
@@ -695,7 +710,16 @@ const SiteLog = () => {
   return (
     <div className="desktop:grid desktop:grid-cols-12 desktop:gap-4 desktop:h-[calc(100vh-140px)] space-y-3 desktop:space-y-0">
       {/* 모바일 상단 - 프로젝트 선택 */}
-      <div className="desktop:hidden flex justify-end mb-2">
+      <div className="desktop:hidden flex justify-end items-center gap-2 mb-2">
+        <label className="flex items-center gap-1 text-[10px] text-gray-500">
+          <input
+            type="checkbox"
+            checked={includeCompleted}
+            onChange={(e) => setIncludeCompleted(e.target.checked)}
+            className="w-3 h-3 rounded border-gray-300"
+          />
+          완료포함
+        </label>
         <select
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
@@ -725,17 +749,28 @@ const SiteLog = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[32vh] desktop:max-h-full overflow-y-auto">
             {/* 프로젝트 선택 - 데스크톱만 */}
             <div className="mb-4 hidden desktop:block">
-              <select
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-              >
-                {projects.map(project => (
-                  <option key={project.id} value={project.name}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedProject}
+                  onChange={(e) => setSelectedProject(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  {projects.map(project => (
+                    <option key={project.id} value={project.name}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <label className="flex items-center gap-1.5 mt-2 text-xs text-gray-500 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeCompleted}
+                  onChange={(e) => setIncludeCompleted(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-gray-300"
+                />
+                공사완료 현장 포함
+              </label>
             </div>
 
             {/* 캘린더 헤더 */}
