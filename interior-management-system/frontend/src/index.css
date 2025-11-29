@@ -1530,6 +1530,50 @@ div.rbc-popup {
   display: none;
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 실행내역 레이아웃 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  /* 전체 컨테이너: 세로 레이아웃 */
+  .execution-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    height: calc(100vh - 180px) !important;
+  }
+
+  /* 입력 폼: 상단 전체 너비 */
+  .execution-form {
+    width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* 입력 폼 내부: 가로 배치 */
+  .execution-form > div {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 1rem !important;
+  }
+
+  .execution-form > div > div {
+    flex: 1 1 200px !important;
+    min-width: 150px !important;
+  }
+
+  /* 실행내역 목록: 중단 전체 너비 */
+  .execution-list {
+    width: 100% !important;
+    flex: 1 !important;
+    min-height: 200px !important;
+  }
+
+  /* 이미지 영역: 하단 전체 너비 */
+  .execution-images {
+    width: 100% !important;
+    flex: 1 !important;
+    min-height: 200px !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 이벤트 행 내부 - 여백 제거 */
