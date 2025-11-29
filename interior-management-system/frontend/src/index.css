@@ -1435,6 +1435,77 @@ div.rbc-popup {
   }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 스펙북 레이아웃 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  /* 전체 컨테이너: 세로 레이아웃으로 변경 */
+  .specbook-container {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: auto auto 1fr 1fr !important;
+    gap: 1rem !important;
+    height: calc(100vh - 140px) !important;
+  }
+
+  /* 사이드바: 내용물들을 그리드에 직접 배치 */
+  .specbook-sidebar {
+    display: contents !important;
+  }
+
+  /* 등급 필터: 상단 전체 너비 */
+  .specbook-grade-filter {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+  }
+
+  /* 아이템 등록 폼: 등급 필터 아래 왼쪽 */
+  .specbook-form {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+  }
+
+  /* 카테고리: 등급 필터 아래 오른쪽 */
+  .specbook-category {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+  }
+
+  /* 메인 영역: 전체 너비 */
+  .specbook-main {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 / -1 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  /* 스펙 라이브러리와 프로젝트 콘텐츠 영역: 상하 배치 */
+  .specbook-content {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  /* 스펙 라이브러리: 전체 너비, 상단 */
+  .specbook-library {
+    width: 100% !important;
+    flex: 1 !important;
+    padding-right: 0 !important;
+  }
+
+  /* 드롭 영역 (라이브러리 뷰): 전체 너비, 하단 */
+  .specbook-drop-zone {
+    width: 100% !important;
+    flex: 1 !important;
+    padding-left: 0 !important;
+  }
+
+  /* 프로젝트 영역: 전체 너비, 하단 */
+  .specbook-project {
+    width: 100% !important;
+    flex: 1 !important;
+    padding-left: 0 !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 이벤트 행 내부 - 여백 제거 */

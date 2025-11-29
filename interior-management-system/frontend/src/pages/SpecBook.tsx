@@ -980,11 +980,11 @@ const SpecBook = () => {
     >
 
       {/* 메인 컨텐츠 */}
-      <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden">
+      <div className="specbook-container flex-1 flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden">
         {/* 좌측: 입력 폼 + 카테고리 (데스크톱에서만 표시) */}
-        <div className="hidden md:flex flex-col gap-4 w-80 lg:w-96 flex-shrink-0">
+        <div className="specbook-sidebar hidden md:flex flex-col gap-4 w-80 lg:w-96 flex-shrink-0">
           {/* 새 아이템 추가 폼 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+          <div className="specbook-form bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
               <form onSubmit={handleSubmit} className="flex flex-col pt-3">
                 {/* 수평 카드 형태: 이미지 + 입력 필드 */}
                 <div className="flex flex-col sm:flex-row gap-3 px-3">
@@ -1132,7 +1132,7 @@ const SpecBook = () => {
           </div>
 
           {/* 등급 필터 */}
-          <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+          <div className="specbook-grade-filter bg-white rounded-lg shadow-sm p-4 border border-gray-200">
             <div className="flex items-center gap-3">
               <h3 className="text-sm font-semibold text-gray-900 mr-3">등급 필터</h3>
               <div className="flex gap-2 flex-1">
@@ -1171,7 +1171,7 @@ const SpecBook = () => {
           </div>
 
           {/* 카테고리 버튼들 (3열) */}
-          <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+          <div className="specbook-category bg-white rounded-lg shadow-sm p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">
                 카테고리
@@ -1223,7 +1223,7 @@ const SpecBook = () => {
         {/* 아이템 그리드 영역 */}
         {view === 'library' ? (
           /* 라이브러리 뷰: 전체 폭 */
-          <div className="flex-1 flex flex-col overflow-hidden pr-4 pt-3">
+          <div className="specbook-main flex-1 flex flex-col overflow-hidden pr-4 pt-3">
           {/* 버튼 영역 */}
           <div className="mb-4 px-4">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 lg:gap-4">
@@ -1261,9 +1261,9 @@ const SpecBook = () => {
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+          <div className="specbook-content flex-1 flex flex-col md:flex-row overflow-hidden">
             {/* 스펙 라이브러리 */}
-            <div className="w-full md:w-1/2 flex flex-col overflow-hidden pb-4 md:pr-3">
+            <div className="specbook-library w-full md:w-1/2 flex flex-col overflow-hidden pb-4 md:pr-3">
               <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
@@ -1380,7 +1380,7 @@ const SpecBook = () => {
             {/* 중앙 경계선 (데스크톱에서만 표시) */}
             <div className="hidden md:block w-px bg-gray-300 self-stretch"></div>
             {/* 우측: 드롭 영역 (데스크톱에서만 표시) */}
-            <div className="hidden md:flex w-1/2 flex-col overflow-hidden pl-3 pb-4">
+            <div className="specbook-drop-zone hidden md:flex w-1/2 flex-col overflow-hidden pl-3 pb-4">
               <div
                 className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 border-2 border-dashed border-gray-300 transition-colors"
                 onDragOver={(e) => {
@@ -1409,7 +1409,7 @@ const SpecBook = () => {
         </div>
         ) : (
           /* 프로젝트 뷰: 좌우 분할 - 스펙 라이브러리 + 프로젝트 아이템 */
-          <div className="flex-1 flex flex-col overflow-hidden pr-4 pt-3">
+          <div className="specbook-main flex-1 flex flex-col overflow-hidden pr-4 pt-3">
             {/* 버튼 영역 */}
             <div className="mb-4 px-4">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 lg:gap-4">
@@ -1447,10 +1447,10 @@ const SpecBook = () => {
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden gap-4">
+            <div className="specbook-content flex-1 flex flex-col md:flex-row overflow-hidden gap-4">
               {/* 좌측: 스펙 라이브러리 (드래그 소스) - 데스크톱에서만 표시, 안팀 제외 */}
               {!isAnTeamUser && (
-                <div className="hidden md:flex md:w-1/2 flex-col overflow-hidden pb-4 md:pr-3">
+                <div className="specbook-library hidden md:flex md:w-1/2 flex-col overflow-hidden pb-4 md:pr-3">
                 <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
@@ -1548,7 +1548,7 @@ const SpecBook = () => {
               <div className="hidden md:block w-px bg-gray-300 self-stretch"></div>
             )}
             {/* 우측: 프로젝트 아이템 (드롭 타겟) - 안팀은 전체 폭 사용 */}
-            <div className={`w-full ${isAnTeamUser ? '' : 'md:w-1/2'} flex flex-col overflow-hidden ${isAnTeamUser ? '' : 'md:pl-3'} pb-4`}>
+            <div className={`specbook-project w-full ${isAnTeamUser ? '' : 'md:w-1/2'} flex flex-col overflow-hidden ${isAnTeamUser ? '' : 'md:pl-3'} pb-4`}>
                 <div
                   className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4"
                 onDragOver={(e) => {
