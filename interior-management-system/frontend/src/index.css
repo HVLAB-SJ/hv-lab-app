@@ -1540,178 +1540,143 @@ div.rbc-popup {
 
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 실행내역 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
-  /* 전체 컨테이너: 세로 레이아웃 */
+  /* 전체 컨테이너 */
   .execution-container {
     display: flex !important;
     flex-direction: column !important;
-    gap: 1rem !important;
+    gap: 0.75rem !important;
     height: calc(100vh - 180px) !important;
   }
 
-  /* 입력 폼: 상단 전체 너비 */
+  /* 입력 폼 카드 */
   .execution-form {
     width: 100% !important;
     max-height: none !important;
     overflow: visible !important;
-    padding: 1rem !important;
+    padding: 0.75rem 1rem !important;
   }
 
-  /* 입력 폼 내부 컨테이너: flex 세로 배치 */
+  /* 폼 내부: CSS Grid 2행 레이아웃 */
   .execution-form-inner {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.75rem !important;
+    display: grid !important;
+    grid-template-columns: 120px 90px 90px 1fr 100px 100px auto auto auto !important;
+    grid-template-rows: auto auto !important;
+    gap: 0.5rem 0.75rem !important;
+    align-items: end !important;
   }
 
-  /* 1행: 프로젝트 + 빠른입력을 flex로 */
-  .execution-form-inner > .exec-project,
-  .execution-form-inner > .exec-quick-input {
-    display: inline-block !important;
-  }
-
-  /* 프로젝트 선택 */
-  .exec-project {
-    width: 15% !important;
-    float: left !important;
-    margin-right: 1rem !important;
-  }
-
-  /* 빠른 입력 */
-  .exec-quick-input {
-    width: calc(85% - 1rem) !important;
-    float: left !important;
-  }
-
-  .exec-quick-input textarea {
-    height: 50px !important;
-    min-height: 50px !important;
-  }
-
-  /* 이미지 미리보기 숨김 */
-  .exec-quick-input .grid.grid-cols-3 {
-    display: none !important;
-  }
-
-  /* 버튼 그리드 인라인으로 */
-  .exec-quick-input .grid.grid-cols-2 {
-    display: inline-flex !important;
-    gap: 0.5rem !important;
-    margin-top: 0.5rem !important;
-  }
-
-  .exec-quick-input .grid.grid-cols-2 > * {
-    width: auto !important;
-    padding: 0.4rem 1rem !important;
-  }
-
-  /* 날짜 & 공정: 2행 시작 */
+  /* Row 1: 메인 입력 필드들 */
+  .exec-project { grid-column: 1; grid-row: 1; }
   .exec-date-process {
-    clear: both !important;
-    display: inline-flex !important;
-    gap: 0.5rem !important;
-    width: auto !important;
-    float: left !important;
-    margin-right: 1rem !important;
+    grid-column: 2 / 4;
+    grid-row: 1;
+    display: contents !important;
   }
-
-  .exec-date-process > div {
-    width: auto !important;
-    min-width: 100px !important;
-  }
-
-  .exec-date-process label {
-    font-size: 0.75rem !important;
-  }
-
-  /* 항목명 */
-  .exec-item-name {
-    display: inline-block !important;
-    width: 200px !important;
-    float: left !important;
-    margin-right: 1rem !important;
-  }
-
-  .exec-item-name label {
-    font-size: 0.75rem !important;
-  }
-
-  /* 금액 입력 */
+  .exec-date-process > div:first-child { grid-column: 2; grid-row: 1; }
+  .exec-date-process > div:last-child { grid-column: 3; grid-row: 1; }
+  .exec-item-name { grid-column: 4; grid-row: 1; }
   .exec-amounts {
-    display: inline-flex !important;
-    gap: 0.5rem !important;
-    float: left !important;
-    align-items: flex-end !important;
-    flex-wrap: wrap !important;
+    grid-column: 5 / 8;
+    grid-row: 1;
+    display: contents !important;
   }
-
-  .exec-amounts > div {
-    width: auto !important;
-    min-width: 100px !important;
-  }
-
-  .exec-amounts label {
-    font-size: 0.75rem !important;
-  }
-
-  /* 체크박스 행 */
+  .exec-amounts > div:first-child { grid-column: 5; grid-row: 1; }
+  .exec-amounts > div:nth-child(2) { grid-column: 6; grid-row: 1; }
   .exec-amounts > .flex.items-center.gap-4 {
-    width: 100% !important;
-    flex-basis: 100% !important;
-    margin-top: 0.25rem !important;
-    gap: 1rem !important;
-    font-size: 0.85rem !important;
+    grid-column: 7;
+    grid-row: 1;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0 !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
   }
-
-  /* 총액 및 내역추가 */
   .exec-total-submit {
-    clear: both !important;
+    grid-column: 8 / 10;
+    grid-row: 1;
     display: flex !important;
-    justify-content: flex-end !important;
     align-items: center !important;
-    gap: 1rem !important;
-    padding-top: 0.75rem !important;
-    border-top: 1px solid #e5e7eb !important;
-    margin-top: 0.5rem !important;
+    gap: 0.75rem !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
-
   .exec-total {
     border: none !important;
     padding: 0 !important;
+    white-space: nowrap !important;
   }
-
   .exec-submit {
     margin: 0 !important;
   }
-
   .exec-submit button {
-    padding: 0.5rem 2rem !important;
+    padding: 0.5rem 1rem !important;
+    white-space: nowrap !important;
   }
 
-  /* 총계 표시 영역 숨김 */
-  .exec-summary {
+  /* Row 2: 빠른입력 */
+  .exec-quick-input {
+    grid-column: 1 / 9;
+    grid-row: 2;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+  }
+  .exec-quick-input textarea {
+    flex: 1 !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    resize: none !important;
+  }
+  .exec-quick-input .grid.grid-cols-3 { display: none !important; }
+  .exec-quick-input .grid.grid-cols-2 {
+    display: flex !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+  }
+  .exec-quick-input .grid.grid-cols-2 > * {
+    padding: 0.4rem 0.75rem !important;
+    font-size: 0.8rem !important;
+  }
+  .exec-quick-input .grid.grid-cols-2 label {
     display: none !important;
   }
 
-  /* 검색 영역 숨김 */
-  .exec-search {
-    display: none !important;
+  /* 라벨 스타일 */
+  .execution-form-inner label {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.2rem !important;
   }
+
+  /* 입력 필드 높이 통일 */
+  .execution-form-inner input,
+  .execution-form-inner select,
+  .execution-form-inner button[type="button"] {
+    height: 36px !important;
+    padding: 0.4rem 0.5rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* 총계/검색 숨김 */
+  .exec-summary { display: none !important; }
+  .exec-search { display: none !important; }
 
   /* 실행내역 목록 */
   .execution-list {
     width: 100% !important;
     flex: 1.5 !important;
-    min-height: 250px !important;
+    min-height: 200px !important;
   }
 
   /* 이미지 영역 */
   .execution-images {
     width: 100% !important;
     flex: 1 !important;
-    min-height: 200px !important;
+    min-height: 150px !important;
   }
 
-  /* 테이블 컬럼 너비 */
+  /* 테이블 컬럼 */
   .exec-th-author, .exec-author-col { width: 6% !important; white-space: nowrap !important; }
   .exec-th-date, .exec-date-col { width: 10% !important; }
   .exec-th-process, .exec-process-col { width: 10% !important; }
@@ -1721,7 +1686,7 @@ div.rbc-popup {
   .exec-th-vat, .exec-vat-col { width: 10% !important; }
   .exec-th-total, .exec-total-col { width: 20% !important; }
 
-  /* 날짜/총액 형식 */
+  /* 날짜/총액 짧은 형식 */
   .exec-date-full { display: none !important; }
   .exec-date-short { display: inline !important; }
   .exec-total-full { display: none !important; }
