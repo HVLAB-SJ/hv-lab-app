@@ -1509,6 +1509,15 @@ div.rbc-popup {
     flex: 1 !important;
     padding-left: 0 !important;
   }
+
+  /* 세로모드에서 텍스트 전환 */
+  .specbook-drop-text-landscape {
+    display: none !important;
+  }
+
+  .specbook-drop-text-portrait {
+    display: inline !important;
+  }
 }
 
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */

@@ -1382,7 +1382,7 @@ const SpecBook = () => {
             {/* 우측: 드롭 영역 (데스크톱에서만 표시) */}
             <div className="specbook-drop-zone hidden md:flex w-1/2 flex-col overflow-hidden pl-3 pb-4">
               <div
-                className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 border-2 border-dashed border-gray-300 transition-colors"
+                className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 border-2 border-dashed border-gray-300 transition-colors relative"
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.currentTarget.classList.add('bg-blue-50', 'border-blue-400');
@@ -1400,8 +1400,29 @@ const SpecBook = () => {
                   }
                 }}
               >
+                {/* 프로젝트 선택 드롭다운 - 좌측 상단 */}
+                <div className="specbook-drop-project-select absolute top-4 left-4">
+                  <select
+                    value={selectedProject || ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setView('project');
+                        setSelectedProject(Number(e.target.value));
+                      }
+                    }}
+                    className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs px-2"
+                  >
+                    <option value="">프로젝트 선택</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-                  좌측에서 아이템을 드래그하여 추가하세요
+                  <span className="specbook-drop-text-landscape">좌측에서 아이템을 드래그하여 추가하세요</span>
+                  <span className="specbook-drop-text-portrait hidden">상단에서 아이템을 드래그하여 추가하세요</span>
                 </div>
               </div>
             </div>
