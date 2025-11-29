@@ -62,8 +62,16 @@ const FinishCheck = () => {
   const [showMobileImageModal, setShowMobileImageModal] = useState(false);
   const [deletingSpaceId, setDeletingSpaceId] = useState<number | null>(null);
   const [selectedItemsToDelete, setSelectedItemsToDelete] = useState<Set<number>>(new Set());
-  const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
+  const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(() => {
+    const saved = localStorage.getItem('finishCheck_showOnlyIncomplete');
+    return saved === 'true';
+  });
   const [showAddSpaceModal, setShowAddSpaceModal] = useState(false);
+
+  // showOnlyIncomplete 상태 저장
+  useEffect(() => {
+    localStorage.setItem('finishCheck_showOnlyIncomplete', String(showOnlyIncomplete));
+  }, [showOnlyIncomplete]);
 
   useEffect(() => {
     // Don't load spaces initially - wait for project to be selected
