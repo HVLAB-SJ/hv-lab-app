@@ -1331,6 +1331,56 @@ div.rbc-popup {
   }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 현장일지 레이아웃 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  /* 전체 컨테이너: 2행 레이아웃으로 변경 */
+  .site-log-container {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; /* 상단 2열 */
+    grid-template-rows: auto 1fr !important; /* 상단 자동, 하단 채우기 */
+    gap: 1rem !important;
+    height: calc(100vh - 140px) !important;
+  }
+
+  /* 좌측 영역 (달력 + 일지작성): 가로 배치로 변경 */
+  .site-log-left {
+    display: contents !important; /* 자식들을 그리드에 직접 배치 */
+  }
+
+  /* 달력: 첫번째 열 */
+  .site-log-calendar {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .site-log-calendar > div {
+    max-height: none !important;
+    height: 100% !important;
+  }
+
+  /* 일지작성: 두번째 열 */
+  .site-log-notes {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    height: auto !important;
+  }
+
+  .site-log-notes > div {
+    max-height: none !important;
+    height: 100% !important;
+  }
+
+  /* 현장사진: 전체 너비, 두번째 행 */
+  .site-log-photos {
+    grid-column: 1 / -1 !important; /* 전체 너비 */
+    grid-row: 2 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 이벤트 행 내부 - 여백 제거 */

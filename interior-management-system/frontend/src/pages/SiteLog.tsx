@@ -708,7 +708,7 @@ const SiteLog = () => {
   }, [imageModal.show, imageModal.images, currentImageIndex]);
 
   return (
-    <div className="desktop:grid desktop:grid-cols-12 desktop:gap-4 desktop:h-[calc(100vh-140px)] space-y-3 desktop:space-y-0">
+    <div className="site-log-container desktop:grid desktop:grid-cols-12 desktop:gap-4 desktop:h-[calc(100vh-140px)] space-y-3 desktop:space-y-0">
       {/* 모바일 상단 - 프로젝트 선택 */}
       <div className="desktop:hidden flex justify-end items-center gap-2 mb-2">
         <label className="flex items-center gap-1 text-[10px] text-gray-500">
@@ -741,10 +741,10 @@ const SiteLog = () => {
         </select>
       </div>
 
-      {/* 좌측: 달력 + 일지작성 (데스크톱에서 상하 배치) */}
-      <div className="desktop:col-span-4 desktop:flex desktop:flex-col desktop:gap-4 desktop:h-full space-y-3 desktop:space-y-0">
+      {/* 좌측: 달력 + 일지작성 (데스크톱에서 상하 배치, 세로모드에서 좌우 배치) */}
+      <div className="site-log-left desktop:col-span-4 desktop:flex desktop:flex-col desktop:gap-4 desktop:h-full space-y-3 desktop:space-y-0">
         {/* 달력 */}
-        <div className="desktop:flex-shrink-0">
+        <div className="site-log-calendar desktop:flex-shrink-0">
           {/* 프로젝트 선택 및 캘린더 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[32vh] desktop:max-h-full overflow-y-auto">
             {/* 프로젝트 선택 - 데스크톱만 */}
@@ -826,7 +826,7 @@ const SiteLog = () => {
         </div>
 
         {/* 일지작성 */}
-        <div className="desktop:flex-1 desktop:min-h-0">
+        <div className="site-log-notes desktop:flex-1 desktop:min-h-0">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 max-h-[30vh] desktop:h-full overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">
               {format(selectedDate, 'M월 d일')} 일지 작성
@@ -914,7 +914,7 @@ const SiteLog = () => {
       </div>
 
       {/* 우측: 현장일지 목록 (데스크톱에서 크게 표시) */}
-      <div className="desktop:col-span-8 desktop:h-full">
+      <div className="site-log-photos desktop:col-span-8 desktop:h-full">
         <div
         className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 transition-all desktop:h-full desktop:flex desktop:flex-col ${
             isDraggingEmpty ? 'ring-2 ring-blue-400 bg-blue-50' : ''
