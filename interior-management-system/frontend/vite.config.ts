@@ -8,14 +8,8 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
-    // 성능 최적화 설정
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // 프로덕션에서 console.log 제거
-        drop_debugger: true
-      }
-    },
+    // 성능 최적화 설정 (esbuild가 terser보다 10-100배 빠름)
+    minify: 'esbuild',
     // 청크 분할 최적화
     rollupOptions: {
       output: {
