@@ -1464,8 +1464,8 @@ const Payments = () => {
       setIncludeTaxDeduction(false);
       setSelectedContractorId(null);
 
-      // 모바일에서는 리스트로 전환
-      if (isMobileDevice) {
+      // 모바일에서는 리스트로 전환 (768px 미만일 때)
+      if (window.innerWidth < 768) {
         setMobileView('list');
       }
     } catch (error) {
