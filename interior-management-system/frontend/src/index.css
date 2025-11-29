@@ -1440,7 +1440,7 @@ div.rbc-popup {
   /* 전체 컨테이너: 세로 레이아웃으로 변경 */
   .specbook-container {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 1fr 1.5fr !important; /* 카테고리 영역 더 넓게 */
     grid-template-rows: auto auto 1fr 1fr !important;
     gap: 1rem !important;
     height: calc(100vh - 140px) !important;
@@ -1468,6 +1468,11 @@ div.rbc-popup {
   .specbook-category {
     grid-column: 2 !important;
     grid-row: 2 !important;
+  }
+
+  /* 카테고리 버튼 그리드: 5열로 변경 */
+  .specbook-category .grid {
+    grid-template-columns: repeat(5, 1fr) !important;
   }
 
   /* 메인 영역: 전체 너비 */
