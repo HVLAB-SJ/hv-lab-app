@@ -407,9 +407,9 @@ const AfterService = () => {
   });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+    <div className="as-container grid grid-cols-1 lg:grid-cols-5 gap-4">
       {/* 좌측: AS 요청 폼 */}
-      <div className={`lg:col-span-1 ${showMobileForm ? 'block' : 'hidden lg:block'}`}>
+      <div className={`as-form lg:col-span-1 ${showMobileForm ? 'block' : 'hidden lg:block'}`}>
         <div className="card p-4 sticky top-4">
           <h2 className="text-lg font-semibold mb-4">
             {selectedRequest ? 'AS 요청 수정' : 'AS 요청 추가'}
@@ -625,7 +625,7 @@ const AfterService = () => {
       </div>
 
       {/* 우측: AS 요청 목록 */}
-      <div className="lg:col-span-4 space-y-4">
+      <div className="as-list lg:col-span-4 space-y-4">
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="flex space-x-4 md:space-x-8">
@@ -663,7 +663,7 @@ const AfterService = () => {
         </div>
 
         {/* AS Request Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="as-cards grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredRequests.map((request) => (
             <div
               key={request.id}

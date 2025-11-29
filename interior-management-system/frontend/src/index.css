@@ -1693,6 +1693,53 @@ div.rbc-popup {
   .exec-total-short { display: inline !important; }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - AS관리 레이아웃 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  .as-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  .as-form {
+    width: 100% !important;
+    order: 1 !important;
+  }
+
+  .as-form .card {
+    position: relative !important;
+  }
+
+  .as-form form {
+    display: grid !important;
+    grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr !important;
+    gap: 0.75rem !important;
+    align-items: end !important;
+  }
+
+  .as-form form > div:nth-child(1) { grid-column: 1; } /* 프로젝트 */
+  .as-form form > input[type="hidden"] { display: none; }
+  .as-form form > div:nth-child(4) { grid-column: 2; } /* 내용 */
+  .as-form form > div:nth-child(5) { grid-column: 3; } /* 담당자 */
+  .as-form form > div:nth-child(6) { grid-column: 4; } /* 요청일/방문예정일 */
+  .as-form form > div:nth-child(7) { grid-column: 5; } /* 방문시간 */
+  .as-form form > div:nth-child(8) { grid-column: 6; } /* 버튼 */
+
+  .as-form textarea {
+    height: 60px !important;
+    min-height: 60px !important;
+  }
+
+  .as-list {
+    width: 100% !important;
+    order: 2 !important;
+  }
+
+  .as-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 이벤트 행 내부 - 여백 제거 */
