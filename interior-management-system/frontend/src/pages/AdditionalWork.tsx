@@ -377,9 +377,9 @@ const AdditionalWork = () => {
   return (
     <div className="space-y-4 md:space-y-6">
       {/* 태블릿/데스크톱 3열 레이아웃 */}
-      <div className="hidden desktop:grid desktop:gap-4 2xl:gap-6 desktop:grid-cols-12">
+      <div className="additional-work-container hidden desktop:grid desktop:gap-4 2xl:gap-6 desktop:grid-cols-12">
         {/* 왼쪽: 추가내역 등록 폼 */}
-        <div className="md:col-span-4 lg:col-span-4 bg-white border border-gray-200 rounded-lg p-4 md:p-5 lg:p-6 h-fit sticky top-4">
+        <div className="additional-work-form md:col-span-4 lg:col-span-4 bg-white border border-gray-200 rounded-lg p-4 md:p-5 lg:p-6 h-fit sticky top-4">
           <div className="space-y-4">
             {/* 프로젝트 선택 */}
             <div>
@@ -452,7 +452,7 @@ const AdditionalWork = () => {
         </div>
 
         {/* 중간: 추가내역 목록 */}
-        <div className="md:col-span-4 lg:col-span-5 space-y-3 md:space-y-4">
+        <div className="additional-work-list md:col-span-4 lg:col-span-5 space-y-3 md:space-y-4">
           {/* 미납/완납 탭 및 검색 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div className="space-y-4">
@@ -568,7 +568,7 @@ const AdditionalWork = () => {
         </div>
 
         {/* 오른쪽: 선택된 항목의 이미지 */}
-        <div className="md:col-span-4 lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-5 lg:p-6">
+        <div className="additional-work-images md:col-span-4 lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-5 lg:p-6">
           {selectedWorkId ? (
             <div>
               <div className="flex items-center justify-between mb-5">

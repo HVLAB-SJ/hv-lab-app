@@ -1393,6 +1393,48 @@ div.rbc-popup {
   }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 추가내역 레이아웃 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  /* 전체 컨테이너: 2행 레이아웃으로 변경 */
+  .additional-work-container {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; /* 하단 2열 */
+    grid-template-rows: auto 1fr !important; /* 상단 자동, 하단 채우기 */
+    gap: 1rem !important;
+    height: calc(100vh - 160px) !important;
+  }
+
+  /* 프로젝트 입력 폼: 상단 전체 너비 */
+  .additional-work-form {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    height: auto !important;
+  }
+
+  /* 추가내역 목록: 하단 왼쪽 */
+  .additional-work-list {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .additional-work-list > .space-y-4 {
+    max-height: calc(100vh - 380px) !important;
+  }
+
+  /* 이미지 영역: 하단 오른쪽 */
+  .additional-work-images {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 이벤트 행 내부 - 여백 제거 */
