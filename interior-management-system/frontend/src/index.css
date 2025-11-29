@@ -1324,32 +1324,34 @@ div.rbc-popup {
   }
 }
 
-/* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2줄 레이아웃 */
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
-  /* 이벤트 높이 증가 (2줄 표시용) */
+  /* 이벤트 높이 - 내용에 따라 자동 조절 (2줄: ~36px, 3줄: ~50px) */
   .rbc-event {
-    min-height: 46px !important;
-    height: 46px !important;
-    line-height: 1.3 !important;
+    min-height: 34px !important;
+    height: auto !important;
+    max-height: 52px !important;
+    line-height: 1.25 !important;
     align-items: flex-start !important;
-    padding: 4px 6px !important;
+    padding: 3px 5px !important;
   }
 
   .rbc-event-content {
-    line-height: 1.3 !important;
+    line-height: 1.25 !important;
     white-space: normal !important;
     overflow: hidden !important;
     display: block !important;
   }
 
-  /* 이벤트 세그먼트 높이 */
+  /* 이벤트 세그먼트 높이 - 자동 */
   .rbc-row-segment {
-    min-height: 48px !important;
+    min-height: 36px !important;
+    height: auto !important;
   }
 
-  /* 월 행 최소 높이 증가 */
+  /* 월 행 최소 높이 */
   .rbc-month-view .rbc-month-row {
-    min-height: 140px !important;
+    min-height: 120px !important;
   }
 }
 

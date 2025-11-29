@@ -278,15 +278,15 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         style={{
-          padding: '2px 4px',
-          minHeight: '40px',
+          padding: '1px 3px',
+          minHeight: '30px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'flex-start'
         }}
       >
         {/* 첫번째 줄: 프로젝트명 + 담당자 */}
-        <div className="flex items-center justify-between w-full" style={{ fontSize: '11px', opacity: 0.8, marginBottom: '2px' }}>
+        <div className="flex items-center justify-between w-full" style={{ fontSize: '10px', opacity: 0.8, marginBottom: '1px', lineHeight: '1.2' }}>
           {!event.isASVisit && event.projectName && (
             <span style={{
               overflow: 'hidden',
@@ -299,7 +299,7 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
             </span>
           )}
           {attendees.length > 0 && (
-            <span style={{ flexShrink: 0, fontSize: '11px' }}>
+            <span style={{ flexShrink: 0, fontSize: '10px' }}>
               {attendees.map((attendee, index) => {
                 const isBold = attendee === 'HV LAB' ||
                   (attendee === '현장팀' && isUserInFieldTeam) ||
@@ -318,12 +318,12 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
           )}
         </div>
 
-        {/* 두번째 줄: 일정 제목 (2줄까지 표시) */}
+        {/* 두번째~세번째 줄: 일정 제목 (2줄까지 표시) */}
         <div
           style={{
             fontWeight: 500,
-            fontSize: '12px',
-            lineHeight: '1.4',
+            fontSize: '11px',
+            lineHeight: '1.3',
             overflow: 'hidden',
             display: '-webkit-box',
             WebkitLineClamp: 2,
