@@ -862,7 +862,6 @@ const ExecutionHistory = () => {
           <div className="space-y-4 overflow-y-auto flex-shrink-0">
             {/* 프로젝트 - 태블릿/데스크톱에서만 표시 */}
             <div className="hidden md:block">
-              <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트 *</label>
               <select
                 value={formData.project}
                 onChange={(e) => {
