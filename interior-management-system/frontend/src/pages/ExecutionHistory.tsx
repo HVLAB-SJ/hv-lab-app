@@ -930,7 +930,7 @@ const ExecutionHistory = () => {
                 }}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-                placeholder={isMobileDevice ? "내역 붙여넣기" : "내역 붙여넣기 (이미지 드래그 또는 Ctrl+V)"}
+                placeholder={isMobileDevice ? "청구 내역 붙여넣기" : "청구 내역 붙여넣기 (이미지 드래그 또는 Ctrl+V)"}
               />
               {/* 이미지 미리보기 */}
               {formData.quickImages.length > 0 && (
