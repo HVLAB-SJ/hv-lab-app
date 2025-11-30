@@ -1785,6 +1785,59 @@ div.rbc-popup {
     display: block !important;
   }
 
+  /* 폼 내부: 2열 그리드 */
+  .payment-form > .space-y-4 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem 1rem !important;
+  }
+
+  /* 프로젝트 선택: 왼쪽 상단 */
+  .payment-form > .space-y-4 > .payment-project-row {
+    grid-column: 1 !important;
+  }
+
+  /* 빠른입력: 왼쪽, 여러 행 차지 */
+  .payment-form > .space-y-4 > div:nth-child(2) {
+    grid-column: 1 !important;
+    grid-row: 2 / 6 !important;
+  }
+
+  .payment-form > .space-y-4 > div:nth-child(2) textarea {
+    min-height: 200px !important;
+  }
+
+  /* 날짜/공정: 오른쪽 첫번째 */
+  .payment-form > .space-y-4 > div:nth-child(3) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  /* 항목명: 오른쪽 두번째 */
+  .payment-form > .space-y-4 > div:nth-child(4) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+  }
+
+  /* 공사비: 오른쪽 세번째 */
+  .payment-form > .space-y-4 > .payment-amount-section {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+  }
+
+  /* 추천 협력업체: 숨김 */
+  .payment-form > .space-y-4 > .bg-amber-50 {
+    display: none !important;
+  }
+
+  /* 계좌정보: 오른쪽 네번째 */
+  .payment-form > .space-y-4 > .payment-account-section {
+    grid-column: 2 !important;
+    grid-row: 4 / 6 !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+  }
+
   /* 결제요청 목록: 중단 */
   .payment-list {
     width: 100% !important;
