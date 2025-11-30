@@ -1816,8 +1816,8 @@ div.rbc-popup {
   .payment-form > .space-y-4 {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    grid-template-rows: auto auto auto auto auto auto !important;
-    gap: 0.25rem 0.5rem !important;
+    grid-template-rows: auto auto auto auto auto !important;
+    gap: 0.125rem 0.5rem !important;
   }
 
   /* 공통 스타일 */
@@ -1836,7 +1836,8 @@ div.rbc-popup {
   .payment-form .payment-project-row {
     grid-column: 1 !important;
     grid-row: 1 !important;
-    align-self: end !important;
+    align-self: start !important;
+    padding-top: 0.875rem !important;
   }
 
   /* 프로젝트 행에서 은행 선택 숨김 */
@@ -1851,7 +1852,7 @@ div.rbc-popup {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 0.25rem !important;
-    align-self: end !important;
+    align-self: start !important;
   }
 
   .payment-form > .space-y-4 > div:nth-child(3) > div {
@@ -1860,21 +1861,28 @@ div.rbc-popup {
   }
 
   .payment-form > .space-y-4 > div:nth-child(3) label {
-    font-size: 0.7rem !important;
-    margin-bottom: 0.125rem !important;
+    font-size: 0.65rem !important;
+    margin-bottom: 0 !important;
+    line-height: 1.2 !important;
   }
 
-  /* Row 2-5: 빠른입력 (왼쪽, 5행 차지) */
+  /* Row 2-5: 빠른입력 (왼쪽, 4행 차지) */
   .payment-form > .space-y-4 > div:nth-child(2) {
     grid-column: 1 !important;
     grid-row: 2 / 6 !important;
     display: flex !important;
     flex-direction: column !important;
+    margin-top: 0 !important;
+  }
+
+  .payment-form > .space-y-4 > div:nth-child(2) label {
+    font-size: 0.65rem !important;
+    margin-bottom: 0 !important;
   }
 
   .payment-form textarea {
     flex: 1 !important;
-    min-height: 180px !important;
+    min-height: 160px !important;
     resize: none !important;
     font-size: 0.875rem !important;
   }
@@ -1939,13 +1947,13 @@ div.rbc-popup {
     display: none !important;
   }
 
-  /* Row 4-5: 계좌 정보 (오른쪽) */
+  /* Row 4: 계좌번호 + 은행 (오른쪽) */
   .payment-form .payment-account-section {
     grid-column: 2 !important;
-    grid-row: 4 / 6 !important;
+    grid-row: 4 !important;
     display: grid !important;
     grid-template-columns: 1fr auto !important;
-    grid-template-rows: auto auto !important;
+    grid-template-rows: auto !important;
     gap: 0.25rem !important;
     border-top: none !important;
     padding-top: 0 !important;
@@ -1955,13 +1963,13 @@ div.rbc-popup {
     display: none !important;
   }
 
-  /* 계좌번호 - Row 1 */
+  /* 계좌번호 */
   .payment-form .payment-account-section > div:last-child {
     grid-column: 1 !important;
     grid-row: 1 !important;
   }
 
-  /* 은행 필드 - Row 1 */
+  /* 은행 필드 */
   .payment-form .payment-bank-field {
     display: block !important;
     grid-column: 2 !important;
@@ -1972,29 +1980,38 @@ div.rbc-popup {
     width: 80px !important;
   }
 
-  /* 예금주 - Row 2 */
+  /* 예금주 숨김 (계좌정보 섹션 내) */
   .payment-form .payment-account-section > div:first-child {
-    grid-column: 1 / 3 !important;
-    grid-row: 2 !important;
-  }
-
-  /* Row 6: 결제요청 버튼 (전체 폭) */
-  .payment-form > .space-y-4 > div:last-child {
-    grid-column: 1 / 3 !important;
-    grid-row: 6 !important;
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 0.5rem !important;
-  }
-
-  .payment-form > .space-y-4 > div:last-child > div:first-child {
     display: none !important;
   }
 
+  /* Row 5: 예금주(총액) + 결제요청 버튼 (같은 행) */
+  .payment-form > .space-y-4 > div:last-child {
+    grid-column: 2 !important;
+    grid-row: 5 !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto auto !important;
+    gap: 0.25rem !important;
+    align-items: end !important;
+  }
+
+  .payment-form > .space-y-4 > div:last-child > div:first-child {
+    display: block !important;
+    grid-column: 1 !important;
+  }
+
+  .payment-form > .space-y-4 > div:last-child > div:first-child label {
+    display: none !important;
+  }
+
+  .payment-form > .space-y-4 > div:last-child > div:first-child input {
+    height: 32px !important;
+  }
+
   .payment-form > .space-y-4 > div:last-child button {
-    flex: 1 !important;
-    height: 36px !important;
-    font-size: 0.875rem !important;
+    height: 32px !important;
+    font-size: 0.75rem !important;
+    padding: 0 0.75rem !important;
   }
 
   /* 결제요청 목록: 중단 */
