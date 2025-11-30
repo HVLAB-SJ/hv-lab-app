@@ -1947,24 +1947,26 @@ div.rbc-popup {
     display: none !important;
   }
 
-  /* Row 4-5: 계좌 정보 (왼쪽, 3행 차지) */
+  /* Row 6: 계좌 정보 (전체 너비) */
   .payment-form .payment-account-section {
-    grid-column: 1 !important;
-    grid-row: 4 / 6 !important;
+    grid-column: 1 / 3 !important;
+    grid-row: 6 !important;
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    grid-template-rows: auto auto auto auto !important;
-    gap: 0.25rem !important;
-    border-top: 1px solid #e5e7eb !important;
-    padding-top: 0.5rem !important;
-    align-content: start !important;
+    grid-template-columns: 1fr 1fr 2fr 1fr !important;
+    grid-template-rows: auto !important;
+    gap: 0.5rem !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+    align-items: end !important;
   }
 
   .payment-form .payment-account-section > div label {
-    display: none !important;
+    display: block !important;
+    font-size: 0.65rem !important;
+    margin-bottom: 0.125rem !important;
   }
 
-  /* 예금주 - Row 1, Col 1 */
+  /* 예금주 - Col 1 */
   .payment-form .payment-account-section > div:first-child {
     display: block !important;
     grid-column: 1 !important;
@@ -1975,11 +1977,15 @@ div.rbc-popup {
     height: 32px !important;
   }
 
-  /* 은행 필드 - Row 1, Col 2 */
+  /* 은행 필드 - Col 2 */
   .payment-form .payment-bank-field {
     display: block !important;
     grid-column: 2 !important;
     grid-row: 1 !important;
+  }
+
+  .payment-form .payment-bank-field label {
+    display: block !important;
   }
 
   .payment-form .payment-bank-field select {
@@ -1987,36 +1993,47 @@ div.rbc-popup {
     width: 100% !important;
   }
 
-  /* 계좌번호 - Row 2, 전체 너비 */
-  .payment-form .payment-account-section > div:last-child {
-    grid-column: 1 / 3 !important;
-    grid-row: 2 !important;
+  /* 계좌번호 - Col 3 */
+  .payment-form .payment-account-section > div:nth-child(3) {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
   }
 
-  .payment-form .payment-account-section > div:last-child input {
+  .payment-form .payment-account-section > div:nth-child(3) input {
     height: 32px !important;
   }
 
-  /* 총액 섹션 - Row 3, 전체 너비 */
+  /* 총액 섹션 - Col 4 */
   .payment-form .payment-account-section > .pt-2.border-t {
     display: flex !important;
-    grid-column: 1 / 3 !important;
-    grid-row: 3 !important;
+    flex-direction: column !important;
+    grid-column: 4 !important;
+    grid-row: 1 !important;
     border-top: none !important;
-    padding-top: 0.25rem !important;
+    padding-top: 0 !important;
+    justify-content: flex-end !important;
   }
 
-  /* Row 4: 결제요청 버튼 */
+  .payment-form .payment-account-section > .pt-2.border-t > .flex {
+    flex-direction: column !important;
+    align-items: flex-end !important;
+  }
+
+  .payment-form .payment-account-section > .pt-2.border-t .text-xs {
+    display: none !important;
+  }
+
+  /* Row 7: 결제요청 버튼 */
   .payment-form > .space-y-4 > div:last-child {
-    grid-column: 2 !important;
-    grid-row: 5 !important;
+    grid-column: 1 / 3 !important;
+    grid-row: 7 !important;
     display: flex !important;
     flex-direction: row !important;
-    gap: 0.25rem !important;
-    align-items: start !important;
+    gap: 0.5rem !important;
+    align-items: center !important;
     justify-content: flex-end !important;
-    margin-top: 0 !important;
-    padding-left: calc(50% + 0.125rem) !important;
+    margin-top: 0.5rem !important;
+    padding-left: 0 !important;
   }
 
   /* 총액 섹션 표시 (payment-account-section 내부로 이동하므로 기존 것 숨김) */
