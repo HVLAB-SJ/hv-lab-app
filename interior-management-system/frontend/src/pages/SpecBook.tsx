@@ -1612,7 +1612,8 @@ const SpecBook = () => {
                   </div>
                 ) : items.length === 0 ? (
                   <div className="flex items-center justify-center h-full text-gray-600 text-sm">
-                    좌측에서 아이템을 드래그하여 추가하세요
+                    <span className="specbook-drop-text-landscape">좌측에서 아이템을 드래그하여 추가하세요</span>
+                    <span className="specbook-drop-text-portrait">상단에서 아이템을 드래그하여 추가하세요</span>
                   </div>
                 ) : (
                   <DndContext
