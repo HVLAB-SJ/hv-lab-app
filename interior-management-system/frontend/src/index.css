@@ -1847,10 +1847,7 @@ div.rbc-popup {
     white-space: nowrap !important;
   }
 
-  /* 추천 협력업체: 숨김 */
-  .payment-form > .space-y-4 > .bg-amber-50 {
-    display: none !important;
-  }
+  /* 추천 협력업체: 예금주 아래에 표시 (CSS로는 위치 변경 어려움, JSX에서 이동) */
 
   /* 계좌정보: 오른쪽 2열 */
   .payment-form > .space-y-4 > .payment-account-section {

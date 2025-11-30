@@ -2278,93 +2278,6 @@ const Payments = () => {
               </div>
             </div>
 
-            {/* 추천 협력업체 (계좌번호 등록된 협력업체) */}
-            {recommendedContractors.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
-                <label className="block text-sm font-medium text-amber-900 mb-2">추천 협력업체</label>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {recommendedContractors.map((contractor) => {
-                    const contractorId = contractor.id || contractor._id;
-                    const isSelected = selectedContractorId === contractorId;
-                    return (
-                      <button
-                        key={contractorId}
-                        type="button"
-                        onClick={() => handleContractorSelect(contractor)}
-                        className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
-                          isSelected
-                            ? 'border-gray-900 bg-gray-50'
-                            : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="space-y-1">
-                          {/* 이름과 협력업체명 */}
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm text-gray-900">
-                              {removePosition(contractor.name)}
-                            </span>
-                            {contractor.companyName && (
-                              <>
-                                <span className="text-gray-300">|</span>
-                                <span className="text-xs text-gray-600">{contractor.companyName}</span>
-                              </>
-                            )}
-                          </div>
-                          {/* 은행 계좌 */}
-                          {contractor.accountNumber && contractor.bankName && (
-                            <div className="text-xs text-gray-500">
-                              {contractor.bankName} {contractor.accountNumber}
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* 이전 송금내역 (공정 기반) */}
-            {processPaymentSuggestions.length > 0 && !selectedContractorId && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
-                <label className="block text-sm font-medium text-blue-900 mb-2">이전 송금 내역</label>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {processPaymentSuggestions.map((account, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          accountHolder: account.accountHolder,
-                          bankName: account.bankName,
-                          accountNumber: account.accountNumber
-                        }));
-                        setProcessPaymentSuggestions([]);
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-lg border border-blue-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition-colors"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="font-medium text-sm text-gray-900">
-                            {account.accountHolder}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {account.bankName} {account.accountNumber}
-                          </div>
-                        </div>
-                        {account.amount > 0 && (
-                          <div className="text-xs text-gray-400">
-                            {account.amount.toLocaleString()}원
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* 계좌 정보 */}
             <div className="payment-account-section border-t pt-3 space-y-2">
               {/* 예금주 */}
@@ -2419,6 +2332,93 @@ const Payments = () => {
                   </div>
                 )}
               </div>
+
+              {/* 추천 협력업체 (계좌번호 등록된 협력업체) - 예금주 아래 */}
+              {recommendedContractors.length > 0 && (
+                <div className="payment-contractor-suggestions bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <label className="block text-sm font-medium text-amber-900 mb-2">추천 협력업체</label>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {recommendedContractors.map((contractor) => {
+                      const contractorId = contractor.id || contractor._id;
+                      const isSelected = selectedContractorId === contractorId;
+                      return (
+                        <button
+                          key={contractorId}
+                          type="button"
+                          onClick={() => handleContractorSelect(contractor)}
+                          className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
+                            isSelected
+                              ? 'border-gray-900 bg-gray-50'
+                              : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="space-y-1">
+                            {/* 이름과 협력업체명 */}
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm text-gray-900">
+                                {removePosition(contractor.name)}
+                              </span>
+                              {contractor.companyName && (
+                                <>
+                                  <span className="text-gray-300">|</span>
+                                  <span className="text-xs text-gray-600">{contractor.companyName}</span>
+                                </>
+                              )}
+                            </div>
+                            {/* 은행 계좌 */}
+                            {contractor.accountNumber && contractor.bankName && (
+                              <div className="text-xs text-gray-500">
+                                {contractor.bankName} {contractor.accountNumber}
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 이전 송금내역 (공정 기반) - 예금주 아래 */}
+              {processPaymentSuggestions.length > 0 && !selectedContractorId && (
+                <div className="payment-history-suggestions bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <label className="block text-sm font-medium text-blue-900 mb-2">이전 송금 내역</label>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {processPaymentSuggestions.map((account, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            accountHolder: account.accountHolder,
+                            bankName: account.bankName,
+                            accountNumber: account.accountNumber
+                          }));
+                          setProcessPaymentSuggestions([]);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg border border-blue-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-medium text-sm text-gray-900">
+                              {account.accountHolder}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {account.bankName} {account.accountNumber}
+                            </div>
+                          </div>
+                          {account.amount > 0 && (
+                            <div className="text-xs text-gray-400">
+                              {account.amount.toLocaleString()}원
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* 은행 */}
               <div className="payment-bank-field">
