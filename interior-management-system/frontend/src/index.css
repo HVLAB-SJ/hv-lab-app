@@ -2290,6 +2290,58 @@ div.rbc-popup {
   }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 공사도면 레이아웃 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  /* 메인 컨테이너: 세로 배치 */
+  .drawings-main {
+    flex-direction: column !important;
+  }
+
+  /* 사이드바: 상단에 가로 배치 */
+  .drawings-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    overflow-y: visible !important;
+    overflow-x: auto !important;
+  }
+
+  .drawings-sidebar-inner {
+    padding: 0.75rem 1rem !important;
+  }
+
+  /* 제목 숨기기 */
+  .drawings-sidebar-title {
+    display: none !important;
+  }
+
+  /* 도면 종류 목록: 가로 배치 */
+  .drawings-type-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    margin-bottom: 0 !important;
+  }
+
+  .drawings-type-list > * + * {
+    margin-top: 0 !important;
+  }
+
+  /* 도면 종류 버튼 */
+  .drawings-type-btn {
+    width: auto !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* 영역 그리기 버튼 및 영역 목록 숨기기 (세로모드에서는 복잡해서 숨김) */
+  .drawings-sidebar-inner > div:not(.drawings-type-list),
+  .drawings-sidebar-inner > h3:not(.drawings-sidebar-title) {
+    display: none !important;
+  }
+}
+
 /* 인쇄 시 현금수령증만 표시 */
 @media print {
   /* 페이지 여백 및 크기 설정 */

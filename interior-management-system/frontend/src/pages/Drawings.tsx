@@ -860,23 +860,23 @@ const Drawings = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div className="drawings-main flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* 좌측: 도면 종류 및 영역 목록 - 데스크톱에서만 표시 */}
-        <div className="hidden md:block w-48 bg-white border-r flex-shrink-0 overflow-y-auto">
-          <div className="p-4">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">도면 종류</h3>
-            <div className="space-y-1 mb-6">
+        <div className="drawings-sidebar hidden md:block w-48 bg-white border-r flex-shrink-0 overflow-y-auto">
+          <div className="drawings-sidebar-inner p-4">
+            <h3 className="drawings-sidebar-title text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">도면 종류</h3>
+            <div className="drawings-type-list space-y-1 mb-6">
               {DRAWING_TYPES.map((type) => (
                 <button
                   key={type}
                   onClick={() => setSelectedDrawingType(type)}
-                  className={`w-full text-left px-3 py-2.5 rounded text-sm transition-colors ${
+                  className={`drawings-type-btn w-full text-left px-3 py-2.5 rounded text-sm transition-colors ${
                     selectedDrawingType === type
                       ? 'bg-gray-900 text-white font-medium'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  {type}
+                  {removeDrawingText(type)}
                 </button>
               ))}
             </div>
