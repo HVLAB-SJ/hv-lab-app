@@ -2328,7 +2328,17 @@ div.rbc-popup {
     grid-row: 2 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.25rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .workrequest-form-inner > .wr-dates > div {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .workrequest-form-inner > .wr-dates input {
+    height: 44px !important;
+    padding: 0.5rem !important;
   }
 
   /* 요청자/담당자: 2열 2행 */
@@ -2337,7 +2347,17 @@ div.rbc-popup {
     grid-row: 2 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.25rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .workrequest-form-inner > .wr-people > div {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .workrequest-form-inner > .wr-people select {
+    height: 44px !important;
+    padding: 0.5rem !important;
   }
 
   /* 버튼: 4열 2행 (날짜/요청자와 같은 행) */
