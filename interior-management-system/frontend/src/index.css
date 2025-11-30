@@ -2224,10 +2224,10 @@ div.rbc-popup {
     padding: 1rem !important;
   }
 
-  /* 폼 내부: 2열 그리드 (컴팩트) */
+  /* 폼 내부: 3열 그리드 (컴팩트) */
   .aw-form-inner {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
     gap: 0.5rem 0.75rem !important;
   }
 
@@ -2247,28 +2247,28 @@ div.rbc-popup {
     grid-row: 1 !important;
   }
 
-  /* 금액: 1열 2행 */
+  /* 금액: 3열 1행 */
   .aw-form-inner > .aw-amount {
-    grid-column: 1 !important;
-    grid-row: 2 !important;
+    grid-column: 3 !important;
+    grid-row: 1 !important;
   }
 
-  /* 버튼: 2열 2행 */
-  .aw-form-inner > .aw-submit {
-    grid-column: 2 !important;
-    grid-row: 2 !important;
-    align-self: end !important;
-  }
-
-  /* 내용: 전체 너비 3행 */
+  /* 내용: 1~2열 2행 */
   .aw-form-inner > .aw-description {
     grid-column: 1 / 3 !important;
-    grid-row: 3 !important;
+    grid-row: 2 !important;
   }
 
   .aw-form-inner > .aw-description textarea {
     min-height: 60px !important;
     resize: none !important;
+  }
+
+  /* 버튼: 3열 2행 */
+  .aw-form-inner > .aw-submit {
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    align-self: end !important;
   }
 
   /* 목록: 하단, 전체 너비 */
