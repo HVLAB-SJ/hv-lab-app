@@ -855,7 +855,6 @@ const WorkRequest = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">요청일</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">마감일</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">D-day</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">우선순위</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">상태</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">액션</th>
                 </tr>
@@ -986,9 +985,6 @@ const WorkRequest = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getDdayBadge(request.dueDate)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getPriorityBadge(request.priority)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(request.status)}
@@ -1258,7 +1254,6 @@ const WorkRequest = () => {
                 <div className="flex items-center gap-2 mb-1">
                   {getStatusBadge(request.status)}
                   {getDdayBadge(request.dueDate)}
-                  {request.priority === 'high' && getPriorityBadge(request.priority)}
                 </div>
                 <h3 className="font-bold text-base text-gray-900">{request.project}</h3>
                 <p className="text-xs text-gray-600 mt-0.5">{request.requestType}</p>
@@ -1308,13 +1303,6 @@ const WorkRequest = () => {
                   <p className="text-xs text-gray-900">
                     {format(request.dueDate, 'MM.dd (eee)', { locale: ko })}
                   </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <div className="text-xs">
-                  <span className="text-gray-500">우선순위: </span>
-                  {getPriorityBadge(request.priority)}
                 </div>
               </div>
             </div>
