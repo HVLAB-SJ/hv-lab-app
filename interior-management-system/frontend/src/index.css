@@ -2185,6 +2185,7 @@ div.rbc-popup {
     white-space: normal !important;
     overflow: hidden !important;
     display: block !important;
+    font-size: 0.8rem !important;
   }
 
   /* 월 행 - 화면에 맞게 자동 확장 */
