@@ -1918,10 +1918,12 @@ div.rbc-popup {
   .payment-form > .space-y-4 > div:nth-child(5) {
     grid-column: 2 !important;
     grid-row: 3 !important;
+    display: block !important;
   }
 
   .payment-form > .space-y-4 > div:nth-child(5) > div:first-child label {
-    display: none !important;
+    display: block !important;
+    font-size: 0.65rem !important;
   }
 
   .payment-form > .space-y-4 > div:nth-child(5) .space-y-2 {
