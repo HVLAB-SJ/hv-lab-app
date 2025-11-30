@@ -2148,7 +2148,7 @@ const Payments = () => {
             </div>
 
             {/* 금액 입력 */}
-            <div className="space-y-2">
+            <div className="space-y-2 payment-amount-section">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">공사비</label>
                 <div className="relative">

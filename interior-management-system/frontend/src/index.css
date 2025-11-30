@@ -1914,8 +1914,8 @@ div.rbc-popup {
     font-size: 0.65rem !important;
   }
 
-  /* Row 3-4: 공사비 (오른쪽) */
-  .payment-form > .space-y-4 > div:nth-child(5) {
+  /* Row 3-4: 공사비 (오른쪽) - 클래스로 명시적 타겟팅 */
+  .payment-form .payment-amount-section {
     grid-column: 2 !important;
     grid-row: 3 / 5 !important;
     display: flex !important;
@@ -1925,36 +1925,32 @@ div.rbc-popup {
     min-height: 80px !important;
   }
 
-  .payment-form > .space-y-4 > div:nth-child(5) > div:first-child {
+  .payment-form .payment-amount-section > div:first-child {
     display: block !important;
   }
 
-  .payment-form > .space-y-4 > div:nth-child(5) > div:first-child label {
+  .payment-form .payment-amount-section > div:first-child label {
     display: block !important;
     font-size: 0.65rem !important;
   }
 
-  .payment-form > .space-y-4 > div:nth-child(5) > div:first-child input {
+  .payment-form .payment-amount-section > div:first-child input {
     height: 32px !important;
     display: block !important;
   }
 
-  .payment-form > .space-y-4 > div:nth-child(5) .space-y-2 {
-    gap: 0.25rem !important;
-  }
-
-  .payment-form > .space-y-4 > div:nth-child(5) .flex.items-center.gap-4 {
+  .payment-form .payment-amount-section .flex.items-center.gap-4 {
     display: flex !important;
     gap: 0.75rem !important;
     margin-top: 0.5rem !important;
   }
 
-  .payment-form > .space-y-4 > div:nth-child(5) .flex.items-center.gap-4 label {
+  .payment-form .payment-amount-section .flex.items-center.gap-4 label {
     font-size: 0.7rem !important;
     margin-left: 0.25rem !important;
   }
 
-  .payment-form > .space-y-4 > div:nth-child(5) .flex.items-center.gap-4 input[type="checkbox"] {
+  .payment-form .payment-amount-section .flex.items-center.gap-4 input[type="checkbox"] {
     height: 14px !important;
     width: 14px !important;
     display: inline-block !important;
