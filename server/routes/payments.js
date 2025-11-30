@@ -577,6 +577,13 @@ router.get('/stats/summary', authenticateToken, (req, res) => {
 async function sendPaymentNotification(data) {
   console.log(`새 결제 요청: ${data.requester}님이 ${data.amount.toLocaleString()}원 요청`);
 
+  // 부가세/세금공제 둘 다 미체크인 경우 기존 번호로는 발송하지 않음
+  // (프론트엔드에서 01089423283으로 별도 발송)
+  if (!data.includes_vat && !data.apply_tax_deduction) {
+    console.log('[CoolSMS] 부가세/세금공제 미체크 - 기존 번호로 발송 생략 (별도 번호로 발송됨)');
+    return;
+  }
+
   try {
     // 프로젝트 정보 조회
     const project = await new Promise((resolve, reject) => {
