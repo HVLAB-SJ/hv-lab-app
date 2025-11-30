@@ -1955,8 +1955,8 @@ div.rbc-popup {
     grid-template-columns: 1fr 1fr !important;
     grid-template-rows: auto auto auto auto !important;
     gap: 0.25rem !important;
-    border-top: none !important;
-    padding-top: 0 !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding-top: 0.5rem !important;
     align-content: start !important;
   }
 
