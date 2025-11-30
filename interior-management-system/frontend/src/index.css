@@ -1505,23 +1505,23 @@ div.rbc-popup {
     display: contents !important;
   }
 
-  /* 등급 필터: 상단 전체 너비 */
-  .specbook-grade-filter {
-    grid-column: 1 / -1 !important;
-    grid-row: 1 !important;
-  }
-
-  /* 아이템 등록 폼: 등급 필터 아래 왼쪽 */
+  /* 아이템 등록 폼(이미지 삽입): 상단 왼쪽 */
   .specbook-form {
     grid-column: 1 !important;
-    grid-row: 2 !important;
+    grid-row: 1 !important;
     width: 100% !important;
   }
 
-  /* 카테고리: 등급 필터 아래 오른쪽 */
+  /* 등급 필터: 이미지 삽입 아래 */
+  .specbook-grade-filter {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+  }
+
+  /* 카테고리: 오른쪽 1-2행 차지 */
   .specbook-category {
     grid-column: 2 !important;
-    grid-row: 2 !important;
+    grid-row: 1 / 3 !important;
   }
 
   /* 카테고리 버튼 그리드: 6열로 변경 */
