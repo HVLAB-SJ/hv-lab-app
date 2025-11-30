@@ -884,6 +884,77 @@ router.get('/tosspay/limit', authenticateToken, isManager, async (req, res) => {
   }
 });
 
+// ==================== 토스 송금 SMS 발송 (부가세/세금공제 미체크용) ====================
+
+// 토스 송금 SMS 발송 (특정 번호로)
+router.post('/send-toss-payment-sms', authenticateToken, async (req, res) => {
+  try {
+    const { recipientPhone, accountHolder, bankName, accountNumber, amount, projectName, itemName } = req.body;
+
+    console.log('[POST /api/payments/send-toss-payment-sms] SMS 발송 요청:', {
+      recipientPhone,
+      accountHolder,
+      bankName,
+      accountNumber,
+      amount,
+      projectName,
+      itemName
+    });
+
+    // 필수 정보 확인
+    if (!recipientPhone || !accountHolder || !bankName || !accountNumber || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: '필수 정보가 누락되었습니다.'
+      });
+    }
+
+    // 프로젝트명에서 앞 2글자 추출
+    const projectPrefix = (projectName || '프로젝트').substring(0, 2);
+
+    // 토스 딥링크 생성
+    const cleanAccountNumber = accountNumber.replace(/-/g, '');
+    const tossBankName = coolsmsService.convertToTossBankName(bankName);
+    const bankCode = coolsmsService.getBankCode(bankName);
+    const tossDeeplink = `supertoss://send?amount=${amount}&bankCode=${bankCode}&bank=${encodeURIComponent(tossBankName)}&accountNo=${cleanAccountNumber}`;
+
+    // 금액 포맷팅
+    const formattedAmount = amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    // SMS 메시지 생성
+    let message = `${projectPrefix}/${itemName || '결제요청'}\n`;
+    message += `${bankName} ${accountNumber} ${accountHolder}\n`;
+    message += `${formattedAmount}원\n\n`;
+    message += `토스송금:\n${tossDeeplink}`;
+
+    console.log('[토스 SMS] 발송할 메시지:', message);
+
+    // SMS 발송
+    const result = await coolsmsService.sendSMS(recipientPhone, message, ' ');
+
+    if (result.success) {
+      console.log('[토스 SMS] 발송 성공:', result.response);
+      res.json({
+        success: true,
+        message: '토스 송금 SMS가 발송되었습니다.'
+      });
+    } else {
+      console.error('[토스 SMS] 발송 실패:', result.error);
+      res.status(400).json({
+        success: false,
+        error: result.error || 'SMS 발송에 실패했습니다.'
+      });
+    }
+
+  } catch (error) {
+    console.error('[POST /api/payments/send-toss-payment-sms] 오류:', error);
+    res.status(500).json({
+      success: false,
+      error: 'SMS 발송 처리 중 오류가 발생했습니다.'
+    });
+  }
+});
+
 // ==================== 오픈뱅킹 즉시송금 ====================
 
 // 오픈뱅킹 즉시송금 요청

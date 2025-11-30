@@ -1463,6 +1463,30 @@ const Payments = () => {
         await addPaymentToAPI(newPayment);
 
         toast.success('결제요청이 추가되었습니다');
+
+        // 부가세/세금공제 둘 다 미체크일 경우 타인에게 토스 송금 문자 발송
+        if (!includeVat && !includeTaxDeduction && formData.accountHolder && formData.bankName && formData.accountNumber) {
+          try {
+            const response = await fetch('/api/payments/send-toss-payment-sms', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                recipientPhone: '01089423283',
+                accountHolder: formData.accountHolder,
+                bankName: formData.bankName,
+                accountNumber: formData.accountNumber,
+                amount: totalAmount,
+                projectName: formData.project,
+                itemName: formData.itemName
+              })
+            });
+            if (response.ok) {
+              toast.success('결제 요청 문자가 발송되었습니다');
+            }
+          } catch (smsError) {
+            console.error('SMS 발송 실패:', smsError);
+          }
+        }
       }
 
       // 폼 초기화 (프로젝트는 유지)
