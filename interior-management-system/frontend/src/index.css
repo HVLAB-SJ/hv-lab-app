@@ -1947,9 +1947,9 @@ div.rbc-popup {
     display: none !important;
   }
 
-  /* Row 4-5: 계좌 정보 (오른쪽, 3행 차지) */
+  /* Row 4-5: 계좌 정보 (왼쪽, 3행 차지) */
   .payment-form .payment-account-section {
-    grid-column: 2 !important;
+    grid-column: 1 !important;
     grid-row: 4 / 6 !important;
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
