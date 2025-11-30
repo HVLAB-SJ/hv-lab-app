@@ -2084,32 +2084,34 @@ div.rbc-popup {
     height: 100% !important;
   }
 
-  /* 이벤트 행 내부 - 여백 제거 */
+  /* 이벤트 행 내부 - 여백 완전 제거 */
   .rbc-row-content .rbc-row,
   .rbc-row-content-scrollable .rbc-row {
     min-height: 0 !important;
     height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
+    gap: 0 !important;
   }
 
-  /* 이벤트 세그먼트 - 여백 제거 */
+  /* 이벤트 세그먼트 - 여백 완전 제거 */
   .rbc-row-segment {
     height: auto !important;
     min-height: 0 !important;
     margin: 0 !important;
-    padding: 0 0 1px 0 !important;
+    padding: 0 !important;
   }
 
-  /* 이벤트 - 내용에 맞게 자동 높이 */
+  /* 이벤트 - 내용에 맞게 자동 높이, 여백 제거 */
   .rbc-event {
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
     line-height: 1.2 !important;
     align-items: flex-start !important;
-    padding: 2px 4px !important;
+    padding: 1px 4px !important;
     margin: 0 !important;
+    margin-bottom: 0 !important;
   }
 
   .rbc-event-content {
@@ -2119,9 +2121,14 @@ div.rbc-popup {
     display: block !important;
   }
 
-  /* 월 행 최소 높이 */
+  /* 월 행 최소 높이 - 높게 설정 */
   .rbc-month-view .rbc-month-row {
-    min-height: 90px !important;
+    min-height: 130px !important;
+  }
+
+  /* 이벤트 컨테이너 여백 제거 */
+  .rbc-row-content {
+    gap: 0 !important;
   }
 
   /* 날짜 헤더 컴팩트하게 */
