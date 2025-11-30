@@ -1898,7 +1898,7 @@ div.rbc-popup {
     font-size: 0.75rem !important;
   }
 
-  /* Row 2: 항목명 (오른쪽) */
+  /* Row 2: 항목명 (오른쪽) - nth-child(4) */
   .payment-form > .space-y-4 > div:nth-child(4) {
     grid-column: 2 !important;
     grid-row: 2 !important;
@@ -1909,59 +1909,77 @@ div.rbc-popup {
     font-size: 0.65rem !important;
   }
 
-  /* Row 3: 공사비 (오른쪽) - 클래스로 명시적 타겟팅 */
-  .payment-form .payment-amount-section {
+  /* Row 3: 공사비 (오른쪽) - nth-child(5) = payment-amount-section */
+  .payment-form > .space-y-4 > div:nth-child(5),
+  .payment-form > .space-y-4 > .payment-amount-section,
+  .payment-form > .space-y-4 > div.payment-amount-section {
     grid-column: 2 !important;
     grid-row: 3 !important;
     display: flex !important;
     flex-direction: column !important;
     visibility: visible !important;
     opacity: 1 !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  .payment-form .payment-amount-section > div:first-child {
+  .payment-form > .space-y-4 > div:nth-child(5) > div:first-child,
+  .payment-form > .space-y-4 > .payment-amount-section > div:first-child {
     display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
-  .payment-form .payment-amount-section > div:first-child label {
+  .payment-form > .space-y-4 > div:nth-child(5) > div:first-child label,
+  .payment-form > .space-y-4 > .payment-amount-section > div:first-child label {
     display: block !important;
     font-size: 0.65rem !important;
+    visibility: visible !important;
   }
 
-  .payment-form .payment-amount-section > div:first-child input {
+  .payment-form > .space-y-4 > div:nth-child(5) > div:first-child input,
+  .payment-form > .space-y-4 > .payment-amount-section > div:first-child input {
     height: 32px !important;
     display: block !important;
+    visibility: visible !important;
   }
 
-  .payment-form .payment-amount-section .flex.items-center.gap-4 {
+  .payment-form > .space-y-4 > div:nth-child(5) .flex.items-center.gap-4,
+  .payment-form > .space-y-4 > .payment-amount-section .flex.items-center.gap-4 {
     display: flex !important;
     gap: 0.5rem !important;
     margin-top: 0.25rem !important;
+    visibility: visible !important;
   }
 
-  .payment-form .payment-amount-section .flex.items-center.gap-4 label {
+  .payment-form > .space-y-4 > div:nth-child(5) .flex.items-center.gap-4 label,
+  .payment-form > .space-y-4 > .payment-amount-section .flex.items-center.gap-4 label {
     font-size: 0.65rem !important;
     margin-left: 0.125rem !important;
   }
 
-  .payment-form .payment-amount-section .flex.items-center.gap-4 input[type="checkbox"] {
+  .payment-form > .space-y-4 > div:nth-child(5) .flex.items-center.gap-4 input[type="checkbox"],
+  .payment-form > .space-y-4 > .payment-amount-section .flex.items-center.gap-4 input[type="checkbox"] {
     height: 12px !important;
     width: 12px !important;
     display: inline-block !important;
   }
 
-  /* 추천 협력업체 - 숨김 */
+  /* 추천 협력업체 - 숨김 (nth-child(6) = bg-amber-50) */
+  .payment-form > .space-y-4 > div:nth-child(6),
   .payment-form .bg-amber-50 {
     display: none !important;
   }
 
-  /* Row 4: 계좌 정보 (오른쪽) */
-  .payment-form .payment-account-section {
+  /* Row 4: 계좌 정보 (오른쪽) - nth-child(7) = payment-account-section */
+  .payment-form > .space-y-4 > div:nth-child(7),
+  .payment-form > .space-y-4 > .payment-account-section,
+  .payment-form > .space-y-4 > div.payment-account-section {
     grid-column: 2 !important;
     grid-row: 4 !important;
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    grid-template-rows: auto auto !important;
+    grid-template-rows: auto auto auto !important;
     gap: 0.25rem 0.5rem !important;
     border-top: none !important;
     padding-top: 0 !important;
