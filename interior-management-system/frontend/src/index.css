@@ -2043,23 +2043,24 @@ div.rbc-popup {
   .schedule-container {
     display: flex !important;
     flex-direction: column !important;
-    height: calc(100vh - 120px) !important;
-    gap: 0.5rem !important;
+    height: calc(100vh - 100px) !important;
+    gap: 0 !important;
   }
 
-  /* 메인 영역: 캘린더 + 일정목록 */
+  /* 메인 영역: 캘린더만 표시 */
   .schedule-main {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 !important;
     min-height: 0 !important;
-    gap: 0.5rem !important;
+    gap: 0 !important;
   }
 
-  /* 캘린더: 상단 60% */
+  /* 캘린더: 화면 전체 */
   .schedule-calendar {
-    flex: 0 0 60% !important;
+    flex: 1 !important;
     overflow: hidden !important;
+    height: 100% !important;
   }
 
   /* 캘린더 내부 높이 조정 */
@@ -2069,19 +2070,25 @@ div.rbc-popup {
 
   .schedule-calendar .rbc-month-view {
     height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
-  /* 일정 목록: 하단 40% - 세로모드에서 표시 */
-  .schedule-events-list {
-    display: block !important;
+  /* 월 행 컨테이너가 남은 공간 채우기 */
+  .schedule-calendar .rbc-month-view > div:last-child {
     flex: 1 !important;
-    overflow-y: auto !important;
-    margin-top: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
-  .schedule-events-list .max-h-\[35vh\] {
-    max-height: none !important;
-    height: 100% !important;
+  /* 각 월 행이 균등하게 공간 채우기 */
+  .schedule-calendar .rbc-month-row {
+    flex: 1 !important;
+  }
+
+  /* 일정 목록: 세로모드에서 숨김 */
+  .schedule-events-list {
+    display: none !important;
   }
 
   /* 이벤트 행 내부 - 여백 완전 제거 */
@@ -2121,9 +2128,10 @@ div.rbc-popup {
     display: block !important;
   }
 
-  /* 월 행 최소 높이 - 높게 설정 */
+  /* 월 행 - 화면에 맞게 자동 확장 */
   .rbc-month-view .rbc-month-row {
-    min-height: 220px !important;
+    min-height: 0 !important;
+    flex: 1 !important;
   }
 
   /* 이벤트 컨테이너 여백 제거 */
