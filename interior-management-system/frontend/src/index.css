@@ -1947,37 +1947,42 @@ div.rbc-popup {
     display: none !important;
   }
 
-  /* Row 4: 계좌번호 + 은행 (오른쪽) */
+  /* Row 4: 은행 + 계좌번호 (오른쪽, 금액 아래) */
   .payment-form .payment-account-section {
     grid-column: 2 !important;
     grid-row: 4 !important;
-    display: grid !important;
-    grid-template-columns: 1fr auto !important;
-    grid-template-rows: auto !important;
+    display: flex !important;
+    flex-direction: row !important;
     gap: 0.25rem !important;
     border-top: none !important;
     padding-top: 0 !important;
+    align-items: end !important;
   }
 
   .payment-form .payment-account-section > div label {
     display: none !important;
   }
 
-  /* 계좌번호 */
-  .payment-form .payment-account-section > div:last-child {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
-  }
-
-  /* 은행 필드 */
+  /* 은행 필드 - 먼저 표시 */
   .payment-form .payment-bank-field {
     display: block !important;
-    grid-column: 2 !important;
-    grid-row: 1 !important;
+    order: 1 !important;
+    flex-shrink: 0 !important;
   }
 
   .payment-form .payment-bank-field select {
     width: 80px !important;
+    height: 32px !important;
+  }
+
+  /* 계좌번호 - 은행 다음 */
+  .payment-form .payment-account-section > div:last-child {
+    order: 2 !important;
+    flex: 1 !important;
+  }
+
+  .payment-form .payment-account-section > div:last-child input {
+    height: 32px !important;
   }
 
   /* 예금주 숨김 (계좌정보 섹션 내) */
@@ -1985,19 +1990,20 @@ div.rbc-popup {
     display: none !important;
   }
 
-  /* Row 5: 예금주(총액) + 결제요청 버튼 (같은 행) */
+  /* Row 5: 총액 + 결제요청 버튼 (오른쪽, 계좌 아래) */
   .payment-form > .space-y-4 > div:last-child {
     grid-column: 2 !important;
     grid-row: 5 !important;
-    display: grid !important;
-    grid-template-columns: 1fr auto auto !important;
+    display: flex !important;
+    flex-direction: row !important;
     gap: 0.25rem !important;
     align-items: end !important;
   }
 
+  /* 총액 입력 */
   .payment-form > .space-y-4 > div:last-child > div:first-child {
     display: block !important;
-    grid-column: 1 !important;
+    flex: 1 !important;
   }
 
   .payment-form > .space-y-4 > div:last-child > div:first-child label {
@@ -2006,12 +2012,15 @@ div.rbc-popup {
 
   .payment-form > .space-y-4 > div:last-child > div:first-child input {
     height: 32px !important;
+    width: 100% !important;
   }
 
+  /* 결제요청 버튼들 */
   .payment-form > .space-y-4 > div:last-child button {
     height: 32px !important;
     font-size: 0.75rem !important;
-    padding: 0 0.75rem !important;
+    padding: 0 0.5rem !important;
+    flex-shrink: 0 !important;
   }
 
   /* 결제요청 목록: 중단 */
