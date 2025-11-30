@@ -78,10 +78,10 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
    * See https://goo.gl/S9QRab
    */
   workbox.precacheAndRoute([{
-    "url": "assets/index-DpVUiK1l.js",
+    "url": "assets/index-BBKQOkxw.js",
     "revision": null
   }, {
-    "url": "assets/index-VaEm-N1o.css",
+    "url": "assets/index-CSpvwqRD.css",
     "revision": null
   }, {
     "url": "assets/vendor-calendar-ZgrlWMy2.js",
@@ -115,7 +115,7 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "revision": "13c8dc084d8e721d3dbb3d62d72ae126"
   }, {
     "url": "index.html",
-    "revision": "bbf35a78420dc76764877b73f3b38b22"
+    "revision": "ebc3b17a40e0c5c0dd0ac3c64c290e1e"
   }, {
     "url": "vite.svg",
     "revision": "8e3a10e157f75ada21ab742c022d5430"
