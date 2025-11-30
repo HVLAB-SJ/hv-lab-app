@@ -2286,12 +2286,14 @@ div.rbc-popup {
     gap: 0.25rem !important;
   }
 
-  /* 버튼: 전체 너비 3행 */
+  /* 버튼: 3열 3행 (우측 하단) */
   .workrequest-form-inner > .wr-actions {
-    grid-column: 1 / 4 !important;
+    grid-column: 3 !important;
     grid-row: 3 !important;
     border-top: none !important;
     padding-top: 0.5rem !important;
+    display: flex !important;
+    justify-content: flex-end !important;
   }
 
   .workrequest-form-inner > .wr-actions button {
