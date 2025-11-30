@@ -8,6 +8,7 @@ import { useNotificationStore } from '../store/notificationStore';
 import workRequestService from '../services/workRequestService';
 import paymentService from '../services/paymentService';
 import asRequestService from '../services/asRequestService';
+import api from '../services/api';
 
 interface NavigationItem {
   name: string;
@@ -26,6 +27,7 @@ const Layout = () => {
   const [pendingWorkRequestCount, setPendingWorkRequestCount] = useState(0);
   const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
   const [inProgressASCount, setInProgressASCount] = useState(0);
+  const [unreadQuoteInquiryCount, setUnreadQuoteInquiryCount] = useState(0);
 
   // 페이지 변경 시 모바일 폼 상태 초기화
   useEffect(() => {
@@ -63,6 +65,17 @@ const Layout = () => {
         setInProgressASCount(
           asRequests.filter(req => req.status === 'in-progress').length
         );
+
+        // 견적문의 읽지 않은 수 조회 (관리자/매니저만)
+        if (user.role === 'admin' || user.role === 'manager') {
+          try {
+            const quoteResponse = await api.get('/quote-inquiries');
+            const unreadQuotes = quoteResponse.data.filter((inq: { isRead: boolean }) => !inq.isRead).length;
+            setUnreadQuoteInquiryCount(unreadQuotes);
+          } catch (quoteError) {
+            console.error('Failed to load quote inquiry count:', quoteError);
+          }
+        }
       } catch (error) {
         console.error('Failed to load badge counts:', error);
       }
@@ -105,7 +118,7 @@ const Layout = () => {
     { name: '결제요청', href: '/payments', ...(pendingPaymentCount > 0 && { badge: pendingPaymentCount }) },
     { name: 'AS 관리', href: '/after-service', ...(inProgressASCount > 0 && { badge: inProgressASCount }) },
     { name: '가견적서', href: '/estimate-preview', roles: ['admin', 'manager'] },
-    { name: '견적문의', href: '/quote-inquiry', roles: ['admin', 'manager'] },
+    { name: '견적문의', href: '/quote-inquiry', roles: ['admin', 'manager'], ...(unreadQuoteInquiryCount > 0 && { badge: unreadQuoteInquiryCount }) },
     { name: '협력업체', href: '/contractors' },
   ];
 
