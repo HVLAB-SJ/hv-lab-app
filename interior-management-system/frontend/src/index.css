@@ -1339,9 +1339,6 @@ div.rbc-popup {
   /* 상단 탭 네비게이션 표시 */
   .portrait-top-nav {
     display: block !important;
-    position: sticky !important;
-    top: 56px !important;
-    z-index: 25 !important;
   }
 
   /* 스크롤바 숨기기 */

@@ -270,35 +270,6 @@ const Layout = () => {
         </div>
       </div>
 
-      {/* Portrait mode top navigation */}
-      <div className="portrait-top-nav hidden">
-        <div className="flex items-center gap-1 px-2 py-2 bg-white border-b border-gray-200 overflow-x-auto">
-          {filteredNavigation.map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.href}
-              className={({ isActive }) =>
-                clsx(
-                  'px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors relative',
-                  isActive
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                )
-              }
-            >
-              <span className="flex items-center gap-1">
-                <span>{item.name}</span>
-                {item.badge && item.badge > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold leading-none text-white bg-red-600 rounded-full">
-                    {item.badge > 99 ? '99+' : item.badge}
-                  </span>
-                )}
-              </span>
-            </NavLink>
-          ))}
-        </div>
-      </div>
-
       {/* Main content */}
       <div className="main-content lg:pl-64">
         {/* Top header */}
@@ -359,6 +330,35 @@ const Layout = () => {
             </div>
           </div>
         </header>
+
+        {/* Portrait mode top navigation */}
+        <div className="portrait-top-nav hidden">
+          <div className="flex items-center gap-1 px-2 py-2 bg-white border-b border-gray-200 overflow-x-auto">
+            {filteredNavigation.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                className={({ isActive }) =>
+                  clsx(
+                    'px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors relative',
+                    isActive
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  )
+                }
+              >
+                <span className="flex items-center gap-1">
+                  <span>{item.name}</span>
+                  {item.badge && item.badge > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold leading-none text-white bg-red-600 rounded-full">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )}
+                </span>
+              </NavLink>
+            ))}
+          </div>
+        </div>
 
         {/* Page content */}
         <main className="py-[10px] md:py-6 lg:py-8">
