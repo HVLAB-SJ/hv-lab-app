@@ -413,6 +413,30 @@ const Schedule = () => {
   const { user } = useAuth();
   const projects = useFilteredProjects();
 
+  // 세로모드 감지 (세로모드에서 간단한 시간 포맷 사용)
+  const [isPortraitMode, setIsPortraitMode] = useState(false);
+
+  useEffect(() => {
+    const checkPortraitMode = () => {
+      const isPortrait = window.innerHeight > window.innerWidth && window.innerWidth >= 1024;
+      setIsPortraitMode(isPortrait);
+    };
+    checkPortraitMode();
+    window.addEventListener('resize', checkPortraitMode);
+    return () => window.removeEventListener('resize', checkPortraitMode);
+  }, []);
+
+  // 세로모드용 간단한 시간 포맷 함수
+  const formatTime = (time: string) => {
+    if (!time || time === '-') return '';
+    // 세로모드에서는 원본 HH:mm 형식 그대로 사용
+    if (isPortraitMode) {
+      return time;
+    }
+    // 일반 모드에서는 한국어 포맷 사용
+    return formatTimeKorean(time);
+  };
+
   // 사용자 이름에서 성 제거 (마지막 2글자만 사용)
   const userNameWithoutSurname = user?.name ? user.name.slice(-2) : null;
 
@@ -452,7 +476,7 @@ const Schedule = () => {
       const project = projects.find(p => p.name === schedule.project);
       const scheduleTime = schedule.time;
       // 시간이 있고 "-"가 아닌 경우에만 시간 텍스트 추가
-      const timeText = (scheduleTime && scheduleTime !== '-') ? ` - ${formatTimeKorean(scheduleTime)}` : '';
+      const timeText = (scheduleTime && scheduleTime !== '-') ? ` - ${formatTime(scheduleTime)}` : '';
 
       // 사용자 일정 여부 확인 (여기서 직접 확인)
       const attendees = schedule.attendees || [];
@@ -501,7 +525,7 @@ const Schedule = () => {
     })
     .map(req => {
       const visitTime = req.scheduledVisitTime;
-      const timeText = (visitTime && visitTime !== '-') ? ` - ${formatTimeKorean(visitTime)}` : '';
+      const timeText = (visitTime && visitTime !== '-') ? ` - ${formatTime(visitTime)}` : '';
       const asProject = projects.find(p => p.name === req.project);
       const originalASTitle = `[AS] ${req.project}`;
       return {
