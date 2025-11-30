@@ -1524,6 +1524,11 @@ div.rbc-popup {
     padding-right: 0 !important;
   }
 
+  /* 스펙북 아이템 그리드: 4열 */
+  .specbook-library .grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
   /* 드롭 영역 (라이브러리 뷰): 전체 너비, 하단 */
   .specbook-drop-zone {
     width: 100% !important;
