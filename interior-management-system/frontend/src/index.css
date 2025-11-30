@@ -1466,6 +1466,48 @@ div.rbc-popup {
     height: auto !important;
   }
 
+  /* 폼 내부: 2열 그리드 */
+  .aw-form-inner {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem 1rem !important;
+  }
+
+  .aw-form-inner > * {
+    margin: 0 !important;
+  }
+
+  /* 프로젝트: 1열 */
+  .aw-form-inner > .aw-project {
+    grid-column: 1 !important;
+  }
+
+  /* 일자: 2열 */
+  .aw-form-inner > .aw-date {
+    grid-column: 2 !important;
+  }
+
+  /* 내용: 1열 */
+  .aw-form-inner > .aw-description {
+    grid-column: 1 !important;
+  }
+
+  .aw-form-inner > .aw-description textarea {
+    min-height: 80px !important;
+    height: 80px !important;
+  }
+
+  /* 금액: 2열 */
+  .aw-form-inner > .aw-amount {
+    grid-column: 2 !important;
+  }
+
+  /* 등록버튼: 2열에 금액 아래 */
+  .aw-form-inner > .aw-submit {
+    grid-column: 2 !important;
+    align-self: end !important;
+  }
+
   /* 추가내역 목록: 하단 왼쪽 */
   .additional-work-list {
     grid-column: 1 !important;
