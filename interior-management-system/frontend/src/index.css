@@ -1592,10 +1592,11 @@ div.rbc-popup {
     gap: 1rem !important;
   }
 
-  /* 스펙 라이브러리: 전체 너비, 상단 */
+  /* 스펙 라이브러리: 전체 너비, 상단 - 2행만 보이도록 높이 제한 */
   .specbook-library {
     width: 100% !important;
-    flex: 1 !important;
+    flex: 0 0 auto !important;
+    max-height: 340px !important;
     padding-right: 0 !important;
   }
 
@@ -1637,9 +1638,22 @@ div.rbc-popup {
     display: block !important;
   }
 
-  /* 프로젝트 선택 드롭다운 너비 고정 */
+  /* 프로젝트 선택 드롭다운 너비: 아이템 1개 너비 (4열 기준) */
   .specbook-drop-project-select select {
-    width: 200px !important;
+    width: calc((100% - 3rem) / 4) !important;
+  }
+
+  /* 상단 버튼 영역: 왼쪽 정렬, 버튼/드롭다운 너비 아이템 1개와 동일 */
+  .specbook-main > .mb-4 .grid {
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 1rem !important;
+  }
+
+  .specbook-main > .mb-4 .grid > button,
+  .specbook-main > .mb-4 .grid > select {
+    width: calc((100% - 3rem) / 4) !important;
+    flex: none !important;
   }
 
   /* 세로모드에서 상단 버튼 영역의 프로젝트 선택 숨김 */
