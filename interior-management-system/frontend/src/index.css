@@ -1519,6 +1519,13 @@ div.rbc-popup {
 
   .additional-work-list > .space-y-4 {
     max-height: calc(100vh - 380px) !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .additional-work-list > .space-y-4 > * {
+    margin: 0 !important;
   }
 
   /* 이미지 영역: 하단 오른쪽 */
