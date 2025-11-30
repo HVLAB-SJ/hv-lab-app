@@ -1631,6 +1631,11 @@ div.rbc-popup {
   .specbook-drop-project-select {
     display: block !important;
   }
+
+  /* 세로모드에서 상단 버튼 영역의 프로젝트 선택 숨김 */
+  .specbook-header-project-select {
+    display: none !important;
+  }
 }
 
 /* 기본: portrait 텍스트 숨김 (가로모드) */

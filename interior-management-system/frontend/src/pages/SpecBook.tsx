@@ -1254,7 +1254,7 @@ const SpecBook = () => {
                     setSelectedProject(null);
                   }
                 }}
-                className={`col-span-1 lg:col-span-1 ${isAnTeamUser ? '' : 'lg:col-start-4'} h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2`}
+                className={`specbook-header-project-select col-span-1 lg:col-span-1 ${isAnTeamUser ? '' : 'lg:col-start-4'} h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2`}
               >
                 {!isAnTeamUser && <option value="">프로젝트 선택</option>}
                 {projects.map(project => (
