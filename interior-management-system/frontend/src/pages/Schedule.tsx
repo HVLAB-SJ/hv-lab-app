@@ -287,7 +287,7 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
       >
         {/* 첫번째 줄: 프로젝트명 + 담당자 */}
         <div className="flex items-center justify-between w-full" style={{ fontSize: '10px', opacity: 0.8, marginBottom: '1px', lineHeight: '1.2' }}>
-          {!event.isASVisit && event.projectName && (
+          {!event.isASVisit && event.projectName ? (
             <span style={{
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -297,9 +297,11 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
             }}>
               [{shortenProjectName(event.projectName)}]
             </span>
+          ) : (
+            <span></span>
           )}
           {attendees.length > 0 && (
-            <span style={{ flexShrink: 0, fontSize: '10px' }}>
+            <span style={{ flexShrink: 0, fontSize: '10px', marginLeft: 'auto' }}>
               {attendees.map((attendee, index) => {
                 const isBold = attendee === 'HV LAB' ||
                   (attendee === '현장팀' && isUserInFieldTeam) ||
