@@ -5,11 +5,18 @@ const { authenticateToken, isManager } = require('../middleware/auth');
 const { sanitizeDatesArray } = require('../utils/dateUtils');
 const emailService = require('../../utils/emailService');
 
-// 모든 견적문의 조회 (로그인한 사용자 누구나 가능)
+// 모든 견적문의 조회 (로그인한 사용자 누구나 가능, 사용자별 읽음 상태)
 router.get('/', authenticateToken, (req, res) => {
+  const userId = req.user.id;
+
+  // 사용자별 읽음 상태를 LEFT JOIN으로 조회
   db.all(
-    `SELECT * FROM quote_inquiries ORDER BY created_at DESC`,
-    [],
+    `SELECT q.*,
+            CASE WHEN r.user_id IS NOT NULL THEN 1 ELSE 0 END as user_is_read
+     FROM quote_inquiries q
+     LEFT JOIN quote_inquiry_reads r ON q.id = r.quote_inquiry_id AND r.user_id = ?
+     ORDER BY q.created_at DESC`,
+    [userId],
     (err, rows) => {
       if (err) {
         console.error('Error fetching quote inquiries:', err);
@@ -39,7 +46,7 @@ router.get('/', authenticateToken, (req, res) => {
           extensionWork: row.extension_work,
           preferredDate: row.preferred_date,
           areaSize: row.area_size,
-          isRead: row.is_read === 1,
+          isRead: row.user_is_read === 1,  // 사용자별 읽음 상태
           isContacted: row.is_contacted === 1,
           createdAt: row.created_at,
           attachments: attachments.map(att => ({
@@ -57,11 +64,17 @@ router.get('/', authenticateToken, (req, res) => {
   );
 });
 
-// 미읽음 견적문의 개수 조회
+// 미읽음 견적문의 개수 조회 (사용자별)
 router.get('/unread-count', authenticateToken, (req, res) => {
+  const userId = req.user.id;
+
   db.get(
-    `SELECT COUNT(*) as count FROM quote_inquiries WHERE is_read = 0`,
-    [],
+    `SELECT COUNT(*) as count FROM quote_inquiries q
+     WHERE NOT EXISTS (
+       SELECT 1 FROM quote_inquiry_reads r
+       WHERE r.quote_inquiry_id = q.id AND r.user_id = ?
+     )`,
+    [userId],
     (err, row) => {
       if (err) {
         console.error('Error fetching unread count:', err);
@@ -87,24 +100,38 @@ router.get('/uncontacted-count', authenticateToken, (req, res) => {
   );
 });
 
-// 견적문의 읽음 처리
+// 견적문의 읽음 처리 (사용자별)
 router.put('/:id/read', authenticateToken, (req, res) => {
   const { id } = req.params;
+  const userId = req.user.id;
 
-  db.run(
-    `UPDATE quote_inquiries SET is_read = 1 WHERE id = ?`,
+  // 먼저 견적문의가 존재하는지 확인
+  db.get(
+    `SELECT id FROM quote_inquiries WHERE id = ?`,
     [id],
-    function(err) {
+    (err, row) => {
       if (err) {
-        console.error('Error marking as read:', err);
+        console.error('Error checking quote inquiry:', err);
         return res.status(500).json({ error: '읽음 처리 실패' });
       }
 
-      if (this.changes === 0) {
+      if (!row) {
         return res.status(404).json({ error: '견적문의를 찾을 수 없습니다.' });
       }
 
-      res.json({ message: '읽음 처리되었습니다.' });
+      // 사용자별 읽음 상태 삽입 (이미 있으면 무시)
+      db.run(
+        `INSERT OR IGNORE INTO quote_inquiry_reads (quote_inquiry_id, user_id) VALUES (?, ?)`,
+        [id, userId],
+        function(err) {
+          if (err) {
+            console.error('Error marking as read:', err);
+            return res.status(500).json({ error: '읽음 처리 실패' });
+          }
+
+          res.json({ message: '읽음 처리되었습니다.' });
+        }
+      );
     }
   );
 });

@@ -627,6 +627,25 @@ const initDatabase = () => {
     }
   });
 
+  // 견적문의 사용자별 읽음 상태 테이블
+  db.run(`
+    CREATE TABLE IF NOT EXISTS quote_inquiry_reads (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      quote_inquiry_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      read_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (quote_inquiry_id) REFERENCES quote_inquiries(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(quote_inquiry_id, user_id)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('❌ quote_inquiry_reads 테이블 생성 실패:', err);
+    } else {
+      console.log('✓ quote_inquiry_reads 테이블 생성 완료');
+    }
+  });
+
   // Add content_hash column if it doesn't exist (migration)
   db.run(`ALTER TABLE quote_inquiries ADD COLUMN content_hash TEXT`, (err) => {
     if (err && !err.message.includes('duplicate column name')) {
