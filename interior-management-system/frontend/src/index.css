@@ -1812,15 +1812,38 @@ div.rbc-popup {
     display: none !important;
   }
 
-  /* 빠른입력 영역 */
-  .payment-form > .space-y-4 > div:nth-child(2) {
-    display: block !important;
+  /* 폼 내부 간격 조정 */
+  .payment-form > .space-y-4 {
+    gap: 0.5rem !important;
   }
 
+  .payment-form > .space-y-4 > * {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* 라벨 크기 축소 */
+  .payment-form label {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.125rem !important;
+  }
+
+  /* 입력 필드 높이 축소 */
+  .payment-form input,
+  .payment-form select,
+  .payment-form button {
+    height: 34px !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* 빠른입력 textarea */
   .payment-form textarea {
-    height: 80px !important;
-    min-height: 80px !important;
+    height: 60px !important;
+    min-height: 60px !important;
     resize: none !important;
+    font-size: 0.875rem !important;
   }
 
   /* 빠른입력 이미지 미리보기 숨김 */
@@ -1828,69 +1851,69 @@ div.rbc-popup {
     display: none !important;
   }
 
-  /* 빠른입력 버튼들 - 가로 배치 */
+  /* 빠른입력 버튼들 */
   .payment-form .grid.grid-cols-2.gap-2.mt-2 {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 0.5rem !important;
-    margin-top: 0.5rem !important;
+    margin-top: 0.25rem !important;
+    gap: 0.25rem !important;
   }
 
   .payment-form .grid.grid-cols-2.gap-2.mt-2 > label > div,
   .payment-form .grid.grid-cols-2.gap-2.mt-2 > label > .flex {
-    height: 36px !important;
+    height: 32px !important;
     font-size: 0.75rem !important;
   }
 
   .payment-form .grid.grid-cols-2.gap-2.mt-2 > button {
-    height: 36px !important;
+    height: 32px !important;
     font-size: 0.75rem !important;
   }
 
-  /* 날짜/공정 - 숨김 */
+  /* 날짜/공정 그리드 */
   .payment-form > .space-y-4 > div:nth-child(3) {
-    display: none !important;
+    gap: 0.5rem !important;
   }
 
-  /* 항목명 - 표시 */
-  .payment-form > .space-y-4 > div:nth-child(4) {
-    display: block !important;
-  }
-
-  .payment-form > .space-y-4 > div:nth-child(4) label {
-    display: none !important;
-  }
-
-  .payment-form > .space-y-4 > div:nth-child(4) input {
-    height: 36px !important;
-  }
-
-  /* 금액 입력 - 간소화 */
+  /* 금액 입력 영역 */
   .payment-form > .space-y-4 > div:nth-child(5) {
-    display: block !important;
+    gap: 0.25rem !important;
   }
 
-  .payment-form > .space-y-4 > div:nth-child(5) > div:first-child label {
-    display: none !important;
+  .payment-form > .space-y-4 > div:nth-child(5) .space-y-2 {
+    gap: 0.25rem !important;
   }
 
-  .payment-form > .space-y-4 > div:nth-child(5) > div:first-child input {
-    height: 36px !important;
-  }
-
-  /* 부가세 체크박스 - 간소화 */
+  /* 부가세 체크박스 */
   .payment-form > .space-y-4 > div:nth-child(5) .flex.items-center.gap-4 {
-    margin-top: 0.25rem !important;
+    gap: 0.5rem !important;
   }
 
   .payment-form > .space-y-4 > div:nth-child(5) .flex.items-center.gap-4 label {
-    display: inline !important;
     font-size: 0.7rem !important;
+    margin-left: 0.25rem !important;
   }
 
-  /* 추천 협력업체 - 숨김 */
+  .payment-form > .space-y-4 > div:nth-child(5) .flex.items-center.gap-4 input[type="checkbox"] {
+    height: 14px !important;
+    width: 14px !important;
+  }
+
+  /* 추천 협력업체 */
   .payment-form .bg-amber-50 {
-    display: none !important;
+    padding: 0.5rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  .payment-form .bg-amber-50 label {
+    margin-bottom: 0.25rem !important;
+  }
+
+  .payment-form .bg-amber-50 .space-y-1 {
+    max-height: 60px !important;
+  }
+
+  .payment-form .bg-amber-50 button {
+    padding: 0.25rem 0.5rem !important;
+    height: auto !important;
   }
 
   /* 계좌 정보 - 2열 그리드 */
@@ -1898,19 +1921,11 @@ div.rbc-popup {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 0.5rem !important;
+    padding-top: 0.5rem !important;
   }
 
-  .payment-form .payment-account-section > div label {
-    display: none !important;
-  }
-
-  .payment-form .payment-account-section > div input {
-    height: 36px !important;
-    font-size: 0.875rem !important;
-  }
-
-  .payment-form .payment-account-section > div input::placeholder {
-    font-size: 0.75rem !important;
+  .payment-form .payment-account-section > div {
+    margin-bottom: 0 !important;
   }
 
   /* 결제요청 버튼 영역 */
@@ -1918,6 +1933,7 @@ div.rbc-popup {
     display: flex !important;
     flex-direction: row !important;
     gap: 0.5rem !important;
+    margin-top: 0.5rem !important;
   }
 
   .payment-form > .space-y-4 > div:last-child > div:first-child {
@@ -1926,8 +1942,9 @@ div.rbc-popup {
 
   .payment-form > .space-y-4 > div:last-child button {
     flex: 1 !important;
-    height: 40px !important;
-    padding: 0 0.75rem !important;
+    height: 38px !important;
+    padding: 0 0.5rem !important;
+    font-size: 0.875rem !important;
   }
 
   /* 결제요청 목록: 중단 */
