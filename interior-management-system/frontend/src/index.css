@@ -2037,8 +2037,53 @@ div.rbc-popup {
   }
 }
 
-/* 세로방향 데스크탑 모니터 (portrait orientation) - 일정 2~3줄 레이아웃 */
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 일정표 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
+  /* 일정 컨테이너: flex 레이아웃 */
+  .schedule-container {
+    display: flex !important;
+    flex-direction: column !important;
+    height: calc(100vh - 120px) !important;
+    gap: 0.5rem !important;
+  }
+
+  /* 메인 영역: 캘린더 + 일정목록 */
+  .schedule-main {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    gap: 0.5rem !important;
+  }
+
+  /* 캘린더: 상단 60% */
+  .schedule-calendar {
+    flex: 0 0 60% !important;
+    overflow: hidden !important;
+  }
+
+  /* 캘린더 내부 높이 조정 */
+  .schedule-calendar .rbc-calendar {
+    height: 100% !important;
+  }
+
+  .schedule-calendar .rbc-month-view {
+    height: 100% !important;
+  }
+
+  /* 일정 목록: 하단 40% - 세로모드에서 표시 */
+  .schedule-events-list {
+    display: block !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
+    margin-top: 0 !important;
+  }
+
+  .schedule-events-list .max-h-\[35vh\] {
+    max-height: none !important;
+    height: 100% !important;
+  }
+
   /* 이벤트 행 내부 - 여백 제거 */
   .rbc-row-content .rbc-row,
   .rbc-row-content-scrollable .rbc-row {
@@ -2076,7 +2121,18 @@ div.rbc-popup {
 
   /* 월 행 최소 높이 */
   .rbc-month-view .rbc-month-row {
-    min-height: 120px !important;
+    min-height: 90px !important;
+  }
+
+  /* 날짜 헤더 컴팩트하게 */
+  .rbc-header {
+    padding: 4px 2px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* 날짜 셀 컴팩트하게 */
+  .rbc-date-cell {
+    padding: 2px 4px !important;
   }
 }
 

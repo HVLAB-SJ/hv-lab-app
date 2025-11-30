@@ -1559,7 +1559,7 @@ const Schedule = () => {
   }, [filteredEvents, date, isMobileView, selectedDate]);
 
   return (
-      <div className="space-y-3 md:space-y-2">
+      <div className="schedule-container space-y-3 md:space-y-2">
         {/* 인라인 입력 폼 */}
         {inlineEdit.date && (
           <div className="bg-white border border-gray-200 rounded-lg p-3 md:p-4 shadow-sm">
@@ -1615,8 +1615,8 @@ const Schedule = () => {
         )}
 
         {/* 캘린더 컨테이너 */}
-        <div className="flex flex-col md:block">
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm calendar-container" style={{ paddingBottom: 0 }}>
+        <div className="schedule-main flex flex-col md:block">
+          <div className="schedule-calendar bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm calendar-container" style={{ paddingBottom: 0 }}>
             <Calendar
               key={`calendar-${selectedDate?.getTime() || 'no-selection'}`}
               localizer={localizer}
@@ -1657,7 +1657,7 @@ const Schedule = () => {
 
           {/* 모바일/태블릿 하단 선택된 주 일정 표시 */}
           {selectedDate && (
-            <div className="desktop:hidden mt-3 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+            <div className="schedule-events-list desktop:hidden mt-3 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
               {/* 날짜 헤더 */}
               <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center gap-2">
