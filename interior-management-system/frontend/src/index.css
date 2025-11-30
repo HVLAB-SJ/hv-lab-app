@@ -2314,8 +2314,8 @@ div.rbc-popup {
   }
 
   .workrequest-form-inner > .wr-description textarea {
-    min-height: 50px !important;
-    height: 50px !important;
+    min-height: 120px !important;
+    height: 120px !important;
   }
 
   /* 날짜: 1열 2행 */
