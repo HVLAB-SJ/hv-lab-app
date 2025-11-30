@@ -1618,6 +1618,11 @@ div.rbc-popup {
     padding-left: 0 !important;
   }
 
+  /* 프로젝트 아이템 그리드: 4열 */
+  .specbook-project .grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
   /* 세로모드에서 텍스트 전환 */
   .specbook-drop-text-landscape {
     display: none !important;
@@ -1630,6 +1635,11 @@ div.rbc-popup {
   /* 세로모드에서 드롭 영역 위 프로젝트 선택 표시 */
   .specbook-drop-project-select {
     display: block !important;
+  }
+
+  /* 프로젝트 선택 드롭다운 너비 고정 */
+  .specbook-drop-project-select select {
+    width: 200px !important;
   }
 
   /* 세로모드에서 상단 버튼 영역의 프로젝트 선택 숨김 */
