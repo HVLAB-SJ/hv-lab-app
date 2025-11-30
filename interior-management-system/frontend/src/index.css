@@ -1780,7 +1780,7 @@ div.rbc-popup {
   .payment-form > .space-y-4 {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    grid-template-rows: 38px 120px !important;
+    grid-template-rows: 38px 180px !important;
     gap: 0.5rem !important;
     align-items: stretch !important;
   }
