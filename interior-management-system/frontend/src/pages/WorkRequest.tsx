@@ -994,7 +994,7 @@ const WorkRequest = () => {
                         {request.status === 'pending' && (
                           <button
                             onClick={() => handleStatusChange(request.id, 'in-progress')}
-                            className="px-3 py-1 text-xs font-semibold text-white rounded transition-colors bg-gray-600 hover:bg-gray-700"
+                            className="px-3 py-1 text-xs font-semibold text-white rounded-lg transition-colors bg-gray-900 hover:bg-gray-800"
                           >
                             수락
                           </button>
@@ -1312,7 +1312,7 @@ const WorkRequest = () => {
               {request.status === 'pending' && (
                 <button
                   onClick={() => handleStatusChange(request.id, 'in-progress')}
-                  className="flex-1 px-3 py-2 text-xs font-semibold text-white rounded-lg transition-colors bg-gray-600 hover:bg-gray-700"
+                  className="flex-1 px-3 py-2 text-xs font-semibold text-white rounded-lg transition-colors bg-gray-900 hover:bg-gray-800"
                 >
                   수락
                 </button>

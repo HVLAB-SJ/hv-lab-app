@@ -1302,7 +1302,7 @@ const EstimatePreview: React.FC = () => {
               <button
                 onClick={calculateEstimate}
                 disabled={loading}
-                className="md:col-span-2 w-full py-3 bg-gray-700 text-white rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base transition-colors"
+                className="md:col-span-2 w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base transition-colors"
               >
                 {loading ? '계산 중...' : '견적 계산'}
               </button>
