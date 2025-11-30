@@ -2234,10 +2234,10 @@ div.rbc-popup {
     padding: 1rem !important;
   }
 
-  /* 폼 내부: 3열 그리드 (컴팩트) */
+  /* 폼 내부: 4열 그리드 (컴팩트) */
   .workrequest-form-inner {
     display: grid !important;
-    grid-template-columns: 1fr 1fr 1fr !important;
+    grid-template-columns: 1fr 1fr 1fr 1fr !important;
     gap: 0.5rem 0.75rem !important;
   }
 
@@ -2257,15 +2257,15 @@ div.rbc-popup {
     grid-row: 1 !important;
   }
 
-  /* 요청내용: 3열 1-2행 */
+  /* 요청내용: 3-4열 1-2행 (2열 차지) */
   .workrequest-form-inner > .wr-description {
-    grid-column: 3 !important;
+    grid-column: 3 / 5 !important;
     grid-row: 1 / 3 !important;
   }
 
   .workrequest-form-inner > .wr-description textarea {
-    min-height: 60px !important;
-    height: 60px !important;
+    min-height: 100% !important;
+    height: 100% !important;
   }
 
   /* 날짜: 1열 2행 */
@@ -2286,9 +2286,9 @@ div.rbc-popup {
     gap: 0.25rem !important;
   }
 
-  /* 버튼: 3열 3행 (우측 하단) */
+  /* 버튼: 4열 3행 (우측 하단) */
   .workrequest-form-inner > .wr-actions {
-    grid-column: 3 !important;
+    grid-column: 4 !important;
     grid-row: 3 !important;
     border-top: none !important;
     padding-top: 0.5rem !important;
