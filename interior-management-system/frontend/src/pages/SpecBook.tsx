@@ -1461,7 +1461,7 @@ const SpecBook = () => {
                       setSelectedProject(null);
                     }
                   }}
-                  className={`col-span-1 lg:col-span-1 ${isAnTeamUser ? '' : 'lg:col-start-4'} h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2`}
+                  className={`specbook-header-project-select col-span-1 lg:col-span-1 ${isAnTeamUser ? '' : 'lg:col-start-4'} h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-xs md:text-sm px-1 md:px-2`}
                 >
                   {!isAnTeamUser && <option value="">프로젝트 선택</option>}
                   {projects.map(project => (
@@ -1575,6 +1575,29 @@ const SpecBook = () => {
             )}
             {/* 우측: 프로젝트 아이템 (드롭 타겟) - 안팀은 전체 폭 사용 */}
             <div className={`specbook-project w-full ${isAnTeamUser ? '' : 'md:w-1/2'} flex flex-col overflow-hidden ${isAnTeamUser ? '' : 'md:pl-3'} pb-4`}>
+              {/* 프로젝트 선택 드롭다운 - 세로모드에서 프로젝트 영역 위에 표시 */}
+              <div className="specbook-drop-project-select hidden mb-2">
+                <select
+                  value={selectedProject || ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setView('project');
+                      setSelectedProject(Number(e.target.value));
+                    } else if (!isAnTeamUser) {
+                      setView('library');
+                      setSelectedProject(null);
+                    }
+                  }}
+                  className="w-full h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-sm px-3"
+                >
+                  {!isAnTeamUser && <option value="">프로젝트 선택</option>}
+                  {projects.map(project => (
+                    <option key={project.id} value={project.id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
                 <div
                   className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4"
                 onDragOver={(e) => {
