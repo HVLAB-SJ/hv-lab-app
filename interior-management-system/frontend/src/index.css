@@ -1810,7 +1810,7 @@ div.rbc-popup {
   /* 폼 2열 그리드 레이아웃 */
   .payment-form > .space-y-4 {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 2fr 3fr !important;
     grid-template-rows: auto auto auto auto auto !important;
     gap: 0.25rem 0.5rem !important;
   }
