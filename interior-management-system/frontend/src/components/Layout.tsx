@@ -44,6 +44,16 @@ const Layout = () => {
     return () => window.removeEventListener('mobileFormStateChange', handleFormStateChange as EventListener);
   }, []);
 
+  // 견적문의 읽음 처리 시 배지 즉시 업데이트
+  useEffect(() => {
+    const handleQuoteInquiryRead = () => {
+      setUnreadQuoteInquiryCount(prev => Math.max(0, prev - 1));
+    };
+
+    window.addEventListener('quoteInquiryRead', handleQuoteInquiryRead);
+    return () => window.removeEventListener('quoteInquiryRead', handleQuoteInquiryRead);
+  }, []);
+
   // Load all badge counts in a single effect (optimized)
   useEffect(() => {
     if (!user) return;

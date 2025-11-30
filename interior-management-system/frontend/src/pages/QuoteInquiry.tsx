@@ -45,6 +45,8 @@ const QuoteInquiry = () => {
       setInquiries(prev =>
         prev.map(inq => inq.id === id ? { ...inq, isRead: true } : inq)
       );
+      // 배지 업데이트를 위한 이벤트 발생
+      window.dispatchEvent(new CustomEvent('quoteInquiryRead'));
     } catch (error) {
       console.error('Failed to mark as read:', error);
     }
