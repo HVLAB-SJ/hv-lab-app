@@ -1034,7 +1034,7 @@ const WorkRequest = () => {
       </div>
 
       {/* 모바일 뷰 */}
-      <div className="md:hidden space-y-3">
+      <div className="workrequest-mobile md:hidden space-y-3">
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="flex space-x-4 overflow-x-auto">
@@ -1245,13 +1245,14 @@ const WorkRequest = () => {
         )}
 
         {/* 업무요청 목록 */}
-        {filteredRequests.map((request) => (
-          <div
-            key={request.id}
-            className={`card p-3 hover:border-gray-400 transition-colors ${
-              request.priority === 'high' ? 'border-2 border-rose-200 bg-rose-50/30' : ''
-            }`}
-          >
+        <div className="workrequest-cards space-y-3">
+          {filteredRequests.map((request) => (
+            <div
+              key={request.id}
+              className={`card p-3 hover:border-gray-400 transition-colors ${
+                request.priority === 'high' ? 'border-2 border-rose-200 bg-rose-50/30' : ''
+              }`}
+            >
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
@@ -1342,8 +1343,9 @@ const WorkRequest = () => {
                 </div>
               )}
             </div>
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

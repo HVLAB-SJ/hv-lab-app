@@ -2104,10 +2104,10 @@ div.rbc-popup {
     padding: 1rem !important;
   }
 
-  /* 폼 내부: 4열 그리드 (좌4:우6 비율) */
+  /* 폼 내부: 4열 그리드 (좌6:우4 비율) */
   .workrequest-form-inner {
     display: grid !important;
-    grid-template-columns: 2fr 2fr 3fr 3fr !important;
+    grid-template-columns: 3fr 3fr 2fr 2fr !important;
     gap: 0.5rem 0.75rem !important;
   }
 
@@ -2167,15 +2167,41 @@ div.rbc-popup {
     align-self: end !important;
   }
 
-  /* 목록: 하단, 전체 너비 */
+  /* 테이블 숨기기 */
   .workrequest-list {
-    width: 100% !important;
-    order: 2 !important;
+    display: none !important;
   }
 
-  /* 테이블 가로 스크롤 */
-  .workrequest-list > .bg-white.border {
-    overflow-x: auto !important;
+  /* 모바일 카드 뷰 표시 및 2열 그리드 */
+  .workrequest-container > .workrequest-mobile {
+    display: block !important;
+  }
+
+  /* 모바일 폼 숨기기 (데스크탑 폼 사용) */
+  .workrequest-mobile > .bg-white.border {
+    display: none !important;
+  }
+
+  /* 탭 영역 */
+  .workrequest-mobile > .border-b {
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* 카드 그리드: 2열 */
+  .workrequest-mobile .workrequest-cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  /* space-y-3 제거 (그리드 사용 시) */
+  .workrequest-mobile .workrequest-cards.space-y-3 > * + * {
+    margin-top: 0 !important;
+  }
+
+  /* 카드 스타일 */
+  .workrequest-mobile .workrequest-cards > .card {
+    padding: 0.75rem !important;
   }
 
   /* 라벨 폰트 크기 축소 */
