@@ -1767,6 +1767,8 @@ div.rbc-popup {
 
   .exec-submit button {
     width: 100% !important;
+    height: 40px !important;
+    padding: 0 !important;
   }
 
   /* 라벨 스타일 */
@@ -2125,6 +2127,11 @@ div.rbc-popup {
     padding: 0 !important;
     position: static !important;
     align-self: end !important;
+  }
+
+  .payment-form .payment-account-section > div.my-6 button {
+    height: 40px !important;
+    padding: 0 !important;
   }
 
   /* 결제요청 목록: 중단 */
