@@ -1907,23 +1907,44 @@ const Payments = () => {
           mobileView !== 'form' ? 'hidden md:block' : ''
         }`}>
           <div className="space-y-4">
-            {/* 프로젝트 - 데스크톱에서만 표시 */}
-            <div className="hidden lg:block">
-              <select
-                value={formData.project}
-                onChange={(e) => {
-                  setFormData({ ...formData, project: e.target.value });
-                  if (e.target.value) {
-                    localStorage.setItem('lastSelectedProject', e.target.value);
-                  }
-                }}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
-              >
-                {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
-                {projects.filter(p => p.status !== 'completed').map(project => (
-                  <option key={project.id} value={project.name}>{project.name}</option>
-                ))}
-              </select>
+            {/* 프로젝트 및 은행 선택 - 데스크톱에서만 표시 */}
+            <div className="hidden lg:block payment-project-row">
+              <div className="flex gap-2">
+                <select
+                  value={formData.project}
+                  onChange={(e) => {
+                    setFormData({ ...formData, project: e.target.value });
+                    if (e.target.value) {
+                      localStorage.setItem('lastSelectedProject', e.target.value);
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
+                >
+                  {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
+                  {projects.filter(p => p.status !== 'completed').map(project => (
+                    <option key={project.id} value={project.name}>{project.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={formData.bankName}
+                  onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+                  className="payment-bank-select hidden px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+                >
+                  <option value="">은행</option>
+                  <option value="KB국민은행">KB국민</option>
+                  <option value="신한은행">신한</option>
+                  <option value="우리은행">우리</option>
+                  <option value="하나은행">하나</option>
+                  <option value="NH농협은행">농협</option>
+                  <option value="IBK기업은행">기업</option>
+                  <option value="카카오뱅크">카카오</option>
+                  <option value="케이뱅크">케이</option>
+                  <option value="토스뱅크">토스</option>
+                  <option value="새마을금고">새마을</option>
+                  <option value="신협">신협</option>
+                  <option value="우체국">우체국</option>
+                </select>
+              </div>
             </div>
 
             {/* 빠른 입력 */}
@@ -2213,7 +2234,7 @@ const Payments = () => {
             )}
 
             {/* 계좌 정보 */}
-            <div className="border-t pt-3 space-y-2">
+            <div className="payment-account-section border-t pt-3 space-y-2">
               {/* 예금주 */}
               <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">예금주</label>
@@ -2268,7 +2289,7 @@ const Payments = () => {
               </div>
 
               {/* 은행 */}
-              <div>
+              <div className="payment-bank-field">
                 <label className="block text-sm font-medium text-gray-700 mb-1">은행</label>
                 <select
                   value={formData.bankName}
