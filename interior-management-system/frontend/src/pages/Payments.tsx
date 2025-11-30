@@ -138,6 +138,15 @@ const Payments = () => {
   const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
   const [isItemNameFocused, setIsItemNameFocused] = useState(false);
 
+  // 공정 기반 이전 송금내역 추천
+  const [processPaymentSuggestions, setProcessPaymentSuggestions] = useState<Array<{
+    accountHolder: string;
+    bankName: string;
+    accountNumber: string;
+    itemName: string;
+    amount: number;
+  }>>([]);
+
   // 결제요청 레코드의 이미지를 저장하는 별도의 상태 (IndexedDB 사용으로 용량 제한 없음)
   const [paymentRecordImages, setPaymentRecordImages] = useState<Record<string, string[]>>({});
   const [imagesLoaded, setImagesLoaded] = useState(false);
@@ -357,6 +366,69 @@ const Payments = () => {
       setRecommendedContractors([]);
     }
   }, [formData.process, contractors, payments]);
+
+  // 공정 변경 시 해당 공정의 이전 송금내역 필터링
+  useEffect(() => {
+    if (formData.process) {
+      // 공정 매칭 함수
+      const isProcessMatch = (formProcess: string, paymentProcess: string): boolean => {
+        if (!paymentProcess) return false;
+        const formLower = formProcess.toLowerCase();
+        const paymentLower = paymentProcess.toLowerCase();
+
+        if (formLower.includes(paymentLower) || paymentLower.includes(formLower)) {
+          return true;
+        }
+
+        const formParts = formLower.split('/').map(p => p.trim());
+        const paymentBase = paymentLower.replace(/공사$/, '').trim();
+
+        for (const part of formParts) {
+          if (part === paymentBase || paymentBase.includes(part) || part.includes(paymentBase)) {
+            return true;
+          }
+        }
+
+        return false;
+      };
+
+      // 송금완료된 결제 내역에서 해당 공정 찾기
+      const completedPayments = payments.filter(p =>
+        p.status === 'completed' &&
+        p.process &&
+        isProcessMatch(formData.process, p.process) &&
+        p.bankInfo?.accountHolder &&
+        p.bankInfo?.bankName &&
+        p.bankInfo?.accountNumber
+      );
+
+      // 중복 제거 (같은 예금주+은행+계좌)
+      const uniqueAccounts = new Map<string, {
+        accountHolder: string;
+        bankName: string;
+        accountNumber: string;
+        itemName: string;
+        amount: number;
+      }>();
+
+      completedPayments.forEach(p => {
+        const key = `${p.bankInfo!.accountHolder}_${p.bankInfo!.bankName}_${p.bankInfo!.accountNumber}`;
+        if (!uniqueAccounts.has(key)) {
+          uniqueAccounts.set(key, {
+            accountHolder: p.bankInfo!.accountHolder,
+            bankName: p.bankInfo!.bankName,
+            accountNumber: p.bankInfo!.accountNumber,
+            itemName: p.itemName || '',
+            amount: p.amount || 0
+          });
+        }
+      });
+
+      setProcessPaymentSuggestions(Array.from(uniqueAccounts.values()));
+    } else {
+      setProcessPaymentSuggestions([]);
+    }
+  }, [formData.process, payments]);
 
   // 예금주 이름 입력 시 송금완료 내역과 협력업체에서 계좌정보 검색
   useEffect(() => {
@@ -2206,7 +2278,7 @@ const Payments = () => {
               </div>
             </div>
 
-            {/* 추천 협력업체 */}
+            {/* 추천 협력업체 (계좌번호 등록된 협력업체) */}
             {recommendedContractors.length > 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
                 <label className="block text-sm font-medium text-amber-900 mb-2">추천 협력업체</label>
@@ -2248,6 +2320,47 @@ const Payments = () => {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* 이전 송금내역 (공정 기반) */}
+            {processPaymentSuggestions.length > 0 && !selectedContractorId && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                <label className="block text-sm font-medium text-blue-900 mb-2">이전 송금 내역</label>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {processPaymentSuggestions.map((account, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          accountHolder: account.accountHolder,
+                          bankName: account.bankName,
+                          accountNumber: account.accountNumber
+                        }));
+                        setProcessPaymentSuggestions([]);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-lg border border-blue-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium text-sm text-gray-900">
+                            {account.accountHolder}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {account.bankName} {account.accountNumber}
+                          </div>
+                        </div>
+                        {account.amount > 0 && (
+                          <div className="text-xs text-gray-400">
+                            {account.amount.toLocaleString()}원
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
