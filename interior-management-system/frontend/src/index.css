@@ -1765,10 +1765,11 @@ div.rbc-popup {
     display: flex !important;
     flex-direction: column !important;
     gap: 0.75rem !important;
-    height: calc(100vh - 220px) !important;
+    height: auto !important;
+    min-height: calc(100vh - 220px) !important;
   }
 
-  /* 입력 폼: 상단 - 고정 높이 */
+  /* 입력 폼: 상단 - 자동 높이 */
   .payment-form {
     width: 100% !important;
     order: 1 !important;
@@ -1777,12 +1778,6 @@ div.rbc-popup {
     flex-shrink: 0 !important;
     height: auto !important;
     max-height: none !important;
-  }
-
-  .payment-form > .space-y-4 {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.5rem !important;
   }
 
   /* 프로젝트 및 은행 선택 */
@@ -1816,8 +1811,8 @@ div.rbc-popup {
   .payment-form > .space-y-4 {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    grid-template-rows: auto auto minmax(40px, auto) minmax(40px, auto) auto !important;
-    gap: 0.125rem 0.5rem !important;
+    grid-template-rows: auto auto auto auto auto !important;
+    gap: 0.25rem 0.5rem !important;
   }
 
   /* 공통 스타일 */
