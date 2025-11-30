@@ -1847,10 +1847,10 @@ div.rbc-popup {
     white-space: nowrap !important;
   }
 
-  /* 추천 협력업체 + 이전 송금내역: 오른쪽 3/5 영역 (결제버튼과 동일 너비) */
-  .payment-form .payment-suggestions-row {
-    grid-column: 3 / 5 !important;
-    grid-row: 7 !important;
+  /* 추천 협력업체 + 이전 송금내역: 예금주/은행 아래, 전체 너비 */
+  .payment-form .payment-account-section .payment-suggestions-row {
+    grid-column: 1 / 3 !important;
+    grid-row: 2 !important;
   }
 
   /* 계좌정보: 오른쪽 2열 */
