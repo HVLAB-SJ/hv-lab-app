@@ -2129,7 +2129,7 @@ const Payments = () => {
               />
               {/* 항목명 추천 목록 */}
               {itemNameSuggestions.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-[200] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {itemNameSuggestions.map((itemName, index) => (
                     <button
                       key={index}
@@ -2272,7 +2272,7 @@ const Payments = () => {
 
                 {/* 송금완료 내역에서 찾은 계좌정보 추천 - absolute로 레이아웃 시프트 방지 */}
                 {accountSuggestions.length > 0 && !selectedContractorId && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-blue-50 border border-blue-200 rounded-lg p-3 shadow-lg">
+                  <div className="absolute left-0 right-0 top-full mt-1 z-[200] bg-blue-50 border border-blue-200 rounded-lg p-3 shadow-lg">
                     <label className="block text-sm font-medium text-blue-900 mb-2">이전 송금 내역</label>
                     <div className="space-y-1 max-h-40 overflow-y-auto">
                       {accountSuggestions.map((account, index) => (
