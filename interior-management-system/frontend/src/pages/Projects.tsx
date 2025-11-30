@@ -609,7 +609,7 @@ const Projects = () => {
       </div>
 
       {viewType === 'grid' || window.innerWidth < 768 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 ipad:grid-cols-2 ipad-lg:grid-cols-2 ipad-xl:grid-cols-3 ipad-2xl:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-6">
+        <div className="projects-grid grid grid-cols-1 md:grid-cols-2 ipad:grid-cols-2 ipad-lg:grid-cols-2 ipad-xl:grid-cols-3 ipad-2xl:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-6">
           {filteredProjects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
