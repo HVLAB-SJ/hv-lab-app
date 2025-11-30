@@ -61,10 +61,9 @@ class EmailService {
             return;
           }
 
-          // 제목에 "[HV LAB] 견적상담문의에 새 응답이 접수되었습니다." 포함된 읽지 않은 메일만 검색
-          // 최근 30일 이내의 메일만 검색
+          // 제목에 "[HV LAB] 견적상담문의에 새 응답이 접수되었습니다." 포함된 메일 검색
+          // 최근 30일 이내의 메일 (읽음/읽지않음 무관, 중복은 DB에서 처리)
           const searchCriteria = [
-            'UNSEEN', // 읽지 않은 메일만
             ['SINCE', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)], // 최근 30일
             ['SUBJECT', '[HV LAB] 견적상담문의에 새 응답이 접수되었습니다.']
           ];
@@ -88,7 +87,7 @@ class EmailService {
 
             const fetch = this.imap.fetch(results, {
               bodies: '',
-              markSeen: true  // 읽음 처리하여 다음 체크 시 중복 방지
+              markSeen: false  // 읽음 상태 변경하지 않음 (중복은 DB에서 처리)
             });
 
             const emails = [];
