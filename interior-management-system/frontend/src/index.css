@@ -1359,6 +1359,32 @@ div.rbc-popup {
   }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 협력업체 테이블 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  .contractors-table th {
+    padding: 0.5rem 0.5rem !important;
+    font-size: 0.65rem !important;
+  }
+
+  .contractors-table td {
+    padding: 0.5rem 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .contractors-table td span {
+    font-size: 0.7rem !important;
+  }
+
+  .contractors-table button {
+    padding: 0.25rem !important;
+  }
+
+  .contractors-table button svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 현장일지 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 전체 컨테이너: 2행 레이아웃으로 변경 */
