@@ -2410,6 +2410,12 @@ div.rbc-popup {
   .drawings-sidebar-inner > h3:not(.drawings-sidebar-title) {
     display: none !important;
   }
+
+  /* 빈 상태 메시지: 상단에서 30% 위치 */
+  .drawings-empty {
+    align-items: flex-start !important;
+    padding-top: 20vh !important;
+  }
 }
 
 /* 인쇄 시 현금수령증만 표시 */

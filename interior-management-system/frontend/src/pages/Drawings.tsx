@@ -1252,7 +1252,7 @@ const Drawings = () => {
           </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="drawings-empty flex-1 flex items-center justify-center bg-gray-50">
             <div className="text-center">
               <FileImage className="w-20 h-20 mx-auto mb-4 text-gray-400" />
               <p className="text-lg text-gray-600 mb-2">프로젝트를 선택하여 시작하세요</p>
