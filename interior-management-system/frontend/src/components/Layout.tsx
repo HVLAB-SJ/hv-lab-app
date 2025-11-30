@@ -229,7 +229,7 @@ const Layout = () => {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+      <div className="desktop-sidebar hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col bg-white border-r border-gray-200">
           <div className="flex h-16 items-center px-6 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-900">HV LAB</h2>
@@ -270,8 +270,37 @@ const Layout = () => {
         </div>
       </div>
 
+      {/* Portrait mode top navigation */}
+      <div className="portrait-top-nav hidden">
+        <div className="flex items-center gap-1 px-2 py-2 bg-white border-b border-gray-200 overflow-x-auto">
+          {filteredNavigation.map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.href}
+              className={({ isActive }) =>
+                clsx(
+                  'px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors relative',
+                  isActive
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                )
+              }
+            >
+              <span className="flex items-center gap-1">
+                <span>{item.name}</span>
+                {item.badge && item.badge > 0 && (
+                  <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold leading-none text-white bg-red-600 rounded-full">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
+              </span>
+            </NavLink>
+          ))}
+        </div>
+      </div>
+
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="main-content lg:pl-64">
         {/* Top header */}
         <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
           <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">

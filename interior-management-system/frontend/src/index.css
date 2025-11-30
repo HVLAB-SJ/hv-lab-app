@@ -1324,6 +1324,37 @@ div.rbc-popup {
   }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 메인 레이아웃 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  /* 왼쪽 사이드바 숨기기 */
+  .desktop-sidebar {
+    display: none !important;
+  }
+
+  /* 메인 콘텐츠 왼쪽 패딩 제거 */
+  .main-content {
+    padding-left: 0 !important;
+  }
+
+  /* 상단 탭 네비게이션 표시 */
+  .portrait-top-nav {
+    display: block !important;
+    position: sticky !important;
+    top: 56px !important;
+    z-index: 25 !important;
+  }
+
+  /* 스크롤바 숨기기 */
+  .portrait-top-nav > div {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .portrait-top-nav > div::-webkit-scrollbar {
+    display: none !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 공사대금 카드 2열 */
 @media (orientation: portrait) and (min-width: 1024px) {
   .construction-payment-grid {
