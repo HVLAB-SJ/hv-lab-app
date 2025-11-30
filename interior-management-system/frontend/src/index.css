@@ -2307,15 +2307,17 @@ div.rbc-popup {
     grid-row: 1 !important;
   }
 
-  /* 요청내용: 3-4열 1-2행 (2열 너비, 세로로 배치) */
+  /* 요청내용: 3-4열 1-2행 (2열 너비, 요청자와 하단 정렬) */
   .workrequest-form-inner > .wr-description {
     grid-column: 3 / 5 !important;
     grid-row: 1 / 3 !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   .workrequest-form-inner > .wr-description textarea {
-    min-height: 100% !important;
-    height: 100% !important;
+    flex: 1 !important;
+    min-height: 0 !important;
   }
 
   /* 날짜: 1열 2행 */
