@@ -2071,7 +2071,7 @@ div.rbc-popup {
   .schedule-container {
     display: flex !important;
     flex-direction: column !important;
-    height: calc(100vh - 100px) !important;
+    height: calc(100vh - 160px) !important;
     gap: 0 !important;
   }
 
