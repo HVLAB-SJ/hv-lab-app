@@ -622,20 +622,20 @@ const WorkRequest = () => {
   };
 
   return (
-    <div className="space-y-3 md:space-y-4">
+    <div className="workrequest-container space-y-3 md:space-y-4">
       {/* 데스크톱 2열 레이아웃 */}
-      <div className="hidden md:grid md:grid-cols-[400px_1fr] gap-4">
+      <div className="workrequest-desktop hidden md:grid md:grid-cols-[400px_1fr] gap-4">
         {/* 왼쪽: 업무요청 폼 */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 h-fit sticky top-4">
+        <div className="workrequest-form bg-white border border-gray-200 rounded-lg p-6 h-fit sticky top-4">
           {editingRequest && (
             <h2 className="text-xl font-semibold mb-4">
               업무요청 수정
             </h2>
           )}
 
-          <form onSubmit={handleFormSubmit} className="space-y-4">
+          <form onSubmit={handleFormSubmit} className="workrequest-form-inner space-y-4">
             {/* Project */}
-            <div>
+            <div className="wr-project">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 프로젝트
               </label>
@@ -656,7 +656,7 @@ const WorkRequest = () => {
             </div>
 
             {/* Request Type */}
-            <div>
+            <div className="wr-type">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 요청유형
               </label>
@@ -697,7 +697,7 @@ const WorkRequest = () => {
             </div>
 
             {/* Description */}
-            <div>
+            <div className="wr-description">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 요청내용
               </label>
@@ -711,7 +711,7 @@ const WorkRequest = () => {
             </div>
 
             {/* Dates */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="wr-dates grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   요청일 *
@@ -739,7 +739,7 @@ const WorkRequest = () => {
             </div>
 
             {/* People */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="wr-people grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   요청자 *
@@ -779,7 +779,7 @@ const WorkRequest = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t">
+            <div className="wr-actions flex gap-3 pt-4 border-t">
               {editingRequest && (
                 <button
                   type="button"
@@ -797,7 +797,7 @@ const WorkRequest = () => {
         </div>
 
         {/* 오른쪽: 업무요청 목록 */}
-        <div className="space-y-4">
+        <div className="workrequest-list space-y-4">
           {/* Tabs */}
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8">
