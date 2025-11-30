@@ -2353,6 +2353,13 @@ div.rbc-popup {
   }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 담당업무 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 공사도면 레이아웃 */
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 메인 컨테이너: 세로 배치 */
