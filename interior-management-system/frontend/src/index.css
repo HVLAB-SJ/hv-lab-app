@@ -2123,7 +2123,7 @@ div.rbc-popup {
 
   /* 월 행 최소 높이 - 높게 설정 */
   .rbc-month-view .rbc-month-row {
-    min-height: 130px !important;
+    min-height: 180px !important;
   }
 
   /* 이벤트 컨테이너 여백 제거 */
