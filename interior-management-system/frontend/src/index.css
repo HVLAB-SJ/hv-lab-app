@@ -1592,11 +1592,11 @@ div.rbc-popup {
     gap: 1rem !important;
   }
 
-  /* 스펙 라이브러리: 전체 너비, 상단 - 2행만 보이도록 높이 제한 */
+  /* 스펙 라이브러리: 전체 너비, 상단 - 높이 제한 */
   .specbook-library {
     width: 100% !important;
     flex: 0 0 auto !important;
-    max-height: 340px !important;
+    max-height: 800px !important;
     padding-right: 0 !important;
   }
 
