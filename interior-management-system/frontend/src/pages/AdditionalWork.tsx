@@ -380,9 +380,9 @@ const AdditionalWork = () => {
       <div className="additional-work-container hidden desktop:grid desktop:gap-4 2xl:gap-6 desktop:grid-cols-12">
         {/* 왼쪽: 추가내역 등록 폼 */}
         <div className="additional-work-form md:col-span-4 lg:col-span-4 bg-white border border-gray-200 rounded-lg p-4 md:p-5 lg:p-6 h-fit sticky top-4">
-          <div className="space-y-4">
+          <div className="aw-form-inner space-y-4">
             {/* 프로젝트 선택 */}
-            <div>
+            <div className="aw-project">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 프로젝트 *
               </label>
@@ -401,7 +401,7 @@ const AdditionalWork = () => {
             </div>
 
             {/* 일자 */}
-            <div>
+            <div className="aw-date">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 일자 *
               </label>
@@ -414,7 +414,7 @@ const AdditionalWork = () => {
             </div>
 
             {/* 내용 */}
-            <div>
+            <div className="aw-description">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 내용 *
               </label>
@@ -428,7 +428,7 @@ const AdditionalWork = () => {
             </div>
 
             {/* 금액 */}
-            <div>
+            <div className="aw-amount">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 금액 *
               </label>
@@ -444,7 +444,7 @@ const AdditionalWork = () => {
             {/* 등록 버튼 */}
             <button
               onClick={handleFormSubmit}
-              className="w-full py-3.5 bg-gray-900 text-white text-base font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+              className="aw-submit w-full py-3.5 bg-gray-900 text-white text-base font-semibold rounded-lg hover:bg-gray-800 transition-colors"
             >
               추가내역 등록
             </button>
