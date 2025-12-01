@@ -54,9 +54,17 @@ export const errorHandler = (
     error.statusCode = 401;
   }
 
+  // 상세 에러 로깅
+  console.error('=== 에러 상세 ===');
+  console.error('메시지:', err.message);
+  console.error('이름:', err.name);
+  console.error('스택:', err.stack);
+
   res.status(error.statusCode || 500).json({
     success: false,
     error: error.message || '서버 오류가 발생했습니다',
+    message: err.message,
+    name: err.name,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 };
