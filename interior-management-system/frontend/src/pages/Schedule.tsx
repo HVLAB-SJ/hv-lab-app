@@ -863,9 +863,45 @@ const Schedule = () => {
 
   // 필터링된 이벤트를 먼저 정의 (useEffect보다 먼저 와야 함)
   // 이미 groupEventsByProjectAndDate에서 사용자 일정의 시간을 조정했으므로 여기서는 필터링만
-  const filteredEvents = (filterProject === 'all'
+  const filteredEventsRaw = (filterProject === 'all'
     ? events
     : events.filter(e => e.projectName === filterProject));
+
+  // 각 날짜별로 로그인한 사용자의 일정을 최상단에 배치
+  const filteredEvents = React.useMemo(() => {
+    return [...filteredEventsRaw].sort((a, b) => {
+      // 먼저 날짜순 정렬
+      const dateA = moment(a.start).startOf('day').valueOf();
+      const dateB = moment(b.start).startOf('day').valueOf();
+      if (dateA !== dateB) return dateA - dateB;
+
+      // 같은 날짜 내에서 사용자 일정 우선
+      const aHasHVLab = a.assignedTo && a.assignedTo.includes('HV LAB');
+      const aHasFieldTeam = a.assignedTo && a.assignedTo.includes('현장팀') &&
+        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+      const aHasDesignTeam = a.assignedTo && a.assignedTo.includes('디자인팀') &&
+        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+      const aHasUser = (a.assignedTo && userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname)) ||
+        (a.assignedTo && user?.name && a.assignedTo.includes(user.name)) ||
+        aHasHVLab || aHasFieldTeam || aHasDesignTeam;
+
+      const bHasHVLab = b.assignedTo && b.assignedTo.includes('HV LAB');
+      const bHasFieldTeam = b.assignedTo && b.assignedTo.includes('현장팀') &&
+        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
+      const bHasDesignTeam = b.assignedTo && b.assignedTo.includes('디자인팀') &&
+        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+      const bHasUser = (b.assignedTo && userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname)) ||
+        (b.assignedTo && user?.name && b.assignedTo.includes(user.name)) ||
+        bHasHVLab || bHasFieldTeam || bHasDesignTeam;
+
+      // 사용자 일정을 먼저
+      if (aHasUser && !bHasUser) return -1;
+      if (!aHasUser && bHasUser) return 1;
+
+      // 같은 우선순위면 시간순
+      return new Date(a.start).getTime() - new Date(b.start).getTime();
+    });
+  }, [filteredEventsRaw, user, userNameWithoutSurname]);
 
   // 안팀 사용자의 경우 프로젝트 목록이 변경되면 필터 업데이트
   useEffect(() => {
