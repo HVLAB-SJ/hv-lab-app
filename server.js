@@ -51,7 +51,7 @@ createSiteLogsTable().catch(console.error);
 addQuickTextColumn().catch(console.error);
 createDrawingsTable().catch(console.error);
 addPaymentImagesColumn().catch(console.error);
-addExecutionRecordsTable(require('./server/config/database')).catch(console.error);
+addExecutionRecordsTable(require('./server/config/database').db).catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";

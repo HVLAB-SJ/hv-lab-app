@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { db } = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 
 // 모든 실행내역 조회
