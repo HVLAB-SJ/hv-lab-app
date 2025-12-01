@@ -69,6 +69,8 @@ export const getRecordById = async (req: Request, res: Response): Promise<void> 
 // 실행내역 생성
 export const createRecord = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('[createRecord] 요청 body:', JSON.stringify(req.body, null, 2));
+
     const {
       project_name,
       author,
@@ -88,22 +90,39 @@ export const createRecord = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // 프로젝트 ID 찾기
-    const project = await Project.findOne({ name: project_name });
+    // 날짜 처리 (안전하게)
+    let recordDate: Date;
+    if (date) {
+      recordDate = new Date(date);
+      if (isNaN(recordDate.getTime())) {
+        recordDate = new Date();
+      }
+    } else {
+      recordDate = new Date();
+    }
+
+    // 프로젝트 ID 찾기 (선택적)
+    let projectId = undefined;
+    try {
+      const project = await Project.findOne({ name: project_name });
+      projectId = project?._id;
+    } catch (projectError) {
+      console.log('[createRecord] 프로젝트 조회 실패 (무시):', projectError);
+    }
 
     const record = new ExecutionRecord({
-      projectId: project?._id,
+      projectId,
       projectName: project_name,
       author: author || '',
-      date: new Date(date),
+      date: recordDate,
       process: process || '',
       itemName: item_name,
-      materialCost: material_cost || 0,
-      laborCost: labor_cost || 0,
-      vatAmount: vat_amount || 0,
-      totalAmount: total_amount || 0,
+      materialCost: Number(material_cost) || 0,
+      laborCost: Number(labor_cost) || 0,
+      vatAmount: Number(vat_amount) || 0,
+      totalAmount: Number(total_amount) || 0,
       notes: notes || '',
-      paymentId: payment_id
+      paymentId: payment_id || undefined
     });
 
     await record.save();
@@ -127,9 +146,13 @@ export const createRecord = async (req: Request, res: Response): Promise<void> =
       created_at: record.createdAt.toISOString(),
       updated_at: record.updatedAt.toISOString()
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('실행내역 생성 오류:', error);
-    res.status(500).json({ message: '실행내역 생성 중 오류가 발생했습니다' });
+    console.error('에러 스택:', error.stack);
+    res.status(500).json({
+      message: '실행내역 생성 중 오류가 발생했습니다',
+      error: error.message || String(error)
+    });
   }
 };
 
