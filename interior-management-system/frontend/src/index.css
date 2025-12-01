@@ -1596,7 +1596,7 @@ div.rbc-popup {
   .specbook-library {
     width: 100% !important;
     flex: 0 0 auto !important;
-    max-height: 800px !important;
+    max-height: 840px !important;
     padding-right: 0 !important;
   }
 
