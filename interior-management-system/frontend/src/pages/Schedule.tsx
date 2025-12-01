@@ -875,24 +875,12 @@ const Schedule = () => {
       const dateB = moment(b.start).startOf('day').valueOf();
       if (dateA !== dateB) return dateA - dateB;
 
-      // 같은 날짜 내에서 사용자 일정 우선
-      const aHasHVLab = a.assignedTo && a.assignedTo.includes('HV LAB');
-      const aHasFieldTeam = a.assignedTo && a.assignedTo.includes('현장팀') &&
-        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
-      const aHasDesignTeam = a.assignedTo && a.assignedTo.includes('디자인팀') &&
-        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+      // 같은 날짜 내에서 사용자 일정 우선 (본인 이름이 직접 포함된 경우만)
       const aHasUser = (a.assignedTo && userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname)) ||
-        (a.assignedTo && user?.name && a.assignedTo.includes(user.name)) ||
-        aHasHVLab || aHasFieldTeam || aHasDesignTeam;
+        (a.assignedTo && user?.name && a.assignedTo.includes(user.name));
 
-      const bHasHVLab = b.assignedTo && b.assignedTo.includes('HV LAB');
-      const bHasFieldTeam = b.assignedTo && b.assignedTo.includes('현장팀') &&
-        userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
-      const bHasDesignTeam = b.assignedTo && b.assignedTo.includes('디자인팀') &&
-        userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
       const bHasUser = (b.assignedTo && userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname)) ||
-        (b.assignedTo && user?.name && b.assignedTo.includes(user.name)) ||
-        bHasHVLab || bHasFieldTeam || bHasDesignTeam;
+        (b.assignedTo && user?.name && b.assignedTo.includes(user.name));
 
       // 사용자 일정을 먼저
       if (aHasUser && !bHasUser) return -1;
