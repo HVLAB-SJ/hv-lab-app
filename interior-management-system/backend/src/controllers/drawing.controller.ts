@@ -5,13 +5,24 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// 업로드 디렉토리 설정
-const uploadDir = path.join(__dirname, '../../uploads/drawings');
+// Railway Volume 또는 로컬 업로드 디렉토리 설정
+// Railway Volume 마운트 경로: /data (환경변수 RAILWAY_VOLUME_MOUNT_PATH)
+const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH || '';
+const uploadDir = volumePath
+  ? path.join(volumePath, 'drawings')  // Railway Volume 사용
+  : path.join(__dirname, '../../uploads/drawings');  // 로컬 개발용
+
+console.log('📁 도면 업로드 디렉토리:', uploadDir);
 
 // 업로드 디렉토리가 없으면 생성
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('✅ 업로드 디렉토리 생성됨');
 }
+
+// Volume 경로 내보내기 (index.ts에서 사용)
+export const getUploadDir = () => uploadDir;
+export const isUsingVolume = () => !!volumePath;
 
 // Multer 설정
 const storage = multer.diskStorage({

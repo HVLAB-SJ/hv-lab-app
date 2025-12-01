@@ -91,6 +91,14 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Static files for uploaded images
+// Railway Volume 또는 로컬 경로에서 정적 파일 서빙
+const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH;
+if (volumePath) {
+  // Railway Volume 사용 시 - drawings 폴더 서빙
+  app.use('/uploads/drawings', express.static(path.join(volumePath, 'drawings')));
+  console.log('📁 Railway Volume 정적 파일 서빙:', path.join(volumePath, 'drawings'));
+}
+// 로컬 uploads 폴더도 서빙 (로컬 개발용)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // API Routes
