@@ -31,6 +31,7 @@ import workRequestRoutes from './routes/workrequest.routes';
 import additionalWorkRoutes from './routes/additionalWork.routes';
 import siteLogRoutes from './routes/siteLog.routes';
 import drawingRoutes from './routes/drawing.routes';
+import executionRecordRoutes from './routes/executionRecord.routes';
 
 // Import middleware
 import { errorHandler } from './middleware/error.middleware';
@@ -115,6 +116,7 @@ app.use('/api/workrequests', workRequestRoutes);
 app.use('/api/additional-works', additionalWorkRoutes);
 app.use('/api/site-logs', siteLogRoutes);
 app.use('/api/drawings', drawingRoutes);
+app.use('/api/execution-records', executionRecordRoutes);
 
 // Health check endpoint with version info
 app.get('/api/health', (_req, res) => {
