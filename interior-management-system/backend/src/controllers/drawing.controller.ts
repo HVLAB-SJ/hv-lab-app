@@ -1,6 +1,65 @@
 import { Request, Response } from 'express';
 import Drawing from '../models/Drawing.model';
 import mongoose from 'mongoose';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+// 업로드 디렉토리 설정
+const uploadDir = path.join(__dirname, '../../uploads/drawings');
+
+// 업로드 디렉토리가 없으면 생성
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer 설정
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname) || '.png';
+    cb(null, `drawing-${uniqueSuffix}${ext}`);
+  }
+});
+
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('지원하지 않는 이미지 형식입니다.'));
+  }
+};
+
+export const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 20 * 1024 * 1024 // 20MB
+  }
+});
+
+// 이미지 업로드
+export const uploadImage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: '이미지 파일이 필요합니다' });
+      return;
+    }
+
+    // 상대 경로로 URL 생성
+    const imageUrl = `/uploads/drawings/${req.file.filename}`;
+
+    console.log('✅ 도면 이미지 업로드 완료:', imageUrl);
+    res.status(200).json({ imageUrl });
+  } catch (error) {
+    console.error('이미지 업로드 오류:', error);
+    res.status(500).json({ error: '이미지 업로드 중 오류가 발생했습니다' });
+  }
+};
 
 // 도면 저장/업데이트 (upsert)
 export const saveDrawing = async (req: Request, res: Response): Promise<void> => {

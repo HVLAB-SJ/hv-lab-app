@@ -3,7 +3,9 @@ import {
   saveDrawing,
   getDrawing,
   getDrawingsByProject,
-  deleteDrawing
+  deleteDrawing,
+  uploadImage,
+  upload
 } from '../controllers/drawing.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
@@ -11,6 +13,9 @@ const router = Router();
 
 // 모든 도면 라우트에 인증 적용
 router.use(authenticate);
+
+// 이미지 업로드
+router.post('/upload', upload.single('image'), uploadImage);
 
 // 도면 저장/업데이트
 router.post('/', saveDrawing);
