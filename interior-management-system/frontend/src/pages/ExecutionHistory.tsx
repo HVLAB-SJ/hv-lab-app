@@ -656,12 +656,20 @@ const ExecutionHistory = () => {
 
       // 타입에 따라 다른 API 호출
       if ((editingRecord as any).type === 'payment') {
-        // 결제요청 수정
+        // 결제요청 수정 - 기존 payment 데이터 찾기
+        const existingPayment = payments.find(p => p.id === editingRecord.id);
+        if (!existingPayment) {
+          throw new Error('결제요청을 찾을 수 없습니다');
+        }
+
         await updatePaymentInAPI(editingRecord.id, {
+          ...existingPayment,
           process: formData.process,
           itemName: formData.itemName,
+          materialAmount: materialCost,
+          laborAmount: laborCost,
           amount: totalAmount,
-          requestDate: new Date(formData.date)
+          requestDate: formData.date
         });
         await loadPaymentsFromAPI();
       } else {
@@ -674,6 +682,7 @@ const ExecutionHistory = () => {
           totalAmount,
           date: new Date(formData.date)
         });
+        await loadExecutionRecordsFromAPI();
       }
 
       toast.success('수정되었습니다');
