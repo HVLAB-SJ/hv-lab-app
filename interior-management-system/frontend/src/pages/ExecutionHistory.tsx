@@ -1306,14 +1306,14 @@ const ExecutionHistory = () => {
                     <th className="px-3 py-3 font-medium text-right exec-th-labor">인건비</th>
                     <th className="px-3 py-3 font-medium text-right exec-th-vat">부가세</th>
                     <th className="px-3 py-3 font-medium text-right exec-th-total">총액</th>
-                    <th className="px-2 py-3 font-medium text-center w-20">관리</th>
+                    <th className="px-2 py-3 font-medium text-center w-12"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredRecords.map((record) => (
                     <tr
                       key={record.id}
-                      className={`hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === record.id ? 'bg-blue-50' : ''}`}
+                      className={`group hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === record.id ? 'bg-blue-50' : ''}`}
                       onClick={() => setSelectedRecord(record.id)}
                     >
                       <td className="px-3 py-3 text-gray-600 whitespace-nowrap exec-author-col">
@@ -1343,20 +1343,20 @@ const ExecutionHistory = () => {
                         <span className="exec-total-short">{(record.totalAmount || 0).toLocaleString()}</span>
                       </td>
                       <td className="px-2 py-3 text-center">
-                        <div className="flex items-center justify-center gap-1">
+                        <div className={`flex items-center justify-center gap-1 transition-opacity ${selectedRecord === record.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                           <button
                             onClick={(e) => handleEditClick(record, e)}
-                            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                            className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
                             title="수정"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={(e) => handleDeleteClick(record.id, e)}
-                            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
                             title="삭제"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
