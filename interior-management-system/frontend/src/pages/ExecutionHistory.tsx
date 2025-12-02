@@ -602,19 +602,44 @@ const ExecutionHistory = () => {
     }
   };
 
-  // 수정 모달 열기
+  // 수정 모드 - 왼쪽 폼에 데이터 채우기
   const handleEditClick = (record: ExecutionRecord, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingRecord(record);
-    setEditFormData({
+    setFormData(prev => ({
+      ...prev,
+      project: record.project || prev.project,
+      date: format(new Date(record.date), 'yyyy-MM-dd'),
       process: record.process || '',
       itemName: record.itemName,
-      materialCost: String(record.materialCost || 0),
-      laborCost: String(record.laborCost || 0),
-      date: format(new Date(record.date), 'yyyy-MM-dd')
-    });
-    setEditModalOpen(true);
+      materialCost: record.materialCost || 0,
+      laborCost: record.laborCost || 0,
+      images: record.images || [],
+      quickText: '',
+      quickImages: []
+    }));
+    setSelectedRecord(record.id);
     setActionMenuId(null);
+    // 모바일에서는 입력 폼으로 이동
+    if (isMobileDevice) {
+      setMobileView('form');
+    }
+  };
+
+  // 수정 취소
+  const handleEditCancel = () => {
+    setEditingRecord(null);
+    setFormData(prev => ({
+      ...prev,
+      date: format(new Date(), 'yyyy-MM-dd'),
+      process: '',
+      itemName: '',
+      materialCost: '',
+      laborCost: '',
+      images: [],
+      quickText: '',
+      quickImages: []
+    }));
   };
 
   // 수정 저장
@@ -622,22 +647,33 @@ const ExecutionHistory = () => {
     if (!editingRecord) return;
 
     try {
-      const materialCost = Number(editFormData.materialCost) || 0;
-      const laborCost = Number(editFormData.laborCost) || 0;
+      const materialCost = Number(formData.materialCost) || 0;
+      const laborCost = Number(formData.laborCost) || 0;
       const totalAmount = materialCost + laborCost;
 
       await updateExecutionRecordInAPI(editingRecord.id, {
-        process: editFormData.process,
-        itemName: editFormData.itemName,
+        process: formData.process,
+        itemName: formData.itemName,
         materialCost,
         laborCost,
         totalAmount,
-        date: new Date(editFormData.date)
+        date: new Date(formData.date)
       });
 
       toast.success('실행내역이 수정되었습니다');
-      setEditModalOpen(false);
       setEditingRecord(null);
+      // 폼 초기화
+      setFormData(prev => ({
+        ...prev,
+        date: format(new Date(), 'yyyy-MM-dd'),
+        process: '',
+        itemName: '',
+        materialCost: '',
+        laborCost: '',
+        images: [],
+        quickText: '',
+        quickImages: []
+      }));
     } catch (error) {
       console.error('수정 실패:', error);
       toast.error('수정에 실패했습니다');
@@ -1207,14 +1243,38 @@ const ExecutionHistory = () => {
                 </div>
               </div>
 
-              {/* 내역추가 버튼 */}
+              {/* 수정 모드 표시 */}
+              {editingRecord && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
+                  <p className="text-sm text-blue-700 font-medium">수정 중: {editingRecord.itemName}</p>
+                </div>
+              )}
+
+              {/* 내역추가/수정완료 버튼 */}
               <div className="exec-submit my-6" style={{ marginTop: '20px' }}>
-                <button
-                  onClick={handleSave}
-                  className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
-                >
-                  내역추가
-                </button>
+                {editingRecord ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleEditCancel}
+                      className="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={handleEditSave}
+                      className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      수정 완료
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleSave}
+                    className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+                  >
+                    내역추가
+                  </button>
+                )}
               </div>
             </div>
 
