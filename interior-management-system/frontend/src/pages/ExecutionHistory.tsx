@@ -673,14 +673,18 @@ const ExecutionHistory = () => {
         });
         await loadPaymentsFromAPI();
       } else {
-        // 실행내역 수정
+        // 실행내역 수정 - 기존 레코드의 데이터 유지하면서 수정된 필드만 업데이트
         await updateExecutionRecordInAPI(editingRecord.id, {
+          project: formData.project || editingRecord.project,
+          author: editingRecord.author,
           process: formData.process,
           itemName: formData.itemName,
           materialCost,
           laborCost,
           totalAmount,
-          date: new Date(formData.date)
+          date: new Date(formData.date),
+          notes: editingRecord.notes,
+          paymentId: editingRecord.paymentId
         });
         await loadExecutionRecordsFromAPI();
       }
