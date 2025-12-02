@@ -1262,7 +1262,7 @@ const ExecutionHistory = () => {
                     </button>
                     <button
                       onClick={handleEditSave}
-                      className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="flex-1 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800"
                     >
                       수정 완료
                     </button>
@@ -1403,22 +1403,24 @@ const ExecutionHistory = () => {
                         <span className="exec-total-short">{(record.totalAmount || 0).toLocaleString()}</span>
                       </td>
                       <td className="px-2 py-3 text-center">
-                        <div className={`flex items-center justify-center gap-1 transition-opacity ${selectedRecord === record.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                          <button
-                            onClick={(e) => handleEditClick(record, e)}
-                            className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-                            title="수정"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => handleDeleteClick(record.id, e)}
-                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                            title="삭제"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        {record.type === 'manual' && (
+                          <div className={`flex items-center justify-center gap-1 transition-opacity ${selectedRecord === record.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                            <button
+                              onClick={(e) => handleEditClick(record as ExecutionRecord, e)}
+                              className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                              title="수정"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteClick(record.id, e)}
+                              className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                              title="삭제"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1445,15 +1447,17 @@ const ExecutionHistory = () => {
                         <p className="text-sm font-bold text-gray-900 shrink-0">
                           {(record.totalAmount || 0).toLocaleString()}원
                         </p>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActionMenuId(actionMenuId === record.id ? null : record.id);
-                          }}
-                          className="p-1 text-gray-400 hover:text-gray-600"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
+                        {record.type === 'manual' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActionMenuId(actionMenuId === record.id ? null : record.id);
+                            }}
+                            className="p-1 text-gray-400 hover:text-gray-600"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                     {/* 2행: 공정, 작성자, 날짜 + 자재비/인건비/부가세 */}
@@ -1463,11 +1467,11 @@ const ExecutionHistory = () => {
                         자재비 {(record.materialCost || 0).toLocaleString()} · 인건비 {(record.laborCost || 0).toLocaleString()} · 부가세 {(record.vatAmount || 0).toLocaleString()}
                       </span>
                     </div>
-                    {/* 액션 메뉴 */}
-                    {actionMenuId === record.id && (
+                    {/* 액션 메뉴 - manual 타입만 */}
+                    {record.type === 'manual' && actionMenuId === record.id && (
                       <div className="absolute right-2 top-8 bg-white border rounded-lg shadow-lg z-10 py-1">
                         <button
-                          onClick={(e) => handleEditClick(record, e)}
+                          onClick={(e) => handleEditClick(record as ExecutionRecord, e)}
                           className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -1475,7 +1479,7 @@ const ExecutionHistory = () => {
                         </button>
                         <button
                           onClick={(e) => handleDeleteClick(record.id, e)}
-                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                         >
                           <Trash2 className="w-4 h-4" />
                           삭제
