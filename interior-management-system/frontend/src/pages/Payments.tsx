@@ -1329,14 +1329,15 @@ const Payments = () => {
     new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
   );
 
-  // 필터링 (대기중/송금완료 탭에서는 모든 프로젝트 표시)
+  // 필터링 (대기중은 전체 프로젝트, 송금완료는 선택한 프로젝트만)
   const filteredRecords = allRecords.filter(record => {
     const matchesSearch = searchTerm === '' ||
       record.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.process?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = record.status === statusFilter;
-    const matchesProject = projectFilter === 'all' || record.project === projectFilter;
+    // 대기중(pending)은 항상 전체 프로젝트 표시, 송금완료(completed)는 프로젝트 필터 적용
+    const matchesProject = statusFilter === 'pending' || projectFilter === 'all' || record.project === projectFilter;
     return matchesSearch && matchesStatus && matchesProject;
   });
 
@@ -1972,21 +1973,6 @@ const Payments = () => {
               이미지
             </button>
           </nav>
-          {/* 프로젝트 필터 드롭다운 - 모바일용 (송금완료 탭에서만 표시) */}
-          {mobileView === 'list' && statusFilter === 'completed' && (
-            <select
-              value={projectFilter}
-              onChange={(e) => setProjectFilter(e.target.value)}
-              className="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white"
-            >
-              <option value="all">전체</option>
-              {projects.filter(p => p.status !== 'completed').map(project => (
-                <option key={project.id} value={project.name}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          )}
         </div>
       </div>
 
@@ -2567,19 +2553,6 @@ const Payments = () => {
                   </span>
                 </button>
               </nav>
-              {/* 프로젝트 필터 드롭다운 - 데스크톱용 (모바일에서는 상단 탭 영역에 표시) */}
-              <select
-                value={projectFilter}
-                onChange={(e) => setProjectFilter(e.target.value)}
-                className="hidden lg:block ml-3 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-              >
-                <option value="all">전체 프로젝트</option>
-                {projects.map(project => (
-                  <option key={project.id} value={project.name}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
           <div className="border-b border-gray-200"></div>
