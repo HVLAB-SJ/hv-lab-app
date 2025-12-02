@@ -603,8 +603,16 @@ const ExecutionHistory = () => {
   };
 
   // 수정 모드 - 왼쪽 폼에 데이터 채우기
-  const handleEditClick = (record: ExecutionRecord, e: React.MouseEvent) => {
+  const handleEditClick = (record: ExecutionRecord & { type?: string }, e: React.MouseEvent) => {
     e.stopPropagation();
+    setActionMenuId(null);
+
+    // 결제요청은 수정 불가
+    if ((record as any).type === 'payment') {
+      toast.error('결제요청은 수정할 수 없습니다');
+      return;
+    }
+
     setEditingRecord(record);
     setFormData(prev => ({
       ...prev,
@@ -619,7 +627,6 @@ const ExecutionHistory = () => {
       quickImages: []
     }));
     setSelectedRecord(record.id);
-    setActionMenuId(null);
     // 모바일에서는 입력 폼으로 이동
     if (isMobileDevice) {
       setMobileView('form');
@@ -684,6 +691,21 @@ const ExecutionHistory = () => {
   const handleDeleteClick = async (recordId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setActionMenuId(null);
+
+    // 레코드 타입 확인
+    const record = allRecords.find(r => r.id === recordId);
+
+    if (record?.type === 'payment') {
+      // 결제요청은 실행내역에서 숨기기만 가능
+      if (!confirm('이 결제요청을 실행내역에서 숨기시겠습니까?\n(결제요청 자체는 삭제되지 않습니다)')) return;
+
+      setHiddenPaymentIds(prev => [...prev, recordId]);
+      if (selectedRecord === recordId) {
+        setSelectedRecord(null);
+      }
+      toast.success('결제요청이 실행내역에서 숨겨졌습니다');
+      return;
+    }
 
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
