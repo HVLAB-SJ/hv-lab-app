@@ -102,7 +102,8 @@ const ExecutionHistory = () => {
     addExecutionRecordToAPI,
     deleteExecutionRecordFromAPI,
     updateExecutionRecordInAPI,
-    updatePaymentInAPI
+    updatePaymentInAPI,
+    deletePaymentFromAPI
   } = useDataStore();
   const { user } = useAuth();
   const projects = useFilteredProjects(); // 안팀 사용자는 담당 프로젝트만 표시
@@ -703,23 +704,19 @@ const ExecutionHistory = () => {
     // 레코드 타입 확인
     const record = allRecords.find(r => r.id === recordId);
 
-    if (record?.type === 'payment') {
-      // 결제요청은 실행내역에서 숨기기만 가능
-      if (!confirm('이 결제요청을 실행내역에서 숨기시겠습니까?\n(결제요청 자체는 삭제되지 않습니다)')) return;
-
-      setHiddenPaymentIds(prev => [...prev, recordId]);
-      if (selectedRecord === recordId) {
-        setSelectedRecord(null);
-      }
-      toast.success('결제요청이 실행내역에서 숨겨졌습니다');
-      return;
-    }
-
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
     try {
-      await deleteExecutionRecordFromAPI(recordId);
-      toast.success('실행내역이 삭제되었습니다');
+      if (record?.type === 'payment') {
+        // 결제요청 삭제
+        await deletePaymentFromAPI(recordId);
+        toast.success('결제요청이 삭제되었습니다');
+      } else {
+        // 실행내역 삭제
+        await deleteExecutionRecordFromAPI(recordId);
+        toast.success('실행내역이 삭제되었습니다');
+      }
+
       if (selectedRecord === recordId) {
         setSelectedRecord(null);
       }
