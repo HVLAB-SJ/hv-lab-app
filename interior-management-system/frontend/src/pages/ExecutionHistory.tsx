@@ -101,7 +101,8 @@ const ExecutionHistory = () => {
     loadExecutionRecordsFromAPI,
     addExecutionRecordToAPI,
     deleteExecutionRecordFromAPI,
-    updateExecutionRecordInAPI
+    updateExecutionRecordInAPI,
+    updatePaymentInAPI
   } = useDataStore();
   const { user } = useAuth();
   const projects = useFilteredProjects(); // 안팀 사용자는 담당 프로젝트만 표시
@@ -607,12 +608,6 @@ const ExecutionHistory = () => {
     e.stopPropagation();
     setActionMenuId(null);
 
-    // 결제요청은 수정 불가
-    if ((record as any).type === 'payment') {
-      toast.error('결제요청은 수정할 수 없습니다');
-      return;
-    }
-
     setEditingRecord(record);
     setFormData(prev => ({
       ...prev,
@@ -658,16 +653,29 @@ const ExecutionHistory = () => {
       const laborCost = Number(formData.laborCost) || 0;
       const totalAmount = materialCost + laborCost;
 
-      await updateExecutionRecordInAPI(editingRecord.id, {
-        process: formData.process,
-        itemName: formData.itemName,
-        materialCost,
-        laborCost,
-        totalAmount,
-        date: new Date(formData.date)
-      });
+      // 타입에 따라 다른 API 호출
+      if ((editingRecord as any).type === 'payment') {
+        // 결제요청 수정
+        await updatePaymentInAPI(editingRecord.id, {
+          process: formData.process,
+          itemName: formData.itemName,
+          amount: totalAmount,
+          requestDate: new Date(formData.date)
+        });
+        await loadPaymentsFromAPI();
+      } else {
+        // 실행내역 수정
+        await updateExecutionRecordInAPI(editingRecord.id, {
+          process: formData.process,
+          itemName: formData.itemName,
+          materialCost,
+          laborCost,
+          totalAmount,
+          date: new Date(formData.date)
+        });
+      }
 
-      toast.success('실행내역이 수정되었습니다');
+      toast.success('수정되었습니다');
       setEditingRecord(null);
       // 폼 초기화
       setFormData(prev => ({
