@@ -3,7 +3,7 @@ import { useDataStore, type ExecutionRecord } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { Navigate } from 'react-router-dom';
-import { Search, Trash2, ImageIcon, X, Upload } from 'lucide-react';
+import { Search, Trash2, ImageIcon, X, Upload, Edit2, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -123,6 +123,18 @@ const ExecutionHistory = () => {
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [showProcessPicker, setShowProcessPicker] = useState(false);
   const processButtonRef = useRef<HTMLButtonElement>(null);
+  // 수정 모달 상태
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<ExecutionRecord | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    process: '',
+    itemName: '',
+    materialCost: '',
+    laborCost: '',
+    date: ''
+  });
+  // 액션 메뉴 상태 (모바일용)
+  const [actionMenuId, setActionMenuId] = useState<string | null>(null);
   // 항목명 추천
   const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
   // 결제요청 레코드의 이미지를 저장하는 별도의 상태 (IndexedDB 사용으로 용량 제한 없음)
@@ -587,6 +599,67 @@ const ExecutionHistory = () => {
     } catch (error) {
       console.error('실행내역 저장 실패:', error);
       toast.error('실행내역 저장에 실패했습니다');
+    }
+  };
+
+  // 수정 모달 열기
+  const handleEditClick = (record: ExecutionRecord, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingRecord(record);
+    setEditFormData({
+      process: record.process || '',
+      itemName: record.itemName,
+      materialCost: String(record.materialCost || 0),
+      laborCost: String(record.laborCost || 0),
+      date: format(new Date(record.date), 'yyyy-MM-dd')
+    });
+    setEditModalOpen(true);
+    setActionMenuId(null);
+  };
+
+  // 수정 저장
+  const handleEditSave = async () => {
+    if (!editingRecord) return;
+
+    try {
+      const materialCost = Number(editFormData.materialCost) || 0;
+      const laborCost = Number(editFormData.laborCost) || 0;
+      const totalAmount = materialCost + laborCost;
+
+      await updateExecutionRecordInAPI(editingRecord.id, {
+        process: editFormData.process,
+        itemName: editFormData.itemName,
+        materialCost,
+        laborCost,
+        totalAmount,
+        date: new Date(editFormData.date)
+      });
+
+      toast.success('실행내역이 수정되었습니다');
+      setEditModalOpen(false);
+      setEditingRecord(null);
+    } catch (error) {
+      console.error('수정 실패:', error);
+      toast.error('수정에 실패했습니다');
+    }
+  };
+
+  // 삭제 핸들러
+  const handleDeleteClick = async (recordId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActionMenuId(null);
+
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+
+    try {
+      await deleteExecutionRecordFromAPI(recordId);
+      toast.success('실행내역이 삭제되었습니다');
+      if (selectedRecord === recordId) {
+        setSelectedRecord(null);
+      }
+    } catch (error) {
+      console.error('삭제 실패:', error);
+      toast.error('삭제에 실패했습니다');
     }
   };
 
@@ -1233,6 +1306,7 @@ const ExecutionHistory = () => {
                     <th className="px-3 py-3 font-medium text-right exec-th-labor">인건비</th>
                     <th className="px-3 py-3 font-medium text-right exec-th-vat">부가세</th>
                     <th className="px-3 py-3 font-medium text-right exec-th-total">총액</th>
+                    <th className="px-2 py-3 font-medium text-center w-20">관리</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -1268,6 +1342,24 @@ const ExecutionHistory = () => {
                         <span className="exec-total-full">{(record.totalAmount || 0).toLocaleString()}원</span>
                         <span className="exec-total-short">{(record.totalAmount || 0).toLocaleString()}</span>
                       </td>
+                      <td className="px-2 py-3 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={(e) => handleEditClick(record, e)}
+                            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                            title="수정"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteClick(record.id, e)}
+                            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                            title="삭제"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1278,7 +1370,7 @@ const ExecutionHistory = () => {
                 {filteredRecords.map((record) => (
                   <div
                     key={record.id}
-                    className={`border rounded-lg px-3 py-2 ${
+                    className={`border rounded-lg px-3 py-2 relative ${
                       selectedRecord === record.id ? 'bg-blue-50 border-blue-300' : 'bg-white'
                     }`}
                     onClick={() => {
@@ -1286,12 +1378,23 @@ const ExecutionHistory = () => {
                       setMobileView('image');
                     }}
                   >
-                    {/* 1행: 항목명 + 총액 */}
+                    {/* 1행: 항목명 + 총액 + 더보기 */}
                     <div className="flex justify-between items-center">
                       <p className="font-medium text-gray-900 text-sm truncate flex-1 mr-2">{record.itemName}</p>
-                      <p className="text-sm font-bold text-gray-900 shrink-0">
-                        {(record.totalAmount || 0).toLocaleString()}원
-                      </p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-sm font-bold text-gray-900 shrink-0">
+                          {(record.totalAmount || 0).toLocaleString()}원
+                        </p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionMenuId(actionMenuId === record.id ? null : record.id);
+                          }}
+                          className="p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     {/* 2행: 공정, 작성자, 날짜 + 자재비/인건비/부가세 */}
                     <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
@@ -1300,6 +1403,25 @@ const ExecutionHistory = () => {
                         자재비 {(record.materialCost || 0).toLocaleString()} · 인건비 {(record.laborCost || 0).toLocaleString()} · 부가세 {(record.vatAmount || 0).toLocaleString()}
                       </span>
                     </div>
+                    {/* 액션 메뉴 */}
+                    {actionMenuId === record.id && (
+                      <div className="absolute right-2 top-8 bg-white border rounded-lg shadow-lg z-10 py-1">
+                        <button
+                          onClick={(e) => handleEditClick(record, e)}
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          수정
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteClick(record.id, e)}
+                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          삭제
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1937,6 +2059,99 @@ const ExecutionHistory = () => {
                 <p>이미지를 불러올 수 없습니다</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 수정 모달 */}
+      {editModalOpen && editingRecord && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-semibold">실행내역 수정</h3>
+              <button
+                onClick={() => {
+                  setEditModalOpen(false);
+                  setEditingRecord(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              {/* 날짜 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
+                <input
+                  type="date"
+                  value={editFormData.date}
+                  onChange={(e) => setEditFormData({ ...editFormData, date: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              {/* 공정 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">공정</label>
+                <select
+                  value={editFormData.process}
+                  onChange={(e) => setEditFormData({ ...editFormData, process: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">선택</option>
+                  {PROCESS_LIST.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+              {/* 항목명 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">항목명</label>
+                <input
+                  type="text"
+                  value={editFormData.itemName}
+                  onChange={(e) => setEditFormData({ ...editFormData, itemName: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              {/* 자재비 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">자재비</label>
+                <input
+                  type="number"
+                  value={editFormData.materialCost}
+                  onChange={(e) => setEditFormData({ ...editFormData, materialCost: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              {/* 인건비 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">인건비</label>
+                <input
+                  type="number"
+                  value={editFormData.laborCost}
+                  onChange={(e) => setEditFormData({ ...editFormData, laborCost: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 p-4 border-t">
+              <button
+                onClick={() => {
+                  setEditModalOpen(false);
+                  setEditingRecord(null);
+                }}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleEditSave}
+                className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                저장
+              </button>
+            </div>
           </div>
         </div>
       )}
