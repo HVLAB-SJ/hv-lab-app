@@ -121,6 +121,7 @@ const Payments = () => {
   const [showCashReceiptModal, setShowCashReceiptModal] = useState(false);
   const [cashReceiptProject, setCashReceiptProject] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false); // 중복 제출 방지
+  const autoCompleteProcessedRef = useRef(false); // 자동 송금완료 처리 여부 (중복 방지)
 
   // 협력업체 관련 상태
   const [contractors, setContractors] = useState<Contractor[]>([]);
@@ -249,57 +250,53 @@ const Payments = () => {
   // URL 파라미터로 송금완료 자동 처리
   useEffect(() => {
     const handleAutoComplete = async () => {
+      // 이미 처리되었으면 스킵
+      if (autoCompleteProcessedRef.current) return;
+
       const urlParams = new URLSearchParams(window.location.search);
       const completeId = urlParams.get('complete') || urlParams.get('c'); // 짧은 파라미터 'c' 지원
 
-      if (completeId) {
-        console.log('[자동 송금완료] URL 파라미터 확인:', completeId);
+      if (!completeId) return;
 
-        // 로그인 확인
-        if (!user) {
-          console.log('[자동 송금완료] 로그인 필요 - 대기 중');
-          return;
+      // 로그인 확인
+      if (!user) {
+        console.log('[자동 송금완료] 로그인 필요 - 대기 중');
+        return;
+      }
+
+      // 중복 처리 방지 플래그 설정
+      autoCompleteProcessedRef.current = true;
+      console.log('[자동 송금완료] 처리 시작:', completeId);
+
+      // URL 파라미터 즉시 제거 (중복 처리 방지)
+      window.history.replaceState({}, '', '/payments');
+
+      // 모바일에서 내역 화면으로 전환
+      setMobileView('list');
+      setStatusFilter('pending');
+
+      try {
+        // 송금완료 처리
+        await updatePaymentInAPI(String(completeId), { status: 'completed' });
+
+        toast.success('송금완료 처리되었습니다');
+        setStatusFilter('completed');
+        await loadPaymentsFromAPI();
+      } catch (error: any) {
+        console.error('[자동 송금완료] 처리 실패:', error);
+
+        let errorMessage = '송금완료 처리에 실패했습니다';
+        if (error.response?.status === 401) {
+          errorMessage = '인증이 만료되었습니다. 다시 로그인해주세요';
+        } else if (error.response?.status === 404) {
+          errorMessage = '결제 요청을 찾을 수 없습니다 (ID: ' + completeId + ')';
+        } else if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.message) {
+          errorMessage += ': ' + error.message;
         }
 
-        // 모바일에서 내역 화면으로 전환
-        setMobileView('list');
-        setStatusFilter('pending');
-
-        try {
-          await loadPaymentsFromAPI();
-
-          // 송금완료 전에 해당 결제요청의 quickText를 실행내역 메모로 저장
-          const payment = payments.find(p => p.id === String(completeId));
-          if (payment && (payment as any).quickText) {
-            const storedMemos = localStorage.getItem('executionMemos');
-            const executionMemos = storedMemos ? JSON.parse(storedMemos) : {};
-            executionMemos[String(completeId)] = (payment as any).quickText;
-            localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
-          }
-
-          await updatePaymentInAPI(String(completeId), { status: 'completed' });
-
-          toast.success('송금완료 처리되었습니다');
-          setStatusFilter('completed');
-          window.history.replaceState({}, '', '/payments');
-          await loadPaymentsFromAPI();
-        } catch (error: any) {
-          console.error('[자동 송금완료] 처리 실패:', error);
-
-          let errorMessage = '송금완료 처리에 실패했습니다';
-          if (error.response?.status === 401) {
-            errorMessage = '인증이 만료되었습니다. 다시 로그인해주세요';
-          } else if (error.response?.status === 404) {
-            errorMessage = '결제 요청을 찾을 수 없습니다 (ID: ' + completeId + ')';
-          } else if (error.response?.data?.error) {
-            errorMessage = error.response.data.error;
-          } else if (error.message) {
-            errorMessage += ': ' + error.message;
-          }
-
-          toast.error(errorMessage);
-          window.history.replaceState({}, '', '/payments');
-        }
+        toast.error(errorMessage);
       }
     };
 
