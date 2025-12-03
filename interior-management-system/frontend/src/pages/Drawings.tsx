@@ -162,6 +162,28 @@ const Drawings = () => {
   const isLoadingRef = useRef(false); // 데이터 로딩 중 플래그
   const hasMigratedRef = useRef(false); // 마이그레이션 완료 플래그
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // 저장 디바운스용
+  const hasRestoredRef = useRef(false); // 복원 완료 플래그
+
+  // localStorage에서 저장된 선택값 복원 (lazy init 실패 시 백업)
+  useEffect(() => {
+    if (user?.id && !hasRestoredRef.current) {
+      hasRestoredRef.current = true;
+
+      // 프로젝트 복원
+      if (!selectedProject) {
+        const savedProject = localStorage.getItem(`drawings-selected-project-${user.id}`);
+        if (savedProject) {
+          setSelectedProject(savedProject);
+        }
+      }
+
+      // 도면 유형 복원
+      const savedType = localStorage.getItem(`drawings-selected-type-${user.id}`);
+      if (savedType && DRAWING_TYPES.includes(savedType) && savedType !== selectedDrawingType) {
+        setSelectedDrawingType(savedType);
+      }
+    }
+  }, [user?.id]);
 
   // 로컬 저장소(localStorage/IndexedDB)에서 서버로 데이터 마이그레이션 (최초 1회만)
   useEffect(() => {
