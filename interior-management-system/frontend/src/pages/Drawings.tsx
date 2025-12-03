@@ -1180,69 +1180,6 @@ const Drawings = () => {
                 </div>
               )}
 
-              {/* 썸네일 바 - 다중 이미지일 때 표시 */}
-              {uploadedImages.length > 0 && (
-                <div className="bg-white border-b px-3 md:px-6 py-2 flex-shrink-0">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                    {uploadedImages.map((imgUrl, idx) => (
-                      <div
-                        key={idx}
-                        className={`relative flex-shrink-0 cursor-pointer group rounded-lg overflow-hidden transition-all ${
-                          selectedImageIndex === idx
-                            ? 'ring-2 ring-blue-500 ring-offset-1'
-                            : 'ring-1 ring-gray-200 hover:ring-gray-400'
-                        }`}
-                        onClick={() => setSelectedImageIndex(idx)}
-                      >
-                        <img
-                          src={imgUrl}
-                          alt={`도면 ${idx + 1}`}
-                          className="w-16 h-16 md:w-20 md:h-20 object-cover"
-                        />
-                        {/* 호버 시 수정/삭제 버튼 */}
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReplaceImage(idx);
-                            }}
-                            className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors"
-                            title="수정"
-                          >
-                            <Pencil className="w-3.5 h-3.5 text-gray-700" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteImage(idx);
-                            }}
-                            className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-red-50 transition-colors"
-                            title="삭제"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                          </button>
-                        </div>
-                        {/* 선택된 이미지 표시 */}
-                        {selectedImageIndex === idx && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-blue-500 text-white text-[10px] text-center py-0.5 font-medium">
-                            {idx + 1}/{uploadedImages.length}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    {/* 이미지 추가 버튼 */}
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors"
-                      title="도면 추가"
-                    >
-                      <Plus className="w-6 h-6" />
-                      <span className="text-[10px] mt-1">추가</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* 캔버스 영역 */}
               <div className={`overflow-hidden p-3 md:p-6 flex-1 md:flex-none`}>
                 {uploadedImage ? (
@@ -1383,6 +1320,88 @@ const Drawings = () => {
                         </div>
                       );
                     })}
+
+                    {/* 이미지 1개일 때: 우하단 추가 버튼 */}
+                    {uploadedImages.length === 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fileInputRef.current?.click();
+                        }}
+                        className="absolute bottom-3 right-3 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-500 hover:text-gray-700 hover:shadow-xl transition-all z-10 border border-gray-200"
+                        title="도면 추가"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    )}
+
+                    {/* 이미지 2개 이상일 때: 하단 썸네일 바 */}
+                    {uploadedImages.length > 1 && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 px-3 py-2 z-10">
+                        <div className="flex items-center gap-2 overflow-x-auto">
+                          {uploadedImages.map((imgUrl, idx) => (
+                            <div
+                              key={idx}
+                              className={`relative flex-shrink-0 cursor-pointer group rounded overflow-hidden transition-all ${
+                                selectedImageIndex === idx
+                                  ? 'ring-2 ring-white'
+                                  : 'opacity-70 hover:opacity-100'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedImageIndex(idx);
+                              }}
+                            >
+                              <img
+                                src={imgUrl}
+                                alt={`도면 ${idx + 1}`}
+                                className="w-12 h-12 md:w-14 md:h-14 object-cover"
+                              />
+                              {/* 호버 시 수정/삭제 버튼 */}
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleReplaceImage(idx);
+                                  }}
+                                  className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors"
+                                  title="수정"
+                                >
+                                  <Pencil className="w-3 h-3 text-gray-700" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteImage(idx);
+                                  }}
+                                  className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-red-50 transition-colors"
+                                  title="삭제"
+                                >
+                                  <Trash2 className="w-3 h-3 text-red-500" />
+                                </button>
+                              </div>
+                              {/* 선택된 이미지 번호 표시 */}
+                              {selectedImageIndex === idx && (
+                                <div className="absolute bottom-0 left-0 right-0 bg-white text-gray-900 text-[9px] text-center py-0.5 font-bold">
+                                  {idx + 1}/{uploadedImages.length}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {/* 이미지 추가 버튼 */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              fileInputRef.current?.click();
+                            }}
+                            className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 border-2 border-dashed border-white border-opacity-50 rounded flex items-center justify-center text-white text-opacity-70 hover:border-opacity-100 hover:text-opacity-100 transition-all"
+                            title="도면 추가"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     </div>
                   </div>
                 ) : (
