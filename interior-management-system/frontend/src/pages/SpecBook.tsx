@@ -1151,7 +1151,7 @@ const SpecBook = () => {
                         setSelectedGrades([...selectedGrades, grade]);
                       }
                     }}
-                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap ${
                       selectedGrades.includes(grade)
                         ? grade === '하이엔드' ? 'bg-violet-500 text-white' :
                           grade === '고급' ? 'bg-sky-500 text-white' :
@@ -1166,7 +1166,7 @@ const SpecBook = () => {
                 {selectedGrades.length > 0 && (
                   <button
                     onClick={() => setSelectedGrades([])}
-                    className="px-3 py-1.5 rounded text-xs font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                    className="px-3 py-1.5 rounded text-xs font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors whitespace-nowrap"
                   >
                     초기화
                   </button>
