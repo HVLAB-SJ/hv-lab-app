@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
-import { FileImage, Trash2, Square, ArrowLeft, X } from 'lucide-react';
+import { FileImage, Trash2, Square, ArrowLeft, X, Plus, Pencil } from 'lucide-react';
 import { drawingStorage } from '../utils/drawingStorage';
 
 // 도면 종류
@@ -108,9 +108,13 @@ const Drawings = () => {
     return '네이버도면';
   });
   const [selectedSymbol, setSelectedSymbol] = useState(ELECTRIC_SYMBOLS[0].id);
-  const [uploadedImage, setUploadedImage] = useState<string>('');
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+
+  // 현재 선택된 이미지
+  const uploadedImage = uploadedImages[selectedImageIndex] || '';
 
   // 네이버도면 전용 필드
   const [naverTypeSqm, setNaverTypeSqm] = useState<string>(''); // 제곱미터
@@ -206,7 +210,15 @@ const Drawings = () => {
       // IndexedDB에서 데이터 로드 (비동기)
       drawingStorage.getItem(key).then(data => {
         if (data) {
-          setUploadedImage(data.imageUrl || '');
+          // 다중 이미지 지원 (기존 단일 이미지 호환)
+          if (data.imageUrls && Array.isArray(data.imageUrls)) {
+            setUploadedImages(data.imageUrls);
+          } else if (data.imageUrl) {
+            setUploadedImages([data.imageUrl]);
+          } else {
+            setUploadedImages([]);
+          }
+          setSelectedImageIndex(0);
           setMarkers(data.markers || []);
           setRooms(data.rooms || []);
           // 네이버도면 필드 로드
@@ -215,7 +227,8 @@ const Drawings = () => {
           setNaverArea(data.naverArea || '');
         } else {
           // Clear current data if no saved data exists
-          setUploadedImage('');
+          setUploadedImages([]);
+          setSelectedImageIndex(0);
           setMarkers([]);
           setRooms([]);
           setNaverTypeSqm('');
@@ -233,7 +246,8 @@ const Drawings = () => {
       }).catch(error => {
         console.error('Failed to load drawing data:', error);
         // 에러 발생 시에도 초기화
-        setUploadedImage('');
+        setUploadedImages([]);
+        setSelectedImageIndex(0);
         setMarkers([]);
         setRooms([]);
         setNaverTypeSqm('');
@@ -246,14 +260,14 @@ const Drawings = () => {
     }
   }, [user?.id, selectedProject, selectedDrawingType]);
 
-  // Save drawing data when image, markers, or rooms change (with debounce)
+  // Save drawing data when images, markers, or rooms change (with debounce)
   useEffect(() => {
     // 로딩 중이면 저장하지 않음 (무한 루프 방지)
     if (isLoadingRef.current) {
       return;
     }
 
-    if (user?.id && selectedProject && selectedDrawingType && uploadedImage) {
+    if (user?.id && selectedProject && selectedDrawingType && uploadedImages.length > 0) {
       // 이전 타이머 취소
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -265,7 +279,8 @@ const Drawings = () => {
         const data: DrawingData = {
           type: selectedDrawingType,
           projectId: selectedProject,
-          imageUrl: uploadedImage,
+          imageUrl: uploadedImages[0], // 첫 번째 이미지 (기존 호환)
+          imageUrls: uploadedImages, // 다중 이미지
           markers,
           rooms,
           lastModified: new Date(),
@@ -293,13 +308,13 @@ const Drawings = () => {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [user?.id, selectedProject, selectedDrawingType, uploadedImage, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea]);
+  }, [user?.id, selectedProject, selectedDrawingType, uploadedImages, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea]);
 
   // 업로드 상태
   const [isUploading, setIsUploading] = useState(false);
 
   // 이미지 파일 처리 함수 (서버 업로드 방식)
-  const processImageFile = async (file: File) => {
+  const processImageFile = async (file: File, replaceIndex?: number) => {
     if (!file.type.startsWith('image/')) {
       alert('이미지 파일만 업로드 가능합니다.');
       return;
@@ -316,7 +331,19 @@ const Drawings = () => {
       // 서버에 파일 업로드
       const imageUrl = await drawingStorage.uploadImage(file);
       console.log(`📸 이미지 업로드 완료: ${imageUrl}`);
-      setUploadedImage(imageUrl);
+
+      if (replaceIndex !== undefined) {
+        // 기존 이미지 교체
+        setUploadedImages(prev => {
+          const newImages = [...prev];
+          newImages[replaceIndex] = imageUrl;
+          return newImages;
+        });
+      } else {
+        // 새 이미지 추가
+        setUploadedImages(prev => [...prev, imageUrl]);
+        setSelectedImageIndex(uploadedImages.length); // 새로 추가된 이미지 선택
+      }
     } catch (error: any) {
       console.error('이미지 업로드 실패:', error);
       alert(error.message || '이미지 업로드에 실패했습니다.');
@@ -325,11 +352,41 @@ const Drawings = () => {
     }
   };
 
-  // 파일 선택 핸들러
+  // 이미지 삭제 핸들러
+  const handleDeleteImage = (index: number) => {
+    if (!confirm('이 도면을 삭제하시겠습니까?')) return;
+
+    setUploadedImages(prev => {
+      const newImages = prev.filter((_, i) => i !== index);
+      // 선택된 인덱스 조정
+      if (selectedImageIndex >= newImages.length) {
+        setSelectedImageIndex(Math.max(0, newImages.length - 1));
+      } else if (selectedImageIndex > index) {
+        setSelectedImageIndex(selectedImageIndex - 1);
+      }
+      return newImages;
+    });
+  };
+
+  // 이미지 교체 핸들러
+  const handleReplaceImage = (index: number) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        processImageFile(file, index);
+      }
+    };
+    input.click();
+  };
+
+  // 파일 선택 핸들러 (다중 파일 지원)
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      processImageFile(file);
+    const files = e.target.files;
+    if (files) {
+      Array.from(files).forEach(file => processImageFile(file));
     }
     // Reset input value to allow re-uploading same file
     e.target.value = '';
@@ -1101,6 +1158,69 @@ const Drawings = () => {
                 </div>
               )}
 
+              {/* 썸네일 바 - 다중 이미지일 때 표시 */}
+              {uploadedImages.length > 0 && (
+                <div className="bg-white border-b px-3 md:px-6 py-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    {uploadedImages.map((imgUrl, idx) => (
+                      <div
+                        key={idx}
+                        className={`relative flex-shrink-0 cursor-pointer group rounded-lg overflow-hidden transition-all ${
+                          selectedImageIndex === idx
+                            ? 'ring-2 ring-blue-500 ring-offset-1'
+                            : 'ring-1 ring-gray-200 hover:ring-gray-400'
+                        }`}
+                        onClick={() => setSelectedImageIndex(idx)}
+                      >
+                        <img
+                          src={imgUrl}
+                          alt={`도면 ${idx + 1}`}
+                          className="w-16 h-16 md:w-20 md:h-20 object-cover"
+                        />
+                        {/* 호버 시 수정/삭제 버튼 */}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReplaceImage(idx);
+                            }}
+                            className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors"
+                            title="수정"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-gray-700" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteImage(idx);
+                            }}
+                            className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-red-50 transition-colors"
+                            title="삭제"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                          </button>
+                        </div>
+                        {/* 선택된 이미지 표시 */}
+                        {selectedImageIndex === idx && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-blue-500 text-white text-[10px] text-center py-0.5 font-medium">
+                            {idx + 1}/{uploadedImages.length}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {/* 이미지 추가 버튼 */}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors"
+                      title="도면 추가"
+                    >
+                      <Plus className="w-6 h-6" />
+                      <span className="text-[10px] mt-1">추가</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* 캔버스 영역 */}
               <div className={`overflow-hidden p-3 md:p-6 flex-1 md:flex-none`}>
                 {uploadedImage ? (
@@ -1287,6 +1407,7 @@ const Drawings = () => {
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
+                      multiple
                       onChange={handleImageUpload}
                       className="hidden"
                     />
