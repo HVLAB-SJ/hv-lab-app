@@ -78,6 +78,13 @@ app.use(express.static(path.join(__dirname, 'views')));
 // uploads 폴더 제공 (스펙북 이미지 등)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Railway Volume 경로 제공 (도면 이미지 등)
+const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH;
+if (volumePath) {
+  app.use('/data', express.static(volumePath));
+  console.log('📁 Railway Volume 정적 파일 제공:', volumePath);
+}
+
 // Socket.IO 연결 처리
 io.on('connection', (socket) => {
   console.log('새로운 클라이언트 연결:', socket.id);

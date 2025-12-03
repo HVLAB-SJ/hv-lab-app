@@ -12,13 +12,23 @@ const generateId = () => {
   return crypto.randomBytes(16).toString('hex');
 };
 
-// 업로드 디렉토리 설정
-const uploadDir = path.join(__dirname, '../../uploads/drawings');
+// 업로드 디렉토리 설정 (Railway Volume 또는 로컬)
+const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH || '';
+const uploadDir = volumePath
+  ? path.join(volumePath, 'drawings')  // Railway Volume 사용
+  : path.join(__dirname, '../../uploads/drawings');  // 로컬 개발용
+
+console.log('📁 도면 업로드 디렉토리:', uploadDir);
+console.log('📁 Railway Volume 사용:', volumePath ? 'Yes' : 'No');
 
 // 디렉토리가 없으면 생성
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log('✅ drawings 업로드 디렉토리 생성:', uploadDir);
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('✅ drawings 업로드 디렉토리 생성:', uploadDir);
+  }
+} catch (mkdirErr) {
+  console.error('❌ 업로드 디렉토리 생성 실패:', mkdirErr.message);
 }
 
 // Multer 설정
@@ -108,27 +118,45 @@ const ensureTableExists = () => {
 };
 
 // 이미지 업로드 엔드포인트
-router.post('/upload', authenticateToken, upload.single('image'), async (req, res) => {
+router.post('/upload', authenticateToken, (req, res, next) => {
   console.log('[drawings] Upload request received');
+  console.log('[drawings] Upload directory:', uploadDir);
+  console.log('[drawings] Directory exists:', fs.existsSync(uploadDir));
 
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: '이미지 파일이 필요합니다' });
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      console.error('[drawings] Multer error:', err);
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: '파일 크기가 20MB를 초과합니다' });
+      }
+      return res.status(400).json({ error: err.message });
     }
 
-    const imageUrl = `/uploads/drawings/${req.file.filename}`;
-    console.log(`[drawings] Image uploaded: ${imageUrl}, size: ${Math.round(req.file.size / 1024)}KB`);
+    try {
+      if (!req.file) {
+        console.error('[drawings] No file in request');
+        return res.status(400).json({ error: '이미지 파일이 필요합니다' });
+      }
 
-    res.json({
-      success: true,
-      imageUrl: imageUrl,
-      filename: req.file.filename,
-      size: req.file.size
-    });
-  } catch (err) {
-    console.error('[drawings] Upload error:', err);
-    res.status(500).json({ error: '이미지 업로드 실패', details: err.message });
-  }
+      // Railway Volume 사용 시 경로 조정
+      const imageUrl = volumePath
+        ? `/data/drawings/${req.file.filename}`  // Volume 경로
+        : `/uploads/drawings/${req.file.filename}`;  // 로컬 경로
+
+      console.log(`[drawings] Image uploaded: ${imageUrl}, size: ${Math.round(req.file.size / 1024)}KB`);
+      console.log(`[drawings] File path: ${req.file.path}`);
+
+      res.json({
+        success: true,
+        imageUrl: imageUrl,
+        filename: req.file.filename,
+        size: req.file.size
+      });
+    } catch (err) {
+      console.error('[drawings] Upload error:', err);
+      res.status(500).json({ error: '이미지 업로드 실패', details: err.message });
+    }
+  });
 });
 
 // 도면 조회 (projectId, type으로 조회)
