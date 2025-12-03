@@ -1531,7 +1531,7 @@ const Payments = () => {
 
         console.log('💰 Creating payment:', newPayment);
         console.log('💰 Images in payment:', formData.quickImages?.length || 0, '개');
-        await addPaymentToAPI(newPayment);
+        const newPaymentId = await addPaymentToAPI(newPayment);
 
         toast.success('결제요청이 추가되었습니다');
 
@@ -1545,7 +1545,9 @@ const Payments = () => {
               accountNumber: formData.accountNumber,
               amount: totalAmount,
               projectName: formData.project,
-              itemName: formData.itemName
+              itemName: formData.itemName,
+              process: formData.process,
+              paymentId: newPaymentId  // 송금완료 링크용
             });
             toast.success('결제 요청 문자가 발송되었습니다');
           } catch (smsError) {

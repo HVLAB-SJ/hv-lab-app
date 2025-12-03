@@ -896,7 +896,7 @@ router.get('/tosspay/limit', authenticateToken, isManager, async (req, res) => {
 // 토스 송금 SMS 발송 (특정 번호로)
 router.post('/send-toss-payment-sms', authenticateToken, async (req, res) => {
   try {
-    const { recipientPhone, accountHolder, bankName, accountNumber, amount, projectName, itemName } = req.body;
+    const { recipientPhone, accountHolder, bankName, accountNumber, amount, projectName, itemName, process, paymentId } = req.body;
 
     console.log('[POST /api/payments/send-toss-payment-sms] SMS 발송 요청:', {
       recipientPhone,
@@ -905,7 +905,9 @@ router.post('/send-toss-payment-sms', authenticateToken, async (req, res) => {
       accountNumber,
       amount,
       projectName,
-      itemName
+      itemName,
+      process,
+      paymentId
     });
 
     // 필수 정보 확인
@@ -928,11 +930,21 @@ router.post('/send-toss-payment-sms', authenticateToken, async (req, res) => {
     // 금액 포맷팅
     const formattedAmount = amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-    // SMS 메시지 생성
-    let message = `${projectPrefix}/${itemName || '결제요청'}\n`;
+    // 송금완료 링크 생성
+    const completeLink = paymentId ? `https://hvlab.app/payments?c=${paymentId}` : '';
+
+    // SMS 메시지 생성 (공정/항목 포함)
+    const processText = process || '';
+    const itemText = itemName || '결제요청';
+    let message = `${projectPrefix}/${processText}/${itemText}\n`;
     message += `${bankName} ${accountNumber} ${accountHolder}\n`;
     message += `${formattedAmount}원\n\n`;
     message += `토스송금:\n${tossDeeplink}`;
+
+    // 송금완료 링크 추가
+    if (completeLink) {
+      message += `\n\n완료:\n${completeLink}`;
+    }
 
     console.log('[토스 SMS] 발송할 메시지:', message);
 
