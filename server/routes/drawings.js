@@ -78,10 +78,70 @@ const ensureTableExists = () => {
       }
 
       if (row) {
-        // 테이블이 이미 존재함
-        console.log('✅ drawings table already exists');
-        tableChecked = true;
-        resolve();
+        // 테이블이 이미 존재함 - 컬럼 확인 및 마이그레이션
+        console.log('✅ drawings table already exists, checking columns...');
+
+        // 테이블 구조 확인
+        db.all("PRAGMA table_info(drawings)", (pragmaErr, columns) => {
+          if (pragmaErr) {
+            console.error('[drawings] Error checking table columns:', pragmaErr);
+            reject(pragmaErr);
+            return;
+          }
+
+          const columnNames = columns.map(col => col.name);
+          console.log('[drawings] Existing columns:', columnNames);
+
+          // 필요한 컬럼 목록
+          const requiredColumns = [
+            { name: 'type', sql: "ALTER TABLE drawings ADD COLUMN type TEXT DEFAULT '기본도면'" },
+            { name: 'naver_type_sqm', sql: "ALTER TABLE drawings ADD COLUMN naver_type_sqm TEXT" },
+            { name: 'naver_type_pyeong', sql: "ALTER TABLE drawings ADD COLUMN naver_type_pyeong TEXT" },
+            { name: 'naver_area', sql: "ALTER TABLE drawings ADD COLUMN naver_area TEXT" }
+          ];
+
+          // 누락된 컬럼 추가
+          const missingColumns = requiredColumns.filter(col => !columnNames.includes(col.name));
+
+          if (missingColumns.length === 0) {
+            console.log('[drawings] All required columns exist');
+            tableChecked = true;
+            resolve();
+            return;
+          }
+
+          console.log('[drawings] Adding missing columns:', missingColumns.map(c => c.name));
+
+          // 순차적으로 컬럼 추가
+          const addColumns = missingColumns.reduce((promise, col) => {
+            return promise.then(() => {
+              return new Promise((res, rej) => {
+                db.run(col.sql, (err) => {
+                  if (err) {
+                    console.error(`[drawings] Failed to add column ${col.name}:`, err);
+                    // 컬럼이 이미 존재하면 무시
+                    if (err.message.includes('duplicate column')) {
+                      res();
+                    } else {
+                      rej(err);
+                    }
+                  } else {
+                    console.log(`[drawings] Added column: ${col.name}`);
+                    res();
+                  }
+                });
+              });
+            });
+          }, Promise.resolve());
+
+          addColumns
+            .then(() => {
+              console.log('[drawings] Migration completed');
+              tableChecked = true;
+              resolve();
+            })
+            .catch(reject);
+        });
         return;
       }
 
