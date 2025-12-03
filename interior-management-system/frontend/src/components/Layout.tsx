@@ -1,8 +1,8 @@
 import { Outlet, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import clsx from 'clsx';
-import { Plus, X, BookOpen } from 'lucide-react';
+import { Plus, X, BookOpen, RefreshCw } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
 import { useNotificationStore } from '../store/notificationStore';
 import workRequestService from '../services/workRequestService';
@@ -28,6 +28,56 @@ const Layout = () => {
   const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
   const [inProgressASCount, setInProgressASCount] = useState(0);
   const [unreadQuoteInquiryCount, setUnreadQuoteInquiryCount] = useState(0);
+
+  // Pull-to-refresh 상태
+  const [isPulling, setIsPulling] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const mainRef = useRef<HTMLDivElement>(null);
+  const PULL_THRESHOLD = 80; // 새로고침 트리거 거리
+
+  // Pull-to-refresh 핸들러
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // 모바일에서만, 스크롤이 맨 위일 때만 동작
+    if (window.scrollY === 0 && window.innerWidth < 768) {
+      touchStartY.current = e.touches[0].clientY;
+      setIsPulling(true);
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isPulling || isRefreshing) return;
+
+    const touchY = e.touches[0].clientY;
+    const diff = touchY - touchStartY.current;
+
+    // 아래로 당길 때만 (양수 값)
+    if (diff > 0 && window.scrollY === 0) {
+      // 저항 효과 적용 (당길수록 덜 움직임)
+      const distance = Math.min(diff * 0.5, 120);
+      setPullDistance(distance);
+    }
+  }, [isPulling, isRefreshing]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isPulling) return;
+
+    if (pullDistance >= PULL_THRESHOLD && !isRefreshing) {
+      // 새로고침 실행
+      setIsRefreshing(true);
+      setPullDistance(50); // 로딩 표시용 고정 거리
+
+      // 페이지 새로고침
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    } else {
+      // 원위치
+      setPullDistance(0);
+    }
+    setIsPulling(false);
+  }, [isPulling, pullDistance, isRefreshing]);
 
   // 페이지 변경 시 모바일 폼 상태 초기화
   useEffect(() => {
@@ -361,8 +411,50 @@ const Layout = () => {
         </div>
 
         {/* Page content */}
-        <main className="py-[10px] md:py-6 lg:py-8">
-          <div className="px-3 sm:px-4 md:px-6 lg:px-8">
+        <main
+          ref={mainRef}
+          className="py-[10px] md:py-6 lg:py-8"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Pull-to-refresh indicator (모바일 전용) */}
+          {pullDistance > 0 && (
+            <div
+              className="md:hidden fixed left-0 right-0 flex items-center justify-center z-50 pointer-events-none"
+              style={{
+                top: 56, // 헤더 높이
+                height: pullDistance,
+                transition: isPulling ? 'none' : 'height 0.2s ease-out'
+              }}
+            >
+              <div
+                className={clsx(
+                  "flex items-center justify-center w-10 h-10 bg-white rounded-full shadow-lg border",
+                  isRefreshing && "animate-spin"
+                )}
+                style={{
+                  transform: `rotate(${isRefreshing ? 0 : pullDistance * 2}deg)`,
+                  opacity: Math.min(pullDistance / PULL_THRESHOLD, 1)
+                }}
+              >
+                <RefreshCw
+                  className={clsx(
+                    "w-5 h-5",
+                    pullDistance >= PULL_THRESHOLD ? "text-blue-600" : "text-gray-400"
+                  )}
+                />
+              </div>
+            </div>
+          )}
+
+          <div
+            className="px-3 sm:px-4 md:px-6 lg:px-8"
+            style={{
+              transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : 'none',
+              transition: isPulling ? 'none' : 'transform 0.2s ease-out'
+            }}
+          >
             <Outlet />
           </div>
         </main>
