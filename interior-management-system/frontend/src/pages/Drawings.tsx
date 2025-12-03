@@ -1487,47 +1487,6 @@ const Drawings = () => {
             </div>
           </div>
 
-          {/* 우측: 수량 집계 - 데스크톱에서만 우측, 모바일에서는 하단 */}
-          <div className="w-full md:w-80 bg-white border-t md:border-t-0 md:border-l flex-shrink-0 overflow-y-auto">
-            <div className="p-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">수량 집계</h3>
-              {selectedDrawingType === '전기도면' && (
-                <div className="space-y-2">
-                  {ELECTRIC_SYMBOLS.map((symbol) => {
-                    const count = getSymbolCount(symbol.id, viewMode === 'room' ? selectedRoomId || undefined : undefined);
-                    if (count === 0) return null;
-                    return (
-                      <div
-                        key={symbol.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded border"
-                        style={{ borderColor: symbol.color, borderWidth: '1.5px' }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="text-base font-semibold px-2 py-1 bg-white rounded"
-                            style={{
-                              color: symbol.color,
-                              border: `1.5px solid ${symbol.color}`
-                            }}
-                          >
-                            {symbol.symbol}
-                          </span>
-                          <span className="text-sm font-medium text-gray-900">{symbol.name}</span>
-                        </div>
-                        <span className="text-lg font-bold text-gray-900">{count}개</span>
-                      </div>
-                    );
-                  })}
-
-                  {markers.length === 0 && (
-                    <p className="text-xs text-gray-500 text-center py-12">
-                      평면도에 마커를 추가하면<br />자동으로 수량이 집계됩니다
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
           </>
         ) : (
           <div className="drawings-empty flex-1 flex items-center justify-center bg-gray-50">
