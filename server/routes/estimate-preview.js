@@ -191,28 +191,51 @@ router.post('/calculate', authenticateToken, async (req, res) => {
       });
     });
 
+    // 방문손잡이 수량 (평수별)
+    const getDoorHandleQuantity = (area) => {
+      if (area < 30) return { min: 3, max: 5 };       // 20평대
+      if (area < 40) return { min: 4, max: 6 };       // 30평대
+      if (area < 60) return { min: 6, max: 7 };       // 40~50평대
+      if (area < 90) return { min: 7, max: 9 };       // 60~80평대
+      return { min: 8, max: 10 };                      // 90평대 이상
+    };
+
     // 집기류 비용 계산 (최소/최대 범위)
     let fixtureCostMin = 0;
     let fixtureCostMax = 0;
     const fixtureItemsWithQuantity = fixtures.map(fixture => {
-      let quantity = 1;
+      let quantityMin = 1;
+      let quantityMax = 1;
+
       // 화장실 관련 집기: 화장실 개수만큼 곱하기
       if (['변기', '세면대', '수전', '샤워수전', '욕조', '비데', '수건걸이', '휴지걸이'].includes(fixture.category)) {
-        quantity = selectedBathroomCount;
+        quantityMin = selectedBathroomCount;
+        quantityMax = selectedBathroomCount;
       } else if (['타일', '마루', '벽지'].includes(fixture.category)) {
-        quantity = Math.ceil(areaSize / 10);
+        const qty = Math.ceil(areaSize / 10);
+        quantityMin = qty;
+        quantityMax = qty;
+      } else if (fixture.category === '방문손잡이') {
+        const doorQty = getDoorHandleQuantity(areaSize);
+        quantityMin = doorQty.min;
+        quantityMax = doorQty.max;
       }
 
-      const minTotal = (fixture.min_price || 0) * quantity;
-      const maxTotal = (fixture.max_price || 0) * quantity;
+      const minTotal = (fixture.min_price || 0) * quantityMin;
+      const maxTotal = (fixture.max_price || 0) * quantityMax;
 
       fixtureCostMin += minTotal;
       fixtureCostMax += maxTotal;
 
+      // 수량 표시용 (범위가 다르면 "3~5" 형태)
+      const quantityDisplay = quantityMin === quantityMax ? quantityMin : `${quantityMin}~${quantityMax}`;
+
       return {
         category: fixture.category,
         count: fixture.count,
-        quantity: quantity,
+        quantity: quantityDisplay,
+        quantityMin: quantityMin,
+        quantityMax: quantityMax,
         minPrice: fixture.min_price || 0,
         maxPrice: fixture.max_price || 0,
         minTotal: minTotal,
@@ -368,28 +391,50 @@ router.post('/create', authenticateToken, async (req, res) => {
       });
     });
 
+    // 방문손잡이 수량 (평수별)
+    const getDoorHandleQuantityCreate = (area) => {
+      if (area < 30) return { min: 3, max: 5 };       // 20평대
+      if (area < 40) return { min: 4, max: 6 };       // 30평대
+      if (area < 60) return { min: 6, max: 7 };       // 40~50평대
+      if (area < 90) return { min: 7, max: 9 };       // 60~80평대
+      return { min: 8, max: 10 };                      // 90평대 이상
+    };
+
     // 집기류 비용 계산 (최소/최대 범위)
     let fixtureCostMin = 0;
     let fixtureCostMax = 0;
     const fixtureItemsWithQuantity = fixtures.map(fixture => {
-      let quantity = 1;
+      let quantityMin = 1;
+      let quantityMax = 1;
+
       // 화장실 관련 집기: 화장실 개수만큼 곱하기
       if (['변기', '세면대', '수전', '샤워수전', '욕조', '비데', '수건걸이', '휴지걸이'].includes(fixture.category)) {
-        quantity = selectedBathroomCount;
+        quantityMin = selectedBathroomCount;
+        quantityMax = selectedBathroomCount;
       } else if (['타일', '마루', '벽지'].includes(fixture.category)) {
-        quantity = Math.ceil(areaSize / 10); // 10평당 1단위
+        const qty = Math.ceil(areaSize / 10); // 10평당 1단위
+        quantityMin = qty;
+        quantityMax = qty;
+      } else if (fixture.category === '방문손잡이') {
+        const doorQty = getDoorHandleQuantityCreate(areaSize);
+        quantityMin = doorQty.min;
+        quantityMax = doorQty.max;
       }
 
-      const minTotal = (fixture.min_price || 0) * quantity;
-      const maxTotal = (fixture.max_price || 0) * quantity;
+      const minTotal = (fixture.min_price || 0) * quantityMin;
+      const maxTotal = (fixture.max_price || 0) * quantityMax;
 
       fixtureCostMin += minTotal;
       fixtureCostMax += maxTotal;
 
+      const quantityDisplay = quantityMin === quantityMax ? quantityMin : `${quantityMin}~${quantityMax}`;
+
       return {
         category: fixture.category,
         count: fixture.count,
-        quantity: quantity,
+        quantity: quantityDisplay,
+        quantityMin: quantityMin,
+        quantityMax: quantityMax,
         minPrice: fixture.min_price || 0,
         maxPrice: fixture.max_price || 0,
         minTotal: minTotal,
