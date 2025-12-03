@@ -1183,7 +1183,30 @@ const Drawings = () => {
               {/* 캔버스 영역 */}
               <div className={`overflow-hidden p-3 md:p-6 flex-1 md:flex-none`}>
                 {uploadedImage ? (
-                  <div className="relative w-full h-full md:h-auto md:max-h-[calc(100vh-280px)] bg-white rounded-lg shadow-lg overflow-hidden md:aspect-[16/10]">
+                  <div className="relative w-full h-full md:h-auto md:max-h-[calc(100vh-280px)] bg-white rounded-lg shadow-lg overflow-hidden md:aspect-[16/10] group/canvas">
+                    {/* 이미지 호버 시 수정/삭제 버튼 */}
+                    <div className="absolute top-3 right-3 flex gap-2 z-20 opacity-0 group-hover/canvas:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReplaceImage(selectedImageIndex);
+                        }}
+                        className="w-9 h-9 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all border border-gray-200"
+                        title="이미지 수정"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteImage(selectedImageIndex);
+                        }}
+                        className="w-9 h-9 bg-white rounded-full shadow-lg flex items-center justify-center text-red-500 hover:text-red-600 hover:bg-red-50 transition-all border border-gray-200"
+                        title="이미지 삭제"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                     <div
                       ref={canvasRef}
                       className={`relative w-full h-full ${
