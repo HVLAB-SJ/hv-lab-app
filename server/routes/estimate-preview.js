@@ -170,9 +170,12 @@ router.post('/calculate', authenticateToken, async (req, res) => {
                               bathroomCeilingCost + bathroomFaucetCost +
                               bathroomTileCost + bathroomGroutCost;
 
-    // 스펙북에서 해당 등급 아이템들의 가격 조회 (기존 로직 유지)
+    // 스펙북에서 해당 등급 아이템들의 가격 조회 (카테고리별 최소/최대 가격)
     const fixtureQuery = `
-      SELECT category, COUNT(*) as count, AVG(CAST(REPLACE(price, ',', '') AS INTEGER)) as avg_price
+      SELECT category,
+             COUNT(*) as count,
+             MIN(CAST(REPLACE(price, ',', '') AS INTEGER)) as min_price,
+             MAX(CAST(REPLACE(price, ',', '') AS INTEGER)) as max_price
       FROM specbook_items
       WHERE is_library = 1
       AND price IS NOT NULL
@@ -188,17 +191,23 @@ router.post('/calculate', authenticateToken, async (req, res) => {
       });
     });
 
-    // 집기류 비용 계산
-    let fixtureCost = 0;
+    // 집기류 비용 계산 (최소/최대 범위)
+    let fixtureCostMin = 0;
+    let fixtureCostMax = 0;
     fixtures.forEach(fixture => {
       let quantity = 1;
-      if (['변기', '세면대', '수전', '샤워수전'].includes(fixture.category)) {
+      // 화장실 관련 집기: 화장실 개수만큼 곱하기
+      if (['변기', '세면대', '수전', '샤워수전', '욕조', '비데', '수건걸이', '휴지걸이'].includes(fixture.category)) {
         quantity = selectedBathroomCount;
       } else if (['타일', '마루', '벽지'].includes(fixture.category)) {
         quantity = Math.ceil(areaSize / 10);
       }
-      fixtureCost += fixture.avg_price * quantity;
+      fixtureCostMin += (fixture.min_price || 0) * quantity;
+      fixtureCostMax += (fixture.max_price || 0) * quantity;
     });
+
+    // 기존 호환을 위해 평균값도 계산
+    const fixtureCost = Math.floor((fixtureCostMin + fixtureCostMax) / 2);
 
     // 추가 공사 비용 계산
     let sashCost = 0;
@@ -218,15 +227,17 @@ router.post('/calculate', authenticateToken, async (req, res) => {
       airconCost = Math.floor((cost.min + cost.max) / 2);
     }
 
-    // 총 비용 계산 (±15% 범위)
-    const totalCost = baseConstructionCost + fixtureCost + settingsBasedCost + sashCost + heatingCost + airconCost;
-    const totalMinCost = Math.floor(totalCost * 0.85);
-    const totalMaxCost = Math.floor(totalCost * 1.15);
+    // 총 비용 계산 (집기류 최소/최대 범위 적용)
+    const baseCost = baseConstructionCost + settingsBasedCost + sashCost + heatingCost + airconCost;
+    const totalMinCost = Math.floor(baseCost + fixtureCostMin);
+    const totalMaxCost = Math.floor(baseCost + fixtureCostMax);
 
     // 상세 내역 JSON 생성
     const detailBreakdown = {
       baseConstruction: baseConstructionCost,
       fixtures: fixtureCost,
+      fixturesMin: fixtureCostMin,
+      fixturesMax: fixtureCostMax,
       additionalBathrooms: additionalBathroomCost,
       settingsBasedCost: settingsBasedCost,
       itemDetails: {
@@ -257,6 +268,8 @@ router.post('/calculate', authenticateToken, async (req, res) => {
     res.json({
       baseConstructionCost,
       fixtureCost,
+      fixtureCostMin,
+      fixtureCostMax,
       settingsBasedCost,
       sashCost,
       heatingCost,
@@ -320,9 +333,12 @@ router.post('/create', authenticateToken, async (req, res) => {
     const additionalBathroomCost = selectedBathroomCount > 1 ? (selectedBathroomCount - 1) * 3000000 : 0;
     baseConstructionCost += additionalBathroomCost;
 
-    // 스펙북에서 해당 등급 아이템들의 가격 조회
+    // 스펙북에서 해당 등급 아이템들의 가격 조회 (카테고리별 최소/최대 가격)
     const fixtureQuery = `
-      SELECT category, COUNT(*) as count, AVG(CAST(REPLACE(price, ',', '') AS INTEGER)) as avg_price
+      SELECT category,
+             COUNT(*) as count,
+             MIN(CAST(REPLACE(price, ',', '') AS INTEGER)) as min_price,
+             MAX(CAST(REPLACE(price, ',', '') AS INTEGER)) as max_price
       FROM specbook_items
       WHERE is_library = 1
       AND price IS NOT NULL
@@ -338,19 +354,23 @@ router.post('/create', authenticateToken, async (req, res) => {
       });
     });
 
-    // 집기류 비용 계산 (카테고리별 평균 가격 * 수량 추정)
-    let fixtureCost = 0;
+    // 집기류 비용 계산 (최소/최대 범위)
+    let fixtureCostMin = 0;
+    let fixtureCostMax = 0;
     fixtures.forEach(fixture => {
-      // 평수에 따른 수량 계산 (카테고리별로 다르게 적용)
       let quantity = 1;
-      if (['변기', '세면대', '수전', '샤워수전'].includes(fixture.category)) {
+      // 화장실 관련 집기: 화장실 개수만큼 곱하기
+      if (['변기', '세면대', '수전', '샤워수전', '욕조', '비데', '수건걸이', '휴지걸이'].includes(fixture.category)) {
         quantity = selectedBathroomCount;
       } else if (['타일', '마루', '벽지'].includes(fixture.category)) {
         quantity = Math.ceil(areaSize / 10); // 10평당 1단위
       }
-
-      fixtureCost += fixture.avg_price * quantity;
+      fixtureCostMin += (fixture.min_price || 0) * quantity;
+      fixtureCostMax += (fixture.max_price || 0) * quantity;
     });
+
+    // 기존 호환을 위해 평균값도 계산
+    const fixtureCost = Math.floor((fixtureCostMin + fixtureCostMax) / 2);
 
     // 추가 공사 비용 계산
     let sashCost = 0;
@@ -370,15 +390,17 @@ router.post('/create', authenticateToken, async (req, res) => {
       airconCost = Math.floor((cost.min + cost.max) / 2);
     }
 
-    // 총 비용 계산 (±15% 범위)
-    const totalCost = baseConstructionCost + fixtureCost + sashCost + heatingCost + airconCost;
-    const totalMinCost = Math.floor(totalCost * 0.85);
-    const totalMaxCost = Math.floor(totalCost * 1.15);
+    // 총 비용 계산 (집기류 최소/최대 범위 적용)
+    const baseCost = baseConstructionCost + sashCost + heatingCost + airconCost;
+    const totalMinCost = Math.floor(baseCost + fixtureCostMin);
+    const totalMaxCost = Math.floor(baseCost + fixtureCostMax);
 
     // 상세 내역 JSON 생성
     const detailBreakdown = JSON.stringify({
       baseConstruction: baseConstructionCost,
       fixtures: fixtureCost,
+      fixturesMin: fixtureCostMin,
+      fixturesMax: fixtureCostMax,
       additionalBathrooms: additionalBathroomCost,
       sash: sashCost,
       floorHeating: heatingCost,

@@ -49,6 +49,8 @@ interface EstimateForm {
 interface EstimateResult {
   baseConstructionCost: number;
   fixtureCost: number;
+  fixtureCostMin?: number;
+  fixtureCostMax?: number;
   sashCost: number;
   heatingCost: number;
   airconCost: number;
@@ -1354,9 +1356,11 @@ const EstimatePreview: React.FC = () => {
                         </td>
                       </tr>
                       <tr>
-                        <td className="px-4 py-2 text-xs md:text-sm text-gray-900">집기류 ({form.grade})</td>
+                        <td className="px-4 py-2 text-xs md:text-sm text-gray-900">집기류 ({form.grade.join(', ')})</td>
                         <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
-                          {formatCurrency(result.fixtureCost)}
+                          {result.fixtureCostMin !== undefined && result.fixtureCostMax !== undefined
+                            ? `${formatCurrency(result.fixtureCostMin)} ~ ${formatCurrency(result.fixtureCostMax)}`
+                            : formatCurrency(result.fixtureCost)}
                         </td>
                       </tr>
                       {result.detailBreakdown?.itemDetails?.floor > 0 && (
