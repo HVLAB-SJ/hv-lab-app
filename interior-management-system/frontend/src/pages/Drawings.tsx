@@ -118,6 +118,12 @@ const Drawings = () => {
   // 파일 드래그 상태
   const [isDraggingFile, setIsDraggingFile] = useState(false);
 
+  // 터치 핀치 줌 상태
+  const lastTouchDistance = useRef<number>(0);
+  const lastTouchCenter = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const lastTapTime = useRef<number>(0);
+  const touchStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -418,6 +424,111 @@ const Drawings = () => {
   const handleImageDoubleClick = () => {
     setImageScale(1);
     setImagePosition({ x: 0, y: 0 });
+  };
+
+  // 터치 이벤트 핸들러 (핀치 줌 & 더블탭)
+  const getTouchDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const getTouchCenter = (touches: React.TouchList) => {
+    if (touches.length < 2) {
+      return { x: touches[0].clientX, y: touches[0].clientY };
+    }
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2
+    };
+  };
+
+  const handleImageTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const touches = e.touches;
+
+    if (touches.length === 1) {
+      // 단일 터치 - 드래그 시작 또는 더블탭 체크
+      const now = Date.now();
+      const timeSinceLastTap = now - lastTapTime.current;
+
+      touchStartPos.current = { x: touches[0].clientX, y: touches[0].clientY };
+
+      if (timeSinceLastTap < 300) {
+        // 더블탭 - 초기화
+        handleImageDoubleClick();
+        lastTapTime.current = 0;
+      } else {
+        lastTapTime.current = now;
+        setIsDraggingImage(true);
+        setDragStart({
+          x: touches[0].clientX - imagePosition.x,
+          y: touches[0].clientY - imagePosition.y
+        });
+      }
+    } else if (touches.length === 2) {
+      // 두 손가락 - 핀치 줌 시작
+      setIsDraggingImage(false);
+      lastTouchDistance.current = getTouchDistance(touches);
+      lastTouchCenter.current = getTouchCenter(touches);
+    }
+  };
+
+  const handleImageTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const touches = e.touches;
+
+    if (touches.length === 1 && isDraggingImage) {
+      // 단일 터치 드래그
+      setImagePosition({
+        x: touches[0].clientX - dragStart.x,
+        y: touches[0].clientY - dragStart.y
+      });
+    } else if (touches.length === 2) {
+      // 핀치 줌
+      const newDistance = getTouchDistance(touches);
+      const newCenter = getTouchCenter(touches);
+
+      if (lastTouchDistance.current > 0) {
+        const scaleFactor = newDistance / lastTouchDistance.current;
+        const newScale = Math.min(Math.max(0.5, imageScale * scaleFactor), 5);
+
+        // 중심점 기준으로 스케일 조정
+        const scaleChange = newScale / imageScale;
+        const centerX = newCenter.x - window.innerWidth / 2;
+        const centerY = newCenter.y - window.innerHeight / 2;
+        const newX = centerX - (centerX - imagePosition.x) * scaleChange;
+        const newY = centerY - (centerY - imagePosition.y) * scaleChange;
+
+        setImageScale(newScale);
+        setImagePosition({ x: newX, y: newY });
+      }
+
+      lastTouchDistance.current = newDistance;
+      lastTouchCenter.current = newCenter;
+    }
+  };
+
+  const handleImageTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+
+    if (e.touches.length === 0) {
+      setIsDraggingImage(false);
+      lastTouchDistance.current = 0;
+    } else if (e.touches.length === 1) {
+      // 두 손가락에서 한 손가락으로 전환
+      lastTouchDistance.current = 0;
+      setIsDraggingImage(true);
+      setDragStart({
+        x: e.touches[0].clientX - imagePosition.x,
+        y: e.touches[0].clientY - imagePosition.y
+      });
+    }
   };
 
   const resetImageModal = () => {
@@ -1306,14 +1417,17 @@ const Drawings = () => {
       {/* 이미지 전체화면 모달 */}
       {showImageModal && uploadedImage && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 touch-none"
           onClick={resetImageModal}
           onWheel={handleImageWheel}
           onMouseMove={handleImageMouseMove}
           onMouseUp={handleImageMouseUp}
           onMouseLeave={handleImageMouseUp}
+          onTouchStart={handleImageTouchStart}
+          onTouchMove={handleImageTouchMove}
+          onTouchEnd={handleImageTouchEnd}
         >
-          <div className="relative w-full h-full p-8 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-full p-4 md:p-8 flex items-center justify-center overflow-hidden">
             <button
               onClick={resetImageModal}
               className="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center text-white transition-all z-10"
@@ -1321,15 +1435,23 @@ const Drawings = () => {
               <X className="w-6 h-6" />
             </button>
 
-            {/* 확대/축소 안내 */}
+            {/* 확대/축소 안내 - 모바일/데스크톱 구분 */}
             <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white text-xs px-3 py-2 rounded z-10">
-              마우스 휠: 확대/축소 | 드래그: 이동 | 더블클릭: 초기화
+              <span className="hidden md:inline">마우스 휠: 확대/축소 | 드래그: 이동 | 더블클릭: 초기화</span>
+              <span className="md:hidden">두 손가락: 확대/축소 | 드래그: 이동 | 더블탭: 초기화</span>
             </div>
+
+            {/* 현재 배율 표시 */}
+            {imageScale !== 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white text-sm px-3 py-1 rounded z-10">
+                {Math.round(imageScale * 100)}%
+              </div>
+            )}
 
             <img
               src={uploadedImage}
               alt="도면 전체화면"
-              className="object-contain select-none"
+              className="object-contain select-none touch-none"
               style={{
                 transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageScale})`,
                 cursor: isDraggingImage ? 'grabbing' : 'grab',
