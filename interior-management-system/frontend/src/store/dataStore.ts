@@ -412,47 +412,12 @@ export const useDataStore = create<DataStore>()(
       const result = await paymentService.createPayment(paymentData);
       const newPaymentId = String(result.id);
 
-      // Reload all payments from API to get the updated list
-      const apiPayments = await paymentService.getAllPayments();
-      const payments: Payment[] = apiPayments.map((p: PaymentResponse) => ({
-        id: String(p.id),
-        project: p.project_name,
-        purpose: p.description,
-        process: p.vendor_name,
-        itemName: p.item_name || '',
-        amount: p.amount,
-        materialAmount: p.material_amount || 0,
-        laborAmount: p.labor_amount || 0,
-        originalMaterialAmount: p.original_material_amount || 0,
-        originalLaborAmount: p.original_labor_amount || 0,
-        applyTaxDeduction: p.apply_tax_deduction === 1,
-        includesVAT: p.includes_vat === 1,
-        quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
-        images: (() => {
-          if (!p.images) return [];
-          try {
-            const parsed = JSON.parse(p.images);
-            return Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            console.error('이미지 파싱 오류:', e, p.images);
-            return [];
-          }
-        })(),
-        category: p.request_type as Payment['category'],
-        status: p.status,
-        urgency: 'normal' as Payment['urgency'],
-        requestedBy: p.requester_name,
-        requestDate: new Date(p.created_at),
-        approvalDate: p.approved_at ? new Date(p.approved_at) : undefined,
-        bankInfo: {
-          accountHolder: p.account_holder || '',
-          bankName: p.bank_name || '',
-          accountNumber: p.account_number || ''
-        },
-        attachments: [],
-        notes: p.notes || ''
-      }));
-      set({ payments });
+      // 로컬 상태에 바로 추가 (전체 목록 재로드 제거로 속도 개선)
+      const newPayment: Payment = {
+        ...payment,
+        id: newPaymentId
+      };
+      set((state) => ({ payments: [newPayment, ...state.payments] }));
       return newPaymentId;
     } catch (error) {
       console.error('Failed to add payment to API:', error);
@@ -494,47 +459,10 @@ export const useDataStore = create<DataStore>()(
         });
       }
 
-      // Reload all payments from API to get the updated list
-      const apiPayments = await paymentService.getAllPayments();
-      const payments: Payment[] = apiPayments.map((p: PaymentResponse) => ({
-        id: String(p.id),
-        project: p.project_name,
-        purpose: p.description,
-        process: p.vendor_name,
-        itemName: p.item_name || '',
-        amount: p.amount,
-        materialAmount: p.material_amount || 0,
-        laborAmount: p.labor_amount || 0,
-        originalMaterialAmount: p.original_material_amount || 0,
-        originalLaborAmount: p.original_labor_amount || 0,
-        applyTaxDeduction: p.apply_tax_deduction === 1,
-        includesVAT: p.includes_vat === 1,
-        quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
-        images: (() => {
-          if (!p.images) return [];
-          try {
-            const parsed = JSON.parse(p.images);
-            return Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            console.error('이미지 파싱 오류:', e, p.images);
-            return [];
-          }
-        })(),
-        category: p.request_type as Payment['category'],
-        status: p.status,
-        urgency: 'normal' as Payment['urgency'],
-        requestedBy: p.requester_name,
-        requestDate: new Date(p.created_at),
-        approvalDate: p.approved_at ? new Date(p.approved_at) : undefined,
-        bankInfo: {
-          accountHolder: p.account_holder || '',
-          bankName: p.bank_name || '',
-          accountNumber: p.account_number || ''
-        },
-        attachments: [],
-        notes: p.notes || ''
+      // 로컬 상태만 업데이트 (전체 목록 재로드 제거로 속도 개선)
+      set((state) => ({
+        payments: state.payments.map((p) => (p.id === id ? { ...p, ...updatedPayment } : p))
       }));
-      set({ payments });
     } catch (error) {
       console.error('Failed to update payment in API:', error);
       throw error;
