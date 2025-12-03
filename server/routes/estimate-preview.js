@@ -208,9 +208,13 @@ router.post('/calculate', authenticateToken, async (req, res) => {
       let quantityMax = 1;
 
       // 화장실 관련 집기: 화장실 개수만큼 곱하기
-      if (['변기', '세면대', '수전', '샤워수전', '욕조', '비데', '수건걸이', '휴지걸이'].includes(fixture.category)) {
+      if (['변기', '세면대', '수전', '샤워수전', '욕조', '비데', '수건걸이', '휴지걸이', '환풍기'].includes(fixture.category)) {
         quantityMin = selectedBathroomCount;
         quantityMax = selectedBathroomCount;
+      } else if (fixture.category === '유가') {
+        // 유가: 화장실 개수 × 1~2개
+        quantityMin = selectedBathroomCount * 1;
+        quantityMax = selectedBathroomCount * 2;
       } else if (['타일', '마루', '벽지'].includes(fixture.category)) {
         const qty = Math.ceil(areaSize / 10);
         quantityMin = qty;
@@ -408,9 +412,13 @@ router.post('/create', authenticateToken, async (req, res) => {
       let quantityMax = 1;
 
       // 화장실 관련 집기: 화장실 개수만큼 곱하기
-      if (['변기', '세면대', '수전', '샤워수전', '욕조', '비데', '수건걸이', '휴지걸이'].includes(fixture.category)) {
+      if (['변기', '세면대', '수전', '샤워수전', '욕조', '비데', '수건걸이', '휴지걸이', '환풍기'].includes(fixture.category)) {
         quantityMin = selectedBathroomCount;
         quantityMax = selectedBathroomCount;
+      } else if (fixture.category === '유가') {
+        // 유가: 화장실 개수 × 1~2개
+        quantityMin = selectedBathroomCount * 1;
+        quantityMax = selectedBathroomCount * 2;
       } else if (['타일', '마루', '벽지'].includes(fixture.category)) {
         const qty = Math.ceil(areaSize / 10); // 10평당 1단위
         quantityMin = qty;
