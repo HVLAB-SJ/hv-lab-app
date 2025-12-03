@@ -1097,9 +1097,9 @@ const Drawings = () => {
               )}
 
               {/* 캔버스 영역 */}
-              <div className={`overflow-hidden p-3 md:p-6 flex-1`}>
+              <div className={`overflow-hidden p-3 md:p-6 flex-1 md:flex-none`}>
                 {uploadedImage ? (
-                  <div className="relative w-full h-full bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="relative w-full h-full md:h-auto md:max-h-[calc(100vh-280px)] bg-white rounded-lg shadow-lg overflow-hidden md:aspect-[16/10]">
                     <div
                       ref={canvasRef}
                       className={`relative w-full h-full ${
