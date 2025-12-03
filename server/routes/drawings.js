@@ -78,8 +78,8 @@ const ensureTableExists = () => {
       }
 
       if (row) {
-        // 테이블이 이미 존재함 - 컬럼 확인 및 마이그레이션
-        console.log('✅ drawings table already exists, checking columns...');
+        // 테이블이 이미 존재함 - 구조 확인
+        console.log('✅ drawings table already exists, checking structure...');
 
         // 테이블 구조 확인
         db.all("PRAGMA table_info(drawings)", (pragmaErr, columns) => {
@@ -90,11 +90,63 @@ const ensureTableExists = () => {
           }
 
           const columnNames = columns.map(col => col.name);
+          const columnTypes = {};
+          columns.forEach(col => {
+            columnTypes[col.name] = col.type;
+          });
           console.log('[drawings] Existing columns:', columnNames);
+          console.log('[drawings] Column types:', columnTypes);
 
-          // 필요한 컬럼 목록
+          // id 컬럼이 TEXT가 아니거나 type 컬럼이 없으면 테이블 재생성
+          const needsRecreate = !columnNames.includes('type') ||
+                               (columnTypes['id'] && columnTypes['id'].toUpperCase() !== 'TEXT');
+
+          if (needsRecreate) {
+            console.log('[drawings] Table structure mismatch, recreating table...');
+
+            // 기존 테이블 삭제 후 재생성
+            db.run("DROP TABLE IF EXISTS drawings", (dropErr) => {
+              if (dropErr) {
+                console.error('[drawings] Failed to drop table:', dropErr);
+                reject(dropErr);
+                return;
+              }
+
+              console.log('[drawings] Old table dropped, creating new one...');
+
+              const createTableQuery = `
+                CREATE TABLE drawings (
+                  id TEXT PRIMARY KEY,
+                  project_id TEXT NOT NULL,
+                  type TEXT NOT NULL DEFAULT '기본도면',
+                  image_url TEXT,
+                  markers TEXT DEFAULT '[]',
+                  rooms TEXT DEFAULT '[]',
+                  naver_type_sqm TEXT,
+                  naver_type_pyeong TEXT,
+                  naver_area TEXT,
+                  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                  UNIQUE(project_id, type)
+                )
+              `;
+
+              db.run(createTableQuery, (createErr) => {
+                if (createErr) {
+                  console.error('[drawings] Failed to create table:', createErr);
+                  reject(createErr);
+                  return;
+                }
+                console.log('✅ drawings table recreated with correct structure');
+                tableChecked = true;
+                resolve();
+              });
+            });
+            return;
+          }
+
+          // 필요한 컬럼 목록 (누락된 것만 추가)
           const requiredColumns = [
-            { name: 'type', sql: "ALTER TABLE drawings ADD COLUMN type TEXT DEFAULT '기본도면'" },
             { name: 'naver_type_sqm', sql: "ALTER TABLE drawings ADD COLUMN naver_type_sqm TEXT" },
             { name: 'naver_type_pyeong', sql: "ALTER TABLE drawings ADD COLUMN naver_type_pyeong TEXT" },
             { name: 'naver_area', sql: "ALTER TABLE drawings ADD COLUMN naver_area TEXT" }
