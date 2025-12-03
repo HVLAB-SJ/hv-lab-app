@@ -1183,7 +1183,22 @@ const Drawings = () => {
               {/* 캔버스 영역 */}
               <div className={`overflow-hidden p-3 md:p-6 flex-1 md:flex-none`}>
                 {uploadedImage ? (
-                  <div className="relative w-full h-full md:h-auto md:max-h-[calc(100vh-280px)] bg-white rounded-lg shadow-lg overflow-hidden md:aspect-[16/10] group/canvas">
+                  <div
+                    className={`relative w-full h-full md:h-auto md:max-h-[calc(100vh-280px)] bg-white rounded-lg shadow-lg overflow-hidden md:aspect-[16/10] group/canvas ${
+                      isDraggingFile ? 'ring-4 ring-blue-500 ring-inset' : ''
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    {/* 드래그 중 오버레이 */}
+                    {isDraggingFile && (
+                      <div className="absolute inset-0 bg-blue-500 bg-opacity-20 z-30 flex items-center justify-center pointer-events-none">
+                        <div className="bg-white px-6 py-3 rounded-lg shadow-lg text-blue-600 font-medium">
+                          이미지를 놓아서 추가
+                        </div>
+                      </div>
+                    )}
                     {/* 이미지 호버 시 수정/삭제 버튼 */}
                     <div className="absolute top-3 right-3 flex gap-2 z-20 opacity-0 group-hover/canvas:opacity-100 transition-opacity">
                       <button
@@ -1344,23 +1359,22 @@ const Drawings = () => {
                       );
                     })}
 
-                    {/* 이미지 1개일 때: 우하단 추가 버튼 */}
+                    </div>
+
+                    {/* 이미지 1개일 때: 우하단 추가 버튼 (canvasRef 밖에 배치) */}
                     {uploadedImages.length === 1 && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          fileInputRef.current?.click();
-                        }}
-                        className="absolute bottom-3 right-3 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-500 hover:text-gray-700 hover:shadow-xl transition-all z-10 border border-gray-200"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute bottom-3 right-3 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-500 hover:text-gray-700 hover:shadow-xl transition-all z-20 border border-gray-200"
                         title="도면 추가"
                       >
                         <Plus className="w-5 h-5" />
                       </button>
                     )}
 
-                    {/* 이미지 2개 이상일 때: 하단 썸네일 바 */}
+                    {/* 이미지 2개 이상일 때: 하단 썸네일 바 (canvasRef 밖에 배치) */}
                     {uploadedImages.length > 1 && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 px-3 py-2 z-10">
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 px-3 py-2 z-20">
                         <div className="flex items-center gap-2 overflow-x-auto">
                           {uploadedImages.map((imgUrl, idx) => (
                             <div
@@ -1370,10 +1384,7 @@ const Drawings = () => {
                                   ? 'ring-2 ring-white'
                                   : 'opacity-70 hover:opacity-100'
                               }`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedImageIndex(idx);
-                              }}
+                              onClick={() => setSelectedImageIndex(idx)}
                             >
                               <img
                                 src={imgUrl}
@@ -1413,10 +1424,7 @@ const Drawings = () => {
                           ))}
                           {/* 이미지 추가 버튼 */}
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              fileInputRef.current?.click();
-                            }}
+                            onClick={() => fileInputRef.current?.click()}
                             className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 border-2 border-dashed border-white border-opacity-50 rounded flex items-center justify-center text-white text-opacity-70 hover:border-opacity-100 hover:text-opacity-100 transition-all"
                             title="도면 추가"
                           >
@@ -1425,7 +1433,6 @@ const Drawings = () => {
                         </div>
                       </div>
                     )}
-                    </div>
                   </div>
                 ) : (
                   <div
