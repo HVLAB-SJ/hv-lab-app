@@ -77,8 +77,36 @@ const Drawings = () => {
   const { user } = useAuth();
   const projects = useFilteredProjects();
 
-  const [selectedProject, setSelectedProject] = useState<string>('');
-  const [selectedDrawingType, setSelectedDrawingType] = useState('네이버도면');
+  const [selectedProject, setSelectedProject] = useState<string>(() => {
+    // 초기 로드 시 localStorage에서 저장된 프로젝트 불러오기
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        const savedProject = localStorage.getItem(`drawings-selected-project-${user.id}`);
+        return savedProject || '';
+      }
+    } catch (e) {
+      console.error('Failed to load saved project:', e);
+    }
+    return '';
+  });
+  const [selectedDrawingType, setSelectedDrawingType] = useState(() => {
+    // 초기 로드 시 localStorage에서 저장된 도면 유형 불러오기
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        const savedType = localStorage.getItem(`drawings-selected-type-${user.id}`);
+        if (savedType && DRAWING_TYPES.includes(savedType)) {
+          return savedType;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load saved drawing type:', e);
+    }
+    return '네이버도면';
+  });
   const [selectedSymbol, setSelectedSymbol] = useState(ELECTRIC_SYMBOLS[0].id);
   const [uploadedImage, setUploadedImage] = useState<string>('');
   const [markers, setMarkers] = useState<Marker[]>([]);
@@ -145,11 +173,11 @@ const Drawings = () => {
     }
   }, [user?.id]);
 
-  // Load from localStorage when user and projects are ready (only if not selected)
+  // 프로젝트 유효성 검사 및 안팀 사용자 처리
   useEffect(() => {
-    if (user?.id && projects.length > 0 && !selectedProject) {
+    if (user?.id && projects.length > 0) {
       // 안팀 사용자인 경우 첫 번째 프로젝트 자동 선택
-      if (user.name === '안팀') {
+      if (user.name === '안팀' && !selectedProject) {
         const firstProject = projects.find(p => p.status !== 'completed');
         if (firstProject) {
           setSelectedProject(firstProject.id);
@@ -157,26 +185,17 @@ const Drawings = () => {
         return;
       }
 
-      const savedProjectId = localStorage.getItem(`drawings-selected-project-${user.id}`);
-
-      if (savedProjectId) {
-        const projectExists = projects.some(p => p.id === savedProjectId);
-        if (projectExists) {
-          setSelectedProject(savedProjectId);
+      // 저장된 프로젝트가 유효한지 확인
+      if (selectedProject) {
+        const projectExists = projects.some(p => p.id === selectedProject);
+        if (!projectExists) {
+          // 존재하지 않으면 초기화
+          setSelectedProject('');
+          localStorage.removeItem(`drawings-selected-project-${user.id}`);
         }
       }
     }
   }, [user?.id, user?.name, projects, selectedProject]);
-
-  // Load drawing type from localStorage on mount
-  useEffect(() => {
-    if (user?.id) {
-      const savedDrawingType = localStorage.getItem(`drawings-selected-type-${user.id}`);
-      if (savedDrawingType && DRAWING_TYPES.includes(savedDrawingType)) {
-        setSelectedDrawingType(savedDrawingType);
-      }
-    }
-  }, [user?.id]);
 
   // Save selected project to localStorage when it changes
   useEffect(() => {
