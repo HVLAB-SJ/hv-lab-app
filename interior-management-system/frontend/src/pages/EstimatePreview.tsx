@@ -1355,14 +1355,25 @@ const EstimatePreview: React.FC = () => {
                           {formatCurrency(result.baseConstructionCost)}
                         </td>
                       </tr>
-                      <tr>
-                        <td className="px-4 py-2 text-xs md:text-sm text-gray-900">집기류 ({form.grade.join(', ')})</td>
-                        <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-medium">
+                      <tr className="bg-gray-50">
+                        <td className="px-4 py-2 text-xs md:text-sm text-gray-900 font-semibold">집기류 ({form.grade.join(', ')})</td>
+                        <td className="px-4 py-2 text-xs md:text-sm text-gray-900 text-right font-semibold">
                           {result.fixtureCostMin !== undefined && result.fixtureCostMax !== undefined
                             ? `${formatCurrency(result.fixtureCostMin)} ~ ${formatCurrency(result.fixtureCostMax)}`
                             : formatCurrency(result.fixtureCost)}
                         </td>
                       </tr>
+                      {/* 집기류 항목별 상세 */}
+                      {result.detailBreakdown?.fixtureItems?.map((item: any, idx: number) => (
+                        <tr key={idx} className="bg-white">
+                          <td className="px-4 py-1.5 text-xs text-gray-600 pl-8">
+                            └ {item.category} × {item.quantity}개
+                          </td>
+                          <td className="px-4 py-1.5 text-xs text-gray-600 text-right">
+                            {formatCurrency(item.minTotal)} ~ {formatCurrency(item.maxTotal)}
+                          </td>
+                        </tr>
+                      ))}
                       {result.detailBreakdown?.itemDetails?.floor > 0 && (
                         <tr>
                           <td className="px-4 py-2 text-xs md:text-sm text-gray-900">바닥재</td>

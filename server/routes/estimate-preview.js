@@ -194,7 +194,7 @@ router.post('/calculate', authenticateToken, async (req, res) => {
     // 집기류 비용 계산 (최소/최대 범위)
     let fixtureCostMin = 0;
     let fixtureCostMax = 0;
-    fixtures.forEach(fixture => {
+    const fixtureItemsWithQuantity = fixtures.map(fixture => {
       let quantity = 1;
       // 화장실 관련 집기: 화장실 개수만큼 곱하기
       if (['변기', '세면대', '수전', '샤워수전', '욕조', '비데', '수건걸이', '휴지걸이'].includes(fixture.category)) {
@@ -202,8 +202,22 @@ router.post('/calculate', authenticateToken, async (req, res) => {
       } else if (['타일', '마루', '벽지'].includes(fixture.category)) {
         quantity = Math.ceil(areaSize / 10);
       }
-      fixtureCostMin += (fixture.min_price || 0) * quantity;
-      fixtureCostMax += (fixture.max_price || 0) * quantity;
+
+      const minTotal = (fixture.min_price || 0) * quantity;
+      const maxTotal = (fixture.max_price || 0) * quantity;
+
+      fixtureCostMin += minTotal;
+      fixtureCostMax += maxTotal;
+
+      return {
+        category: fixture.category,
+        count: fixture.count,
+        quantity: quantity,
+        minPrice: fixture.min_price || 0,
+        maxPrice: fixture.max_price || 0,
+        minTotal: minTotal,
+        maxTotal: maxTotal
+      };
     });
 
     // 기존 호환을 위해 평균값도 계산
@@ -261,7 +275,7 @@ router.post('/calculate', authenticateToken, async (req, res) => {
       sash: sashCost,
       floorHeating: heatingCost,
       aircon: airconCost,
-      fixtureDetails: fixtures
+      fixtureItems: fixtureItemsWithQuantity
     };
 
     // 결과 반환 (DB 저장 없음)
@@ -357,7 +371,7 @@ router.post('/create', authenticateToken, async (req, res) => {
     // 집기류 비용 계산 (최소/최대 범위)
     let fixtureCostMin = 0;
     let fixtureCostMax = 0;
-    fixtures.forEach(fixture => {
+    const fixtureItemsWithQuantity = fixtures.map(fixture => {
       let quantity = 1;
       // 화장실 관련 집기: 화장실 개수만큼 곱하기
       if (['변기', '세면대', '수전', '샤워수전', '욕조', '비데', '수건걸이', '휴지걸이'].includes(fixture.category)) {
@@ -365,8 +379,22 @@ router.post('/create', authenticateToken, async (req, res) => {
       } else if (['타일', '마루', '벽지'].includes(fixture.category)) {
         quantity = Math.ceil(areaSize / 10); // 10평당 1단위
       }
-      fixtureCostMin += (fixture.min_price || 0) * quantity;
-      fixtureCostMax += (fixture.max_price || 0) * quantity;
+
+      const minTotal = (fixture.min_price || 0) * quantity;
+      const maxTotal = (fixture.max_price || 0) * quantity;
+
+      fixtureCostMin += minTotal;
+      fixtureCostMax += maxTotal;
+
+      return {
+        category: fixture.category,
+        count: fixture.count,
+        quantity: quantity,
+        minPrice: fixture.min_price || 0,
+        maxPrice: fixture.max_price || 0,
+        minTotal: minTotal,
+        maxTotal: maxTotal
+      };
     });
 
     // 기존 호환을 위해 평균값도 계산
@@ -405,7 +433,7 @@ router.post('/create', authenticateToken, async (req, res) => {
       sash: sashCost,
       floorHeating: heatingCost,
       aircon: airconCost,
-      fixtureDetails: fixtures
+      fixtureItems: fixtureItemsWithQuantity
     });
 
     // DB에 저장
