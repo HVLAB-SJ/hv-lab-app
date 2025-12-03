@@ -173,26 +173,12 @@ const Drawings = () => {
     }
   }, [user?.id]);
 
-  // 프로젝트 유효성 검사 및 안팀 사용자 처리
+  // 안팀 사용자 자동 프로젝트 선택
   useEffect(() => {
-    if (user?.id && projects.length > 0) {
-      // 안팀 사용자인 경우 첫 번째 프로젝트 자동 선택
-      if (user.name === '안팀' && !selectedProject) {
-        const firstProject = projects.find(p => p.status !== 'completed');
-        if (firstProject) {
-          setSelectedProject(firstProject.id);
-        }
-        return;
-      }
-
-      // 저장된 프로젝트가 유효한지 확인
-      if (selectedProject) {
-        const projectExists = projects.some(p => p.id === selectedProject);
-        if (!projectExists) {
-          // 존재하지 않으면 초기화
-          setSelectedProject('');
-          localStorage.removeItem(`drawings-selected-project-${user.id}`);
-        }
+    if (user?.id && user.name === '안팀' && projects.length > 0 && !selectedProject) {
+      const firstProject = projects.find(p => p.status !== 'completed');
+      if (firstProject) {
+        setSelectedProject(firstProject.id);
       }
     }
   }, [user?.id, user?.name, projects, selectedProject]);
