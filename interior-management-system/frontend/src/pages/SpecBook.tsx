@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useAuth } from '../contexts/AuthContext';
+import ImageCropper from '../components/ImageCropper';
 import {
   DndContext,
   closestCenter,
@@ -321,6 +322,10 @@ const SpecBook = () => {
   const initialSubImagesRef = useRef<string[]>([]);
   const isMountedRef = useRef(true); // 컴포넌트 마운트 상태 추적
 
+  // 이미지 크롭 관련 상태
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
+
   // DnD 센서 설정
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -501,13 +506,18 @@ const SpecBook = () => {
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setFormData({ ...formData, imageData: e.target?.result as string });
+        // 크롭 모달 열기
+        setImageToCrop(e.target?.result as string);
+        setShowCropper(true);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handlePaste = (e: ClipboardEvent) => {
+    // 크롭 모달이나 서브이미지 모달이 열려있으면 무시
+    if (showCropper || isSubImageModalOpen) return;
+
     const items = e.clipboardData?.items;
     if (!items) return;
 
@@ -517,7 +527,9 @@ const SpecBook = () => {
         if (file) {
           const reader = new FileReader();
           reader.onload = (e) => {
-            setFormData({ ...formData, imageData: e.target?.result as string });
+            // 크롭 모달 열기
+            setImageToCrop(e.target?.result as string);
+            setShowCropper(true);
           };
           reader.readAsDataURL(file);
         }
@@ -528,7 +540,7 @@ const SpecBook = () => {
   useEffect(() => {
     document.addEventListener('paste', handlePaste as any);
     return () => document.removeEventListener('paste', handlePaste as any);
-  }, [formData]);
+  }, [formData, showCropper, isSubImageModalOpen]);
 
   const formatPrice = (value: string) => {
     const numbers = value.replace(/[^\d]/g, '');
@@ -684,6 +696,19 @@ const SpecBook = () => {
       grades: ['기본'],
       imageData: null
     });
+  };
+
+  // 이미지 크롭 완료 핸들러
+  const handleCropComplete = (croppedImage: string) => {
+    setFormData({ ...formData, imageData: croppedImage });
+    setShowCropper(false);
+    setImageToCrop(null);
+  };
+
+  // 이미지 크롭 취소 핸들러
+  const handleCropCancel = () => {
+    setShowCropper(false);
+    setImageToCrop(null);
   };
 
   // 이미지 클릭 - Sub 이미지 모달 열기
@@ -966,22 +991,6 @@ const SpecBook = () => {
   return (
     <div
       className="flex flex-col h-[calc(100vh-120px)] bg-gray-50"
-      onDragOver={(e) => {
-        e.preventDefault();
-        if (showModal) {
-          setIsDragging(true);
-        }
-      }}
-      onDragLeave={() => {
-        if (showModal) {
-          setIsDragging(false);
-        }
-      }}
-      onDrop={(e) => {
-        if (showModal) {
-          handleImageDrop(e);
-        }
-      }}
     >
 
       {/* 메인 컨텐츠 */}
@@ -1027,10 +1036,14 @@ const SpecBook = () => {
                         if (file) {
                           const reader = new FileReader();
                           reader.onload = (e) => {
-                            setFormData({ ...formData, imageData: e.target?.result as string });
+                            // 크롭 모달 열기
+                            setImageToCrop(e.target?.result as string);
+                            setShowCropper(true);
                           };
                           reader.readAsDataURL(file);
                         }
+                        // input 초기화 (같은 파일 다시 선택 가능하도록)
+                        e.target.value = '';
                       }}
                       className="hidden"
                     />
@@ -2179,6 +2192,16 @@ const SpecBook = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* 이미지 크롭 모달 */}
+      {showCropper && imageToCrop && (
+        <ImageCropper
+          image={imageToCrop}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio={1}
+        />
       )}
     </div>
   );
