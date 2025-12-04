@@ -3063,7 +3063,7 @@ const Payments = () => {
                           <img
                             src={img}
                             alt={`증빙 ${index + 1}`}
-                            className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity border"
+                            className="w-full aspect-square object-contain rounded-lg cursor-pointer hover:opacity-90 transition-opacity border bg-gray-100"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleImageClick(img);
