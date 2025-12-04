@@ -1203,7 +1203,8 @@ export const useDataStore = create<DataStore>()(
         vat_amount: record.vatAmount,
         total_amount: record.totalAmount,
         notes: record.notes,
-        payment_id: record.paymentId
+        payment_id: record.paymentId,
+        images: record.images
       });
 
       set((state) => ({
