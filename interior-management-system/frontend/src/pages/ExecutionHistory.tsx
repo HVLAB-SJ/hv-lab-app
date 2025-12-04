@@ -328,18 +328,32 @@ const ExecutionHistory = () => {
         return;
       }
 
-      // 모든 레코드 이미지를 로컬 저장소에 저장 (실행내역, 결제요청 모두)
-      const existingImages = paymentRecordImages[selectedRecord] || [];
-      setPaymentRecordImages(prev => ({
-        ...prev,
-        [selectedRecord]: [...existingImages, ...newImages]
-      }));
-      toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+      // 실행내역(manual) 레코드인지 확인
+      const executionRecord = executionRecords.find(r => r.id === selectedRecord);
+      if (executionRecord) {
+        // 실행내역인 경우 서버 API로 저장
+        const updatedImages = [...(executionRecord.images || []), ...newImages];
+        try {
+          await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
+          toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+        } catch (error) {
+          console.error('이미지 저장 실패:', error);
+          toast.error('이미지 저장에 실패했습니다');
+        }
+      } else {
+        // 결제요청 레코드인 경우 로컬 저장소에 저장
+        const existingImages = paymentRecordImages[selectedRecord] || [];
+        setPaymentRecordImages(prev => ({
+          ...prev,
+          [selectedRecord]: [...existingImages, ...newImages]
+        }));
+        toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+      }
     }).catch(error => {
       console.error('이미지 처리 중 오류:', error);
       toast.error('이미지 추가 중 오류가 발생했습니다');
     });
-  }, [selectedRecord, setFormData, paymentRecordImages]);
+  }, [selectedRecord, setFormData, paymentRecordImages, executionRecords, updateExecutionRecordInAPI]);
 
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
@@ -430,9 +444,7 @@ const ExecutionHistory = () => {
     .filter(record => user?.name !== '안팀' || filteredProjectNames.includes(record.project))
     .map(record => ({
       ...record,
-      type: 'manual' as const,
-      // 로컬 저장소의 이미지와 서버 이미지를 합침
-      images: [...(record.images || []), ...(paymentRecordImages[record.id] || [])]
+      type: 'manual' as const
     }));
 
   // 모든 레코드 합치기

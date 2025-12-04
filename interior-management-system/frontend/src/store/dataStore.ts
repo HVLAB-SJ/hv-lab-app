@@ -1136,6 +1136,7 @@ export const useDataStore = create<DataStore>()(
         vatAmount: r.vat_amount || 0,
         totalAmount: r.total_amount || 0,
         notes: r.notes || undefined,
+        images: r.images || [],
         paymentId: r.payment_id ? String(r.payment_id) : undefined,
         createdAt: new Date(r.created_at),
         updatedAt: new Date(r.updated_at)

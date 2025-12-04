@@ -20,6 +20,7 @@ export const getAllRecords = async (_req: Request, res: Response): Promise<void>
       vat_amount: record.vatAmount,
       total_amount: record.totalAmount,
       notes: record.notes,
+      images: record.images || [],
       payment_id: record.paymentId,
       created_at: record.createdAt.toISOString(),
       updated_at: record.updatedAt.toISOString()
@@ -56,6 +57,7 @@ export const getRecordById = async (req: Request, res: Response): Promise<void> 
       vat_amount: record.vatAmount,
       total_amount: record.totalAmount,
       notes: record.notes,
+      images: record.images || [],
       payment_id: record.paymentId,
       created_at: record.createdAt.toISOString(),
       updated_at: record.updatedAt.toISOString()
@@ -82,6 +84,7 @@ export const createRecord = async (req: Request, res: Response): Promise<void> =
       vat_amount,
       total_amount,
       notes,
+      images,
       payment_id
     } = req.body;
 
@@ -122,6 +125,7 @@ export const createRecord = async (req: Request, res: Response): Promise<void> =
       vatAmount: Number(vat_amount) || 0,
       totalAmount: Number(total_amount) || 0,
       notes: notes || '',
+      images: images || [],
       paymentId: payment_id || undefined
     });
 
@@ -142,6 +146,7 @@ export const createRecord = async (req: Request, res: Response): Promise<void> =
       vat_amount: record.vatAmount,
       total_amount: record.totalAmount,
       notes: record.notes,
+      images: record.images || [],
       payment_id: record.paymentId,
       created_at: record.createdAt.toISOString(),
       updated_at: record.updatedAt.toISOString()
@@ -171,6 +176,7 @@ export const updateRecord = async (req: Request, res: Response): Promise<void> =
       vat_amount,
       total_amount,
       notes,
+      images,
       payment_id
     } = req.body;
 
@@ -190,6 +196,7 @@ export const updateRecord = async (req: Request, res: Response): Promise<void> =
     if (vat_amount !== undefined) updateData.vatAmount = vat_amount;
     if (total_amount !== undefined) updateData.totalAmount = total_amount;
     if (notes !== undefined) updateData.notes = notes;
+    if (images !== undefined) updateData.images = images;
     if (payment_id !== undefined) updateData.paymentId = payment_id;
 
     const record = await ExecutionRecord.findByIdAndUpdate(
@@ -216,6 +223,7 @@ export const updateRecord = async (req: Request, res: Response): Promise<void> =
       vat_amount: record.vatAmount,
       total_amount: record.totalAmount,
       notes: record.notes,
+      images: record.images || [],
       payment_id: record.paymentId,
       created_at: record.createdAt.toISOString(),
       updated_at: record.updatedAt.toISOString()

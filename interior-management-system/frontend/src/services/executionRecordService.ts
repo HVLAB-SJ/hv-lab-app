@@ -13,22 +13,24 @@ export interface ExecutionRecordResponse {
   vat_amount: number;
   total_amount: number;
   notes: string;
+  images: string[];
   payment_id: number | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface ExecutionRecordData {
-  project_name: string;
+  project_name?: string;
   author?: string;
-  date: string;
+  date?: string;
   process?: string;
-  item_name: string;
-  material_cost: number;
-  labor_cost: number;
-  vat_amount: number;
-  total_amount: number;
+  item_name?: string;
+  material_cost?: number;
+  labor_cost?: number;
+  vat_amount?: number;
+  total_amount?: number;
   notes?: string;
+  images?: string[];
   payment_id?: string;
 }
 

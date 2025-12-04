@@ -12,6 +12,7 @@ export interface IExecutionRecord extends Document {
   vatAmount: number;
   totalAmount: number;
   notes: string;
+  images: string[];
   paymentId?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -61,6 +62,10 @@ const executionRecordSchema = new Schema<IExecutionRecord>({
   notes: {
     type: String,
     default: ''
+  },
+  images: {
+    type: [String],
+    default: []
   },
   paymentId: {
     type: Schema.Types.ObjectId,
