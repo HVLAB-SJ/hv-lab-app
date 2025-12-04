@@ -287,11 +287,6 @@ const ExecutionHistory = () => {
 
   // 클립보드 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
-    if (!selectedRecord) {
-      toast.error('먼저 실행내역을 선택해주세요');
-      return;
-    }
-
     const items = e.clipboardData?.items;
     if (!items) return;
 
@@ -323,6 +318,16 @@ const ExecutionHistory = () => {
         });
       })
     ).then(async newImages => {
+      // 선택된 내역이 없으면 좌측 폼의 quickImages에 추가
+      if (!selectedRecord) {
+        setFormData(prev => ({
+          ...prev,
+          quickImages: [...prev.quickImages, ...newImages]
+        }));
+        toast.success(`${newImages.length}개의 이미지가 청구내역에 추가되었습니다`);
+        return;
+      }
+
       // 실제 레코드에 이미지 추가
       const record = executionRecords.find(r => r.id === selectedRecord);
       if (record) {
@@ -344,7 +349,7 @@ const ExecutionHistory = () => {
       console.error('이미지 처리 중 오류:', error);
       toast.error('이미지 추가 중 오류가 발생했습니다');
     });
-  }, [selectedRecord, executionRecords, updateExecutionRecordInAPI]);
+  }, [selectedRecord, executionRecords, updateExecutionRecordInAPI, setFormData]);
 
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
