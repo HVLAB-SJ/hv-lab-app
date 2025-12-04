@@ -1400,8 +1400,8 @@ const Payments = () => {
       record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.process?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = record.status === statusFilter;
-    // 대기중(pending)은 항상 전체 프로젝트 표시, 송금완료(completed)는 프로젝트 필터 적용
-    const matchesProject = statusFilter === 'pending' || projectFilter === 'all' || record.project === projectFilter;
+    // 대기중(pending)은 항상 전체 프로젝트 표시, 송금완료(completed)는 폼에서 선택한 프로젝트만 표시
+    const matchesProject = statusFilter === 'pending' || !formData.project || record.project === formData.project;
     return matchesSearch && matchesStatus && matchesProject;
   });
 
