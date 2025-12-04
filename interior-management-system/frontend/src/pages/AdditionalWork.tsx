@@ -38,7 +38,9 @@ const AdditionalWork = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImage, setModalImage] = useState<string | null>(null);
   const [workImages, setWorkImages] = useState<Record<string, string[]>>({});
+  const [formImages, setFormImages] = useState<string[]>([]); // 좌측 폼의 이미지
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formFileInputRef = useRef<HTMLInputElement>(null); // 폼용 파일 입력
   const [showMobileForm, setShowMobileForm] = useState(false);
   const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
 
@@ -92,7 +94,7 @@ const AdditionalWork = () => {
     }
   }, [filteredProjects]);
 
-  // 클립보드 이미지 붙여넣기 처리 (우측 이미지 영역에만 적용)
+  // 클립보드 이미지 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
     // 텍스트 입력 필드에서 붙여넣기할 때는 무시 (텍스트 붙여넣기 허용)
     const activeElement = document.activeElement;
@@ -102,11 +104,6 @@ const AdditionalWork = () => {
 
     if (isTextInput) {
       return; // 텍스트 입력 중에는 이미지 붙여넣기 무시
-    }
-
-    // 내역이 선택되지 않은 경우에는 아무 동작 없음 (에러 메시지도 표시하지 않음)
-    if (!selectedWorkId) {
-      return;
     }
 
     const items = e.clipboardData?.items;
@@ -121,19 +118,24 @@ const AdditionalWork = () => {
           reader.onload = (event) => {
             const base64 = event.target?.result as string;
 
-            // workImages에 이미지 첨부 및 서버 저장
-            setWorkImages(prev => {
-              const currentImages = prev[selectedWorkId] || [];
-              const newImages = [...currentImages, base64];
+            if (selectedWorkId) {
+              // 내역이 선택된 경우: 우측 이미지 영역에 첨부
+              setWorkImages(prev => {
+                const currentImages = prev[selectedWorkId] || [];
+                const newImages = [...currentImages, base64];
 
-              // 서버에 이미지 저장 (최신 상태 사용)
-              saveImagesToWork(selectedWorkId, newImages);
+                // 서버에 이미지 저장 (최신 상태 사용)
+                saveImagesToWork(selectedWorkId, newImages);
 
-              return {
-                ...prev,
-                [selectedWorkId]: newImages
-              };
-            });
+                return {
+                  ...prev,
+                  [selectedWorkId]: newImages
+                };
+              });
+            } else {
+              // 내역이 선택되지 않은 경우: 좌측 폼에 첨부
+              setFormImages(prev => [...prev, base64]);
+            }
 
             toast.success('이미지가 첨부되었습니다');
           };
@@ -314,11 +316,12 @@ const AdditionalWork = () => {
     }
 
     try {
-      await additionalWorkService.createAdditionalWork({
+      const newWork = await additionalWorkService.createAdditionalWork({
         project: formData.project,
         description: formData.description,
         amount: parseFloat(formData.amount),
-        date: new Date(formData.date)
+        date: new Date(formData.date),
+        images: formImages  // 폼 이미지 포함
       });
 
       toast.success('추가내역이 등록되었습니다');
@@ -331,9 +334,18 @@ const AdditionalWork = () => {
         date: format(new Date(), 'yyyy-MM-dd'),
         notes: ''
       }));
+      setFormImages([]); // 폼 이미지 초기화
 
       // 목록 새로고침
       await loadAdditionalWorks();
+
+      // 새로 생성된 내역의 이미지를 workImages에도 저장
+      if (formImages.length > 0 && newWork._id) {
+        setWorkImages(prev => ({
+          ...prev,
+          [newWork._id]: formImages
+        }));
+      }
 
       // localStorage에 마지막 선택 프로젝트 저장
       localStorage.setItem('lastSelectedProject', formData.project);
@@ -454,6 +466,66 @@ const AdditionalWork = () => {
                 className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="0"
               />
+            </div>
+
+            {/* 이미지 첨부 */}
+            <div className="aw-images">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                이미지 첨부
+                <span className="text-xs text-gray-500 ml-2">(Ctrl+V로 붙여넣기 가능)</span>
+              </label>
+              <div className="space-y-2">
+                <input
+                  ref={formFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    files.forEach(file => {
+                      if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const base64 = event.target?.result as string;
+                          setFormImages(prev => [...prev, base64]);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    });
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => formFileInputRef.current?.click()}
+                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 flex items-center justify-center gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  이미지 첨부
+                </button>
+                {formImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {formImages.map((img, idx) => (
+                      <div key={idx} className="relative group">
+                        <img
+                          src={img}
+                          alt={`첨부 ${idx + 1}`}
+                          className="w-full h-20 object-cover rounded cursor-pointer"
+                          onClick={() => handleImageClick(img)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormImages(prev => prev.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* 등록 버튼 */}

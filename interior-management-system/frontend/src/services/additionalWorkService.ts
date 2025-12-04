@@ -6,6 +6,7 @@ export interface AdditionalWorkData {
   amount: number;
   date: Date;
   notes?: string;
+  images?: string[];
 }
 
 export interface AdditionalWorkResponse {
@@ -40,7 +41,8 @@ const additionalWorkService = {
       description: data.description,
       amount: data.amount,
       work_date: data.date instanceof Date ? data.date.toISOString().split('T')[0] : data.date,
-      notes: data.notes || ''
+      notes: data.notes || '',
+      images: data.images || []  // 이미지 배열 추가
     };
     console.log('[additionalWorkService.createAdditionalWork] Sending to backend:', backendData);
     const response = await api.post('/additional-works', backendData);
