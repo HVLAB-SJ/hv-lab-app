@@ -1193,7 +1193,10 @@ export const useDataStore = create<DataStore>()(
 
   updateExecutionRecordInAPI: async (id: string, record: Partial<ExecutionRecord>) => {
     try {
-      await executionRecordService.updateRecord(id, {
+      console.log('[updateExecutionRecordInAPI] id:', id);
+      console.log('[updateExecutionRecordInAPI] record.images length:', record.images?.length || 0);
+
+      const result = await executionRecordService.updateRecord(id, {
         project_name: record.project,
         author: record.author,
         date: record.date?.toISOString().split('T')[0],
@@ -1208,11 +1211,15 @@ export const useDataStore = create<DataStore>()(
         images: record.images
       });
 
+      console.log('[updateExecutionRecordInAPI] API response images:', result?.images?.length || 0);
+
       set((state) => ({
         executionRecords: state.executionRecords.map((r) =>
           r.id === id ? { ...r, ...record, updatedAt: new Date() } : r
         )
       }));
+
+      console.log('[updateExecutionRecordInAPI] Store updated');
     } catch (error) {
       console.error('Failed to update execution record in API:', error);
       throw error;

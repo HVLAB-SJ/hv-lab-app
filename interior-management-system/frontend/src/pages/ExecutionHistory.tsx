@@ -822,16 +822,26 @@ const ExecutionHistory = () => {
           });
         })
       ).then(async newImages => {
+        console.log('[handleFileSelect] newImages count:', newImages.length);
+        console.log('[handleFileSelect] selectedRecord:', selectedRecord);
+
         // 실행내역(manual) 레코드인지 확인
         const executionRecord = executionRecords.find(r => r.id === selectedRecord);
+        console.log('[handleFileSelect] executionRecord found:', !!executionRecord);
+
         if (executionRecord) {
           // 실행내역인 경우 서버 API로 저장
-          const updatedImages = [...(executionRecord.images || []), ...newImages];
+          const existingImages = executionRecord.images || [];
+          const updatedImages = [...existingImages, ...newImages];
+          console.log('[handleFileSelect] existing images:', existingImages.length);
+          console.log('[handleFileSelect] updated images:', updatedImages.length);
+
           try {
             await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
+            console.log('[handleFileSelect] API update success');
             toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
           } catch (error) {
-            console.error('이미지 저장 실패:', error);
+            console.error('[handleFileSelect] API update failed:', error);
             toast.error('이미지 저장에 실패했습니다');
           }
         } else {
@@ -1685,6 +1695,14 @@ const ExecutionHistory = () => {
               const fullRecord = allRecords.find(r => r.id === selectedRecord);
               // allRecords의 images에 이미 paymentRecordImages가 포함되어 있음
               const images = fullRecord?.images || record?.images || [];
+
+              // 디버그 로그
+              console.log('[ImageDisplay] selectedRecord:', selectedRecord);
+              console.log('[ImageDisplay] record found:', !!record);
+              console.log('[ImageDisplay] record.images:', record?.images?.length || 0);
+              console.log('[ImageDisplay] fullRecord found:', !!fullRecord);
+              console.log('[ImageDisplay] fullRecord.images:', fullRecord?.images?.length || 0);
+              console.log('[ImageDisplay] final images:', images.length);
 
               return (
                 <div className="h-full flex flex-col">
