@@ -1422,14 +1422,14 @@ const ExecutionHistory = () => {
                     <th className="px-3 py-3 font-medium text-right exec-th-labor">인건비</th>
                     <th className="px-3 py-3 font-medium text-right exec-th-vat">부가세</th>
                     <th className="px-3 py-3 font-medium text-right exec-th-total">총액</th>
-                    <th className="px-2 py-3 font-medium text-center w-20">관리</th>
+                    <th className="px-2 py-3 w-20"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredRecords.map((record) => (
                     <tr
                       key={record.id}
-                      className={`hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === record.id ? 'bg-blue-50' : ''}`}
+                      className={`group hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === record.id ? 'bg-blue-50' : ''}`}
                       onClick={() => setSelectedRecord(record.id)}
                     >
                       <td className="px-3 py-3 text-gray-600 whitespace-nowrap exec-author-col">
@@ -1459,7 +1459,7 @@ const ExecutionHistory = () => {
                         <span className="exec-total-short">{(record.totalAmount || 0).toLocaleString()}</span>
                       </td>
                       <td className="px-2 py-3 text-center">
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={(e) => handleEditClick(record as ExecutionRecord, e)}
                             className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
