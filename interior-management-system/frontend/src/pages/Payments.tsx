@@ -2126,7 +2126,7 @@ const Payments = () => {
                     }}
                   />
                   <div className="w-full h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium border border-gray-300">
-                    이미지 추가
+                    견적서 첨부
                   </div>
                 </label>
                 <button
