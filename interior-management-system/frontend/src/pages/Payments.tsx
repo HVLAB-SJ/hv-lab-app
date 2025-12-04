@@ -3016,52 +3016,72 @@ const Payments = () => {
               const localImages = paymentRecordImages[selectedRecord] || [];
               const images = serverImages.length > 0 ? serverImages : localImages;
 
-              console.log('[Payments] selectedRecord:', selectedRecord);
-              console.log('[Payments] record found:', record ? 'yes' : 'no');
-              console.log('[Payments] record.images:', (record as any)?.images);
-              console.log('[Payments] serverImages:', serverImages.length);
-              console.log('[Payments] localImages:', localImages.length);
-
-              return images.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
-                  {images.map((img, index) => (
-                    <div key={index} className="relative group border rounded-lg overflow-hidden">
-                      <img
-                        src={img}
-                        alt={`증빙 ${index + 1}`}
-                        className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleImageClick(img);
-                        }}
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeImage(index);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <label
-                  htmlFor="image-file-input"
-                  className="h-full flex items-center justify-center cursor-pointer"
-                >
-                  <div
-                    className={`w-full h-full min-h-[200px] border-2 border-dashed rounded-lg p-6 text-center transition-colors flex flex-col items-center justify-center ${
-                      isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm font-medium text-gray-700">클릭하여 선택</p>
-                    <p className="text-xs text-gray-500 mt-1">또는 이미지를 드래그하거나 Ctrl+V로 붙여넣기</p>
+              return (
+                <div className="h-full flex flex-col">
+                  {/* 메모 영역 */}
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">메모</label>
+                    <textarea
+                      value={(record as any)?.quickText || record?.notes || ''}
+                      readOnly
+                      placeholder="메모 없음"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 resize-none"
+                      rows={8}
+                    />
                   </div>
-                </label>
+
+                  {/* 이미지 그리드 - 모바일 2열, 데스크탑 3열 */}
+                  {images.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+                      {images.map((img, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={img}
+                            alt={`증빙 ${index + 1}`}
+                            className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity border"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleImageClick(img);
+                            }}
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeImage(index);
+                            }}
+                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                          <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1.5 py-0.5 rounded">
+                            {index + 1}/{images.length}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 이미지 추가 버튼 */}
+                  <label
+                    htmlFor="image-file-input"
+                    className={`block cursor-pointer ${images.length > 0 ? '' : 'flex-1'}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div
+                      className={`w-full border-2 border-dashed rounded-lg p-4 text-center transition-colors flex flex-col items-center justify-center ${
+                        isDragging ? 'border-gray-500 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
+                      } ${images.length > 0 ? 'min-h-[80px]' : 'min-h-[200px]'}`}
+                    >
+                      <Upload className={`mx-auto text-gray-400 mb-1 ${images.length > 0 ? 'h-6 w-6' : 'h-10 w-10 mb-2'}`} />
+                      <p className="text-sm font-medium text-gray-700">
+                        {images.length > 0 ? '이미지 첨부' : '클릭하여 선택'}
+                      </p>
+                      {images.length === 0 && (
+                        <p className="text-xs text-gray-500 mt-1">또는 이미지를 드래그하거나 Ctrl+V로 붙여넣기</p>
+                      )}
+                    </div>
+                  </label>
+                </div>
               );
             })() : (
               <div className="h-full flex items-center justify-center min-h-[200px]">
