@@ -139,6 +139,12 @@ const paymentService = {
     return response.data;
   },
 
+  // Update payment images
+  updatePaymentImages: async (id: string, images: string[]): Promise<{ message: string; images: string[] }> => {
+    const response = await api.put(`/payments/${id}/images`, { images });
+    return response.data;
+  },
+
   // Delete payment
   deletePayment: async (id: string): Promise<void> => {
     await api.delete(`/payments/${id}`);

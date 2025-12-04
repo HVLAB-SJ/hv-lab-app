@@ -44,10 +44,14 @@ router.get('/', authenticateToken, (req, res) => {
       return res.status(500).json({ error: '결제 요청 조회 실패' });
     }
     console.log('[GET /api/payments] Found', requests.length, 'payments');
-    console.log('[GET /api/payments] Sample:', JSON.stringify(requests[0], null, 2));
     // Convert SQLite dates to ISO 8601
     const sanitized = sanitizeDatesArray(requests, ['created_at', 'updated_at', 'approved_at', 'paid_at']);
-    res.json(sanitized);
+    // images 필드 JSON 파싱
+    const withParsedImages = sanitized.map(req => ({
+      ...req,
+      images: req.images ? JSON.parse(req.images) : []
+    }));
+    res.json(withParsedImages);
   });
 });
 
@@ -74,7 +78,11 @@ router.get('/:id', authenticateToken, (req, res) => {
       if (!request) {
         return res.status(404).json({ error: '결제 요청을 찾을 수 없습니다.' });
       }
-      res.json(request);
+      // images 필드 JSON 파싱
+      res.json({
+        ...request,
+        images: request.images ? JSON.parse(request.images) : []
+      });
     }
   );
 });
@@ -452,6 +460,35 @@ router.patch('/:id/amounts', authenticateToken, (req, res) => {
 
       console.log(`[PATCH /api/payments/:id/amounts] Successfully updated payment ${id}`);
       res.json({ message: '금액이 수정되었습니다.' });
+    }
+  );
+});
+
+// 결제 이미지 업데이트
+router.put('/:id/images', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { images } = req.body;
+
+  console.log(`[PUT /api/payments/:id/images] Updating images for payment ${id}, count: ${images?.length || 0}`);
+
+  const imagesJson = images ? JSON.stringify(images) : '[]';
+
+  db.run(
+    `UPDATE payment_requests
+     SET images = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [imagesJson, id],
+    function(err) {
+      if (err) {
+        console.error('[PUT /api/payments/:id/images] Error:', err);
+        return res.status(500).json({ error: '이미지 업데이트 실패', details: err.message });
+      }
+      if (this.changes === 0) {
+        return res.status(404).json({ error: '결제 요청을 찾을 수 없습니다.' });
+      }
+
+      console.log(`[PUT /api/payments/:id/images] Successfully updated images for payment ${id}`);
+      res.json({ message: '이미지가 업데이트되었습니다.', images: images || [] });
     }
   );
 });

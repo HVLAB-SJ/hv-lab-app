@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import contractorService from '../services/contractorService';
+import paymentService from '../services/paymentService';
 import api from '../services/api';
 import CashReceiptModal from '../components/CashReceiptModal';
 import { removePosition } from '../utils/formatters';
@@ -1278,7 +1279,7 @@ const Payments = () => {
   }, [paymentRecordImages, imagesLoaded]);
 
   // 클립보드 붙여넣기 처리
-  const handlePaste = useCallback((e: ClipboardEvent) => {
+  const handlePaste = useCallback(async (e: ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
 
@@ -1318,19 +1319,39 @@ const Payments = () => {
         const blob = items[i].getAsFile();
         if (blob) {
           const reader = new FileReader();
-          reader.onload = (event) => {
+          reader.onload = async (event) => {
             const base64 = event.target?.result as string;
-            setPaymentRecordImages(prev => ({
-              ...prev,
-              [selectedRecord]: [...(prev[selectedRecord] || []), base64]
-            }));
-            toast.success('이미지가 추가되었습니다');
+            if (!base64) return;
+
+            try {
+              // 현재 결제요청의 기존 이미지 가져오기
+              const payment = payments.find(p => p.id === selectedRecord);
+              const existingImages = payment?.images || paymentRecordImages[selectedRecord] || [];
+              const updatedImages = [...existingImages, base64];
+
+              // 서버에 이미지 저장
+              await paymentService.updatePaymentImages(selectedRecord, updatedImages);
+
+              // 로컬 상태 업데이트
+              setPaymentRecordImages(prev => ({
+                ...prev,
+                [selectedRecord]: updatedImages
+              }));
+
+              // payments 목록 새로고침
+              await loadPaymentsFromAPI();
+
+              toast.success('이미지가 추가되었습니다');
+            } catch (error) {
+              console.error('이미지 저장 실패:', error);
+              toast.error('이미지 저장에 실패했습니다');
+            }
           };
           reader.readAsDataURL(blob);
         }
       }
     }
-  }, [selectedRecord]);
+  }, [selectedRecord, payments, paymentRecordImages, loadPaymentsFromAPI]);
 
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
@@ -1848,43 +1869,89 @@ const Payments = () => {
   };
 
   // 파일 선택 처리
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedRecord) {
       toast.error('먼저 결제요청을 선택해주세요');
       return;
     }
 
     const files = Array.from(e.target?.files || []);
-    const newImages: string[] = [];
     const imageFiles = files.filter(f => f.type.startsWith('image/'));
 
     if (imageFiles.length === 0) return;
 
-    imageFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        newImages.push(base64);
+    try {
+      // 모든 이미지를 base64로 변환
+      const newImages = await Promise.all(
+        imageFiles.map(file => {
+          return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const base64 = event.target?.result as string;
+              if (base64) {
+                resolve(base64);
+              } else {
+                reject(new Error('이미지 읽기 실패'));
+              }
+            };
+            reader.onerror = () => reject(new Error('FileReader 오류'));
+            reader.readAsDataURL(file);
+          });
+        })
+      );
 
-        if (newImages.length === imageFiles.length) {
-          setPaymentRecordImages(prev => ({
-            ...prev,
-            [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
-          }));
-          toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+      // 현재 결제요청의 기존 이미지 가져오기
+      const payment = payments.find(p => p.id === selectedRecord);
+      const existingImages = payment?.images || paymentRecordImages[selectedRecord] || [];
+      const updatedImages = [...existingImages, ...newImages];
+
+      // 서버에 이미지 저장
+      await paymentService.updatePaymentImages(selectedRecord, updatedImages);
+
+      // 로컬 상태 업데이트
+      setPaymentRecordImages(prev => ({
+        ...prev,
+        [selectedRecord]: updatedImages
+      }));
+
+      // payments 목록 새로고침 (서버 이미지 동기화)
+      await loadPaymentsFromAPI();
+
+      toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+    } catch (error) {
+      console.error('이미지 저장 실패:', error);
+      toast.error('이미지 저장에 실패했습니다');
+    }
+
+    // input 초기화
+    e.target.value = '';
   };
 
   // 이미지 삭제
-  const removeImage = (index: number) => {
+  const removeImage = async (index: number) => {
     if (!selectedRecord) return;
-    setPaymentRecordImages(prev => ({
-      ...prev,
-      [selectedRecord]: prev[selectedRecord]?.filter((_, i) => i !== index) || []
-    }));
+
+    try {
+      // 현재 이미지 목록에서 삭제
+      const payment = payments.find(p => p.id === selectedRecord);
+      const currentImages = payment?.images || paymentRecordImages[selectedRecord] || [];
+      const updatedImages = currentImages.filter((_, i) => i !== index);
+
+      // 서버에 업데이트
+      await paymentService.updatePaymentImages(selectedRecord, updatedImages);
+
+      // 로컬 상태 업데이트
+      setPaymentRecordImages(prev => ({
+        ...prev,
+        [selectedRecord]: updatedImages
+      }));
+
+      // payments 목록 새로고침
+      await loadPaymentsFromAPI();
+    } catch (error) {
+      console.error('이미지 삭제 실패:', error);
+      toast.error('이미지 삭제에 실패했습니다');
+    }
   };
 
   // 이미지 클릭 시 모달 열기
@@ -1904,7 +1971,7 @@ const Payments = () => {
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
 
@@ -1914,27 +1981,52 @@ const Payments = () => {
     }
 
     const files = Array.from(e.dataTransfer.files);
-    const newImages: string[] = [];
     const imageFiles = files.filter(f => f.type.startsWith('image/'));
 
     if (imageFiles.length === 0) return;
 
-    imageFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        newImages.push(base64);
+    try {
+      // 모든 이미지를 base64로 변환
+      const newImages = await Promise.all(
+        imageFiles.map(file => {
+          return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const base64 = event.target?.result as string;
+              if (base64) {
+                resolve(base64);
+              } else {
+                reject(new Error('이미지 읽기 실패'));
+              }
+            };
+            reader.onerror = () => reject(new Error('FileReader 오류'));
+            reader.readAsDataURL(file);
+          });
+        })
+      );
 
-        if (newImages.length === imageFiles.length) {
-          setPaymentRecordImages(prev => ({
-            ...prev,
-            [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
-          }));
-          toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+      // 현재 결제요청의 기존 이미지 가져오기
+      const payment = payments.find(p => p.id === selectedRecord);
+      const existingImages = payment?.images || paymentRecordImages[selectedRecord] || [];
+      const updatedImages = [...existingImages, ...newImages];
+
+      // 서버에 이미지 저장
+      await paymentService.updatePaymentImages(selectedRecord, updatedImages);
+
+      // 로컬 상태 업데이트
+      setPaymentRecordImages(prev => ({
+        ...prev,
+        [selectedRecord]: updatedImages
+      }));
+
+      // payments 목록 새로고침
+      await loadPaymentsFromAPI();
+
+      toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+    } catch (error) {
+      console.error('이미지 저장 실패:', error);
+      toast.error('이미지 저장에 실패했습니다');
+    }
   };
 
   return (
