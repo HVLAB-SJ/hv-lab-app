@@ -368,6 +368,7 @@ const ExecutionHistory = () => {
   // 안팀 사용자인 경우 담당 프로젝트만 필터링
   console.log('[ExecutionHistory] payments 배열:', payments.length, '개');
   console.log('[ExecutionHistory] 이미지가 있는 payments:', payments.filter(p => p.images && p.images.length > 0).map(p => ({ id: p.id, imagesCount: p.images?.length })));
+  console.log('[ExecutionHistory] paymentRecordImages 상태:', Object.keys(paymentRecordImages).length, '개 레코드', Object.entries(paymentRecordImages).slice(0, 3).map(([id, imgs]) => ({ id, count: imgs?.length })));
 
   const paymentRecords = payments
     .filter(p => {
@@ -1688,6 +1689,21 @@ const ExecutionHistory = () => {
               const fullRecord = allRecords.find(r => r.id === selectedRecord);
               // allRecords의 images에 이미 paymentRecordImages가 포함되어 있음
               const images = fullRecord?.images || record?.images || [];
+
+              // 디버깅: 선택된 레코드의 이미지 상태
+              const originalPayment = payments.find(p => p.id === selectedRecord);
+              console.log('[ExecutionHistory] 선택된 레코드:', {
+                selectedRecord,
+                fullRecordExists: !!fullRecord,
+                fullRecordType: fullRecord?.type,
+                fullRecordImages: fullRecord?.images?.length || 0,
+                recordExists: !!record,
+                recordImages: record?.images?.length || 0,
+                originalPaymentExists: !!originalPayment,
+                originalPaymentImages: originalPayment?.images?.length || 0,
+                paymentRecordImagesForId: paymentRecordImages[selectedRecord]?.length || 0,
+                finalImagesCount: images.length
+              });
 
               return (
                 <div className="h-full flex flex-col">
