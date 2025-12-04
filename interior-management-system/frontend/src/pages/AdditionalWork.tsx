@@ -111,22 +111,27 @@ const AdditionalWork = () => {
           reader.onload = (event) => {
             const base64 = event.target?.result as string;
 
-            // workImages에 이미지 추가
-            setWorkImages(prev => ({
-              ...prev,
-              [selectedWorkId]: [...(prev[selectedWorkId] || []), base64]
-            }));
+            // workImages에 이미지 추가 및 서버 저장
+            setWorkImages(prev => {
+              const currentImages = prev[selectedWorkId] || [];
+              const newImages = [...currentImages, base64];
+
+              // 서버에 이미지 저장 (최신 상태 사용)
+              saveImagesToWork(selectedWorkId, newImages);
+
+              return {
+                ...prev,
+                [selectedWorkId]: newImages
+              };
+            });
 
             toast.success('이미지가 추가되었습니다');
-
-            // 서버에 이미지 저장
-            saveImagesToWork(selectedWorkId, [...(workImages[selectedWorkId] || []), base64]);
           };
           reader.readAsDataURL(blob);
         }
       }
     }
-  }, [selectedWorkId, workImages]);
+  }, [selectedWorkId]);
 
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
