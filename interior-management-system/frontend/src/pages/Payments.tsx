@@ -1979,7 +1979,7 @@ const Payments = () => {
       <div className="payment-container grid grid-cols-1 md:grid-cols-6 ipad:grid-cols-6 ipad-lg:grid-cols-6 ipad-xl:grid-cols-12 ipad-2xl:grid-cols-12 gap-3 md:gap-4">
 
         {/* 왼쪽: 입력 폼 (2열) */}
-        <div className={`payment-form md:col-span-2 ipad:col-span-2 ipad-lg:col-span-2 ipad-xl:col-span-2 ipad-2xl:col-span-2 bg-white rounded-lg border p-3 md:p-4 overflow-y-auto ${
+        <div className={`payment-form md:col-span-2 ipad:col-span-2 ipad-lg:col-span-2 ipad-xl:col-span-2 ipad-2xl:col-span-2 bg-white rounded-lg border p-3 md:p-4 overflow-y-auto h-[calc(100vh-180px)] ${
           mobileView !== 'form' ? 'hidden md:block' : ''
         }`}>
           <div className="space-y-4">
@@ -2514,11 +2514,11 @@ const Payments = () => {
         </div>
 
         {/* 중앙: 결제요청 목록 - 카드 형식 (4열) */}
-        <div className={`payment-list md:col-span-4 ipad:col-span-4 ipad-lg:col-span-4 ipad-xl:col-span-4 ipad-2xl:col-span-4 bg-white rounded-lg border overflow-hidden flex flex-col ${
+        <div className={`payment-list md:col-span-4 ipad:col-span-4 ipad-lg:col-span-4 ipad-xl:col-span-4 ipad-2xl:col-span-4 bg-white rounded-lg border overflow-hidden flex flex-col h-[calc(100vh-180px)] ${
           mobileView !== 'list' ? 'hidden md:flex' : ''
         }`}>
           {/* 상태 탭 + 선택된 프로젝트 필터 */}
-          <div className="bg-gray-50 px-4 pt-3 pb-0">
+          <div className="bg-gray-50 px-4 pt-3 pb-0 flex-shrink-0">
             <div className="flex items-center justify-between gap-4">
               <nav className="flex gap-2 overflow-x-auto flex-1">
                 <button
@@ -2842,7 +2842,7 @@ const Payments = () => {
 
         {/* 오른쪽: 이미지 업로드 및 뷰어 (6열) - 태블릿에서는 전체 너비로 표시 */}
         <div
-          className={`payment-images md:col-span-6 ipad:col-span-6 ipad-lg:col-span-6 ipad-xl:col-span-6 ipad-2xl:col-span-6 bg-white rounded-lg border flex flex-col overflow-hidden ${
+          className={`payment-images md:col-span-6 ipad:col-span-6 ipad-lg:col-span-6 ipad-xl:col-span-6 ipad-2xl:col-span-6 bg-white rounded-lg border flex flex-col overflow-hidden h-[calc(100vh-180px)] ${
             mobileView !== 'image' ? 'hidden lg:flex' : ''
           }`}
           onDragOver={handleDragOver}

@@ -539,9 +539,9 @@ const AdditionalWork = () => {
         </div>
 
         {/* 중간: 추가내역 목록 */}
-        <div className="additional-work-list md:col-span-4 lg:col-span-5 space-y-3 md:space-y-4">
+        <div className="additional-work-list md:col-span-4 lg:col-span-5 flex flex-col h-[calc(100vh-120px)]">
           {/* 미납/완납 탭 및 검색 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex-shrink-0">
             <div className="space-y-4">
               {/* 미납/완납 탭 */}
               <div className="flex border-b border-gray-200">
@@ -570,7 +570,7 @@ const AdditionalWork = () => {
           </div>
 
           {/* 프로젝트별 추가내역 */}
-          <div className="space-y-4 max-h-[calc(100vh-240px)] overflow-y-auto">
+          <div className="space-y-4 flex-1 overflow-y-auto mt-3 pr-1">
             {projectGroups.map(group => (
               <div key={group.projectName} className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div
@@ -655,10 +655,10 @@ const AdditionalWork = () => {
         </div>
 
         {/* 오른쪽: 선택된 항목의 이미지 */}
-        <div className="additional-work-images md:col-span-4 lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-5 lg:p-6">
+        <div className="additional-work-images md:col-span-4 lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-5 lg:p-6 h-[calc(100vh-120px)] overflow-y-auto">
           {selectedWorkId ? (
             <div>
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center justify-between mb-5 sticky top-0 bg-white pb-2">
                 <h3 className="text-base font-semibold text-gray-900">이미지 관리</h3>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-500">
