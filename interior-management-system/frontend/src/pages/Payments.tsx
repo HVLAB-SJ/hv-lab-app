@@ -1383,6 +1383,16 @@ const Payments = () => {
     new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
   );
 
+  // 디버깅: 결제 데이터 확인
+  console.log('[결제요청 디버깅]', {
+    '전체 payments': payments.length,
+    '프로젝트 필터링 후': projectFilteredPayments.length,
+    '완료된 결제(전체)': payments.filter(p => p.status === 'completed').length,
+    '완료된 결제(필터링 후)': projectFilteredPayments.filter(p => p.status === 'completed').length,
+    '현재 사용자': user?.name,
+    '프로젝트 수': projects.length
+  });
+
   // 필터링 (대기중은 전체 프로젝트, 송금완료는 선택한 프로젝트만)
   const filteredRecords = allRecords.filter(record => {
     const matchesSearch = searchTerm === '' ||
