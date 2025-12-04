@@ -1006,8 +1006,8 @@ const ExecutionHistory = () => {
         </div>
       </div>
 
-      {/* 메인 컨텐츠 - 3열 레이아웃 */}
-      <div className="execution-container grid grid-cols-1 md:grid-cols-6 ipad:grid-cols-6 ipad-lg:grid-cols-6 ipad-xl:grid-cols-12 ipad-2xl:grid-cols-12 gap-3 md:gap-4">
+      {/* 메인 컨텐츠 - 3열 레이아웃 (고정 높이로 독립 스크롤) */}
+      <div className="execution-container grid grid-cols-1 md:grid-cols-6 ipad:grid-cols-6 ipad-lg:grid-cols-6 ipad-xl:grid-cols-12 ipad-2xl:grid-cols-12 gap-3 md:gap-4 md:h-[calc(100vh-120px)]">
 
         {/* 입력 폼 (2열) */}
         <div className={`execution-form md:col-span-2 ipad:col-span-2 ipad-lg:col-span-2 ipad-xl:col-span-2 ipad-2xl:col-span-2 bg-white rounded-lg border p-3 md:p-4 overflow-y-auto ${
