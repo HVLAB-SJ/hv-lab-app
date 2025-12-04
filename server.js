@@ -36,6 +36,7 @@ const addQuickTextColumn = require('./server/migrations/add-quick-text-column');
 const createDrawingsTable = require('./server/migrations/create-drawings-table');
 const addPaymentImagesColumn = require('./server/migrations/add-payment-images-column');
 const addExecutionRecordsTable = require('./server/migrations/add-execution-records-table');
+const addExecutionRecordImages = require('./server/migrations/add-execution-record-images');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
@@ -52,6 +53,10 @@ addQuickTextColumn().catch(console.error);
 createDrawingsTable().catch(console.error);
 addPaymentImagesColumn().catch(console.error);
 addExecutionRecordsTable(require('./server/config/database').db).catch(console.error);
+// 실행내역 테이블 생성 후 images 컬럼 추가
+setTimeout(() => {
+  addExecutionRecordImages(require('./server/config/database').db).catch(console.error);
+}, 500);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
