@@ -237,7 +237,7 @@ const Payments = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, [loadPaymentsFromAPI, projects]);
 
-  // 자동 새로고침 (30초마다)
+  // 자동 새로고침 (30초마다) + 페이지 포커스 시 새로고침
   useEffect(() => {
     const autoRefreshInterval = setInterval(() => {
       console.log('[자동 새로고침] 결제 내역 업데이트 중...');
@@ -246,7 +246,22 @@ const Payments = () => {
       });
     }, 30000); // 30초
 
-    return () => clearInterval(autoRefreshInterval);
+    // 페이지가 다시 보일 때 새로고침 (탭 전환, 창 활성화 시)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[포커스 새로고침] 페이지 활성화 - 결제 내역 업데이트 중...');
+        loadPaymentsFromAPI().catch(error => {
+          console.error('[포커스 새로고침] 실패:', error);
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(autoRefreshInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [loadPaymentsFromAPI]);
 
   // Socket.IO 실시간 동기화 - 다른 사용자가 송금완료 시 즉시 반영
