@@ -92,10 +92,20 @@ const AdditionalWork = () => {
     }
   }, [filteredProjects]);
 
-  // 클립보드 이미지 붙여넣기 처리
+  // 클립보드 이미지 붙여넣기 처리 (우측 이미지 영역에만 적용)
   const handlePaste = useCallback((e: ClipboardEvent) => {
+    // 텍스트 입력 필드에서 붙여넣기할 때는 무시 (텍스트 붙여넣기 허용)
+    const activeElement = document.activeElement;
+    const isTextInput = activeElement instanceof HTMLInputElement ||
+                        activeElement instanceof HTMLTextAreaElement ||
+                        activeElement instanceof HTMLSelectElement;
+
+    if (isTextInput) {
+      return; // 텍스트 입력 중에는 이미지 붙여넣기 무시
+    }
+
+    // 내역이 선택되지 않은 경우에는 아무 동작 없음 (에러 메시지도 표시하지 않음)
     if (!selectedWorkId) {
-      toast.error('먼저 추가내역을 선택해주세요');
       return;
     }
 
@@ -111,7 +121,7 @@ const AdditionalWork = () => {
           reader.onload = (event) => {
             const base64 = event.target?.result as string;
 
-            // workImages에 이미지 추가 및 서버 저장
+            // workImages에 이미지 첨부 및 서버 저장
             setWorkImages(prev => {
               const currentImages = prev[selectedWorkId] || [];
               const newImages = [...currentImages, base64];
