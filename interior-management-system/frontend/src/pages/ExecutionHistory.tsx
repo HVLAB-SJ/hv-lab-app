@@ -822,23 +822,27 @@ const ExecutionHistory = () => {
           });
         })
       ).then(async newImages => {
-        // 실제 레코드에 이미지 추가
-        const record = executionRecords.find(r => r.id === selectedRecord);
-        if (record) {
-          const updatedImages = [...(record.images || []), ...newImages];
+        // 실행내역(manual) 레코드인지 확인
+        const executionRecord = executionRecords.find(r => r.id === selectedRecord);
+        if (executionRecord) {
+          // 실행내역인 경우 서버 API로 저장
+          const updatedImages = [...(executionRecord.images || []), ...newImages];
           try {
             await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
+            toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
           } catch (error) {
             console.error('이미지 저장 실패:', error);
+            toast.error('이미지 저장에 실패했습니다');
           }
         } else {
-          // 결제요청 레코드인 경우 별도 저장소에 저장
+          // 결제요청 레코드인 경우 로컬 저장소에 저장
+          const existingImages = paymentRecordImages[selectedRecord] || [];
           setPaymentRecordImages(prev => ({
             ...prev,
-            [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
+            [selectedRecord]: [...existingImages, ...newImages]
           }));
+          toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
         }
-        toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
       }).catch(error => {
         console.error('이미지 처리 중 오류:', error);
         toast.error('이미지 추가 중 오류가 발생했습니다');
