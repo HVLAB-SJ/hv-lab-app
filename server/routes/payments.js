@@ -222,6 +222,17 @@ router.post('/', authenticateToken, async (req, res) => {
         apply_tax_deduction: applyTaxDeduction
       });
 
+      // Socket.IO로 실시간 알림 전송
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('payment:refresh', {
+          paymentId: paymentId,
+          status: 'created',
+          updatedAt: new Date().toISOString()
+        });
+        console.log(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${paymentId}, status: created`);
+      }
+
       res.status(201).json({
         id: this.lastID,
         message: '결제 요청이 생성되었습니다.'
@@ -374,6 +385,17 @@ router.put('/:id', authenticateToken, (req, res) => {
           );
         }
       });
+
+      // Socket.IO로 실시간 알림 전송
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('payment:refresh', {
+          paymentId: id,
+          status: 'updated',
+          updatedAt: new Date().toISOString()
+        });
+        console.log(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: updated`);
+      }
 
       res.json({ message: '결제 요청이 수정되었습니다.' });
     }
@@ -534,6 +556,17 @@ router.put('/:id/status', authenticateToken, (req, res) => {
         notifyCompletion(id);
       }
 
+      // Socket.IO로 실시간 알림 전송
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('payment:refresh', {
+          paymentId: id,
+          status: status,
+          updatedAt: new Date().toISOString()
+        });
+        console.log(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: ${status}`);
+      }
+
       res.json({ message: '상태가 변경되었습니다.' });
     }
   );
@@ -561,6 +594,17 @@ router.post('/:id/complete', authenticateToken, isManager, (req, res) => {
       // 요청자에게 알림 전송
       notifyCompletion(id);
 
+      // Socket.IO로 실시간 알림 전송
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('payment:refresh', {
+          paymentId: id,
+          status: 'completed',
+          updatedAt: new Date().toISOString()
+        });
+        console.log(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: completed`);
+      }
+
       res.json({ message: '결제가 완료되었습니다.' });
     }
   );
@@ -584,6 +628,18 @@ router.delete('/:id', authenticateToken, (req, res) => {
         return res.status(404).json({ error: '삭제할 수 없는 요청입니다. (이미 삭제되었거나 존재하지 않습니다)' });
       }
       console.log(`[DELETE /api/payments/:id] Deleted payment request ${id} by user ${req.user.id}`);
+
+      // Socket.IO로 실시간 알림 전송
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('payment:refresh', {
+          paymentId: id,
+          status: 'deleted',
+          updatedAt: new Date().toISOString()
+        });
+        console.log(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: deleted`);
+      }
+
       res.json({ message: '결제 요청이 삭제되었습니다.' });
     }
   );

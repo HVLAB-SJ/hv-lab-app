@@ -90,6 +90,9 @@ if (volumePath) {
   console.log('📁 Railway Volume 정적 파일 제공:', volumePath);
 }
 
+// io 인스턴스를 app에 설정 (라우트에서 접근 가능)
+app.set('io', io);
+
 // Socket.IO 연결 처리
 io.on('connection', (socket) => {
   console.log('새로운 클라이언트 연결:', socket.id);
