@@ -1121,7 +1121,7 @@ const ExecutionHistory = () => {
                     }}
                   />
                   <div className="w-full h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium border border-gray-300">
-                    이미지 추가
+                    이미지 첨부
                   </div>
                 </label>
                 <button
@@ -1877,7 +1877,7 @@ const ExecutionHistory = () => {
                     >
                       <Upload className={`mx-auto text-gray-400 mb-1 ${images.length > 0 ? 'h-6 w-6' : 'h-10 w-10 mb-2'}`} />
                       <p className="text-sm font-medium text-gray-700">
-                        {images.length > 0 ? '이미지 추가' : '클릭하여 선택'}
+                        {images.length > 0 ? '이미지 첨부' : '클릭하여 선택'}
                       </p>
                       {images.length === 0 && (
                         <p className="text-xs text-gray-500 mt-1">또는 이미지를 드래그하거나 Ctrl+V로 붙여넣기</p>
