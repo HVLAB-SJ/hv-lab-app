@@ -331,9 +331,6 @@ export const useDataStore = create<DataStore>()(
       const apiPayments = await paymentService.getAllPayments();
       console.log('[loadPaymentsFromAPI] Raw API response sample:', apiPayments[0]);
       const payments: Payment[] = apiPayments.map((p: PaymentResponse) => {
-        if (p.images) {
-          console.log(`[loadPaymentsFromAPI] Payment ${p.id} has images:`, p.images.substring(0, 100));
-        }
         return {
           id: String(p.id),
           project: p.project_name,
@@ -350,16 +347,17 @@ export const useDataStore = create<DataStore>()(
           quickText: p.quick_text || '',  // 자동으로 항목 채우기에 입력했던 원본 텍스트
           images: (() => {
             if (!p.images) {
-              console.log(`[loadPaymentsFromAPI] Payment ${p.id}: no images field`);
               return [];
             }
+            // 백엔드에서 이미 파싱된 배열로 올 수도 있고, 문자열로 올 수도 있음
+            if (Array.isArray(p.images)) {
+              return p.images;
+            }
             try {
-              const parsed = JSON.parse(p.images);
-              const result = Array.isArray(parsed) ? parsed : [];
-              console.log(`[loadPaymentsFromAPI] Payment ${p.id}: parsed ${result.length} images`);
-              return result;
+              const parsed = JSON.parse(p.images as string);
+              return Array.isArray(parsed) ? parsed : [];
             } catch (e) {
-              console.error('이미지 파싱 오류:', e, p.images);
+              console.error('이미지 파싱 오류:', e);
               return [];
             }
           })(),
