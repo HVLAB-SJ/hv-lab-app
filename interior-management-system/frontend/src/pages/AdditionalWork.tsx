@@ -125,7 +125,7 @@ const AdditionalWork = () => {
               };
             });
 
-            toast.success('이미지가 추가되었습니다');
+            toast.success('이미지가 첨부되었습니다');
           };
           reader.readAsDataURL(blob);
         }
@@ -203,7 +203,7 @@ const AdditionalWork = () => {
     });
 
     if (files.length > 0) {
-      toast.success('이미지가 추가되었습니다');
+      toast.success('이미지가 첨부되었습니다');
     }
   };
 
@@ -595,7 +595,7 @@ const AdditionalWork = () => {
                     className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 cursor-pointer flex items-center gap-2 font-medium"
                   >
                     <Upload className="h-4 w-4" />
-                    업로드
+                    이미지 첨부
                   </label>
                 </div>
               </div>
