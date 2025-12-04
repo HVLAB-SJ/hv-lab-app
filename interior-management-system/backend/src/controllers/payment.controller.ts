@@ -240,6 +240,14 @@ export const updatePaymentStatus = async (req: Request, res: Response): Promise<
       return;
     }
 
+    // 결제 상태 변경 시 모든 클라이언트에게 실시간 브로드캐스트
+    io.emit('payment:refresh', {
+      paymentId: payment._id,
+      status: payment.status,
+      updatedAt: new Date().toISOString()
+    });
+    console.log('📢 결제 상태 변경 브로드캐스트:', { id: payment._id, status: payment.status });
+
     res.json(payment);
   } catch (error) {
     console.error('Update payment status error:', error);

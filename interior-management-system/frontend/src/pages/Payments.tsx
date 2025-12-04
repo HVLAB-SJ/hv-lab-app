@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDataStore, type Payment } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
+import socketService from '../services/socket';
 
 type PaymentRequest = Payment;
 import { Search, Trash2, ImageIcon, X, Upload, FileText, Pencil } from 'lucide-react';
@@ -245,6 +246,26 @@ const Payments = () => {
     }, 30000); // 30초
 
     return () => clearInterval(autoRefreshInterval);
+  }, [loadPaymentsFromAPI]);
+
+  // Socket.IO 실시간 동기화 - 다른 사용자가 송금완료 시 즉시 반영
+  useEffect(() => {
+    const socket = socketService.getSocket();
+    if (!socket) return;
+
+    const handlePaymentRefresh = (data: { paymentId: string; status: string; updatedAt: string }) => {
+      console.log('🔄 [실시간 동기화] 결제 상태 변경 감지:', data);
+      // 결제 목록 새로고침
+      loadPaymentsFromAPI().catch(error => {
+        console.error('[실시간 동기화] 새로고침 실패:', error);
+      });
+    };
+
+    socket.on('payment:refresh', handlePaymentRefresh);
+
+    return () => {
+      socket.off('payment:refresh', handlePaymentRefresh);
+    };
   }, [loadPaymentsFromAPI]);
 
   // URL 파라미터로 송금완료 자동 처리
