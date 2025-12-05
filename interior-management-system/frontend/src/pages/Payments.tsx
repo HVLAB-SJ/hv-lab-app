@@ -483,22 +483,24 @@ const Payments = () => {
       }> = [];
       const addedNames = new Set<string>();
 
-      // 1. 협력업체에서 검색
-      contractors.forEach(contractor => {
-        const name = contractor.name.trim();
-        const lowerName = name.toLowerCase();
-        const lowerSearch = searchTerm.toLowerCase();
+      // 1. 협력업체에서 검색 (계좌번호 있는 사람만)
+      contractors
+        .filter(contractor => contractor.accountNumber && contractor.accountNumber.trim() !== '')
+        .forEach(contractor => {
+          const name = contractor.name.trim();
+          const lowerName = name.toLowerCase();
+          const lowerSearch = searchTerm.toLowerCase();
 
-        if (lowerName.startsWith(lowerSearch) && !addedNames.has(lowerName)) {
-          addedNames.add(lowerName);
-          suggestions.push({
-            name,
-            bankName: contractor.bankName || '',
-            accountNumber: contractor.accountNumber || '',
-            source: 'contractor'
-          });
-        }
-      });
+          if (lowerName.startsWith(lowerSearch) && !addedNames.has(lowerName)) {
+            addedNames.add(lowerName);
+            suggestions.push({
+              name,
+              bankName: contractor.bankName || '',
+              accountNumber: contractor.accountNumber || '',
+              source: 'contractor'
+            });
+          }
+        });
 
       // 2. 이전 송금완료 내역에서 검색
       payments
