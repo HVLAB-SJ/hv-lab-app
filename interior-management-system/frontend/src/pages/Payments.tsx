@@ -140,6 +140,15 @@ const Payments = () => {
     amount: number;
   }>>([]);
 
+  // 예금주 자동완성 관련 상태
+  const [accountHolderSuggestions, setAccountHolderSuggestions] = useState<Array<{
+    name: string;
+    bankName: string;
+    accountNumber: string;
+    source: 'contractor' | 'payment';
+  }>>([]);
+  const [isAccountHolderFocused, setIsAccountHolderFocused] = useState(false);
+
   // 결제요청 레코드의 이미지를 저장하는 별도의 상태 (IndexedDB 사용으로 용량 제한 없음)
   const [paymentRecordImages, setPaymentRecordImages] = useState<Record<string, string[]>>({});
   const [imagesLoaded, setImagesLoaded] = useState(false);
@@ -460,6 +469,61 @@ const Payments = () => {
       setProcessPaymentSuggestions([]);
     }
   }, [formData.process, payments]);
+
+  // 예금주 입력 시 자동완성 필터링
+  useEffect(() => {
+    const searchTerm = formData.accountHolder?.trim() || '';
+
+    if (searchTerm.length >= 1 && isAccountHolderFocused) {
+      const suggestions: Array<{
+        name: string;
+        bankName: string;
+        accountNumber: string;
+        source: 'contractor' | 'payment';
+      }> = [];
+      const addedNames = new Set<string>();
+
+      // 1. 협력업체에서 검색
+      contractors.forEach(contractor => {
+        const name = contractor.name.trim();
+        const lowerName = name.toLowerCase();
+        const lowerSearch = searchTerm.toLowerCase();
+
+        if (lowerName.startsWith(lowerSearch) && !addedNames.has(lowerName)) {
+          addedNames.add(lowerName);
+          suggestions.push({
+            name,
+            bankName: contractor.bankName || '',
+            accountNumber: contractor.accountNumber || '',
+            source: 'contractor'
+          });
+        }
+      });
+
+      // 2. 이전 송금완료 내역에서 검색
+      payments
+        .filter(p => p.status === 'completed' && p.bankInfo?.accountHolder)
+        .forEach(p => {
+          const name = p.bankInfo!.accountHolder.trim();
+          const lowerName = name.toLowerCase();
+          const lowerSearch = searchTerm.toLowerCase();
+
+          if (lowerName.startsWith(lowerSearch) && !addedNames.has(lowerName)) {
+            addedNames.add(lowerName);
+            suggestions.push({
+              name,
+              bankName: p.bankInfo!.bankName || '',
+              accountNumber: p.bankInfo!.accountNumber || '',
+              source: 'payment'
+            });
+          }
+        });
+
+      setAccountHolderSuggestions(suggestions);
+    } else {
+      setAccountHolderSuggestions([]);
+    }
+  }, [formData.accountHolder, isAccountHolderFocused, contractors, payments]);
 
   // 텍스트에서 금액 파싱 (자재비/인건비 구분)
   const parseAmountFromText = (text: string): { material?: number; labor?: number; total?: number } => {
@@ -2183,10 +2247,10 @@ const Payments = () => {
 
               {/* 부가세 체크박스 */}
               <div className="flex items-center gap-4">
-                <label
+                <button
+                  type="button"
                   className="flex items-center cursor-pointer"
                   onMouseDown={(e) => e.preventDefault()}
-                  onTouchStart={(e) => e.preventDefault()}
                   onClick={() => {
                     if (!includeVat) {
                       setIncludeTaxDeduction(false);
@@ -2194,20 +2258,17 @@ const Payments = () => {
                     setIncludeVat(!includeVat);
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={includeVat}
-                    readOnly
-                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded pointer-events-none"
-                  />
+                  <div className={`h-4 w-4 border rounded flex items-center justify-center ${includeVat ? 'bg-gray-600 border-gray-600' : 'border-gray-300'}`}>
+                    {includeVat && <span className="text-white text-xs">✓</span>}
+                  </div>
                   <span className="ml-2 text-sm text-gray-700">
                     부가세 포함 (10%)
                   </span>
-                </label>
-                <label
+                </button>
+                <button
+                  type="button"
                   className="flex items-center cursor-pointer"
                   onMouseDown={(e) => e.preventDefault()}
-                  onTouchStart={(e) => e.preventDefault()}
                   onClick={() => {
                     if (!includeTaxDeduction) {
                       setIncludeVat(false);
@@ -2215,31 +2276,57 @@ const Payments = () => {
                     setIncludeTaxDeduction(!includeTaxDeduction);
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={includeTaxDeduction}
-                    readOnly
-                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded pointer-events-none"
-                  />
+                  <div className={`h-4 w-4 border rounded flex items-center justify-center ${includeTaxDeduction ? 'bg-gray-600 border-gray-600' : 'border-gray-300'}`}>
+                    {includeTaxDeduction && <span className="text-white text-xs">✓</span>}
+                  </div>
                   <span className="ml-2 text-sm text-gray-700">
                     3.3% 세금공제
                   </span>
-                </label>
+                </button>
               </div>
             </div>
 
             {/* 계좌 정보 */}
             <div className="payment-account-section border-t pt-3 space-y-2">
               {/* 예금주 */}
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">예금주</label>
                 <input
                   type="text"
                   value={formData.accountHolder}
                   onChange={(e) => setFormData({ ...formData, accountHolder: e.target.value })}
+                  onFocus={() => setIsAccountHolderFocused(true)}
+                  onBlur={() => setTimeout(() => setIsAccountHolderFocused(false), 150)}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="예금주명을 입력하세요"
                 />
+                {/* 예금주 자동완성 드롭다운 */}
+                {isAccountHolderFocused && accountHolderSuggestions.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {accountHolderSuggestions.map((suggestion, index) => (
+                      <button
+                        key={`${suggestion.name}-${index}`}
+                        type="button"
+                        className="w-full px-3 py-2 text-left hover:bg-gray-100 border-b last:border-b-0 flex justify-between items-center"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            accountHolder: suggestion.name,
+                            bankName: suggestion.bankName || formData.bankName,
+                            accountNumber: suggestion.accountNumber || formData.accountNumber
+                          });
+                          setIsAccountHolderFocused(false);
+                        }}
+                      >
+                        <span className="font-medium">{suggestion.name}</span>
+                        <span className="text-xs text-gray-500">
+                          {suggestion.source === 'contractor' ? '협력업체' : '송금내역'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* 은행 */}
