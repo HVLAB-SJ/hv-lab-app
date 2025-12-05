@@ -2328,40 +2328,48 @@ const Payments = () => {
 
               {/* 부가세 체크박스 */}
               <div className="flex items-center gap-4">
-                <div className="flex items-center">
+                <label
+                  className="flex items-center cursor-pointer"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onTouchStart={(e) => e.preventDefault()}
+                  onClick={() => {
+                    if (!includeVat) {
+                      setIncludeTaxDeduction(false);
+                    }
+                    setIncludeVat(!includeVat);
+                  }}
+                >
                   <input
                     type="checkbox"
-                    id="includeVat"
                     checked={includeVat}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setIncludeTaxDeduction(false);
-                      }
-                      setIncludeVat(e.target.checked);
-                    }}
-                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                    readOnly
+                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded pointer-events-none"
                   />
-                  <label htmlFor="includeVat" className="ml-2 block text-sm text-gray-700">
+                  <span className="ml-2 text-sm text-gray-700">
                     부가세 포함 (10%)
-                  </label>
-                </div>
-                <div className="flex items-center">
+                  </span>
+                </label>
+                <label
+                  className="flex items-center cursor-pointer"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onTouchStart={(e) => e.preventDefault()}
+                  onClick={() => {
+                    if (!includeTaxDeduction) {
+                      setIncludeVat(false);
+                    }
+                    setIncludeTaxDeduction(!includeTaxDeduction);
+                  }}
+                >
                   <input
                     type="checkbox"
-                    id="includeTaxDeduction"
                     checked={includeTaxDeduction}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setIncludeVat(false);
-                      }
-                      setIncludeTaxDeduction(e.target.checked);
-                    }}
-                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                    readOnly
+                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded pointer-events-none"
                   />
-                  <label htmlFor="includeTaxDeduction" className="ml-2 block text-sm text-gray-700">
+                  <span className="ml-2 text-sm text-gray-700">
                     3.3% 세금공제
-                  </label>
-                </div>
+                  </span>
+                </label>
               </div>
             </div>
 
