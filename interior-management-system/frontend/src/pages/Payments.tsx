@@ -99,7 +99,8 @@ const Payments = () => {
     loadPaymentsFromAPI,
     addPaymentToAPI,
     deletePaymentFromAPI,
-    updatePaymentInAPI
+    updatePaymentInAPI,
+    updatePayment  // 로컬 상태 즉시 업데이트용
   } = useDataStore();
   const { user } = useAuth();
   const projects = useFilteredProjects();
@@ -308,19 +309,26 @@ const Payments = () => {
       // URL 파라미터 즉시 제거 (중복 처리 방지)
       window.history.replaceState({}, '', '/payments');
 
-      // 모바일에서 내역 화면으로 전환
+      // 모바일에서 내역 화면으로 전환 - 바로 송금완료 탭으로
       setMobileView('list');
-      setStatusFilter('pending');
+      setStatusFilter('completed');
+
+      // 로컬 상태 즉시 업데이트 (낙관적 UI)
+      updatePayment(String(completeId), { status: 'completed' });
+      toast.success('송금완료 처리되었습니다');
 
       try {
-        // 송금완료 처리
+        // 서버에 송금완료 처리 (백그라운드에서 진행)
         await updatePaymentInAPI(String(completeId), { status: 'completed' });
 
-        toast.success('송금완료 처리되었습니다');
-        setStatusFilter('completed');
-        await loadPaymentsFromAPI();
+        // API 완료 후 목록 새로고침 (서버와 동기화)
+        loadPaymentsFromAPI();
       } catch (error: any) {
         console.error('[자동 송금완료] 처리 실패:', error);
+
+        // 실패 시 롤백 - 다시 대기중으로
+        updatePayment(String(completeId), { status: 'pending' });
+        setStatusFilter('pending');
 
         let errorMessage = '송금완료 처리에 실패했습니다';
         if (error.response?.status === 401) {
@@ -338,7 +346,7 @@ const Payments = () => {
     };
 
     handleAutoComplete();
-  }, [loadPaymentsFromAPI, updatePaymentInAPI, user]);
+  }, [loadPaymentsFromAPI, updatePaymentInAPI, updatePayment, user]);
 
   // 공정 변경 시 해당 공정의 협력업체 필터링
   useEffect(() => {
