@@ -2473,7 +2473,7 @@ const Payments = () => {
               </div>
 
               {/* 결제요청/수정완료 버튼 - 모바일 최적화 */}
-              <div className="my-6 lg:my-[50px] sticky bottom-0 bg-white pt-4 pb-4 -mb-4 lg:static lg:pb-0" style={{ zIndex: 100 }}>
+              <div className="mt-6 lg:my-[50px]">
                 {editingPaymentId && (
                   <button
                     onClick={() => {
@@ -2517,7 +2517,7 @@ const Payments = () => {
                       ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                       : 'bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-950'
                   }`}
-                  style={{ minHeight: '48px', position: 'relative', zIndex: 101, WebkitTapHighlightColor: 'transparent' }}
+                  style={{ minHeight: '48px', WebkitTapHighlightColor: 'transparent' }}
                 >
                   {isSubmitting ? '처리중...' : (editingPaymentId ? '수정완료' : '결제요청')}
                 </button>
