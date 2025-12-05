@@ -131,13 +131,6 @@ const Payments = () => {
   const [recommendedContractors, setRecommendedContractors] = useState<Contractor[]>([]);
   const [selectedContractorId, setSelectedContractorId] = useState<string | null>(null);
 
-  // 송금완료 내역에서 계좌정보 추천
-  const [accountSuggestions, setAccountSuggestions] = useState<Array<{
-    accountHolder: string;
-    bankName: string;
-    accountNumber: string;
-  }>>([]);
-
   // 공정 기반 이전 송금내역 추천
   const [processPaymentSuggestions, setProcessPaymentSuggestions] = useState<Array<{
     accountHolder: string;
@@ -467,88 +460,6 @@ const Payments = () => {
       setProcessPaymentSuggestions([]);
     }
   }, [formData.process, payments]);
-
-  // 예금주 이름 입력 시 송금완료 내역과 협력업체에서 계좌정보 검색
-  useEffect(() => {
-    if (formData.accountHolder && formData.accountHolder.trim().length >= 1) {
-      const searchName = formData.accountHolder.trim().toLowerCase();
-
-      const uniqueAccounts = new Map<string, {
-        accountHolder: string;
-        bankName: string;
-        accountNumber: string;
-      }>();
-
-      // 현재 선택된 협력업체의 계좌정보 (중복 추천 방지용)
-      let selectedContractorAccount: string | null = null;
-      if (selectedContractorId) {
-        const selectedContractor = contractors.find(c =>
-          (c.id || c._id) === selectedContractorId
-        );
-        if (selectedContractor && selectedContractor.accountNumber && selectedContractor.bankName) {
-          const cleanName = removePosition(selectedContractor.name).trim();
-          selectedContractorAccount = `${cleanName}_${selectedContractor.bankName}_${selectedContractor.accountNumber}`;
-        }
-      }
-
-      // 1. 송금완료된 결제 내역에서 예금주 이름으로 검색
-      const completedPayments = payments.filter(p =>
-        p.status === 'completed' &&
-        p.bankInfo?.accountHolder &&
-        p.bankInfo?.bankName &&
-        p.bankInfo?.accountNumber
-      );
-
-      completedPayments.forEach(p => {
-        const holder = p.bankInfo!.accountHolder.trim();
-        const holderLower = holder.toLowerCase();
-
-        // 예금주 이름이 포함되어 있으면 추천 목록에 추가
-        if (holderLower.includes(searchName) || searchName.includes(holderLower)) {
-          const key = `${holder}_${p.bankInfo!.bankName}_${p.bankInfo!.accountNumber}`;
-
-          // 선택된 협력업체와 중복되는 경우 제외
-          if (key !== selectedContractorAccount && !uniqueAccounts.has(key)) {
-            uniqueAccounts.set(key, {
-              accountHolder: holder,
-              bankName: p.bankInfo!.bankName,
-              accountNumber: p.bankInfo!.accountNumber
-            });
-          }
-        }
-      });
-
-      // 2. 협력업체 데이터에서 예금주 이름으로 검색 (선택된 협력업체는 제외)
-      contractors.forEach(contractor => {
-        // 이미 선택된 협력업체는 제외
-        if ((contractor.id || contractor._id) === selectedContractorId) {
-          return;
-        }
-
-        // 계좌번호와 은행 정보가 있는 협력업체만 추천
-        if (contractor.accountNumber && contractor.bankName) {
-          const cleanName = removePosition(contractor.name).trim();
-          const nameLower = cleanName.toLowerCase();
-
-          // 예금주 이름이 포함되어 있으면 추천 목록에 추가
-          if (nameLower.includes(searchName) || searchName.includes(nameLower)) {
-            const key = `${cleanName}_${contractor.bankName}_${contractor.accountNumber}`;
-            if (!uniqueAccounts.has(key)) {
-              uniqueAccounts.set(key, {
-                accountHolder: cleanName,
-                bankName: contractor.bankName,
-                accountNumber: contractor.accountNumber
-              });
-            }
-          }
-        }
-      });
-
-      setAccountSuggestions(Array.from(uniqueAccounts.values()));
-    } else {
-      setAccountSuggestions([]);
-    }
-  }, [formData.accountHolder, payments, contractors, selectedContractorId]);
 
   // 텍스트에서 금액 파싱 (자재비/인건비 구분)
   const parseAmountFromText = (text: string): { material?: number; labor?: number; total?: number } => {
@@ -1188,62 +1099,6 @@ const Payments = () => {
       toast.info('텍스트를 분석 중... 더 명확한 정보를 입력해주세요.');
     }
   };
-
-  // 예금주 입력칸 포커스 시 모든 이전 송금내역 표시
-  const handleAccountHolderFocus = useCallback(() => {
-    // 추천 협력업체에서 선택한 경우는 제외
-    if (selectedContractorId) {
-      return;
-    }
-
-    // 예금주가 비어있을 때만 모든 내역 표시
-    if (!formData.accountHolder || formData.accountHolder.trim().length === 0) {
-      const uniqueAccounts = new Map<string, {
-        accountHolder: string;
-        bankName: string;
-        accountNumber: string;
-      }>();
-
-      // 송금완료된 결제 내역에서 모든 계좌정보 가져오기
-      const completedPayments = payments.filter(p =>
-        p.status === 'completed' &&
-        p.bankInfo?.accountHolder &&
-        p.bankInfo?.bankName &&
-        p.bankInfo?.accountNumber
-      );
-
-      completedPayments.forEach(p => {
-        const holder = p.bankInfo!.accountHolder.trim();
-        const key = `${holder}_${p.bankInfo!.bankName}_${p.bankInfo!.accountNumber}`;
-
-        if (!uniqueAccounts.has(key)) {
-          uniqueAccounts.set(key, {
-            accountHolder: holder,
-            bankName: p.bankInfo!.bankName,
-            accountNumber: p.bankInfo!.accountNumber
-          });
-        }
-      });
-
-      // 협력업체 데이터에서 계좌정보가 있는 업체 추가
-      contractors.forEach(contractor => {
-        if (contractor.accountNumber && contractor.bankName) {
-          const cleanName = removePosition(contractor.name).trim();
-          const key = `${cleanName}_${contractor.bankName}_${contractor.accountNumber}`;
-
-          if (!uniqueAccounts.has(key)) {
-            uniqueAccounts.set(key, {
-              accountHolder: cleanName,
-              bankName: contractor.bankName,
-              accountNumber: contractor.accountNumber
-            });
-          }
-        }
-      });
-
-      setAccountSuggestions(Array.from(uniqueAccounts.values()));
-    }
-  }, [formData.accountHolder, payments, contractors, selectedContractorId]);
 
   // IndexedDB에서 이미지 로드 (마운트 시 1회)
   useEffect(() => {
@@ -2376,56 +2231,15 @@ const Payments = () => {
             {/* 계좌 정보 */}
             <div className="payment-account-section border-t pt-3 space-y-2">
               {/* 예금주 */}
-              <div className="relative">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">예금주</label>
                 <input
                   type="text"
                   value={formData.accountHolder}
                   onChange={(e) => setFormData({ ...formData, accountHolder: e.target.value })}
-                  onFocus={handleAccountHolderFocus}
-                  onBlur={() => {
-                    // 클릭 이벤트가 처리될 시간을 주기 위해 지연
-                    setTimeout(() => setAccountSuggestions([]), 200);
-                  }}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="예금주명을 입력하세요"
                 />
-
-                {/* 송금완료 내역에서 찾은 계좌정보 추천 - absolute로 레이아웃 시프트 방지 */}
-                {accountSuggestions.length > 0 && !selectedContractorId && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-[200] bg-blue-50 border border-blue-200 rounded-lg p-3 shadow-lg">
-                    <label className="block text-sm font-medium text-blue-900 mb-2">이전 송금 내역</label>
-                    <div className="space-y-1 max-h-40 overflow-y-auto">
-                      {accountSuggestions.map((account, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => {
-                            setFormData(prev => ({
-                              ...prev,
-                              accountHolder: account.accountHolder,
-                              bankName: account.bankName,
-                              accountNumber: account.accountNumber
-                            }));
-                            setAccountSuggestions([]);
-                          }}
-                          className="w-full text-left px-3 py-2 rounded-lg border border-blue-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition-colors"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="font-medium text-sm text-gray-900">
-                                {account.accountHolder}
-                              </div>
-                              <div className="text-xs text-gray-500 mt-0.5">
-                                {account.bankName} {account.accountNumber}
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* 은행 */}
