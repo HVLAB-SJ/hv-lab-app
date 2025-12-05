@@ -2391,11 +2391,9 @@ const Payments = () => {
                             <div className="font-medium text-xs text-gray-900">
                               {removePosition(contractor.name)}
                             </div>
-                            {contractor.accountNumber && contractor.bankName && (
-                              <div className="text-[10px] text-gray-500 truncate">
-                                {contractor.bankName} {contractor.accountNumber}
-                              </div>
-                            )}
+                            <div className="text-[10px] text-gray-500 truncate">
+                              {contractor.bankName || ''} {contractor.accountNumber || ''}
+                            </div>
                           </button>
                         );
                       })}
