@@ -284,6 +284,8 @@ const CustomEvent = React.memo(({
   const attendees = event.assignedTo || [];
   // 호버 상태
   const [isHovered, setIsHovered] = useState(false);
+  // 삭제 확인 팝오버 상태
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   // 태블릿 또는 세로방향 데스크탑 모니터 감지
   const checkVerticalLayout = () => {
     const width = window.innerWidth;
@@ -376,16 +378,40 @@ const CustomEvent = React.memo(({
           justifyContent: 'flex-start'
         }}
       >
-        {/* 호버 시 삭제 아이콘 */}
-        {isHovered && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onHoverDelete(); }}
-            className="absolute top-0 right-0 p-0.5 text-gray-400 hover:text-red-500 z-10"
-            style={{ fontSize: '12px', lineHeight: 1 }}
-            title="삭제"
-          >
-            ✕
-          </button>
+        {/* 호버 시 삭제 아이콘 및 확인 팝오버 */}
+        {(isHovered || showDeleteConfirm) && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
+          <div className="absolute top-0 right-0 z-20">
+            {showDeleteConfirm ? (
+              <div
+                className="bg-white border border-gray-300 rounded-lg shadow-lg p-2 flex items-center gap-2"
+                onClick={(e) => e.stopPropagation()}
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                <span className="text-xs text-gray-700">삭제할까요?</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onHoverDelete(); setShowDeleteConfirm(false); }}
+                  className="px-2 py-0.5 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                >
+                  삭제
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}
+                  className="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
+                >
+                  취소
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
+                className="p-0.5 text-gray-400 hover:text-red-500"
+                style={{ fontSize: '12px', lineHeight: 1 }}
+                title="삭제"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         )}
         {/* 첫번째 줄: 프로젝트명 + 담당자 (개별 프로젝트 선택 시 프로젝트명 숨김) */}
         <div className="flex items-center justify-between w-full" style={{ fontSize: isSpecificProject ? '11px' : '10px', opacity: 0.8, marginBottom: '1px', lineHeight: '1.2' }}>
@@ -499,16 +525,40 @@ const CustomEvent = React.memo(({
           })}
         </span>
       )}
-      {/* 호버 시 삭제 아이콘 */}
-      {isHovered && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onHoverDelete(); }}
-          className="absolute top-0 right-0 p-0.5 text-gray-400 hover:text-red-500"
-          style={{ fontSize: '11px', lineHeight: 1 }}
-          title="삭제"
-        >
-          ✕
-        </button>
+      {/* 호버 시 삭제 아이콘 및 확인 팝오버 */}
+      {(isHovered || showDeleteConfirm) && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
+        <div className="absolute top-0 right-0 z-20">
+          {showDeleteConfirm ? (
+            <div
+              className="bg-white border border-gray-300 rounded-lg shadow-lg p-2 flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              <span className="text-xs text-gray-700">삭제할까요?</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); onHoverDelete(); setShowDeleteConfirm(false); }}
+                className="px-2 py-0.5 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+              >
+                삭제
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}
+                className="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
+              >
+                취소
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
+              className="p-0.5 text-gray-400 hover:text-red-500"
+              style={{ fontSize: '11px', lineHeight: 1 }}
+              title="삭제"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
@@ -1134,10 +1184,8 @@ const Schedule = () => {
     setInlineEditTitle('');
   }, [inlineEditEvent, inlineEditTitle, updateScheduleInAPI, loadSchedulesFromAPI]);
 
-  // 인라인 일정 삭제
+  // 인라인 일정 삭제 (확인은 커스텀 팝오버에서 이미 처리됨)
   const handleInlineDelete = useCallback(async (event: ScheduleEvent) => {
-    if (!confirm('이 일정을 삭제하시겠습니까?')) return;
-
     try {
       // 병합된 일정인 경우 모든 이벤트 삭제
       const eventIds = event.mergedEventIds || [event.id];
@@ -2000,9 +2048,9 @@ const Schedule = () => {
           <div className="flex gap-3">
             {/* 공정 사이드바 (프로젝트 선택 시에만 표시, 데스크톱만) */}
             {filterProject !== 'all' && !isMobileView && (
-              <div className="hidden lg:block w-28 flex-shrink-0">
-                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-1.5 sticky top-4">
-                  <div className="grid grid-cols-1 gap-0.5">
+              <div className="hidden lg:block w-40 flex-shrink-0">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-2 sticky top-4">
+                  <div className="grid grid-cols-2 gap-1">
                     {PROCESS_LIST.map((process) => (
                       <div
                         key={process}
@@ -2013,7 +2061,7 @@ const Schedule = () => {
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
                         onDragEnd={() => setDraggedProcess(null)}
-                        className={`px-1.5 py-0.5 text-[11px] rounded cursor-grab active:cursor-grabbing transition-colors text-center ${
+                        className={`px-2 py-1.5 text-xs rounded cursor-grab active:cursor-grabbing transition-colors text-center font-medium ${
                           draggedProcess === process
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
