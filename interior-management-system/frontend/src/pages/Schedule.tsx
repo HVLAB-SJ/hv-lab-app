@@ -750,8 +750,14 @@ const Schedule = () => {
     })
     .map(schedule => {
       // 비공개 일정은 "[개인일정]"으로 표시
-      const displayProjectName = schedule.project === '비공개' ? '[개인일정]' : schedule.project;
       const project = projects.find(p => p.name === schedule.project);
+      // 프로젝트가 있으면 축약형 표기 생성 (프로젝트명 앞2글자_고객명)
+      let displayProjectName = schedule.project === '비공개' ? '[개인일정]' : schedule.project;
+      if (project && schedule.project !== '비공개') {
+        const prefix = project.name.length > 2 ? project.name.substring(0, 2) : project.name;
+        const clientName = project.client || '';
+        displayProjectName = clientName ? `${prefix}_${clientName}` : prefix;
+      }
       const scheduleTime = schedule.time;
       // 시간이 있고 "-"가 아닌 경우에만 시간 텍스트 추가
       const timeText = (scheduleTime && scheduleTime !== '-') ? ` - ${formatTime(scheduleTime)}` : '';
@@ -805,7 +811,14 @@ const Schedule = () => {
       const visitTime = req.scheduledVisitTime;
       const timeText = (visitTime && visitTime !== '-') ? ` - ${formatTime(visitTime)}` : '';
       const asProject = projects.find(p => p.name === req.project);
-      const originalASTitle = `[AS] ${req.project}`;
+      // 프로젝트 축약형 표기 생성
+      let asDisplayProjectName = req.project;
+      if (asProject) {
+        const prefix = asProject.name.length > 2 ? asProject.name.substring(0, 2) : asProject.name;
+        const clientName = asProject.client || '';
+        asDisplayProjectName = clientName ? `${prefix}_${clientName}` : prefix;
+      }
+      const originalASTitle = `[AS] ${asDisplayProjectName}`;
       return {
         id: `as-${req.id}`,
         title: originalASTitle + timeText,
@@ -813,7 +826,7 @@ const Schedule = () => {
         start: req.scheduledVisitDate!,
         end: req.scheduledVisitDate!,
         projectId: asProject?.id || '',
-        projectName: req.project,
+        projectName: asDisplayProjectName,
         type: 'as_visit' as const,
         phase: '',
         assignedTo: req.assignedTo
