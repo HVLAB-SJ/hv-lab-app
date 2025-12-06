@@ -424,33 +424,33 @@
   border-radius: 0 !important;
 }
 
-/* 개별 프로젝트 선택 시 날짜 셀 상단 24px만 배경색 */
+/* 개별 프로젝트 선택 시 날짜 셀 상단 26px만 배경색 */
 /* 평일 - 연한 회색 */
 .specific-project-view .rbc-day-bg {
-  background: linear-gradient(to bottom, #f5f5f5 24px, transparent 24px) !important;
+  background: linear-gradient(to bottom, #f5f5f5 26px, transparent 26px) !important;
 }
 
 /* 토요일 - 연한 하늘색 (7번째 열) */
 .specific-project-view .rbc-day-bg:nth-child(7n) {
-  background: linear-gradient(to bottom, #e3f2fd 24px, transparent 24px) !important;
+  background: linear-gradient(to bottom, #e3f2fd 26px, transparent 26px) !important;
 }
 
 /* 일요일 - 연한 붉은색 (1번째 열) */
 .specific-project-view .rbc-day-bg:nth-child(7n+1) {
-  background: linear-gradient(to bottom, #ffebee 24px, transparent 24px) !important;
+  background: linear-gradient(to bottom, #ffebee 26px, transparent 26px) !important;
 }
 
 /* 이전/다음 달 날짜는 더 연하게 */
 .specific-project-view .rbc-day-bg.rbc-off-range-bg {
-  background: linear-gradient(to bottom, #fafafa 24px, transparent 24px) !important;
+  background: linear-gradient(to bottom, #fafafa 26px, transparent 26px) !important;
 }
 
 .specific-project-view .rbc-day-bg.rbc-off-range-bg:nth-child(7n) {
-  background: linear-gradient(to bottom, #f0f7fc 24px, transparent 24px) !important;
+  background: linear-gradient(to bottom, #f0f7fc 26px, transparent 26px) !important;
 }
 
 .specific-project-view .rbc-day-bg.rbc-off-range-bg:nth-child(7n+1) {
-  background: linear-gradient(to bottom, #fdf5f5 24px, transparent 24px) !important;
+  background: linear-gradient(to bottom, #fdf5f5 26px, transparent 26px) !important;
 }
 
 /* 드래그 선택 영역 숨김 */
