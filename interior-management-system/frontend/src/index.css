@@ -436,6 +436,15 @@
   visibility: hidden !important;
 }
 
+/* 드래그 중 해당 날짜 하이라이트 */
+.rbc-addons-dnd-over {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+.rbc-addons-dnd .rbc-row-bg .rbc-day-bg.rbc-addons-dnd-over {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
 /* 선택된 셀과 이벤트의 배경색 변경 방지 - 최우선순위 */
 .rbc-selected,
 .rbc-selected-cell {
