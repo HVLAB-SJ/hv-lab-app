@@ -1044,11 +1044,35 @@ const Schedule = () => {
   // 모든 이벤트 합치기
   const allEvents = [...scheduleEvents, ...asVisitEvents, ...expectedPaymentEvents];
 
+  // 사용자가 담당자인지 확인하는 함수
+  const isUserAssignedEvent = (event: ScheduleEvent): boolean => {
+    if (!user?.name) return false;
+    const attendees = event.assignedTo || [];
+    const userNameWithoutSurname = user.name.slice(-2);
+    const isInFieldTeam = ['재천', '민기'].includes(userNameWithoutSurname);
+    const isInDesignTeam = ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+
+    return (
+      attendees.includes(user.name) ||
+      attendees.includes('HV LAB') ||
+      (attendees.includes('디자인팀') && isInDesignTeam) ||
+      (attendees.includes('현장팀') && isInFieldTeam)
+    );
+  };
+
   // 같은 날, 같은 프로젝트의 일정을 그룹화하는 함수 (전체 프로젝트 보기에서만 병합)
   const groupEventsByProjectAndDate = (events: ScheduleEvent[], shouldMerge: boolean): ScheduleEvent[] => {
     // 개별 프로젝트 선택 시에는 병합하지 않고 그대로 반환
     if (!shouldMerge) {
-      return [...events].sort((a, b) => a.start.getTime() - b.start.getTime());
+      return [...events].sort((a, b) => {
+        // 사용자 담당 일정 우선
+        const aUserAssigned = isUserAssignedEvent(a);
+        const bUserAssigned = isUserAssignedEvent(b);
+        if (aUserAssigned && !bUserAssigned) return -1;
+        if (!aUserAssigned && bUserAssigned) return 1;
+        // 같은 날짜 내에서 시간순
+        return a.start.getTime() - b.start.getTime();
+      });
     }
 
     const grouped = new Map<string, ScheduleEvent[]>();
@@ -1118,8 +1142,14 @@ const Schedule = () => {
       }
     });
 
-    // 시간순 정렬 (사용자 일정은 이미 scheduleEvents에서 시간이 조정됨)
+    // 사용자 담당 일정 우선, 그 다음 시간순 정렬
     return finalEvents.sort((a, b) => {
+      // 사용자 담당 일정 우선
+      const aUserAssigned = isUserAssignedEvent(a);
+      const bUserAssigned = isUserAssignedEvent(b);
+      if (aUserAssigned && !bUserAssigned) return -1;
+      if (!aUserAssigned && bUserAssigned) return 1;
+      // 같은 날짜 내에서 시간순
       return a.start.getTime() - b.start.getTime();
     });
   };
