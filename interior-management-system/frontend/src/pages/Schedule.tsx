@@ -1218,7 +1218,7 @@ const Schedule = () => {
     : events.filter(e => e.projectName === filterProject));
 
   // 각 날짜별로 로그인한 사용자의 일정을 최상단에 배치
-  const filteredEvents = React.useMemo(() => {
+  const filteredEventsSorted = React.useMemo(() => {
     return [...filteredEventsRaw].sort((a, b) => {
       // 먼저 날짜순 정렬
       const dateA = moment(a.start).startOf('day').valueOf();
@@ -1240,6 +1240,27 @@ const Schedule = () => {
       return new Date(a.start).getTime() - new Date(b.start).getTime();
     });
   }, [filteredEventsRaw, user, userNameWithoutSurname]);
+
+  // 인라인 추가 이벤트 포함 (날짜 셀에 직접 입력 필드 표시)
+  const filteredEvents = React.useMemo(() => {
+    if (inlineAddDate && filterProject !== 'all') {
+      const inlineAddEvent: ScheduleEvent = {
+        id: '__inline_add__',
+        title: '',
+        start: inlineAddDate,
+        end: inlineAddDate,
+        projectId: '',
+        projectName: filterProject,
+        type: 'other',
+        phase: '',
+        assignedTo: [],
+        priority: 'medium',
+        allDay: true
+      };
+      return [...filteredEventsSorted, inlineAddEvent];
+    }
+    return filteredEventsSorted;
+  }, [filteredEventsSorted, inlineAddDate, filterProject]);
 
   // 안팀 사용자의 경우 프로젝트 목록이 변경되면 필터 업데이트
   useEffect(() => {
@@ -1320,6 +1341,11 @@ const Schedule = () => {
 
   // 이벤트 클릭 - 개별 프로젝트 선택 시 인라인 편집, 그 외 모달 열기
   const onSelectEvent = (event: ScheduleEvent) => {
+    // 인라인 추가 이벤트는 무시 (자체 입력 필드가 있음)
+    if (event.id === '__inline_add__') {
+      return;
+    }
+
     // 이벤트가 클릭되었음을 표시 (onSelectSlot보다 먼저 실행됨)
     eventClickedRef.current = true;
 
@@ -1446,6 +1472,24 @@ const Schedule = () => {
 
   // 커스텀 이벤트 스타일 (프로젝트별 색상 적용)
   const eventStyleGetter = (event: ScheduleEvent) => {
+    // 인라인 추가 이벤트는 흰색 배경
+    if (event.id === '__inline_add__') {
+      return {
+        style: {
+          backgroundColor: '#ffffff',
+          borderRadius: '6px',
+          color: '#1f2937',
+          border: '1px solid #d1d5db',
+          display: 'block',
+          fontSize: '0.8125rem',
+          padding: '0',
+          fontWeight: '400',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+          overflow: 'visible'
+        } as React.CSSProperties
+      };
+    }
+
     let bgColor = event.color || '#E0E7FF'; // 연한 인디고/보라색 (기본값)
     let textColor = '#1f2937';
 
@@ -1548,6 +1592,50 @@ const Schedule = () => {
 
   // 커스텀 이벤트 래퍼 컴포넌트 (props 전달용)
   const CustomEventWrapper = React.useCallback(({ event }: { event: ScheduleEvent }) => {
+    // 인라인 추가 이벤트일 때 입력 필드 렌더링
+    if (event.id === '__inline_add__') {
+      return (
+        <div
+          className="w-full h-full"
+          onClick={(e) => e.stopPropagation()}
+          style={{ minHeight: '28px' }}
+        >
+          <input
+            type="text"
+            value={inlineAddTitle}
+            onChange={(e) => setInlineAddTitle(e.target.value)}
+            onBlur={() => {
+              if (inlineAddTitle.trim()) {
+                handleInlineAdd();
+              } else {
+                setInlineAddDate(null);
+                setInlineAddTitle('');
+              }
+            }}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Enter') {
+                if (inlineAddTitle.trim()) {
+                  handleInlineAdd();
+                } else {
+                  setInlineAddDate(null);
+                  setInlineAddTitle('');
+                }
+              } else if (e.key === 'Escape') {
+                setInlineAddDate(null);
+                setInlineAddTitle('');
+              }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            placeholder="일정 입력"
+            className="w-full h-full px-2 py-0.5 text-xs border-none focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white rounded"
+            autoFocus
+            style={{ minWidth: 0 }}
+          />
+        </div>
+      );
+    }
+
     const isThisEditing = inlineEditEvent?.id === event.id ||
       (inlineEditEvent?.mergedEventIds && inlineEditEvent.mergedEventIds.includes(event.id));
 
@@ -1565,7 +1653,7 @@ const Schedule = () => {
         onHoverDelete={() => handleInlineDelete(event)}
       />
     );
-  }, [user, filterProject, inlineEditEvent, inlineEditTitle, handleInlineEditSave, handleInlineDelete]);
+  }, [user, filterProject, inlineEditEvent, inlineEditTitle, handleInlineEditSave, handleInlineDelete, inlineAddTitle, handleInlineAdd]);
 
   // 커스텀 툴바
   const CustomToolbar = ({ onNavigate }: { onNavigate: (action: string) => void }) => {
@@ -2108,7 +2196,7 @@ const Schedule = () => {
                 onEventDrop={filterProject !== 'all' ? onEventDrop : undefined}
                 onDropFromOutside={filterProject !== 'all' ? onDropFromOutside : undefined}
                 dragFromOutsideItem={filterProject !== 'all' ? dragFromOutsideItem : undefined}
-                draggableAccessor={() => filterProject !== 'all'}
+                draggableAccessor={(event: ScheduleEvent) => filterProject !== 'all' && event.id !== '__inline_add__'}
                 resizable={false}
                 selectable={true}
                 longPressThreshold={0}
@@ -2136,48 +2224,6 @@ const Schedule = () => {
               />
             </div>
           </div>
-
-          {/* 인라인 일정 추가 패널 */}
-          {inlineAddDate && filterProject !== 'all' && (
-            <div className="mt-3 bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  {moment(inlineAddDate).format('MM.DD (ddd)')}
-                </span>
-                <input
-                  type="text"
-                  value={inlineAddTitle}
-                  onChange={(e) => setInlineAddTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleInlineAdd();
-                    } else if (e.key === 'Escape') {
-                      setInlineAddDate(null);
-                      setInlineAddTitle('');
-                    }
-                  }}
-                  placeholder="일정 제목을 입력하세요 (Enter로 저장)"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm"
-                  autoFocus
-                />
-                <button
-                  onClick={handleInlineAdd}
-                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
-                >
-                  추가
-                </button>
-                <button
-                  onClick={() => {
-                    setInlineAddDate(null);
-                    setInlineAddTitle('');
-                  }}
-                  className="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm"
-                >
-                  취소
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* 모바일/태블릿 하단 선택된 주 일정 표시 */}
           {selectedDate && (
