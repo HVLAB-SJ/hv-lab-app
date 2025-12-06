@@ -148,17 +148,18 @@ export const updateSchedule = async (req: Request, res: Response): Promise<void>
       time
     } = req.body;
 
-    const updateData: any = {
-      title,
-      type,
-      phase,
-      description,
-      location,
-      priority,
-      progress,
-      isCompleted,
-      time  // 시간 필드 추가
-    };
+    // 정의된 필드만 포함하는 객체 생성
+    const updateData: any = {};
+
+    if (title !== undefined) updateData.title = title;
+    if (type !== undefined) updateData.type = type;
+    if (phase !== undefined) updateData.phase = phase;
+    if (description !== undefined) updateData.description = description;
+    if (location !== undefined) updateData.location = location;
+    if (priority !== undefined) updateData.priority = priority;
+    if (progress !== undefined) updateData.progress = progress;
+    if (isCompleted !== undefined) updateData.isCompleted = isCompleted;
+    if (time !== undefined) updateData.time = time;
 
     if (startDate) {
       updateData.startDate = new Date(startDate);
@@ -181,6 +182,8 @@ export const updateSchedule = async (req: Request, res: Response): Promise<void>
     if (isCompleted && !req.body.completedAt) {
       updateData.completedAt = new Date();
     }
+
+    console.log('📤 Schedule update data:', updateData);
 
     const schedule = await Schedule.findByIdAndUpdate(
       req.params.id,
