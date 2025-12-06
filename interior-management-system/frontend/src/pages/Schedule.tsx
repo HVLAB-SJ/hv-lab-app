@@ -257,7 +257,27 @@ const CustomDateHeader = React.memo(({
 });
 
 // 커스텀 이벤트 컴포넌트도 밖으로 이동
-const CustomEvent = React.memo(({ event, user, filterProject }: { event: ScheduleEvent; user: { id: string; name: string; role: string } | null; filterProject?: string }) => {
+const CustomEvent = React.memo(({
+  event,
+  user,
+  filterProject,
+  isEditing,
+  editTitle,
+  onEditTitleChange,
+  onEditSave,
+  onEditDelete,
+  onEditCancel
+}: {
+  event: ScheduleEvent;
+  user: { id: string; name: string; role: string } | null;
+  filterProject?: string;
+  isEditing?: boolean;
+  editTitle?: string;
+  onEditTitleChange?: (value: string) => void;
+  onEditSave?: () => void;
+  onEditDelete?: () => void;
+  onEditCancel?: () => void;
+}) => {
   const isSpecificProject = filterProject && filterProject !== 'all';
   const attendees = event.assignedTo || [];
   // 태블릿 또는 세로방향 데스크탑 모니터 감지
@@ -284,6 +304,51 @@ const CustomEvent = React.memo(({ event, user, filterProject }: { event: Schedul
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // 인라인 편집 모드일 때
+  if (isEditing && onEditTitleChange && onEditSave && onEditCancel) {
+    return (
+      <div
+        className="w-full h-full"
+        onClick={(e) => e.stopPropagation()}
+        style={{ minHeight: '28px' }}
+      >
+        <div className="flex items-center gap-1 h-full">
+          <input
+            type="text"
+            value={editTitle || ''}
+            onChange={(e) => onEditTitleChange(e.target.value)}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Enter') {
+                onEditSave();
+              } else if (e.key === 'Escape') {
+                onEditCancel();
+              }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 px-2 py-0.5 text-xs border border-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 bg-white"
+            autoFocus
+            style={{ minWidth: 0 }}
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); onEditSave(); }}
+            className="px-1.5 py-0.5 bg-gray-800 text-white text-[10px] rounded hover:bg-gray-700"
+          >
+            저장
+          </button>
+          {onEditDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onEditDelete(); }}
+              className="px-1.5 py-0.5 text-red-600 text-[10px] hover:text-red-800"
+            >
+              삭제
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // 태블릿 또는 세로방향 데스크탑에서는 세로 레이아웃으로 표시
   if (useVerticalLayout) {
@@ -878,6 +943,8 @@ const Schedule = () => {
 
   // 드래그 중인 공정 (사이드바에서 드래그)
   const [draggedProcess, setDraggedProcess] = useState<string | null>(null);
+  // 드래그 드롭 처리 중 플래그 (중복 방지)
+  const isProcessingDropRef = React.useRef(false);
 
   // 인라인 편집 상태 (개별 프로젝트 선택 시)
   const [inlineAddDate, setInlineAddDate] = useState<Date | null>(null);
@@ -913,10 +980,17 @@ const Schedule = () => {
 
   // 사이드바에서 공정을 드래그하여 날짜에 드롭했을 때 핸들러
   const handleProcessDrop = useCallback(async (processName: string, dropDate: Date) => {
+    // 이미 처리 중이면 중복 실행 방지
+    if (isProcessingDropRef.current) {
+      return;
+    }
+
     if (filterProject === 'all') {
       toast.error('프로젝트를 먼저 선택해주세요');
       return;
     }
+
+    isProcessingDropRef.current = true;
 
     try {
       await addScheduleToAPI({
@@ -931,18 +1005,24 @@ const Schedule = () => {
         description: ''
       });
       toast.success(`${processName} 일정이 추가되었습니다`);
-      loadSchedulesFromAPI();
+      await loadSchedulesFromAPI();
     } catch (error) {
       console.error('일정 추가 실패:', error);
       toast.error('일정 추가에 실패했습니다');
+    } finally {
+      // 약간의 딜레이 후 플래그 해제 (연속 드롭 방지)
+      setTimeout(() => {
+        isProcessingDropRef.current = false;
+      }, 500);
     }
   }, [filterProject, addScheduleToAPI, loadSchedulesFromAPI]);
 
   // 외부에서 드래그해서 캘린더에 드롭할 때 핸들러
   const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
-    if (draggedProcess && filterProject !== 'all') {
-      handleProcessDrop(draggedProcess, start);
-      setDraggedProcess(null);
+    if (draggedProcess && filterProject !== 'all' && !isProcessingDropRef.current) {
+      const processToAdd = draggedProcess;
+      setDraggedProcess(null); // 먼저 상태 클리어
+      handleProcessDrop(processToAdd, start);
     }
   }, [draggedProcess, filterProject, handleProcessDrop]);
 
@@ -1360,8 +1440,23 @@ const Schedule = () => {
 
   // 커스텀 이벤트 래퍼 컴포넌트 (props 전달용)
   const CustomEventWrapper = React.useCallback(({ event }: { event: ScheduleEvent }) => {
-    return <CustomEvent event={event} user={user} filterProject={filterProject} />;
-  }, [user, filterProject]);
+    const isThisEditing = inlineEditEvent?.id === event.id ||
+      (inlineEditEvent?.mergedEventIds && inlineEditEvent.mergedEventIds.includes(event.id));
+
+    return (
+      <CustomEvent
+        event={event}
+        user={user}
+        filterProject={filterProject}
+        isEditing={isThisEditing}
+        editTitle={isThisEditing ? inlineEditTitle : undefined}
+        onEditTitleChange={isThisEditing ? setInlineEditTitle : undefined}
+        onEditSave={isThisEditing ? handleInlineEditSave : undefined}
+        onEditDelete={isThisEditing ? () => handleInlineDelete(event) : undefined}
+        onEditCancel={isThisEditing ? () => { setInlineEditEvent(null); setInlineEditTitle(''); } : undefined}
+      />
+    );
+  }, [user, filterProject, inlineEditEvent, inlineEditTitle, handleInlineEditSave, handleInlineDelete]);
 
   // 커스텀 툴바
   const CustomToolbar = ({ onNavigate }: { onNavigate: (action: string) => void }) => {
@@ -1966,54 +2061,6 @@ const Schedule = () => {
                   onClick={() => {
                     setInlineAddDate(null);
                     setInlineAddTitle('');
-                  }}
-                  className="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm"
-                >
-                  취소
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* 인라인 일정 편집 패널 */}
-          {inlineEditEvent && filterProject !== 'all' && (
-            <div className="mt-3 bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  {moment(inlineEditEvent.start).format('MM.DD (ddd)')}
-                </span>
-                <input
-                  type="text"
-                  value={inlineEditTitle}
-                  onChange={(e) => setInlineEditTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleInlineEditSave();
-                    } else if (e.key === 'Escape') {
-                      setInlineEditEvent(null);
-                      setInlineEditTitle('');
-                    }
-                  }}
-                  placeholder="일정 제목"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm"
-                  autoFocus
-                />
-                <button
-                  onClick={handleInlineEditSave}
-                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
-                >
-                  저장
-                </button>
-                <button
-                  onClick={() => handleInlineDelete(inlineEditEvent)}
-                  className="px-3 py-2 text-red-500 hover:text-red-700 text-sm font-medium"
-                >
-                  삭제
-                </button>
-                <button
-                  onClick={() => {
-                    setInlineEditEvent(null);
-                    setInlineEditTitle('');
                   }}
                   className="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm"
                 >
