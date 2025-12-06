@@ -450,16 +450,7 @@ const CustomEvent = React.memo(({
           <input
             type="text"
             value={editTitle || ''}
-            onChange={(e) => {
-              if (!isComposingRef.current) {
-                handleEditChange(e.target.value);
-              }
-            }}
-            onCompositionStart={() => { isComposingRef.current = true; }}
-            onCompositionEnd={(e) => {
-              isComposingRef.current = false;
-              handleEditChange(e.currentTarget.value);
-            }}
+            onChange={(e) => handleEditChange(e.target.value)}
             onBlur={handleEditBlur}
             onKeyDown={handleEditKeyDown}
             onClick={(e) => e.stopPropagation()}
@@ -540,16 +531,7 @@ const CustomEvent = React.memo(({
           <input
             type="text"
             value={editTitle || ''}
-            onChange={(e) => {
-              if (!isComposingRef.current) {
-                handleEditChange(e.target.value);
-              }
-            }}
-            onCompositionStart={() => { isComposingRef.current = true; }}
-            onCompositionEnd={(e) => {
-              isComposingRef.current = false;
-              handleEditChange(e.currentTarget.value);
-            }}
+            onChange={(e) => handleEditChange(e.target.value)}
             onBlur={handleEditBlur}
             onKeyDown={handleEditKeyDown}
             onClick={(e) => e.stopPropagation()}
