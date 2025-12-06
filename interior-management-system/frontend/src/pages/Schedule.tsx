@@ -374,7 +374,7 @@ const CustomEvent = React.memo(({
                 }
                 setShowDeleteConfirm(true);
               }}
-              className="p-1 text-gray-400 hover:text-red-500 bg-white/80 rounded"
+              className="p-1 text-gray-500 hover:text-red-500"
               style={{ fontSize: '14px', lineHeight: 1 }}
               title="삭제"
             >
@@ -589,7 +589,7 @@ const CustomEvent = React.memo(({
               }
               setShowDeleteConfirm(true);
             }}
-            className="p-1 text-gray-400 hover:text-red-500 bg-white/80 rounded"
+            className="p-1 text-gray-500 hover:text-red-500"
             style={{ fontSize: '14px', lineHeight: 1 }}
             title="삭제"
           >
