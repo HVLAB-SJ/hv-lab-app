@@ -1210,6 +1210,12 @@ const Schedule = () => {
         justDroppedProcessRef.current = false;
       }, 500);
 
+      // 인라인 추가/편집 모드 즉시 클리어
+      setInlineAddDate(null);
+      setInlineAddTitle('');
+      setInlineEditEvent(null);
+      setInlineEditTitle('');
+
       const processToAdd = draggedProcess;
       setDraggedProcess(null); // 먼저 상태 클리어
       handleProcessDrop(processToAdd, start);

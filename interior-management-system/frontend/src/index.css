@@ -427,6 +427,15 @@
   display: none !important;
 }
 
+/* 드래그 앤 드롭 프리뷰 숨김 */
+.rbc-addons-dnd-drag-preview,
+.rbc-addons-dnd-drag-row,
+.rbc-addons-dnd .rbc-addons-dnd-drag-preview {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
 /* 선택된 셀과 이벤트의 배경색 변경 방지 - 최우선순위 */
 .rbc-selected,
 .rbc-selected-cell {
