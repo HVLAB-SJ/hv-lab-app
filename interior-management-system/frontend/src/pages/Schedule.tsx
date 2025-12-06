@@ -1018,13 +1018,24 @@ const Schedule = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
-  // 안팀 사용자는 기본적으로 첫 번째 프로젝트를 선택, 다른 사용자는 'all'
+  // 프로젝트 필터 상태 (localStorage에서 복원)
   const [filterProject, setFilterProject] = useState<string>(() => {
+    // localStorage에서 저장된 프로젝트 필터 복원
+    const savedFilter = localStorage.getItem('schedule_filterProject');
+    if (savedFilter) {
+      return savedFilter;
+    }
+    // 안팀 사용자는 기본적으로 첫 번째 프로젝트를 선택, 다른 사용자는 'all'
     if (user?.name === '안팀' && projects.length > 0) {
       return projects[0].name;
     }
     return 'all';
   });
+
+  // filterProject 변경 시 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('schedule_filterProject', filterProject);
+  }, [filterProject]);
 
   // 그룹화 적용 (전체 프로젝트 보기에서만 병합)
   const events = groupEventsByProjectAndDate(allEvents, filterProject === 'all');
