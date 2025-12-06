@@ -56,7 +56,8 @@ interface ScheduleEvent {
   start: Date;
   end: Date;
   projectId: string;
-  projectName: string;
+  projectName: string;  // 표시용 (축약형)
+  originalProjectName?: string;  // 필터링용 (원본 프로젝트명)
   type: 'construction' | 'material' | 'inspection' | 'meeting' | 'other' | 'as_visit' | 'expected_payment';
   phase: string;
   assignedTo: string[];
@@ -775,6 +776,7 @@ const Schedule = () => {
         end: schedule.end,
         projectId: project?.id || '',
         projectName: displayProjectName || '',
+        originalProjectName: schedule.project || '',  // 필터링용 원본 프로젝트명
         type: (schedule.type as ScheduleEvent['type']) || 'other',
         phase: '',
         assignedTo: attendees,
@@ -819,6 +821,7 @@ const Schedule = () => {
         end: req.scheduledVisitDate!,
         projectId: asProject?.id || '',
         projectName: asDisplayProjectName,
+        originalProjectName: req.project,  // 필터링용 원본 프로젝트명
         type: 'as_visit' as const,
         phase: '',
         assignedTo: req.assignedTo
@@ -1433,9 +1436,10 @@ const Schedule = () => {
 
   // 필터링된 이벤트를 먼저 정의 (useEffect보다 먼저 와야 함)
   // 이미 groupEventsByProjectAndDate에서 사용자 일정의 시간을 조정했으므로 여기서는 필터링만
+  // originalProjectName으로 필터링 (없으면 projectName 사용)
   const filteredEventsRaw = (filterProject === 'all'
     ? events
-    : events.filter(e => e.projectName === filterProject));
+    : events.filter(e => (e.originalProjectName || e.projectName) === filterProject));
 
   // 각 날짜별로 로그인한 사용자의 일정을 최상단에 배치
   // react-big-calendar가 start 시간으로 정렬하므로, 사용자 일정의 시작 시간을 미세 조정
