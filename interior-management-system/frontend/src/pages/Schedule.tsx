@@ -1032,6 +1032,8 @@ const Schedule = () => {
   const [draggedProcess, setDraggedProcess] = useState<string | null>(null);
   // 드래그 드롭 처리 중 플래그 (중복 방지)
   const isProcessingDropRef = React.useRef(false);
+  // 공정 드롭 직후 플래그 (인라인 모드 방지)
+  const justDroppedProcessRef = React.useRef(false);
 
   // 인라인 편집 상태 (개별 프로젝트 선택 시)
   const [inlineAddDate, setInlineAddDate] = useState<Date | null>(null);
@@ -1117,6 +1119,12 @@ const Schedule = () => {
   // 외부에서 드래그해서 캘린더에 드롭할 때 핸들러
   const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
     if (draggedProcess && filterProject !== 'all' && !isProcessingDropRef.current) {
+      // 드롭 직후 플래그 설정 (인라인 모드 방지)
+      justDroppedProcessRef.current = true;
+      setTimeout(() => {
+        justDroppedProcessRef.current = false;
+      }, 500);
+
       const processToAdd = draggedProcess;
       setDraggedProcess(null); // 먼저 상태 클리어
       handleProcessDrop(processToAdd, start);
@@ -1353,6 +1361,11 @@ const Schedule = () => {
   const onSelectSlot = (slotInfo: { start: Date; end: Date; action: string }) => {
     // 이벤트가 방금 클릭되었다면 슬롯 선택 무시
     if (eventClickedRef.current) {
+      return;
+    }
+
+    // 공정 드롭 직후라면 슬롯 선택 무시 (인라인 모드 방지)
+    if (justDroppedProcessRef.current) {
       return;
     }
 
@@ -2048,9 +2061,9 @@ const Schedule = () => {
           <div className="flex gap-3">
             {/* 공정 사이드바 (프로젝트 선택 시에만 표시, 데스크톱만) */}
             {filterProject !== 'all' && !isMobileView && (
-              <div className="hidden lg:block w-40 flex-shrink-0">
+              <div className="hidden lg:block flex-shrink-0">
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-2 sticky top-4">
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="flex flex-col gap-0.5">
                     {PROCESS_LIST.map((process) => (
                       <div
                         key={process}
@@ -2061,7 +2074,7 @@ const Schedule = () => {
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
                         onDragEnd={() => setDraggedProcess(null)}
-                        className={`px-2 py-1.5 text-xs rounded cursor-grab active:cursor-grabbing transition-colors text-center font-medium ${
+                        className={`px-3 py-1 text-xs rounded cursor-grab active:cursor-grabbing transition-colors text-center font-medium whitespace-nowrap ${
                           draggedProcess === process
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
