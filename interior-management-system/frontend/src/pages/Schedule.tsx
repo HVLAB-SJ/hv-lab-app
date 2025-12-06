@@ -482,6 +482,7 @@ const CustomEvent = React.memo(({
               textOverflow: 'ellipsis',
               textDecoration: isUserAssigned ? 'underline' : 'none',
               textDecorationColor: isUserAssigned ? '#e57373' : 'transparent',
+              textDecorationThickness: '2px',
               textUnderlineOffset: '2px'
             }}
             title={event.title}
@@ -558,6 +559,7 @@ const CustomEvent = React.memo(({
               fontSize: isSpecificProject ? '18px' : '12px',
               textDecoration: isUserAssigned ? 'underline' : 'none',
               textDecorationColor: isUserAssigned ? '#e57373' : 'transparent',
+              textDecorationThickness: '2px',
               textUnderlineOffset: '2px'
             }}
           >
