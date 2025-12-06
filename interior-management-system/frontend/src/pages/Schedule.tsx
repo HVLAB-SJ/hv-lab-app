@@ -1474,21 +1474,24 @@ const Schedule = () => {
         }
       });
 
-      // 사용자 일정의 시작 시간을 00:00:00.001로 설정하여 먼저 표시되게 함
+      // 사용자 일정의 시작 시간을 00:00:00.xxx로 설정하여 먼저 표시되게 함
+      // allDay: false로 설정해야 react-big-calendar가 시간 기반 정렬을 적용함
       userEvents.forEach((event, idx) => {
         const adjustedStart = moment(event.start).startOf('day').add(idx, 'milliseconds').toDate();
         result.push({
           ...event,
-          start: adjustedStart
+          start: adjustedStart,
+          allDay: false  // 시간 기반 정렬을 위해 false로 설정
         });
       });
 
-      // 비사용자 일정은 00:00:01.000부터 시작하도록 설정
+      // 비사용자 일정은 00:00:01.xxx부터 시작하도록 설정
       otherEvents.forEach((event, idx) => {
         const adjustedStart = moment(event.start).startOf('day').add(1000 + idx, 'milliseconds').toDate();
         result.push({
           ...event,
-          start: adjustedStart
+          start: adjustedStart,
+          allDay: false  // 시간 기반 정렬을 위해 false로 설정
         });
       });
     });
