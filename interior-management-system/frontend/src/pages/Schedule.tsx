@@ -1,6 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import React from 'react';
 import { Calendar, momentLocalizer, type View } from 'react-big-calendar';
+import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
+import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import moment from 'moment';
 import ScheduleModal from '../components/ScheduleModal';
 import toast from 'react-hot-toast';
@@ -8,6 +10,18 @@ import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { formatTimeKorean } from '../utils/formatters';
+
+// 드래그앤드롭 캘린더 컴포넌트
+const DragAndDropCalendar = withDragAndDrop(Calendar);
+
+// 공정 목록 (드래그앤드롭용)
+const PROCESS_LIST = [
+  '현장점검', '가설', '철거', '방수', '단열', '설비', '전기배선', '인터넷선',
+  '에어컨배관', '전열교환기', '소방', '창호', '현관문교체', '목공', '조명타공',
+  '금속', '타일', '도장', '마루', '필름', '도배', '중문', '가구', '상판',
+  '욕실집기', '조명', '이노솔', '유리', '실리콘', '도어락', '커튼/블라인드',
+  '청소', '마감', '준공검사', '가전입고', '스타일링', '촬영', '이사', '기타'
+];
 
 // Moment 한국어 로케일 설정
 moment.updateLocale('ko', {
@@ -861,6 +875,75 @@ const Schedule = () => {
     window.innerWidth < 768 ? new Date() : null
   );
 
+  // 드래그 중인 공정 (사이드바에서 드래그)
+  const [draggedProcess, setDraggedProcess] = useState<string | null>(null);
+
+  // 기존 일정 드래그하여 날짜 이동 핸들러
+  const onEventDrop = useCallback(async ({ event, start, end }: { event: ScheduleEvent; start: Date; end: Date }) => {
+    // AS 방문이나 수금 일정은 이동 불가
+    if (event.isASVisit || event.isExpectedPayment) {
+      toast.error('이 일정은 이동할 수 없습니다');
+      return;
+    }
+
+    // 병합된 일정인 경우 모든 일정을 이동
+    const eventIds = event.mergedEventIds || [event.id];
+
+    try {
+      for (const eventId of eventIds) {
+        await updateScheduleInAPI(eventId, {
+          start: start,
+          end: end
+        });
+      }
+      toast.success('일정이 이동되었습니다');
+      loadSchedulesFromAPI();
+    } catch (error) {
+      console.error('일정 이동 실패:', error);
+      toast.error('일정 이동에 실패했습니다');
+    }
+  }, [updateScheduleInAPI, loadSchedulesFromAPI]);
+
+  // 사이드바에서 공정을 드래그하여 날짜에 드롭했을 때 핸들러
+  const handleProcessDrop = useCallback(async (processName: string, dropDate: Date) => {
+    if (filterProject === 'all') {
+      toast.error('프로젝트를 먼저 선택해주세요');
+      return;
+    }
+
+    try {
+      await addScheduleToAPI({
+        id: Date.now().toString(),
+        title: processName,
+        start: dropDate,
+        end: dropDate,
+        type: 'construction',
+        project: filterProject,
+        location: '',
+        attendees: [],
+        description: ''
+      });
+      toast.success(`${processName} 일정이 추가되었습니다`);
+      loadSchedulesFromAPI();
+    } catch (error) {
+      console.error('일정 추가 실패:', error);
+      toast.error('일정 추가에 실패했습니다');
+    }
+  }, [filterProject, addScheduleToAPI, loadSchedulesFromAPI]);
+
+  // 외부에서 드래그해서 캘린더에 드롭할 때 핸들러
+  const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
+    if (draggedProcess && filterProject !== 'all') {
+      handleProcessDrop(draggedProcess, start);
+      setDraggedProcess(null);
+    }
+  }, [draggedProcess, filterProject, handleProcessDrop]);
+
+  // 드래그 가능한 외부 아이템 접근자 (dragFromOutsideItem)
+  const dragFromOutsideItem = useCallback(() => {
+    return draggedProcess ? { title: draggedProcess } : null;
+  }, [draggedProcess]);
+
   // 필터링된 이벤트를 먼저 정의 (useEffect보다 먼저 와야 함)
   // 이미 groupEventsByProjectAndDate에서 사용자 일정의 시간을 조정했으므로 여기서는 필터링만
   const filteredEventsRaw = (filterProject === 'all'
@@ -1666,43 +1749,84 @@ const Schedule = () => {
 
         {/* 캘린더 컨테이너 */}
         <div className="schedule-main flex flex-col md:block">
-          <div className="schedule-calendar bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm calendar-container" style={{ paddingBottom: 0 }}>
-            <Calendar
-              key={`calendar-${selectedDate?.getTime() || 'no-selection'}`}
-              localizer={localizer}
-              events={filteredEvents}
-              startAccessor="start"
-              endAccessor="end"
-              view={view}
-              onView={setView}
-              date={date}
-              onNavigate={setDate}
-              onSelectEvent={onSelectEvent}
-              onSelectSlot={onSelectSlot}
-              selectable={true}
-              longPressThreshold={0}
-              eventPropGetter={eventStyleGetter}
-              dayPropGetter={dayPropGetter}
-              components={calendarComponents}
-              popup={false}
-              doShowMoreDrillDown={false}
-              onShowMore={() => {}}
-              showAllEvents={true}
-              messages={{
-                today: '오늘',
-                previous: '이전',
-                next: '다음',
-                month: '월',
-                week: '주',
-                day: '일',
-                agenda: '일정목록',
-                date: '날짜',
-                time: '시간',
-                event: '일정',
-                noEventsInRange: '이 기간에 일정이 없습니다',
-                showMore: (count: number) => `+${count} 더보기`
-              }}
-            />
+          <div className="flex gap-3">
+            {/* 공정 사이드바 (프로젝트 선택 시에만 표시, 데스크톱만) */}
+            {filterProject !== 'all' && !isMobileView && (
+              <div className="hidden lg:block w-40 flex-shrink-0">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-2 sticky top-4">
+                  <h3 className="text-xs font-semibold text-gray-700 mb-2 px-1">공정 드래그</h3>
+                  <div className="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto">
+                    {PROCESS_LIST.map((process) => (
+                      <div
+                        key={process}
+                        draggable
+                        onDragStart={(e) => {
+                          setDraggedProcess(process);
+                          e.dataTransfer.setData('text/plain', process);
+                          e.dataTransfer.effectAllowed = 'copy';
+                        }}
+                        onDragEnd={() => setDraggedProcess(null)}
+                        className={`px-2 py-1.5 text-xs rounded cursor-grab active:cursor-grabbing transition-colors ${
+                          draggedProcess === process
+                            ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-transparent'
+                        }`}
+                      >
+                        {process}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 캘린더 */}
+            <div
+              className="schedule-calendar bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm calendar-container flex-1"
+              style={{ paddingBottom: 0 }}
+            >
+              <DragAndDropCalendar
+                key={`calendar-${selectedDate?.getTime() || 'no-selection'}`}
+                localizer={localizer}
+                events={filteredEvents}
+                startAccessor="start"
+                endAccessor="end"
+                view={view}
+                onView={setView}
+                date={date}
+                onNavigate={setDate}
+                onSelectEvent={onSelectEvent}
+                onSelectSlot={onSelectSlot}
+                onEventDrop={filterProject !== 'all' ? onEventDrop : undefined}
+                onDropFromOutside={filterProject !== 'all' ? onDropFromOutside : undefined}
+                dragFromOutsideItem={filterProject !== 'all' ? dragFromOutsideItem : undefined}
+                draggableAccessor={() => filterProject !== 'all'}
+                resizable={false}
+                selectable={true}
+                longPressThreshold={0}
+                eventPropGetter={eventStyleGetter}
+                dayPropGetter={dayPropGetter}
+                components={calendarComponents}
+                popup={false}
+                doShowMoreDrillDown={false}
+                onShowMore={() => {}}
+                showAllEvents={true}
+                messages={{
+                  today: '오늘',
+                  previous: '이전',
+                  next: '다음',
+                  month: '월',
+                  week: '주',
+                  day: '일',
+                  agenda: '일정목록',
+                  date: '날짜',
+                  time: '시간',
+                  event: '일정',
+                  noEventsInRange: '이 기간에 일정이 없습니다',
+                  showMore: (count: number) => `+${count} 더보기`
+                }}
+              />
+            </div>
           </div>
 
           {/* 모바일/태블릿 하단 선택된 주 일정 표시 */}
