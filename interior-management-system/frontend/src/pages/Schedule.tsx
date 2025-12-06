@@ -175,6 +175,14 @@ const CustomDateHeader = React.memo(({
   // 오늘 날짜인지 확인
   const isToday = moment(date).isSame(moment(), 'day');
 
+  // 오늘 날짜 동그라미 색상 (요일에 맞게)
+  let todayCircleColor = '#d1d5db'; // 평일: 연한 회색
+  if (isHoliday || isSunday) {
+    todayCircleColor = '#fecaca'; // 일요일/공휴일: 연한 빨강
+  } else if (isSaturday) {
+    todayCircleColor = '#bfdbfe'; // 토요일: 연한 파랑
+  }
+
   // 날짜 스타일 (항상 같은 크기 유지)
   // 두 자리 숫자일 때 패딩 0px
   const isTwoDigit = displayLabel.length === 2;
@@ -195,7 +203,18 @@ const CustomDateHeader = React.memo(({
   } : {
     color: dateColor,
     fontWeight: isToday ? '700' : '400', // 오늘 날짜는 굵게
-    paddingLeft: isTwoDigit ? '0px' : '4px' // 두 자리는 0px, 한 자리는 4px
+    paddingLeft: isTwoDigit ? '0px' : '4px', // 두 자리는 0px, 한 자리는 4px
+    // 오늘 날짜 동그라미 스타일
+    ...(isToday && {
+      backgroundColor: todayCircleColor,
+      borderRadius: '50%',
+      width: '22px',
+      height: '22px',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingLeft: '0px'
+    })
   };
 
   // 데스크톱: 날짜와 공휴일을 같은 라인에 배치 (요일과 같은 라인)
