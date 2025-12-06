@@ -416,6 +416,11 @@
   -ms-user-select: none;
 }
 
+/* 개별 프로젝트 선택 시 일정 간 간격 추가 */
+.specific-project-view .rbc-event {
+  margin-bottom: 4px !important;
+}
+
 .rbc-event:hover,
 .rbc-month-view .rbc-event:hover {
   filter: brightness(0.95) !important;

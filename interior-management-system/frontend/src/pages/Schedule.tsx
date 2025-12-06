@@ -2253,7 +2253,7 @@ const Schedule = () => {
 
             {/* 캘린더 */}
             <div
-              className="schedule-calendar bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm calendar-container flex-1"
+              className={`schedule-calendar bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm calendar-container flex-1 ${filterProject !== 'all' ? 'specific-project-view' : ''}`}
               style={{ paddingBottom: 0 }}
             >
               <DragAndDropCalendar
