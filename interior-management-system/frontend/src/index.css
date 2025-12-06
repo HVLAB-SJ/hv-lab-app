@@ -457,10 +457,13 @@
   background: linear-gradient(to bottom, #fdf5f5 22px, transparent 22px) !important;
 }
 
-/* 날짜 숫자 4px 위로 올림 */
+/* 날짜 숫자 22px 영역 내 가운데 정렬 */
 .rbc-date-cell {
-  padding-top: 0 !important;
-  margin-top: -4px !important;
+  height: 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 6px !important;
+  margin: 0 !important;
 }
 
 /* 드래그 선택 영역 숨김 */
