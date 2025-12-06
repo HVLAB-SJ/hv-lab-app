@@ -513,7 +513,10 @@ const CustomEvent = React.memo(({
       className="flex items-center justify-between w-full gap-1.5 overflow-hidden relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      style={{ minHeight: isSpecificProject ? '28px' : '18px' }}
+      style={{
+        minHeight: isSpecificProject ? '32px' : '18px',
+        padding: isSpecificProject ? '4px 0' : '0'
+      }}
     >
       <div className="flex items-center gap-1.5 overflow-hidden flex-1">
         {/* AS 일정이 아닐 때만 프로젝트명 표시 (개별 프로젝트 선택 시 숨김) */}
@@ -1987,7 +1990,7 @@ const Schedule = () => {
       // 동적 높이 계산 및 적용
       const isSpecificProjectView = filterProject && filterProject !== 'all';
       const baseHeight = 100; // 기본 높이
-      const eventHeight = isSpecificProjectView ? 32 : 18; // 일정 하나당 높이 (개별 프로젝트: 1.5배)
+      const eventHeight = isSpecificProjectView ? 42 : 18; // 일정 하나당 높이 (개별 프로젝트: 패딩 포함)
       const dateHeaderHeight = 25; // 날짜 숫자 영역
       const maxEventsPerRow = Math.floor((baseHeight - dateHeaderHeight) / eventHeight); // 약 4개
 
