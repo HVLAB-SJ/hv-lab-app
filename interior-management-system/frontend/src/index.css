@@ -1425,6 +1425,45 @@ div.rbc-popup {
   }
 }
 
+/* 세로방향 데스크탑 모니터 (portrait orientation) - 일정표 셀 높이 증가 */
+@media (orientation: portrait) and (min-width: 1024px) {
+  /* 캘린더 컨테이너 높이 - 화면에 맞춤 */
+  .calendar-container {
+    height: calc(100vh - 140px) !important;
+    min-height: 700px !important;
+  }
+
+  /* 월 행 높이 증가 */
+  .rbc-month-view .rbc-month-row {
+    min-height: 130px !important;
+    flex: 1 1 auto !important;
+  }
+
+  /* 행 콘텐츠 높이 */
+  .rbc-row-content,
+  .rbc-row-content-scrollable {
+    min-height: 130px !important;
+  }
+
+  /* 캘린더 전체가 컨테이너를 채우도록 */
+  .calendar-container .rbc-calendar {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .calendar-container .rbc-month-view {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* 월 뷰의 주간 행들이 균등하게 분배되도록 */
+  .rbc-month-view .rbc-month-row {
+    flex: 1 1 0 !important;
+  }
+}
+
 /* 세로방향 데스크탑 모니터 (portrait orientation) - 협력업체 테이블 */
 @media (orientation: portrait) and (min-width: 1024px) {
   .contractors-table th {
