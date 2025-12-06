@@ -1058,12 +1058,12 @@ const Schedule = () => {
   const allEvents = [...scheduleEvents, ...asVisitEvents, ...expectedPaymentEvents];
 
   // 사용자가 담당자인지 확인하는 함수
-  const isUserAssignedEvent = (event: ScheduleEvent): boolean => {
+  const isUserAssignedEvent = useCallback((event: ScheduleEvent): boolean => {
     if (!user?.name) return false;
     const attendees = event.assignedTo || [];
-    const userNameWithoutSurname = user.name.slice(-2);
-    const isInFieldTeam = ['재천', '민기'].includes(userNameWithoutSurname);
-    const isInDesignTeam = ['신애', '재성', '재현'].includes(userNameWithoutSurname);
+    const shortName = user.name.slice(-2);
+    const isInFieldTeam = ['재천', '민기'].includes(shortName);
+    const isInDesignTeam = ['신애', '재성', '재현'].includes(shortName);
 
     return (
       attendees.includes(user.name) ||
@@ -1071,7 +1071,7 @@ const Schedule = () => {
       (attendees.includes('디자인팀') && isInDesignTeam) ||
       (attendees.includes('현장팀') && isInFieldTeam)
     );
-  };
+  }, [user?.name]);
 
   // 같은 날, 같은 프로젝트의 일정을 그룹화하는 함수 (전체 프로젝트 보기에서만 병합)
   const groupEventsByProjectAndDate = (events: ScheduleEvent[], shouldMerge: boolean): ScheduleEvent[] => {
@@ -1446,28 +1446,56 @@ const Schedule = () => {
     : events.filter(e => e.projectName === filterProject));
 
   // 각 날짜별로 로그인한 사용자의 일정을 최상단에 배치
+  // react-big-calendar가 start 시간으로 정렬하므로, 사용자 일정의 시작 시간을 미세 조정
   const filteredEventsSorted = React.useMemo(() => {
-    return [...filteredEventsRaw].sort((a, b) => {
-      // 먼저 날짜순 정렬
-      const dateA = moment(a.start).startOf('day').valueOf();
-      const dateB = moment(b.start).startOf('day').valueOf();
-      if (dateA !== dateB) return dateA - dateB;
+    // 날짜별로 그룹화하여 사용자 일정 순서 조정
+    const eventsByDate = new Map<string, ScheduleEvent[]>();
 
-      // 같은 날짜 내에서 사용자 일정 우선 (본인 이름이 직접 포함된 경우만)
-      const aHasUser = (a.assignedTo && userNameWithoutSurname && a.assignedTo.includes(userNameWithoutSurname)) ||
-        (a.assignedTo && user?.name && a.assignedTo.includes(user.name));
-
-      const bHasUser = (b.assignedTo && userNameWithoutSurname && b.assignedTo.includes(userNameWithoutSurname)) ||
-        (b.assignedTo && user?.name && b.assignedTo.includes(user.name));
-
-      // 사용자 일정을 먼저
-      if (aHasUser && !bHasUser) return -1;
-      if (!aHasUser && bHasUser) return 1;
-
-      // 같은 우선순위면 시간순
-      return new Date(a.start).getTime() - new Date(b.start).getTime();
+    filteredEventsRaw.forEach(event => {
+      const dateKey = moment(event.start).format('YYYY-MM-DD');
+      if (!eventsByDate.has(dateKey)) {
+        eventsByDate.set(dateKey, []);
+      }
+      eventsByDate.get(dateKey)!.push(event);
     });
-  }, [filteredEventsRaw, user, userNameWithoutSurname]);
+
+    const result: ScheduleEvent[] = [];
+
+    eventsByDate.forEach((dayEvents) => {
+      // 사용자 일정과 비사용자 일정 분리
+      const userEvents: ScheduleEvent[] = [];
+      const otherEvents: ScheduleEvent[] = [];
+
+      dayEvents.forEach(event => {
+        if (isUserAssignedEvent(event)) {
+          userEvents.push(event);
+        } else {
+          otherEvents.push(event);
+        }
+      });
+
+      // 사용자 일정의 시작 시간을 00:00:00.001로 설정하여 먼저 표시되게 함
+      userEvents.forEach((event, idx) => {
+        const adjustedStart = moment(event.start).startOf('day').add(idx, 'milliseconds').toDate();
+        result.push({
+          ...event,
+          start: adjustedStart
+        });
+      });
+
+      // 비사용자 일정은 00:00:01.000부터 시작하도록 설정
+      otherEvents.forEach((event, idx) => {
+        const adjustedStart = moment(event.start).startOf('day').add(1000 + idx, 'milliseconds').toDate();
+        result.push({
+          ...event,
+          start: adjustedStart
+        });
+      });
+    });
+
+    // 최종 시간순 정렬
+    return result.sort((a, b) => a.start.getTime() - b.start.getTime());
+  }, [filteredEventsRaw, isUserAssignedEvent]);
 
   // 인라인 추가 이벤트 포함 (날짜 셀에 직접 입력 필드 표시)
   const filteredEvents = React.useMemo(() => {
