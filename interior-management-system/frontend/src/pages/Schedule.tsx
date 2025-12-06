@@ -588,10 +588,11 @@ const CustomEvent = React.memo(({
           </span>
         )}
       </div>
-      {attendees.length > 0 && (
+      {/* 개별 프로젝트 선택 시 담당자 숨김 */}
+      {!isSpecificProject && attendees.length > 0 && (
         <span
           className="opacity-80 flex-shrink-0 ml-auto"
-          style={{ fontSize: isSpecificProject ? '15px' : '11px' }}
+          style={{ fontSize: '11px' }}
         >
           {attendees.map((attendee, index) => {
             const isBold = attendee === 'HV LAB' ||
@@ -1258,6 +1259,31 @@ const Schedule = () => {
   const [inlineEditEvent, setInlineEditEvent] = useState<ScheduleEvent | null>(null);
   const [inlineEditTitle, setInlineEditTitle] = useState('');
 
+  // 드래그 프리뷰 상태
+  const [draggingEvent, setDraggingEvent] = useState<ScheduleEvent | null>(null);
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+
+  // 드래그 중 마우스 위치 추적
+  useEffect(() => {
+    if (!draggingEvent) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setDragPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseUp = () => {
+      setDraggingEvent(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [draggingEvent]);
+
   // 삭제 액션 진행 중 플래그 (onSelectEvent 방지용)
   const deleteActionRef = React.useRef<boolean>(false);
 
@@ -1297,6 +1323,14 @@ const Schedule = () => {
       toast.error(`일정 이동 실패: ${errorMessage}`);
     }
   }, [updateScheduleInAPI, loadSchedulesFromAPI]);
+
+  // 드래그 시작 핸들러
+  const onDragStart = useCallback(({ event }: { event: ScheduleEvent }) => {
+    if (event.isASVisit || event.isExpectedPayment || event.id === '__inline_add__') {
+      return;
+    }
+    setDraggingEvent(event);
+  }, []);
 
   // 사이드바에서 공정을 드래그하여 날짜에 드롭했을 때 핸들러
   const handleProcessDrop = useCallback(async (processName: string, dropDate: Date) => {
@@ -2470,6 +2504,7 @@ const Schedule = () => {
                 onSelectEvent={onSelectEvent}
                 onSelectSlot={onSelectSlot}
                 onEventDrop={filterProject !== 'all' ? onEventDrop : undefined}
+                onDragStart={filterProject !== 'all' ? onDragStart : undefined}
                 onDropFromOutside={filterProject !== 'all' ? onDropFromOutside : undefined}
                 dragFromOutsideItem={filterProject !== 'all' ? dragFromOutsideItem : undefined}
                 draggableAccessor={(event: ScheduleEvent) => filterProject !== 'all' && event.id !== '__inline_add__'}
@@ -2835,6 +2870,25 @@ const Schedule = () => {
               }
             }}
           />
+        )}
+
+        {/* 드래그 프리뷰 */}
+        {draggingEvent && (
+          <div
+            className="fixed pointer-events-none z-[9999] bg-white border border-gray-300 rounded-md shadow-lg px-3 py-2"
+            style={{
+              left: dragPosition.x + 15,
+              top: dragPosition.y + 15,
+              maxWidth: '200px'
+            }}
+          >
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {draggingEvent.originalTitle || draggingEvent.title}
+            </p>
+            <p className="text-xs text-gray-500">
+              {draggingEvent.projectName}
+            </p>
+          </div>
         )}
       </div>
   );
