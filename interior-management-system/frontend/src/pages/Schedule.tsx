@@ -319,26 +319,15 @@ const CustomEvent = React.memo(({
   }, []);
 
   // 인라인 편집 모드일 때 - 기존 디자인 유지하면서 텍스트만 수정
+  // 타이핑 중에는 저장하지 않고, 편집 완료 시에만 저장
   const handleEditChange = (value: string) => {
     if (onEditTitleChange) {
       onEditTitleChange(value);
-      // 디바운스: 500ms 후 자동 저장
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
-      saveTimerRef.current = setTimeout(() => {
-        if (value.trim() && onEditSave) {
-          onEditSave();
-        }
-      }, 500);
     }
   };
 
   const handleEditBlur = () => {
-    // blur 시 즉시 저장
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current);
-    }
+    // 편집 완료 시에만 저장
     if (editTitle?.trim() && onEditSave) {
       onEditSave();
     }
