@@ -406,10 +406,9 @@
   opacity: 0.3 !important;
 }
 
-/* 일정 호버 효과 */
+/* 일정 기본 스타일 */
 .rbc-event {
   cursor: pointer;
-  transition: filter 0.2s ease;
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -420,11 +419,6 @@
 .specific-project-view .rbc-event {
   min-height: 36px !important;
   padding: 6px 4px !important;
-}
-
-.rbc-event:hover,
-.rbc-month-view .rbc-event:hover {
-  filter: brightness(0.95) !important;
 }
 
 /* 선택된 셀과 이벤트의 배경색 변경 방지 - 최우선순위 */

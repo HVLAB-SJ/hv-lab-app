@@ -595,7 +595,7 @@ const CustomEvent = React.memo(({
       )}
       {/* 호버 시 삭제 아이콘 */}
       {(isHovered || showDeleteConfirm) && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
-        <div className="absolute top-0 right-0 z-20" style={{ padding: '2px' }}>
+        <div className="absolute top-1/2 -translate-y-1/2 right-0 z-20" style={{ padding: '2px' }}>
           <button
             ref={deleteButtonRef}
             onMouseDown={(e) => {
