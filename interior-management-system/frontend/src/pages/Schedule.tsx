@@ -1013,9 +1013,6 @@ const Schedule = () => {
     });
   };
 
-  // 그룹화 적용 (전체 프로젝트 보기에서만 병합)
-  const events = groupEventsByProjectAndDate(allEvents, filterProject === 'all');
-
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
   const [showModal, setShowModal] = useState(false);
@@ -1028,6 +1025,9 @@ const Schedule = () => {
     }
     return 'all';
   });
+
+  // 그룹화 적용 (전체 프로젝트 보기에서만 병합)
+  const events = groupEventsByProjectAndDate(allEvents, filterProject === 'all');
   // 모바일에서는 오늘 날짜를 기본 선택
   const [selectedDate, setSelectedDate] = useState<Date | null>(
     window.innerWidth < 768 ? new Date() : null
