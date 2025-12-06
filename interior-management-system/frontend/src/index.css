@@ -1429,20 +1429,20 @@ div.rbc-popup {
 @media (orientation: portrait) and (min-width: 1024px) {
   /* 캘린더 컨테이너 높이 - 화면 전체 사용 */
   .calendar-container {
-    height: calc(100vh - 100px) !important;
-    min-height: 800px !important;
+    height: calc(100vh - 60px) !important;
+    min-height: 900px !important;
   }
 
-  /* 월 행 높이 대폭 증가 */
+  /* 월 행 높이 대폭 증가 (2.5배) */
   .rbc-month-view .rbc-month-row {
-    min-height: 180px !important;
+    min-height: 450px !important;
     flex: 1 1 auto !important;
   }
 
   /* 행 콘텐츠 높이 */
   .rbc-row-content,
   .rbc-row-content-scrollable {
-    min-height: 180px !important;
+    min-height: 450px !important;
   }
 
   /* 캘린더 전체가 컨테이너를 채우도록 */
@@ -1461,6 +1461,20 @@ div.rbc-popup {
   /* 월 뷰의 주간 행들이 균등하게 분배되도록 */
   .rbc-month-view .rbc-month-row {
     flex: 1 1 0 !important;
+  }
+
+  /* 일정 호버 시 그라데이션 제거 */
+  .rbc-event:hover,
+  .rbc-event:focus,
+  .rbc-event:active {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+  }
+
+  .rbc-event::before,
+  .rbc-event::after {
+    display: none !important;
   }
 }
 
