@@ -879,6 +879,12 @@ const Schedule = () => {
   // 드래그 중인 공정 (사이드바에서 드래그)
   const [draggedProcess, setDraggedProcess] = useState<string | null>(null);
 
+  // 인라인 편집 상태 (개별 프로젝트 선택 시)
+  const [inlineAddDate, setInlineAddDate] = useState<Date | null>(null);
+  const [inlineAddTitle, setInlineAddTitle] = useState('');
+  const [inlineEditEvent, setInlineEditEvent] = useState<ScheduleEvent | null>(null);
+  const [inlineEditTitle, setInlineEditTitle] = useState('');
+
   // 기존 일정 드래그하여 날짜 이동 핸들러
   const onEventDrop = useCallback(async ({ event, start, end }: { event: ScheduleEvent; start: Date; end: Date }) => {
     // AS 방문이나 수금 일정은 이동 불가
@@ -944,6 +950,83 @@ const Schedule = () => {
   const dragFromOutsideItem = useCallback(() => {
     return draggedProcess ? { title: draggedProcess } : null;
   }, [draggedProcess]);
+
+  // 인라인 일정 추가 저장
+  const handleInlineAdd = useCallback(async () => {
+    if (!inlineAddTitle.trim() || !inlineAddDate || filterProject === 'all') {
+      setInlineAddDate(null);
+      setInlineAddTitle('');
+      return;
+    }
+
+    try {
+      await addScheduleToAPI({
+        id: Date.now().toString(),
+        title: inlineAddTitle.trim(),
+        start: inlineAddDate,
+        end: inlineAddDate,
+        type: 'construction',
+        project: filterProject,
+        location: '',
+        attendees: [],
+        description: ''
+      });
+      toast.success('일정이 추가되었습니다');
+      loadSchedulesFromAPI();
+    } catch (error) {
+      console.error('일정 추가 실패:', error);
+      toast.error('일정 추가에 실패했습니다');
+    }
+
+    setInlineAddDate(null);
+    setInlineAddTitle('');
+  }, [inlineAddTitle, inlineAddDate, filterProject, addScheduleToAPI, loadSchedulesFromAPI]);
+
+  // 인라인 일정 수정 저장
+  const handleInlineEditSave = useCallback(async () => {
+    if (!inlineEditEvent || !inlineEditTitle.trim()) {
+      setInlineEditEvent(null);
+      setInlineEditTitle('');
+      return;
+    }
+
+    try {
+      // 병합된 일정인 경우 첫 번째 이벤트만 수정
+      const eventId = inlineEditEvent.mergedEventIds?.[0] || inlineEditEvent.id;
+      await updateScheduleInAPI(eventId, {
+        title: inlineEditTitle.trim()
+      });
+      toast.success('일정이 수정되었습니다');
+      loadSchedulesFromAPI();
+    } catch (error) {
+      console.error('일정 수정 실패:', error);
+      toast.error('일정 수정에 실패했습니다');
+    }
+
+    setInlineEditEvent(null);
+    setInlineEditTitle('');
+  }, [inlineEditEvent, inlineEditTitle, updateScheduleInAPI, loadSchedulesFromAPI]);
+
+  // 인라인 일정 삭제
+  const handleInlineDelete = useCallback(async (event: ScheduleEvent) => {
+    if (!confirm('이 일정을 삭제하시겠습니까?')) return;
+
+    try {
+      // 병합된 일정인 경우 모든 이벤트 삭제
+      const eventIds = event.mergedEventIds || [event.id];
+      for (const eventId of eventIds) {
+        await deleteScheduleFromAPI(eventId);
+      }
+      toast.success('일정이 삭제되었습니다');
+      loadSchedulesFromAPI();
+    } catch (error) {
+      console.error('일정 삭제 실패:', error);
+      toast.error('일정 삭제에 실패했습니다');
+    }
+
+    setInlineEditEvent(null);
+    setInlineEditTitle('');
+  }, [deleteScheduleFromAPI, loadSchedulesFromAPI]);
 
   // 필터링된 이벤트를 먼저 정의 (useEffect보다 먼저 와야 함)
   // 이미 groupEventsByProjectAndDate에서 사용자 일정의 시간을 조정했으므로 여기서는 필터링만
@@ -1052,7 +1135,7 @@ const Schedule = () => {
   const eventClickedRef = React.useRef(false);
   const eventClickTimerRef = React.useRef<number | null>(null);
 
-  // 이벤트 클릭 - 모바일/데스크톱 모두 모달 열기
+  // 이벤트 클릭 - 개별 프로젝트 선택 시 인라인 편집, 그 외 모달 열기
   const onSelectEvent = (event: ScheduleEvent) => {
     // 이벤트가 클릭되었음을 표시 (onSelectSlot보다 먼저 실행됨)
     eventClickedRef.current = true;
@@ -1062,18 +1145,29 @@ const Schedule = () => {
       clearTimeout(eventClickTimerRef.current);
     }
 
-    // 빈 슬롯 정보 초기화하고 이벤트 설정
-    // 원본 제목을 사용하도록 event 객체 수정
-    const eventForModal = {
-      ...event,
-      title: event.originalTitle || event.title  // 원본 제목이 있으면 사용
-    };
+    // 개별 프로젝트 선택 시 & AS/수금 일정이 아닐 때 인라인 편집
+    const isSpecificProject = filterProject !== 'all';
+    const isMobile = window.innerWidth < 768;
 
-    setSelectedSlot(null);
-    setSelectedEvent(eventForModal);
-    setShowModal(true);
+    if (isSpecificProject && !isMobile && !event.isASVisit && !event.isExpectedPayment) {
+      // 인라인 추가 모드 닫기
+      setInlineAddDate(null);
+      setInlineAddTitle('');
+      // 인라인 편집 모드 열기
+      setInlineEditEvent(event);
+      setInlineEditTitle(event.originalTitle || event.title);
+    } else {
+      // 기존 모달 방식
+      const eventForModal = {
+        ...event,
+        title: event.originalTitle || event.title
+      };
+      setSelectedSlot(null);
+      setSelectedEvent(eventForModal);
+      setShowModal(true);
+    }
 
-    // 충분한 시간 후 플래그 리셋 (1500ms로 증가 - 태블릿 대응 강화)
+    // 충분한 시간 후 플래그 리셋
     eventClickTimerRef.current = setTimeout(() => {
       eventClickedRef.current = false;
       eventClickTimerRef.current = null;
@@ -1090,14 +1184,12 @@ const Schedule = () => {
     const windowWidth = window.innerWidth;
     const isMobile = windowWidth < 768;
     const isTablet = windowWidth >= 768 && windowWidth < 1024;
+    const isSpecificProject = filterProject !== 'all';
 
     // 모바일에서는 날짜 선택 처리
     if (isMobile) {
-      // slotInfo.start가 존재하면 날짜 선택으로 처리
       if (slotInfo.start) {
         setSelectedDate(slotInfo.start);
-
-        // 하단 일정 목록으로 즉시 스크롤
         const scheduleSection = document.querySelector('.md\\:hidden.mt-3.bg-white');
         if (scheduleSection) {
           scheduleSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1110,10 +1202,22 @@ const Schedule = () => {
     const isSimpleClick = slotInfo.action === 'click' || slotInfo.action === 'select';
 
     if (isTablet && !isSimpleClick) {
-      // 태블릿에서 드래그 선택인 경우에만 새 일정 추가 모달 열기
       return;
-    } else if (!isMobile) {
-      // 데스크톱 & 태블릿 단순 클릭: 모달 열기
+    }
+
+    // 개별 프로젝트 선택 시 인라인 추가 모드
+    if (isSpecificProject && !isMobile) {
+      // 인라인 편집 모드 닫기
+      setInlineEditEvent(null);
+      setInlineEditTitle('');
+      // 인라인 추가 모드 열기
+      setInlineAddDate(slotInfo.start);
+      setInlineAddTitle('');
+      return;
+    }
+
+    // 전체 프로젝트일 때는 기존 모달 방식
+    if (!isMobile) {
       setSelectedSlot(slotInfo);
       setSelectedEvent(null);
       setShowModal(true);
@@ -1828,6 +1932,96 @@ const Schedule = () => {
               />
             </div>
           </div>
+
+          {/* 인라인 일정 추가 패널 */}
+          {inlineAddDate && filterProject !== 'all' && (
+            <div className="mt-3 bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  {moment(inlineAddDate).format('MM.DD (ddd)')}
+                </span>
+                <input
+                  type="text"
+                  value={inlineAddTitle}
+                  onChange={(e) => setInlineAddTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleInlineAdd();
+                    } else if (e.key === 'Escape') {
+                      setInlineAddDate(null);
+                      setInlineAddTitle('');
+                    }
+                  }}
+                  placeholder="일정 제목을 입력하세요 (Enter로 저장)"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm"
+                  autoFocus
+                />
+                <button
+                  onClick={handleInlineAdd}
+                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  추가
+                </button>
+                <button
+                  onClick={() => {
+                    setInlineAddDate(null);
+                    setInlineAddTitle('');
+                  }}
+                  className="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 인라인 일정 편집 패널 */}
+          {inlineEditEvent && filterProject !== 'all' && (
+            <div className="mt-3 bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  {moment(inlineEditEvent.start).format('MM.DD (ddd)')}
+                </span>
+                <input
+                  type="text"
+                  value={inlineEditTitle}
+                  onChange={(e) => setInlineEditTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleInlineEditSave();
+                    } else if (e.key === 'Escape') {
+                      setInlineEditEvent(null);
+                      setInlineEditTitle('');
+                    }
+                  }}
+                  placeholder="일정 제목"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm"
+                  autoFocus
+                />
+                <button
+                  onClick={handleInlineEditSave}
+                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  저장
+                </button>
+                <button
+                  onClick={() => handleInlineDelete(inlineEditEvent)}
+                  className="px-3 py-2 text-red-500 hover:text-red-700 text-sm font-medium"
+                >
+                  삭제
+                </button>
+                <button
+                  onClick={() => {
+                    setInlineEditEvent(null);
+                    setInlineEditTitle('');
+                  }}
+                  className="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* 모바일/태블릿 하단 선택된 주 일정 표시 */}
           {selectedDate && (
