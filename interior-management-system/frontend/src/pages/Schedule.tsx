@@ -513,6 +513,7 @@ const CustomEvent = React.memo(({
       className="flex items-center justify-between w-full gap-1.5 overflow-hidden relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      style={{ minHeight: isSpecificProject ? '28px' : '18px' }}
     >
       <div className="flex items-center gap-1.5 overflow-hidden flex-1">
         {/* AS 일정이 아닐 때만 프로젝트명 표시 (개별 프로젝트 선택 시 숨김) */}
@@ -521,10 +522,18 @@ const CustomEvent = React.memo(({
             [{shortenProjectName(event.projectName)}]
           </span>
         )}
-        <span className={`font-medium truncate ${isSpecificProject ? 'text-sm' : ''}`}>{event.title}</span>
+        <span
+          className="font-medium truncate"
+          style={{ fontSize: isSpecificProject ? '18px' : '12px' }}
+        >
+          {event.title}
+        </span>
       </div>
       {attendees.length > 0 && (
-        <span className={`opacity-80 flex-shrink-0 ml-auto ${isSpecificProject ? 'text-xs' : 'text-xs'}`}>
+        <span
+          className="opacity-80 flex-shrink-0 ml-auto"
+          style={{ fontSize: isSpecificProject ? '15px' : '11px' }}
+        >
           {attendees.map((attendee, index) => {
             const isBold = attendee === 'HV LAB' ||
               (attendee === '현장팀' && isUserInFieldTeam) ||
@@ -541,39 +550,51 @@ const CustomEvent = React.memo(({
           })}
         </span>
       )}
-      {/* 호버 시 삭제 아이콘 및 확인 팝오버 */}
+      {/* 호버 시 삭제 아이콘 */}
       {(isHovered || showDeleteConfirm) && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
         <div className="absolute top-0 right-0 z-20">
-          {showDeleteConfirm ? (
-            <div
-              className="bg-white border border-gray-300 rounded-lg shadow-lg p-2 flex items-center gap-2"
-              onClick={(e) => e.stopPropagation()}
-              style={{ whiteSpace: 'nowrap' }}
-            >
-              <span className="text-xs text-gray-700">삭제할까요?</span>
-              <button
-                onClick={(e) => { e.stopPropagation(); onHoverDelete(); setShowDeleteConfirm(false); }}
-                className="px-2 py-0.5 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-              >
-                삭제
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}
-                className="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
-              >
-                취소
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
-              className="p-0.5 text-gray-400 hover:text-red-500"
-              style={{ fontSize: '11px', lineHeight: 1 }}
-              title="삭제"
-            >
-              ✕
-            </button>
-          )}
+          <button
+            ref={deleteButtonRef}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (deleteButtonRef.current) {
+                const rect = deleteButtonRef.current.getBoundingClientRect();
+                setDeleteButtonPos({ top: rect.top - 4, right: window.innerWidth - rect.left + 8 });
+              }
+              setShowDeleteConfirm(true);
+            }}
+            className="p-0.5 text-gray-400 hover:text-red-500"
+            style={{ fontSize: '12px', lineHeight: 1 }}
+            title="삭제"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      {/* 삭제 확인 팝오버 - fixed position으로 잘림 방지 */}
+      {showDeleteConfirm && deleteButtonPos && isSpecificProject && onHoverDelete && (
+        <div
+          className="fixed bg-white border border-gray-300 rounded-lg shadow-lg p-2 flex items-center gap-2 z-[9999]"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            top: deleteButtonPos.top,
+            right: deleteButtonPos.right,
+            whiteSpace: 'nowrap'
+          }}
+        >
+          <span className="text-sm text-gray-700">삭제할까요?</span>
+          <button
+            onClick={(e) => { e.stopPropagation(); onHoverDelete(); setShowDeleteConfirm(false); setDeleteButtonPos(null); }}
+            className="px-2 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+          >
+            삭제
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); setDeleteButtonPos(null); }}
+            className="px-2 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
+          >
+            취소
+          </button>
         </div>
       )}
     </div>
@@ -1964,8 +1985,9 @@ const Schedule = () => {
       });
 
       // 동적 높이 계산 및 적용
+      const isSpecificProjectView = filterProject && filterProject !== 'all';
       const baseHeight = 100; // 기본 높이
-      const eventHeight = 18; // 일정 하나당 높이
+      const eventHeight = isSpecificProjectView ? 32 : 18; // 일정 하나당 높이 (개별 프로젝트: 1.5배)
       const dateHeaderHeight = 25; // 날짜 숫자 영역
       const maxEventsPerRow = Math.floor((baseHeight - dateHeaderHeight) / eventHeight); // 약 4개
 
@@ -2119,7 +2141,7 @@ const Schedule = () => {
         });
       }
     };
-  }, [filteredEvents, date, isMobileView, selectedDate]);
+  }, [filteredEvents, date, isMobileView, selectedDate, filterProject]);
 
   return (
       <div className="schedule-container space-y-3 md:space-y-2">
