@@ -217,8 +217,8 @@ const CustomDateHeader = React.memo(({
     ...(isToday && {
       backgroundColor: todayCircleColor,
       borderRadius: '50%',
-      width: '22px',
-      height: '22px',
+      width: '21px',
+      height: '21px',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
