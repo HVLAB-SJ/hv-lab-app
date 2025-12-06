@@ -425,8 +425,8 @@ const CustomEvent = React.memo(({
           ) : (
             <span></span>
           )}
-          {attendees.length > 0 && (
-            <span style={{ flexShrink: 0, fontSize: isSpecificProject ? '13px' : '10px', marginLeft: 'auto' }}>
+          {!isSpecificProject && attendees.length > 0 && (
+            <span style={{ flexShrink: 0, fontSize: '10px', marginLeft: 'auto' }}>
               {attendees.map((attendee, index) => {
                 const isBold = attendee === 'HV LAB' ||
                   (attendee === '현장팀' && isUserInFieldTeam) ||
