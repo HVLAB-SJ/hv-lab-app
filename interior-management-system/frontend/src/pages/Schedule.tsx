@@ -1854,13 +1854,13 @@ const Schedule = () => {
 
   // 커스텀 이벤트 래퍼 컴포넌트 (props 전달용)
   const CustomEventWrapper = React.useCallback(({ event }: { event: ScheduleEvent }) => {
-    // 인라인 추가 이벤트일 때 입력 필드 렌더링
+    // 인라인 추가 이벤트일 때 입력 필드 렌더링 (텍스트 편집과 동일한 스타일)
     if (event.id === '__inline_add__') {
       return (
         <div
-          className="w-full h-full"
+          className="w-full"
           onClick={(e) => e.stopPropagation()}
-          style={{ minHeight: '28px' }}
+          style={{ padding: '4px 3px', minHeight: '32px' }}
         >
           <input
             type="text"
@@ -1889,10 +1889,18 @@ const Schedule = () => {
               }
             }}
             onClick={(e) => e.stopPropagation()}
-            placeholder="일정 입력"
-            className="w-full h-full px-2 py-0.5 text-xs border-none focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white rounded"
+            placeholder=""
+            className="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0"
             autoFocus
-            style={{ minWidth: 0 }}
+            style={{
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#374151',
+              padding: 0,
+              margin: 0,
+              lineHeight: '1.4',
+              caretColor: '#374151'
+            }}
           />
         </div>
       );
