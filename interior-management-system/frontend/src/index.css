@@ -348,9 +348,9 @@
   padding-top: 0 !important;
 }
 
-/* 요일 헤더 바로 아래 날짜 셀의 상단 패딩 제거 */
+/* 요일 헤더 바로 아래 날짜 셀도 동일한 패딩 적용 */
 .rbc-month-view .rbc-month-header + .rbc-month-row .rbc-date-cell {
-  padding-top: 0 !important;
+  padding-top: 1px !important;
 }
 
 /* 요일 헤더 바로 아래 빈 영역 제거 */
