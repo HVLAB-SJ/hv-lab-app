@@ -69,11 +69,26 @@ const Dashboard = () => {
       return false;
     });
 
-    const todaySchedules = memberSchedules.filter(s => isToday(new Date(s.start)));
-    const upcomingSchedules = memberSchedules
-      .filter(s => isFuture(new Date(s.start)) && !isToday(new Date(s.start)))
-      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
-      .slice(0, 3);
+    // 중복 제거 함수: 같은 날짜 + 프로젝트 + 제목은 하나만 표시
+    const deduplicateSchedules = (scheduleList: typeof memberSchedules) => {
+      const seen = new Set<string>();
+      return scheduleList.filter(schedule => {
+        const dateKey = format(new Date(schedule.start), 'yyyy-MM-dd');
+        const key = `${dateKey}|${schedule.project}|${schedule.title}`;
+        if (seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      });
+    };
+
+    const todaySchedules = deduplicateSchedules(memberSchedules.filter(s => isToday(new Date(s.start))));
+    const upcomingSchedules = deduplicateSchedules(
+      memberSchedules
+        .filter(s => isFuture(new Date(s.start)) && !isToday(new Date(s.start)))
+        .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+    ).slice(0, 3);
 
     return { todaySchedules, upcomingSchedules, member };
   };
