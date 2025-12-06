@@ -414,7 +414,7 @@ const CustomEvent = React.memo(({
           </div>
         )}
         {/* 첫번째 줄: 프로젝트명 + 담당자 (개별 프로젝트 선택 시 프로젝트명 숨김) */}
-        <div className="flex items-center justify-between w-full" style={{ fontSize: isSpecificProject ? '11px' : '10px', opacity: 0.8, marginBottom: '1px', lineHeight: '1.2' }}>
+        <div className="flex items-center justify-between w-full" style={{ fontSize: isSpecificProject ? '16px' : '10px', opacity: 0.8, marginBottom: '1px', lineHeight: '1.2' }}>
           {!isSpecificProject && !event.isASVisit && event.projectName ? (
             <span style={{
               overflow: 'hidden',
@@ -429,7 +429,7 @@ const CustomEvent = React.memo(({
             <span></span>
           )}
           {attendees.length > 0 && (
-            <span style={{ flexShrink: 0, fontSize: isSpecificProject ? '11px' : '10px', marginLeft: 'auto' }}>
+            <span style={{ flexShrink: 0, fontSize: isSpecificProject ? '16px' : '10px', marginLeft: 'auto' }}>
               {attendees.map((attendee, index) => {
                 const isBold = attendee === 'HV LAB' ||
                   (attendee === '현장팀' && isUserInFieldTeam) ||
@@ -452,7 +452,7 @@ const CustomEvent = React.memo(({
         <div
           style={{
             fontWeight: 500,
-            fontSize: isSpecificProject ? '13px' : '11px',
+            fontSize: isSpecificProject ? '20px' : '11px',
             lineHeight: '1.3',
             overflow: 'hidden',
             display: '-webkit-box',
@@ -1085,7 +1085,6 @@ const Schedule = () => {
           end: endDate
         });
       }
-      toast.success('일정이 이동되었습니다');
       await loadSchedulesFromAPI();
     } catch (error: any) {
       console.error('일정 이동 실패:', error);
