@@ -416,9 +416,10 @@
   -ms-user-select: none;
 }
 
-/* 개별 프로젝트 선택 시 일정 간 간격 추가 */
+/* 개별 프로젝트 선택 시 일정 높이 증가 */
 .specific-project-view .rbc-event {
-  margin-bottom: 4px !important;
+  min-height: 36px !important;
+  padding: 6px 4px !important;
 }
 
 .rbc-event:hover,
