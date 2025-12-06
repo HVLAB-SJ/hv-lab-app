@@ -257,7 +257,8 @@ const CustomDateHeader = React.memo(({
 });
 
 // 커스텀 이벤트 컴포넌트도 밖으로 이동
-const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: { id: string; name: string; role: string } | null }) => {
+const CustomEvent = React.memo(({ event, user, filterProject }: { event: ScheduleEvent; user: { id: string; name: string; role: string } | null; filterProject?: string }) => {
+  const isSpecificProject = filterProject && filterProject !== 'all';
   const attendees = event.assignedTo || [];
   // 태블릿 또는 세로방향 데스크탑 모니터 감지
   const checkVerticalLayout = () => {
@@ -299,9 +300,9 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
           justifyContent: 'flex-start'
         }}
       >
-        {/* 첫번째 줄: 프로젝트명 + 담당자 */}
-        <div className="flex items-center justify-between w-full" style={{ fontSize: '10px', opacity: 0.8, marginBottom: '1px', lineHeight: '1.2' }}>
-          {!event.isASVisit && event.projectName ? (
+        {/* 첫번째 줄: 프로젝트명 + 담당자 (개별 프로젝트 선택 시 프로젝트명 숨김) */}
+        <div className="flex items-center justify-between w-full" style={{ fontSize: isSpecificProject ? '11px' : '10px', opacity: 0.8, marginBottom: '1px', lineHeight: '1.2' }}>
+          {!isSpecificProject && !event.isASVisit && event.projectName ? (
             <span style={{
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -315,7 +316,7 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
             <span></span>
           )}
           {attendees.length > 0 && (
-            <span style={{ flexShrink: 0, fontSize: '10px', marginLeft: 'auto' }}>
+            <span style={{ flexShrink: 0, fontSize: isSpecificProject ? '11px' : '10px', marginLeft: 'auto' }}>
               {attendees.map((attendee, index) => {
                 const isBold = attendee === 'HV LAB' ||
                   (attendee === '현장팀' && isUserInFieldTeam) ||
@@ -338,7 +339,7 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
         <div
           style={{
             fontWeight: 500,
-            fontSize: '11px',
+            fontSize: isSpecificProject ? '13px' : '11px',
             lineHeight: '1.3',
             overflow: 'hidden',
             display: '-webkit-box',
@@ -381,16 +382,16 @@ const CustomEvent = React.memo(({ event, user }: { event: ScheduleEvent; user: {
   return (
     <div className="flex items-center justify-between w-full gap-1.5 overflow-hidden">
       <div className="flex items-center gap-1.5 overflow-hidden flex-1">
-        {/* AS 일정이 아닐 때만 프로젝트명 표시 */}
-        {!event.isASVisit && event.projectName && (
+        {/* AS 일정이 아닐 때만 프로젝트명 표시 (개별 프로젝트 선택 시 숨김) */}
+        {!isSpecificProject && !event.isASVisit && event.projectName && (
           <span className="text-xs opacity-70 flex-shrink-0">
             [{shortenProjectName(event.projectName)}]
           </span>
         )}
-        <span className="font-medium truncate">{event.title}</span>
+        <span className={`font-medium truncate ${isSpecificProject ? 'text-sm' : ''}`}>{event.title}</span>
       </div>
       {attendees.length > 0 && (
-        <span className="text-xs opacity-80 flex-shrink-0 ml-auto">
+        <span className={`opacity-80 flex-shrink-0 ml-auto ${isSpecificProject ? 'text-xs' : 'text-xs'}`}>
           {attendees.map((attendee, index) => {
             const isBold = attendee === 'HV LAB' ||
               (attendee === '현장팀' && isUserInFieldTeam) ||
@@ -1255,8 +1256,8 @@ const Schedule = () => {
 
   // 커스텀 이벤트 래퍼 컴포넌트 (props 전달용)
   const CustomEventWrapper = React.useCallback(({ event }: { event: ScheduleEvent }) => {
-    return <CustomEvent event={event} user={user} />;
-  }, [user]);
+    return <CustomEvent event={event} user={user} filterProject={filterProject} />;
+  }, [user, filterProject]);
 
   // 커스텀 툴바
   const CustomToolbar = ({ onNavigate }: { onNavigate: (action: string) => void }) => {
@@ -1752,10 +1753,9 @@ const Schedule = () => {
           <div className="flex gap-3">
             {/* 공정 사이드바 (프로젝트 선택 시에만 표시, 데스크톱만) */}
             {filterProject !== 'all' && !isMobileView && (
-              <div className="hidden lg:block w-40 flex-shrink-0">
-                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-2 sticky top-4">
-                  <h3 className="text-xs font-semibold text-gray-700 mb-2 px-1">공정 드래그</h3>
-                  <div className="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="hidden lg:block w-28 flex-shrink-0">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-1.5 sticky top-4">
+                  <div className="grid grid-cols-1 gap-0.5">
                     {PROCESS_LIST.map((process) => (
                       <div
                         key={process}
@@ -1766,10 +1766,10 @@ const Schedule = () => {
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
                         onDragEnd={() => setDraggedProcess(null)}
-                        className={`px-2 py-1.5 text-xs rounded cursor-grab active:cursor-grabbing transition-colors ${
+                        className={`px-1.5 py-0.5 text-[11px] rounded cursor-grab active:cursor-grabbing transition-colors text-center ${
                           draggedProcess === process
-                            ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-transparent'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                         }`}
                       >
                         {process}
