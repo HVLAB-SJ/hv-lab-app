@@ -587,17 +587,21 @@ export const useDataStore = create<DataStore>()(
   updateScheduleInAPI: async (id: string, updatedSchedule: Partial<Schedule>) => {
     try {
       console.log('📤 updateScheduleInAPI called with:', { id, updatedSchedule });
-      const apiSchedule = await scheduleService.updateSchedule(id, {
-        project: updatedSchedule.project,
-        title: updatedSchedule.title,
-        type: updatedSchedule.type,
-        startDate: updatedSchedule.start,
-        endDate: updatedSchedule.end,
-        location: updatedSchedule.location,
-        description: updatedSchedule.description,
-        assignedTo: updatedSchedule.attendees || [],
-        time: updatedSchedule.time
-      });
+
+      // 정의된 필드만 포함하는 객체 생성
+      const updateData: Record<string, unknown> = {};
+      if (updatedSchedule.project !== undefined) updateData.project = updatedSchedule.project;
+      if (updatedSchedule.title !== undefined) updateData.title = updatedSchedule.title;
+      if (updatedSchedule.type !== undefined) updateData.type = updatedSchedule.type;
+      if (updatedSchedule.start !== undefined) updateData.startDate = updatedSchedule.start;
+      if (updatedSchedule.end !== undefined) updateData.endDate = updatedSchedule.end;
+      if (updatedSchedule.location !== undefined) updateData.location = updatedSchedule.location;
+      if (updatedSchedule.description !== undefined) updateData.description = updatedSchedule.description;
+      if (updatedSchedule.attendees !== undefined) updateData.assignedTo = updatedSchedule.attendees;
+      if (updatedSchedule.time !== undefined) updateData.time = updatedSchedule.time;
+
+      console.log('📤 Sending update data:', updateData);
+      const apiSchedule = await scheduleService.updateSchedule(id, updateData);
       console.log('✅ updateScheduleInAPI response:', apiSchedule);
 
       const schedule: Schedule = {
