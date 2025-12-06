@@ -286,6 +286,9 @@ const CustomEvent = React.memo(({
   const [isHovered, setIsHovered] = useState(false);
   // 삭제 확인 팝오버 상태
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // 삭제 버튼 위치 추적
+  const [deleteButtonPos, setDeleteButtonPos] = useState<{ top: number; right: number } | null>(null);
+  const deleteButtonRef = React.useRef<HTMLButtonElement>(null);
   // 태블릿 또는 세로방향 데스크탑 모니터 감지
   const checkVerticalLayout = () => {
     const width = window.innerWidth;
@@ -378,39 +381,51 @@ const CustomEvent = React.memo(({
           justifyContent: 'flex-start'
         }}
       >
-        {/* 호버 시 삭제 아이콘 및 확인 팝오버 */}
+        {/* 호버 시 삭제 아이콘 */}
         {(isHovered || showDeleteConfirm) && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
           <div className="absolute top-0 right-0 z-20">
-            {showDeleteConfirm ? (
-              <div
-                className="bg-white border border-gray-300 rounded-lg shadow-lg p-2 flex items-center gap-2"
-                onClick={(e) => e.stopPropagation()}
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                <span className="text-xs text-gray-700">삭제할까요?</span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onHoverDelete(); setShowDeleteConfirm(false); }}
-                  className="px-2 py-0.5 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-                >
-                  삭제
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}
-                  className="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
-                >
-                  취소
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
-                className="p-0.5 text-gray-400 hover:text-red-500"
-                style={{ fontSize: '12px', lineHeight: 1 }}
-                title="삭제"
-              >
-                ✕
-              </button>
-            )}
+            <button
+              ref={deleteButtonRef}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (deleteButtonRef.current) {
+                  const rect = deleteButtonRef.current.getBoundingClientRect();
+                  setDeleteButtonPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+                }
+                setShowDeleteConfirm(true);
+              }}
+              className="p-0.5 text-gray-400 hover:text-red-500"
+              style={{ fontSize: '12px', lineHeight: 1 }}
+              title="삭제"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        {/* 삭제 확인 팝오버 - fixed position으로 잘림 방지 */}
+        {showDeleteConfirm && deleteButtonPos && isSpecificProject && onHoverDelete && (
+          <div
+            className="fixed bg-white border border-gray-300 rounded-lg shadow-lg p-2 flex items-center gap-2 z-[9999]"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              top: deleteButtonPos.top,
+              right: deleteButtonPos.right,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <span className="text-xs text-gray-700">삭제할까요?</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onHoverDelete(); setShowDeleteConfirm(false); setDeleteButtonPos(null); }}
+              className="px-2 py-0.5 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+            >
+              삭제
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); setDeleteButtonPos(null); }}
+              className="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
+            >
+              취소
+            </button>
           </div>
         )}
         {/* 첫번째 줄: 프로젝트명 + 담당자 (개별 프로젝트 선택 시 프로젝트명 숨김) */}
