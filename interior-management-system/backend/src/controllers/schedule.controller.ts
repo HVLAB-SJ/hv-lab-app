@@ -132,6 +132,11 @@ export const createSchedule = async (req: Request, res: Response): Promise<void>
 // Update schedule
 export const updateSchedule = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('📥 Update schedule request:', {
+      id: req.params.id,
+      body: req.body
+    });
+
     const {
       title,
       type,
@@ -185,23 +190,33 @@ export const updateSchedule = async (req: Request, res: Response): Promise<void>
 
     console.log('📤 Schedule update data:', updateData);
 
+    // runValidators를 false로 변경하여 부분 업데이트 허용
     const schedule = await Schedule.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: false }
     )
       .populate('project', 'name')
       .populate('assignedTo', 'name username');
 
     if (!schedule) {
+      console.log('❌ Schedule not found:', req.params.id);
       res.status(404).json({ error: 'Schedule not found' });
       return;
     }
 
+    console.log('✅ Schedule updated successfully:', schedule._id);
     res.json(schedule);
-  } catch (error) {
-    console.error('Update schedule error:', error);
-    res.status(500).json({ error: 'Failed to update schedule' });
+  } catch (error: any) {
+    console.error('❌ Update schedule error:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
+    res.status(500).json({
+      error: 'Failed to update schedule',
+      details: error.message
+    });
   }
 };
 
