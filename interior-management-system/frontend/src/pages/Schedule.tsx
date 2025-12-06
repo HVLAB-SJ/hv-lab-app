@@ -267,7 +267,8 @@ const CustomEvent = React.memo(({
   onEditSave,
   onEditDelete,
   onEditCancel,
-  onHoverDelete
+  onHoverDelete,
+  onDeleteAction
 }: {
   event: ScheduleEvent;
   user: { id: string; name: string; role: string } | null;
@@ -279,6 +280,7 @@ const CustomEvent = React.memo(({
   onEditDelete?: () => void;
   onEditCancel?: () => void;
   onHoverDelete?: () => void;
+  onDeleteAction?: () => void;
 }) => {
   const isSpecificProject = filterProject && filterProject !== 'all';
   const attendees = event.assignedTo || [];
@@ -389,6 +391,8 @@ const CustomEvent = React.memo(({
               onMouseDown={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
+                // 삭제 액션 플래그 설정 (onSelectEvent 방지)
+                if (onDeleteAction) onDeleteAction();
                 if (deleteButtonRef.current) {
                   const rect = deleteButtonRef.current.getBoundingClientRect();
                   setDeleteButtonPos({ top: rect.top - 4, right: window.innerWidth - rect.left + 8 });
@@ -514,8 +518,8 @@ const CustomEvent = React.memo(({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => { if (!showDeleteConfirm) setIsHovered(false); }}
       style={{
-        minHeight: isSpecificProject ? '32px' : '18px',
-        padding: isSpecificProject ? '4px 0' : '0'
+        minHeight: isSpecificProject ? '36px' : '18px',
+        padding: isSpecificProject ? '6px 0' : '0'
       }}
     >
       <div className="flex items-center gap-1.5 overflow-hidden flex-1">
@@ -561,6 +565,8 @@ const CustomEvent = React.memo(({
             onMouseDown={(e) => {
               e.stopPropagation();
               e.preventDefault();
+              // 삭제 액션 플래그 설정 (onSelectEvent 방지)
+              if (onDeleteAction) onDeleteAction();
               if (deleteButtonRef.current) {
                 const rect = deleteButtonRef.current.getBoundingClientRect();
                 setDeleteButtonPos({ top: rect.top - 4, right: window.innerWidth - rect.left + 8 });
@@ -1098,6 +1104,9 @@ const Schedule = () => {
   const [inlineEditEvent, setInlineEditEvent] = useState<ScheduleEvent | null>(null);
   const [inlineEditTitle, setInlineEditTitle] = useState('');
 
+  // 삭제 액션 진행 중 플래그 (onSelectEvent 방지용)
+  const deleteActionRef = React.useRef<boolean>(false);
+
   // 기존 일정 드래그하여 날짜 이동 핸들러
   const onEventDrop = useCallback(async ({ event, start, end }: { event: ScheduleEvent; start: Date | string; end: Date | string }) => {
     console.log('🔄 onEventDrop called:', { event, start, end, eventId: event.id, mergedEventIds: event.mergedEventIds });
@@ -1399,6 +1408,12 @@ const Schedule = () => {
 
   // 이벤트 클릭 - 개별 프로젝트 선택 시 인라인 편집, 그 외 모달 열기
   const onSelectEvent = (event: ScheduleEvent) => {
+    // 삭제 액션 진행 중이면 무시
+    if (deleteActionRef.current) {
+      deleteActionRef.current = false;
+      return;
+    }
+
     // 인라인 추가 이벤트는 무시 (자체 입력 필드가 있음)
     if (event.id === '__inline_add__') {
       return;
@@ -1709,6 +1724,7 @@ const Schedule = () => {
         onEditDelete={isThisEditing ? () => handleInlineDelete(event) : undefined}
         onEditCancel={isThisEditing ? () => { setInlineEditEvent(null); setInlineEditTitle(''); } : undefined}
         onHoverDelete={() => handleInlineDelete(event)}
+        onDeleteAction={() => { deleteActionRef.current = true; }}
       />
     );
   }, [user, filterProject, inlineEditEvent, inlineEditTitle, handleInlineEditSave, handleInlineDelete, inlineAddTitle, handleInlineAdd]);
@@ -1991,7 +2007,7 @@ const Schedule = () => {
       // 동적 높이 계산 및 적용
       const isSpecificProjectView = filterProject && filterProject !== 'all';
       const baseHeight = 100; // 기본 높이
-      const eventHeight = isSpecificProjectView ? 42 : 18; // 일정 하나당 높이 (개별 프로젝트: 패딩 포함)
+      const eventHeight = isSpecificProjectView ? 48 : 18; // 일정 하나당 높이 (개별 프로젝트: 패딩 포함)
       const dateHeaderHeight = 25; // 날짜 숫자 영역
       const maxEventsPerRow = Math.floor((baseHeight - dateHeaderHeight) / eventHeight); // 약 4개
 
