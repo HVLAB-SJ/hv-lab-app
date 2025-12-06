@@ -1087,9 +1087,11 @@ const Schedule = () => {
       }
       toast.success('일정이 이동되었습니다');
       await loadSchedulesFromAPI();
-    } catch (error) {
+    } catch (error: any) {
       console.error('일정 이동 실패:', error);
-      toast.error('일정 이동에 실패했습니다');
+      const errorMessage = error?.response?.data?.details || error?.response?.data?.error || error?.message || '알 수 없는 오류';
+      console.error('오류 상세:', errorMessage);
+      toast.error(`일정 이동 실패: ${errorMessage}`);
     }
   }, [updateScheduleInAPI, loadSchedulesFromAPI]);
 
