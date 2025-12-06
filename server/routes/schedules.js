@@ -502,39 +502,84 @@ router.put('/:id', authenticateToken, (req, res) => {
   const description = req.body.description;
   const start_date = req.body.start_date || req.body.startDate;
   const end_date = req.body.end_date || req.body.endDate;
-  const type = req.body.type || 'other';
+  const type = req.body.type;  // 기본값 제거 - 제공된 경우에만 업데이트
   const status = req.body.status;
   const priority = req.body.priority;
   const color = req.body.color;
   const progress = req.body.progress;
   // Don't auto-populate assigned_to from assignedTo array - keep them separate
   // assigned_to is for legacy team names, assignee_ids is for specific user selections
-  const assigned_to = req.body.assigned_to || null; // Only use if explicitly provided
+  const assigned_to = req.body.assigned_to;  // 기본값 제거
   const assignee_ids = req.body.assignee_ids || req.body.assignedTo;
   const project_id = req.body.project_id || req.body.project;
   const time = req.body.time;
 
-  db.run(
-    `UPDATE schedules
-     SET title = ?, description = ?, start_date = ?, end_date = ?,
-         type = ?, status = ?, priority = ?, color = ?, progress = ?,
-         assigned_to = ?, project_id = ?, time = ?, updated_at = CURRENT_TIMESTAMP
-     WHERE id = ?`,
-    [
-      title,
-      description,
-      start_date,
-      end_date,
-      type,
-      status,
-      priority,
-      color,
-      progress,
-      assigned_to,
-      project_id,
-      time,
-      id
-    ],
+  // 동적으로 업데이트할 필드만 포함하는 쿼리 생성
+  const updateFields = [];
+  const updateValues = [];
+
+  if (title !== undefined) {
+    updateFields.push('title = ?');
+    updateValues.push(title);
+  }
+  if (description !== undefined) {
+    updateFields.push('description = ?');
+    updateValues.push(description);
+  }
+  if (start_date !== undefined) {
+    updateFields.push('start_date = ?');
+    updateValues.push(start_date);
+  }
+  if (end_date !== undefined) {
+    updateFields.push('end_date = ?');
+    updateValues.push(end_date);
+  }
+  if (type !== undefined) {
+    updateFields.push('type = ?');
+    updateValues.push(type);
+  }
+  if (status !== undefined) {
+    updateFields.push('status = ?');
+    updateValues.push(status);
+  }
+  if (priority !== undefined) {
+    updateFields.push('priority = ?');
+    updateValues.push(priority);
+  }
+  if (color !== undefined) {
+    updateFields.push('color = ?');
+    updateValues.push(color);
+  }
+  if (progress !== undefined) {
+    updateFields.push('progress = ?');
+    updateValues.push(progress);
+  }
+  if (assigned_to !== undefined) {
+    updateFields.push('assigned_to = ?');
+    updateValues.push(assigned_to);
+  }
+  if (project_id !== undefined) {
+    updateFields.push('project_id = ?');
+    updateValues.push(project_id);
+  }
+  if (time !== undefined) {
+    updateFields.push('time = ?');
+    updateValues.push(time);
+  }
+
+  // 업데이트할 필드가 없으면 에러
+  if (updateFields.length === 0) {
+    return res.status(400).json({ error: '업데이트할 필드가 없습니다.' });
+  }
+
+  updateFields.push('updated_at = CURRENT_TIMESTAMP');
+  updateValues.push(id);
+
+  const updateQuery = `UPDATE schedules SET ${updateFields.join(', ')} WHERE id = ?`;
+  console.log('[PUT /api/schedules/:id] Update query:', updateQuery);
+  console.log('[PUT /api/schedules/:id] Update values:', updateValues);
+
+  db.run(updateQuery, updateValues,
     function(err) {
       if (err) {
         console.error('[PUT /api/schedules/:id] Database error:', err);
