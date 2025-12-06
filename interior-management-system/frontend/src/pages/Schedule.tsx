@@ -1510,19 +1510,14 @@ const Schedule = () => {
       return;
     }
 
-    // 개별 프로젝트 선택 시 인라인 추가 모드
-    if (isSpecificProject && !isMobile) {
+    // 데스크탑/태블릿에서는 모달 방식으로 일정 추가
+    if (!isMobile) {
       // 인라인 편집 모드 닫기
       setInlineEditEvent(null);
       setInlineEditTitle('');
-      // 인라인 추가 모드 열기
-      setInlineAddDate(slotInfo.start);
+      setInlineAddDate(null);
       setInlineAddTitle('');
-      return;
-    }
-
-    // 전체 프로젝트일 때는 기존 모달 방식
-    if (!isMobile) {
+      // 모달 열기
       setSelectedSlot(slotInfo);
       setSelectedEvent(null);
       setShowModal(true);

@@ -421,6 +421,12 @@
   padding: 6px 4px !important;
 }
 
+/* 드래그 선택 영역 숨김 */
+.rbc-slot-selection {
+  background-color: transparent !important;
+  display: none !important;
+}
+
 /* 선택된 셀과 이벤트의 배경색 변경 방지 - 최우선순위 */
 .rbc-selected,
 .rbc-selected-cell {
