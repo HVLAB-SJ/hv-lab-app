@@ -266,7 +266,8 @@ const CustomEvent = React.memo(({
   onEditTitleChange,
   onEditSave,
   onEditDelete,
-  onEditCancel
+  onEditCancel,
+  onHoverDelete
 }: {
   event: ScheduleEvent;
   user: { id: string; name: string; role: string } | null;
@@ -277,9 +278,12 @@ const CustomEvent = React.memo(({
   onEditSave?: () => void;
   onEditDelete?: () => void;
   onEditCancel?: () => void;
+  onHoverDelete?: () => void;
 }) => {
   const isSpecificProject = filterProject && filterProject !== 'all';
   const attendees = event.assignedTo || [];
+  // 호버 상태
+  const [isHovered, setIsHovered] = useState(false);
   // 태블릿 또는 세로방향 데스크탑 모니터 감지
   const checkVerticalLayout = () => {
     const width = window.innerWidth;
@@ -289,6 +293,8 @@ const CustomEvent = React.memo(({
   };
   const [useVerticalLayout, setUseVerticalLayout] = useState(checkVerticalLayout);
   const [showTooltip, setShowTooltip] = useState(false);
+  // 디바운스 타이머 ref
+  const saveTimerRef = React.useRef<number | null>(null);
 
   // 사용자 이름에서 성 제거
   const userNameWithoutSurname = user?.name ? user.name.slice(-2) : null;
@@ -305,47 +311,52 @@ const CustomEvent = React.memo(({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 인라인 편집 모드일 때
+  // 인라인 편집 모드일 때 - 실시간 저장 (메모장처럼)
   if (isEditing && onEditTitleChange && onEditSave && onEditCancel) {
+    const handleChange = (value: string) => {
+      onEditTitleChange(value);
+      // 디바운스: 500ms 후 자동 저장
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+      saveTimerRef.current = setTimeout(() => {
+        if (value.trim()) {
+          onEditSave();
+        }
+      }, 500);
+    };
+
     return (
       <div
         className="w-full h-full"
         onClick={(e) => e.stopPropagation()}
         style={{ minHeight: '28px' }}
       >
-        <div className="flex items-center gap-1 h-full">
-          <input
-            type="text"
-            value={editTitle || ''}
-            onChange={(e) => onEditTitleChange(e.target.value)}
-            onKeyDown={(e) => {
-              e.stopPropagation();
-              if (e.key === 'Enter') {
-                onEditSave();
-              } else if (e.key === 'Escape') {
-                onEditCancel();
-              }
-            }}
-            onClick={(e) => e.stopPropagation()}
-            className="flex-1 px-2 py-0.5 text-xs border border-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 bg-white"
-            autoFocus
-            style={{ minWidth: 0 }}
-          />
-          <button
-            onClick={(e) => { e.stopPropagation(); onEditSave(); }}
-            className="px-1.5 py-0.5 bg-gray-800 text-white text-[10px] rounded hover:bg-gray-700"
-          >
-            저장
-          </button>
-          {onEditDelete && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onEditDelete(); }}
-              className="px-1.5 py-0.5 text-red-600 text-[10px] hover:text-red-800"
-            >
-              삭제
-            </button>
-          )}
-        </div>
+        <input
+          type="text"
+          value={editTitle || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          onBlur={() => {
+            // blur 시 즉시 저장
+            if (saveTimerRef.current) {
+              clearTimeout(saveTimerRef.current);
+            }
+            if (editTitle?.trim()) {
+              onEditSave();
+            }
+            onEditCancel();
+          }}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              e.currentTarget.blur();
+            }
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full h-full px-2 py-0.5 text-xs border-none focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white rounded"
+          autoFocus
+          style={{ minWidth: 0 }}
+        />
       </div>
     );
   }
@@ -355,8 +366,8 @@ const CustomEvent = React.memo(({
     return (
       <div
         className="w-full relative block"
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
+        onMouseEnter={() => { setShowTooltip(true); setIsHovered(true); }}
+        onMouseLeave={() => { setShowTooltip(false); setIsHovered(false); }}
         style={{
           padding: '1px 3px',
           minHeight: '30px',
@@ -365,6 +376,17 @@ const CustomEvent = React.memo(({
           justifyContent: 'flex-start'
         }}
       >
+        {/* 호버 시 삭제 아이콘 */}
+        {isHovered && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onHoverDelete(); }}
+            className="absolute top-0 right-0 p-0.5 text-gray-400 hover:text-red-500 z-10"
+            style={{ fontSize: '12px', lineHeight: 1 }}
+            title="삭제"
+          >
+            ✕
+          </button>
+        )}
         {/* 첫번째 줄: 프로젝트명 + 담당자 (개별 프로젝트 선택 시 프로젝트명 숨김) */}
         <div className="flex items-center justify-between w-full" style={{ fontSize: isSpecificProject ? '11px' : '10px', opacity: 0.8, marginBottom: '1px', lineHeight: '1.2' }}>
           {!isSpecificProject && !event.isASVisit && event.projectName ? (
@@ -445,7 +467,11 @@ const CustomEvent = React.memo(({
 
   // 데스크톱과 모바일 레이아웃 (기존 코드)
   return (
-    <div className="flex items-center justify-between w-full gap-1.5 overflow-hidden">
+    <div
+      className="flex items-center justify-between w-full gap-1.5 overflow-hidden relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="flex items-center gap-1.5 overflow-hidden flex-1">
         {/* AS 일정이 아닐 때만 프로젝트명 표시 (개별 프로젝트 선택 시 숨김) */}
         {!isSpecificProject && !event.isASVisit && event.projectName && (
@@ -472,6 +498,17 @@ const CustomEvent = React.memo(({
             );
           })}
         </span>
+      )}
+      {/* 호버 시 삭제 아이콘 */}
+      {isHovered && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onHoverDelete(); }}
+          className="absolute top-0 right-0 p-0.5 text-gray-400 hover:text-red-500"
+          style={{ fontSize: '11px', lineHeight: 1 }}
+          title="삭제"
+        >
+          ✕
+        </button>
       )}
     </div>
   );
@@ -953,25 +990,35 @@ const Schedule = () => {
   const [inlineEditTitle, setInlineEditTitle] = useState('');
 
   // 기존 일정 드래그하여 날짜 이동 핸들러
-  const onEventDrop = useCallback(async ({ event, start, end }: { event: ScheduleEvent; start: Date; end: Date }) => {
+  const onEventDrop = useCallback(async ({ event, start, end }: { event: ScheduleEvent; start: Date | string; end: Date | string }) => {
+    console.log('🔄 onEventDrop called:', { event, start, end, eventId: event.id, mergedEventIds: event.mergedEventIds });
+
     // AS 방문이나 수금 일정은 이동 불가
     if (event.isASVisit || event.isExpectedPayment) {
       toast.error('이 일정은 이동할 수 없습니다');
       return;
     }
 
+    // 날짜를 Date 객체로 변환 (react-big-calendar이 문자열로 전달할 수 있음)
+    const startDate = start instanceof Date ? start : new Date(start);
+    const endDate = end instanceof Date ? end : new Date(end);
+
+    console.log('📅 Converted dates:', { startDate, endDate });
+
     // 병합된 일정인 경우 모든 일정을 이동
     const eventIds = event.mergedEventIds || [event.id];
+    console.log('🆔 Event IDs to update:', eventIds);
 
     try {
       for (const eventId of eventIds) {
+        console.log('📤 Updating event:', eventId);
         await updateScheduleInAPI(eventId, {
-          start: start,
-          end: end
+          start: startDate,
+          end: endDate
         });
       }
       toast.success('일정이 이동되었습니다');
-      loadSchedulesFromAPI();
+      await loadSchedulesFromAPI();
     } catch (error) {
       console.error('일정 이동 실패:', error);
       toast.error('일정 이동에 실패했습니다');
@@ -1454,6 +1501,7 @@ const Schedule = () => {
         onEditSave={isThisEditing ? handleInlineEditSave : undefined}
         onEditDelete={isThisEditing ? () => handleInlineDelete(event) : undefined}
         onEditCancel={isThisEditing ? () => { setInlineEditEvent(null); setInlineEditTitle(''); } : undefined}
+        onHoverDelete={() => handleInlineDelete(event)}
       />
     );
   }, [user, filterProject, inlineEditEvent, inlineEditTitle, handleInlineEditSave, handleInlineDelete]);
