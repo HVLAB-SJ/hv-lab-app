@@ -1239,7 +1239,6 @@ const Schedule = () => {
         attendees: [],
         description: ''
       });
-      toast.success(`${processName} 일정이 추가되었습니다`);
       await loadSchedulesFromAPI();
     } catch (error) {
       console.error('일정 추가 실패:', error);
@@ -1298,7 +1297,6 @@ const Schedule = () => {
         attendees: [],
         description: ''
       });
-      toast.success('일정이 추가되었습니다');
       loadSchedulesFromAPI();
     } catch (error) {
       console.error('일정 추가 실패:', error);
@@ -1323,7 +1321,6 @@ const Schedule = () => {
       await updateScheduleInAPI(eventId, {
         title: inlineEditTitle.trim()
       });
-      toast.success('일정이 수정되었습니다');
       loadSchedulesFromAPI();
     } catch (error) {
       console.error('일정 수정 실패:', error);
@@ -1342,7 +1339,6 @@ const Schedule = () => {
       for (const eventId of eventIds) {
         await deleteScheduleFromAPI(eventId);
       }
-      toast.success('일정이 삭제되었습니다');
       loadSchedulesFromAPI();
     } catch (error) {
       console.error('일정 삭제 실패:', error);
@@ -1606,7 +1602,6 @@ const Schedule = () => {
 
       setInlineEdit({ date: null, projectId: '', title: '' });
       setSelectedDate(null);
-      toast.success('일정이 추가되었습니다');
     } catch (error) {
       console.error('Failed to add schedule:', error);
       toast.error('일정 추가에 실패했습니다');
@@ -2556,7 +2551,6 @@ const Schedule = () => {
                       scheduledVisitTime: newEvent.time || selectedEvent.time
                     });
 
-                    toast.success('AS 방문 일정이 수정되었습니다');
                     // AS 요청 다시 로드
                     await loadASRequestsFromAPI();
                     setShowModal(false);
@@ -2578,7 +2572,6 @@ const Schedule = () => {
                       await updateConstructionPaymentInAPI(cpId, {
                         expectedPaymentDates: updatedDates
                       });
-                      toast.success('수금 일정이 수정되었습니다');
                     }
                   } else {
                     // 일반 일정 수정
@@ -2614,7 +2607,6 @@ const Schedule = () => {
                           time: newEvent.time
                         });
                       }
-                      toast.success(`${selectedEvent.mergedEventIds.length}개의 일정이 수정되었습니다`);
                     } else {
                       // 단일 일정 수정
                       await updateScheduleInAPI(selectedEvent.id, {
@@ -2628,7 +2620,6 @@ const Schedule = () => {
                         description: newEvent.description,
                         time: newEvent.time
                       });
-                      toast.success('일정이 수정되었습니다');
                     }
 
                     // 수정 후 일정 다시 로드
@@ -2649,7 +2640,6 @@ const Schedule = () => {
                     description: newEvent.description,
                     time: newEvent.time
                   });
-                  toast.success('일정이 추가되었습니다');
                 }
                 setShowModal(false);
               } catch (error) {
@@ -2676,7 +2666,6 @@ const Schedule = () => {
                     await updateConstructionPaymentInAPI(cpId, {
                       expectedPaymentDates: updatedDates
                     });
-                    toast.success('수금 일정이 삭제되었습니다');
                   }
                 }
                 // AS 방문 일정인지 확인 (ID가 'as-'로 시작하는 경우)
@@ -2688,7 +2677,6 @@ const Schedule = () => {
                     scheduledVisitDate: null,
                     scheduledVisitTime: null
                   });
-                  toast.success('AS 방문 일정이 삭제되었습니다');
                 } else {
                   // 일반 일정 삭제
                   // 병합된 일정인 경우 모든 관련 일정 삭제
@@ -2699,11 +2687,9 @@ const Schedule = () => {
                     for (const id of eventToDelete.mergedEventIds) {
                       await deleteScheduleFromAPI(id);
                     }
-                    toast.success(`${eventToDelete.mergedEventIds.length}개의 일정이 삭제되었습니다`);
                   } else {
                     // 단일 일정 삭제
                     await deleteScheduleFromAPI(eventId);
-                    toast.success('일정이 삭제되었습니다');
                   }
                 }
                 setShowModal(false);
