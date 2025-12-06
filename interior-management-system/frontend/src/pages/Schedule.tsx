@@ -90,13 +90,22 @@ const projectColors = [
   '#F3F4F6', // 연한 회색
 ];
 
-// 프로젝트명 축약 함수 (언더스코어 앞부분만 두 글자로)
+// 프로젝트명 축약 함수 (언더스코어 앞부분 두 글자 + 이름에서 성 제거)
 const shortenProjectName = (projectName: string): string => {
   if (!projectName) return projectName;
   const parts = projectName.split('_');
-  if (parts.length > 1 && parts[0].length > 2) {
-    // 언더스코어가 있고 앞부분이 2글자보다 길면 축약
-    return parts[0].substring(0, 2) + '_' + parts.slice(1).join('_');
+  if (parts.length > 1) {
+    // 앞부분 축약 (2글자보다 길면)
+    const prefix = parts[0].length > 2 ? parts[0].substring(0, 2) : parts[0];
+
+    // 뒷부분에서 성 제거 (예: 박성진님 -> 성진님)
+    let suffix = parts.slice(1).join('_');
+    // "님"으로 끝나고 3글자 이상이면 성(첫글자) 제거
+    if (suffix.endsWith('님') && suffix.length >= 3) {
+      suffix = suffix.substring(1);
+    }
+
+    return prefix + '_' + suffix;
   }
   return projectName;
 };
