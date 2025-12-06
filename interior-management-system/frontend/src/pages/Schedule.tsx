@@ -312,6 +312,9 @@ const CustomEvent = React.memo(({
   const isUserInFieldTeam = userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
   const isUserInDesignTeam = userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
 
+  // 현재 사용자가 담당자인지 확인
+  const isUserAssigned = user?.name && attendees.includes(user.name);
+
   useEffect(() => {
     const handleResize = () => {
       setUseVerticalLayout(checkVerticalLayout());
@@ -476,7 +479,10 @@ const CustomEvent = React.memo(({
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               wordBreak: 'keep-all',
-              textOverflow: 'ellipsis'
+              textOverflow: 'ellipsis',
+              textDecoration: isUserAssigned ? 'underline' : 'none',
+              textDecorationColor: isUserAssigned ? '#e57373' : 'transparent',
+              textUnderlineOffset: '2px'
             }}
             title={event.title}
           >
@@ -548,7 +554,12 @@ const CustomEvent = React.memo(({
         ) : (
           <span
             className="font-medium truncate"
-            style={{ fontSize: isSpecificProject ? '18px' : '12px' }}
+            style={{
+              fontSize: isSpecificProject ? '18px' : '12px',
+              textDecoration: isUserAssigned ? 'underline' : 'none',
+              textDecorationColor: isUserAssigned ? '#e57373' : 'transparent',
+              textUnderlineOffset: '2px'
+            }}
           >
             {event.title}
           </span>
