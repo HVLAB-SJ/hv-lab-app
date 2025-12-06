@@ -436,13 +436,10 @@
   visibility: hidden !important;
 }
 
-/* 드래그 중 해당 날짜 하이라이트 */
-.rbc-addons-dnd-over {
-  background-color: rgba(59, 130, 246, 0.15) !important;
-}
-
-.rbc-addons-dnd .rbc-row-bg .rbc-day-bg.rbc-addons-dnd-over {
-  background-color: rgba(59, 130, 246, 0.15) !important;
+/* 드래그 아이템 자체에는 하이라이트 제거 */
+.rbc-addons-dnd-dragged-event,
+.rbc-event.rbc-addons-dnd-dragged-event {
+  background-color: var(--event-bg-color) !important;
 }
 
 /* 선택된 셀과 이벤트의 배경색 변경 방지 - 최우선순위 */

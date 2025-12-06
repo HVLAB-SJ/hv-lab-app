@@ -1116,6 +1116,57 @@ const Schedule = () => {
   // 공정 드롭 직후 플래그 (인라인 모드 방지)
   const justDroppedProcessRef = React.useRef(false);
 
+  // 드래그 중 날짜 셀 하이라이트 효과
+  useEffect(() => {
+    if (!draggedProcess) return;
+
+    let lastHighlightedCell: HTMLElement | null = null;
+
+    const handleDragOver = (e: DragEvent) => {
+      // 가장 가까운 날짜 셀 찾기
+      const target = e.target as HTMLElement;
+      const dayBg = target.closest('.rbc-day-bg') as HTMLElement;
+
+      // 이전 하이라이트 제거
+      if (lastHighlightedCell && lastHighlightedCell !== dayBg) {
+        lastHighlightedCell.style.backgroundColor = '';
+      }
+
+      // 새 하이라이트 적용
+      if (dayBg) {
+        dayBg.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
+        lastHighlightedCell = dayBg;
+      }
+    };
+
+    const handleDragEnd = () => {
+      if (lastHighlightedCell) {
+        lastHighlightedCell.style.backgroundColor = '';
+        lastHighlightedCell = null;
+      }
+    };
+
+    const handleDrop = () => {
+      if (lastHighlightedCell) {
+        lastHighlightedCell.style.backgroundColor = '';
+        lastHighlightedCell = null;
+      }
+    };
+
+    document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('dragend', handleDragEnd);
+    document.addEventListener('drop', handleDrop);
+
+    return () => {
+      document.removeEventListener('dragover', handleDragOver);
+      document.removeEventListener('dragend', handleDragEnd);
+      document.removeEventListener('drop', handleDrop);
+      if (lastHighlightedCell) {
+        lastHighlightedCell.style.backgroundColor = '';
+      }
+    };
+  }, [draggedProcess]);
+
   // 인라인 편집 상태 (개별 프로젝트 선택 시)
   const [inlineAddDate, setInlineAddDate] = useState<Date | null>(null);
   const [inlineAddTitle, setInlineAddTitle] = useState('');
