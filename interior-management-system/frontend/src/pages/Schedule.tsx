@@ -302,6 +302,8 @@ const CustomEvent = React.memo(({
   const [showTooltip, setShowTooltip] = useState(false);
   // 디바운스 타이머 ref
   const saveTimerRef = React.useRef<number | null>(null);
+  // 한글 IME 조합 상태 추적
+  const isComposingRef = React.useRef(false);
 
   // 사용자 이름에서 성 제거
   const userNameWithoutSurname = user?.name ? user.name.slice(-2) : null;
@@ -448,7 +450,16 @@ const CustomEvent = React.memo(({
           <input
             type="text"
             value={editTitle || ''}
-            onChange={(e) => handleEditChange(e.target.value)}
+            onChange={(e) => {
+              if (!isComposingRef.current) {
+                handleEditChange(e.target.value);
+              }
+            }}
+            onCompositionStart={() => { isComposingRef.current = true; }}
+            onCompositionEnd={(e) => {
+              isComposingRef.current = false;
+              handleEditChange(e.currentTarget.value);
+            }}
             onBlur={handleEditBlur}
             onKeyDown={handleEditKeyDown}
             onClick={(e) => e.stopPropagation()}
@@ -529,7 +540,16 @@ const CustomEvent = React.memo(({
           <input
             type="text"
             value={editTitle || ''}
-            onChange={(e) => handleEditChange(e.target.value)}
+            onChange={(e) => {
+              if (!isComposingRef.current) {
+                handleEditChange(e.target.value);
+              }
+            }}
+            onCompositionStart={() => { isComposingRef.current = true; }}
+            onCompositionEnd={(e) => {
+              isComposingRef.current = false;
+              handleEditChange(e.currentTarget.value);
+            }}
             onBlur={handleEditBlur}
             onKeyDown={handleEditKeyDown}
             onClick={(e) => e.stopPropagation()}
