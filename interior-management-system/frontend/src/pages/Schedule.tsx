@@ -315,6 +315,7 @@ const CustomEvent = React.memo(({
   // 현재 사용자가 담당자인지 확인 (팀 소속 포함)
   const isUserAssigned = user?.name && (
     attendees.includes(user.name) ||
+    attendees.includes('HV LAB') ||
     (attendees.includes('디자인팀') && isUserInDesignTeam) ||
     (attendees.includes('현장팀') && isUserInFieldTeam)
   );
@@ -1100,10 +1101,11 @@ const Schedule = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
-  // 프로젝트 필터 상태 (localStorage에서 복원)
+  // 프로젝트 필터 상태 (사용자별 localStorage에서 복원)
+  const filterStorageKey = `schedule_filterProject_${user?.id || 'guest'}`;
   const [filterProject, setFilterProject] = useState<string>(() => {
-    // localStorage에서 저장된 프로젝트 필터 복원
-    const savedFilter = localStorage.getItem('schedule_filterProject');
+    // 사용자별 localStorage에서 저장된 프로젝트 필터 복원
+    const savedFilter = localStorage.getItem(filterStorageKey);
     if (savedFilter) {
       return savedFilter;
     }
@@ -1114,10 +1116,10 @@ const Schedule = () => {
     return 'all';
   });
 
-  // filterProject 변경 시 localStorage에 저장
+  // filterProject 변경 시 사용자별 localStorage에 저장
   useEffect(() => {
-    localStorage.setItem('schedule_filterProject', filterProject);
-  }, [filterProject]);
+    localStorage.setItem(filterStorageKey, filterProject);
+  }, [filterProject, filterStorageKey]);
 
   // 그룹화 적용 (전체 프로젝트 보기에서만 병합)
   const events = groupEventsByProjectAndDate(allEvents, filterProject === 'all');
