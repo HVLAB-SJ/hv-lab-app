@@ -390,7 +390,8 @@ const CustomEvent = React.memo(({
                 e.stopPropagation();
                 if (deleteButtonRef.current) {
                   const rect = deleteButtonRef.current.getBoundingClientRect();
-                  setDeleteButtonPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+                  // X 버튼 왼쪽에 팝업 표시 (버튼 중앙에 수직 정렬)
+                  setDeleteButtonPos({ top: rect.top - 4, right: window.innerWidth - rect.left + 8 });
                 }
                 setShowDeleteConfirm(true);
               }}
@@ -413,16 +414,16 @@ const CustomEvent = React.memo(({
               whiteSpace: 'nowrap'
             }}
           >
-            <span className="text-xs text-gray-700">삭제할까요?</span>
+            <span className="text-sm text-gray-700">삭제할까요?</span>
             <button
               onClick={(e) => { e.stopPropagation(); onHoverDelete(); setShowDeleteConfirm(false); setDeleteButtonPos(null); }}
-              className="px-2 py-0.5 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+              className="px-2 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
             >
               삭제
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); setDeleteButtonPos(null); }}
-              className="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
+              className="px-2 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
             >
               취소
             </button>
