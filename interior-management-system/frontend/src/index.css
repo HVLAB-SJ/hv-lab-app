@@ -415,10 +415,13 @@
   -ms-user-select: none;
 }
 
-/* 개별 프로젝트 선택 시 일정 높이 증가 */
+/* 개별 프로젝트 선택 시 일정 스타일 - 텍스트만 표시 */
 .specific-project-view .rbc-event {
   min-height: 36px !important;
   padding: 6px 4px !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 
 /* 드래그 선택 영역 숨김 */
