@@ -372,10 +372,10 @@ const CustomEvent = React.memo(({
       <div
         className="w-full relative block"
         onMouseEnter={() => { setShowTooltip(true); setIsHovered(true); }}
-        onMouseLeave={() => { setShowTooltip(false); setIsHovered(false); }}
+        onMouseLeave={() => { if (!showDeleteConfirm) { setShowTooltip(false); setIsHovered(false); } }}
         style={{
-          padding: '1px 3px',
-          minHeight: '30px',
+          padding: isSpecificProject ? '4px 3px' : '1px 3px',
+          minHeight: isSpecificProject ? '32px' : '30px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'flex-start'
@@ -383,20 +383,20 @@ const CustomEvent = React.memo(({
       >
         {/* 호버 시 삭제 아이콘 */}
         {(isHovered || showDeleteConfirm) && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
-          <div className="absolute top-0 right-0 z-20">
+          <div className="absolute top-0 right-0 z-20" style={{ padding: '4px' }}>
             <button
               ref={deleteButtonRef}
-              onClick={(e) => {
+              onMouseDown={(e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 if (deleteButtonRef.current) {
                   const rect = deleteButtonRef.current.getBoundingClientRect();
-                  // X 버튼 왼쪽에 팝업 표시 (버튼 중앙에 수직 정렬)
                   setDeleteButtonPos({ top: rect.top - 4, right: window.innerWidth - rect.left + 8 });
                 }
                 setShowDeleteConfirm(true);
               }}
-              className="p-0.5 text-gray-400 hover:text-red-500"
-              style={{ fontSize: '12px', lineHeight: 1 }}
+              className="p-1 text-gray-400 hover:text-red-500 bg-white/80 rounded"
+              style={{ fontSize: '14px', lineHeight: 1 }}
               title="삭제"
             >
               ✕
@@ -512,7 +512,7 @@ const CustomEvent = React.memo(({
     <div
       className="flex items-center justify-between w-full gap-1.5 overflow-hidden relative"
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => { if (!showDeleteConfirm) setIsHovered(false); }}
       style={{
         minHeight: isSpecificProject ? '32px' : '18px',
         padding: isSpecificProject ? '4px 0' : '0'
@@ -555,19 +555,20 @@ const CustomEvent = React.memo(({
       )}
       {/* 호버 시 삭제 아이콘 */}
       {(isHovered || showDeleteConfirm) && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
-        <div className="absolute top-0 right-0 z-20">
+        <div className="absolute top-0 right-0 z-20" style={{ padding: '2px' }}>
           <button
             ref={deleteButtonRef}
-            onClick={(e) => {
+            onMouseDown={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               if (deleteButtonRef.current) {
                 const rect = deleteButtonRef.current.getBoundingClientRect();
                 setDeleteButtonPos({ top: rect.top - 4, right: window.innerWidth - rect.left + 8 });
               }
               setShowDeleteConfirm(true);
             }}
-            className="p-0.5 text-gray-400 hover:text-red-500"
-            style={{ fontSize: '12px', lineHeight: 1 }}
+            className="p-1 text-gray-400 hover:text-red-500 bg-white/80 rounded"
+            style={{ fontSize: '14px', lineHeight: 1 }}
             title="삭제"
           >
             ✕
