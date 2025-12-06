@@ -90,23 +90,10 @@ const projectColors = [
   '#F3F4F6', // 연한 회색
 ];
 
-// 프로젝트명 축약 함수 (언더스코어 앞부분 두 글자 + 이름에서 성 제거)
+// 프로젝트명 축약 함수 (이미 축약된 형식이면 그대로 반환)
 const shortenProjectName = (projectName: string): string => {
   if (!projectName) return projectName;
-  const parts = projectName.split('_');
-  if (parts.length > 1) {
-    // 앞부분 축약 (2글자보다 길면)
-    const prefix = parts[0].length > 2 ? parts[0].substring(0, 2) : parts[0];
-
-    // 뒷부분에서 성 제거 (예: 박성진님 -> 성진님)
-    let suffix = parts.slice(1).join('_');
-    // "님"으로 끝나고 3글자 이상이면 성(첫글자) 제거
-    if (suffix.endsWith('님') && suffix.length >= 3) {
-      suffix = suffix.substring(1);
-    }
-
-    return prefix + '_' + suffix;
-  }
+  // 이미 "XX_숫자" 형식이면 그대로 반환
   return projectName;
 };
 
@@ -751,12 +738,15 @@ const Schedule = () => {
     .map(schedule => {
       // 비공개 일정은 "[개인일정]"으로 표시
       const project = projects.find(p => p.name === schedule.project);
-      // 프로젝트가 있으면 축약형 표기 생성 (프로젝트명 앞2글자_고객명)
+      // 프로젝트가 있으면 축약형 표기 생성 (프로젝트명 앞2글자_호수)
       let displayProjectName = schedule.project === '비공개' ? '[개인일정]' : schedule.project;
       if (project && schedule.project !== '비공개') {
         const prefix = project.name.length > 2 ? project.name.substring(0, 2) : project.name;
-        const clientName = project.client || '';
-        displayProjectName = clientName ? `${prefix}_${clientName}` : prefix;
+        // location에서 호수 추출 (예: "2105호", "B114호" 등)
+        const location = project.location || '';
+        const unitMatch = location.match(/([A-Za-z]?\d+)호/);
+        const unitNumber = unitMatch ? unitMatch[1] : '';
+        displayProjectName = unitNumber ? `${prefix}_${unitNumber}` : prefix;
       }
       const scheduleTime = schedule.time;
       // 시간이 있고 "-"가 아닌 경우에만 시간 텍스트 추가
@@ -811,12 +801,14 @@ const Schedule = () => {
       const visitTime = req.scheduledVisitTime;
       const timeText = (visitTime && visitTime !== '-') ? ` - ${formatTime(visitTime)}` : '';
       const asProject = projects.find(p => p.name === req.project);
-      // 프로젝트 축약형 표기 생성
+      // 프로젝트 축약형 표기 생성 (프로젝트명 앞2글자_호수)
       let asDisplayProjectName = req.project;
       if (asProject) {
         const prefix = asProject.name.length > 2 ? asProject.name.substring(0, 2) : asProject.name;
-        const clientName = asProject.client || '';
-        asDisplayProjectName = clientName ? `${prefix}_${clientName}` : prefix;
+        const location = asProject.location || '';
+        const unitMatch = location.match(/([A-Za-z]?\d+)호/);
+        const unitNumber = unitMatch ? unitMatch[1] : '';
+        asDisplayProjectName = unitNumber ? `${prefix}_${unitNumber}` : prefix;
       }
       const originalASTitle = `[AS] ${asDisplayProjectName}`;
       return {
