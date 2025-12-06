@@ -81,7 +81,7 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "url": "assets/index-BR8EoFHG.css",
     "revision": null
   }, {
-    "url": "assets/index-DjW7U2Dy.js",
+    "url": "assets/index-DTp7qVqV.js",
     "revision": null
   }, {
     "url": "assets/vendor-calendar-DjAQlTCo.js",
@@ -115,7 +115,7 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "revision": "13c8dc084d8e721d3dbb3d62d72ae126"
   }, {
     "url": "index.html",
-    "revision": "1ad0bc1ee9b3973f99eb3d4ba32c00cd"
+    "revision": "7de336856fd49bc384aaebf9e9052364"
   }, {
     "url": "vite.svg",
     "revision": "8e3a10e157f75ada21ab742c022d5430"

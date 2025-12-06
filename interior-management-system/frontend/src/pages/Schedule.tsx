@@ -318,55 +318,41 @@ const CustomEvent = React.memo(({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 인라인 편집 모드일 때 - 실시간 저장 (메모장처럼)
-  if (isEditing && onEditTitleChange && onEditSave && onEditCancel) {
-    const handleChange = (value: string) => {
+  // 인라인 편집 모드일 때 - 기존 디자인 유지하면서 텍스트만 수정
+  const handleEditChange = (value: string) => {
+    if (onEditTitleChange) {
       onEditTitleChange(value);
       // 디바운스: 500ms 후 자동 저장
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current);
       }
       saveTimerRef.current = setTimeout(() => {
-        if (value.trim()) {
+        if (value.trim() && onEditSave) {
           onEditSave();
         }
       }, 500);
-    };
+    }
+  };
 
-    return (
-      <div
-        className="w-full h-full"
-        onClick={(e) => e.stopPropagation()}
-        style={{ minHeight: '28px' }}
-      >
-        <input
-          type="text"
-          value={editTitle || ''}
-          onChange={(e) => handleChange(e.target.value)}
-          onBlur={() => {
-            // blur 시 즉시 저장
-            if (saveTimerRef.current) {
-              clearTimeout(saveTimerRef.current);
-            }
-            if (editTitle?.trim()) {
-              onEditSave();
-            }
-            onEditCancel();
-          }}
-          onKeyDown={(e) => {
-            e.stopPropagation();
-            if (e.key === 'Enter' || e.key === 'Escape') {
-              e.currentTarget.blur();
-            }
-          }}
-          onClick={(e) => e.stopPropagation()}
-          className="w-full h-full px-2 py-0.5 text-xs border-none focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white rounded"
-          autoFocus
-          style={{ minWidth: 0 }}
-        />
-      </div>
-    );
-  }
+  const handleEditBlur = () => {
+    // blur 시 즉시 저장
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+    if (editTitle?.trim() && onEditSave) {
+      onEditSave();
+    }
+    if (onEditCancel) {
+      onEditCancel();
+    }
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (e.key === 'Enter' || e.key === 'Escape') {
+      e.currentTarget.blur();
+    }
+  };
 
   // 태블릿 또는 세로방향 데스크탑에서는 세로 레이아웃으로 표시
   if (useVerticalLayout) {
@@ -468,23 +454,44 @@ const CustomEvent = React.memo(({
           )}
         </div>
 
-        {/* 두번째~세번째 줄: 일정 제목 (2줄까지 표시) */}
-        <div
-          style={{
-            fontWeight: 500,
-            fontSize: isSpecificProject ? '16px' : '11px',
-            lineHeight: '1.3',
-            overflow: 'hidden',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            wordBreak: 'keep-all',
-            textOverflow: 'ellipsis'
-          }}
-          title={event.title}
-        >
-          {event.title}
-        </div>
+        {/* 두번째~세번째 줄: 일정 제목 (2줄까지 표시) 또는 인라인 편집 */}
+        {isEditing ? (
+          <input
+            type="text"
+            value={editTitle || ''}
+            onChange={(e) => handleEditChange(e.target.value)}
+            onBlur={handleEditBlur}
+            onKeyDown={handleEditKeyDown}
+            onClick={(e) => e.stopPropagation()}
+            autoFocus
+            className="w-full bg-transparent border-none outline-none"
+            style={{
+              fontWeight: 500,
+              fontSize: isSpecificProject ? '16px' : '11px',
+              lineHeight: '1.3',
+              color: 'inherit',
+              padding: 0,
+              margin: 0
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              fontWeight: 500,
+              fontSize: isSpecificProject ? '16px' : '11px',
+              lineHeight: '1.3',
+              overflow: 'hidden',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              wordBreak: 'keep-all',
+              textOverflow: 'ellipsis'
+            }}
+            title={event.title}
+          >
+            {event.title}
+          </div>
+        )}
 
         {/* 툴팁 */}
         {showTooltip && (
@@ -529,12 +536,32 @@ const CustomEvent = React.memo(({
             [{shortenProjectName(event.projectName)}]
           </span>
         )}
-        <span
-          className="font-medium truncate"
-          style={{ fontSize: isSpecificProject ? '18px' : '12px' }}
-        >
-          {event.title}
-        </span>
+        {isEditing ? (
+          <input
+            type="text"
+            value={editTitle || ''}
+            onChange={(e) => handleEditChange(e.target.value)}
+            onBlur={handleEditBlur}
+            onKeyDown={handleEditKeyDown}
+            onClick={(e) => e.stopPropagation()}
+            autoFocus
+            className="font-medium bg-transparent border-none outline-none flex-1"
+            style={{
+              fontSize: isSpecificProject ? '18px' : '12px',
+              color: 'inherit',
+              padding: 0,
+              margin: 0,
+              minWidth: 0
+            }}
+          />
+        ) : (
+          <span
+            className="font-medium truncate"
+            style={{ fontSize: isSpecificProject ? '18px' : '12px' }}
+          >
+            {event.title}
+          </span>
+        )}
       </div>
       {attendees.length > 0 && (
         <span
