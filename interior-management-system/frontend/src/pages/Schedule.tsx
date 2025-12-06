@@ -312,8 +312,12 @@ const CustomEvent = React.memo(({
   const isUserInFieldTeam = userNameWithoutSurname && ['재천', '민기'].includes(userNameWithoutSurname);
   const isUserInDesignTeam = userNameWithoutSurname && ['신애', '재성', '재현'].includes(userNameWithoutSurname);
 
-  // 현재 사용자가 담당자인지 확인
-  const isUserAssigned = user?.name && attendees.includes(user.name);
+  // 현재 사용자가 담당자인지 확인 (팀 소속 포함)
+  const isUserAssigned = user?.name && (
+    attendees.includes(user.name) ||
+    (attendees.includes('디자인팀') && isUserInDesignTeam) ||
+    (attendees.includes('현장팀') && isUserInFieldTeam)
+  );
 
   useEffect(() => {
     const handleResize = () => {
