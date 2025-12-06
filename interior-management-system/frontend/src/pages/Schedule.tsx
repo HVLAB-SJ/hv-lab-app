@@ -933,8 +933,13 @@ const Schedule = () => {
   // 모든 이벤트 합치기
   const allEvents = [...scheduleEvents, ...asVisitEvents, ...expectedPaymentEvents];
 
-  // 같은 날, 같은 프로젝트의 일정을 그룹화하는 함수
-  const groupEventsByProjectAndDate = (events: ScheduleEvent[]): ScheduleEvent[] => {
+  // 같은 날, 같은 프로젝트의 일정을 그룹화하는 함수 (전체 프로젝트 보기에서만 병합)
+  const groupEventsByProjectAndDate = (events: ScheduleEvent[], shouldMerge: boolean): ScheduleEvent[] => {
+    // 개별 프로젝트 선택 시에는 병합하지 않고 그대로 반환
+    if (!shouldMerge) {
+      return [...events].sort((a, b) => a.start.getTime() - b.start.getTime());
+    }
+
     const grouped = new Map<string, ScheduleEvent[]>();
 
     events.forEach(event => {
@@ -1008,8 +1013,8 @@ const Schedule = () => {
     });
   };
 
-  // 그룹화 적용
-  const events = groupEventsByProjectAndDate(allEvents);
+  // 그룹화 적용 (전체 프로젝트 보기에서만 병합)
+  const events = groupEventsByProjectAndDate(allEvents, filterProject === 'all');
 
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
