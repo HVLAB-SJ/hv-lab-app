@@ -513,14 +513,24 @@ div.rbc-event.rbc-selected,
 
 .rbc-event:active {
   filter: none !important;
+  background-color: var(--event-bg-color) !important;
 }
 
-/* 일정 호버 시 그라데이션/배경 효과 제거 (모든 모드) */
+/* 일정 호버/포커스/액티브 시 배경 효과 제거 (모든 모드) */
 .rbc-event:hover,
-.rbc-event:focus {
-  background: transparent !important;
+.rbc-event:focus,
+.rbc-event:active,
+.rbc-event.rbc-addons-dnd-dragging,
+.rbc-addons-dnd-dragged-event,
+.rbc-addons-dnd .rbc-event {
   background-image: none !important;
   box-shadow: none !important;
+  filter: none !important;
+}
+
+/* 드래그 중인 이벤트 원본 스타일 유지 */
+.rbc-addons-dnd-drag-preview {
+  opacity: 0 !important;
 }
 
 .rbc-event::before,

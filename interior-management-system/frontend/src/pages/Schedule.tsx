@@ -3356,14 +3356,13 @@ const Schedule = () => {
           />
         )}
 
-        {/* 드래그 프리뷰 - 원본 위치에서 떨어져 나오는 효과 */}
-        {draggingEvent && (
+        {/* 드래그 프리뷰 - 실제로 드래그 중일 때만 표시 */}
+        {draggingEvent && isDragging && (
           <div
             className="fixed pointer-events-none z-[9999]"
             style={{
-              // 드래그 시작 시에는 원본 위치, 이동 중에는 마우스 위치
-              left: isDragging ? dragPosition.x - 50 : dragStartPosition.x,
-              top: isDragging ? dragPosition.y - 15 : dragStartPosition.y,
+              left: dragPosition.x - 50,
+              top: dragPosition.y - 15,
               backgroundColor: draggingEvent.color || '#F3F4F6',
               borderRadius: '6px',
               color: '#1f2937',
