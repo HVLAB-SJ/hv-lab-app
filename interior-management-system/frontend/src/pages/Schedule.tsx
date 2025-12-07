@@ -1520,13 +1520,19 @@ const Schedule = () => {
   const [dragStartPosition, setDragStartPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
 
-  // 드래그 중 마우스 위치 추적
+  // 드래그 중 마우스 위치 추적 (거리 임계값 적용)
+  const dragThreshold = 8; // 최소 8px 이동해야 드래그로 인식
   useEffect(() => {
     if (!draggingEvent) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       setDragPosition({ x: e.clientX, y: e.clientY });
-      setIsDragging(true);
+      // 시작 위치에서 일정 거리 이상 이동해야 드래그로 인식
+      const dx = Math.abs(e.clientX - dragStartPosition.x);
+      const dy = Math.abs(e.clientY - dragStartPosition.y);
+      if (dx > dragThreshold || dy > dragThreshold) {
+        setIsDragging(true);
+      }
     };
 
     const handleMouseUp = () => {
@@ -1541,7 +1547,7 @@ const Schedule = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [draggingEvent]);
+  }, [draggingEvent, dragStartPosition]);
 
   // 삭제 액션 진행 중 플래그 (onSelectEvent 방지용)
   const deleteActionRef = React.useRef<boolean>(false);
@@ -2814,7 +2820,7 @@ const Schedule = () => {
                 draggableAccessor={(event: ScheduleEvent) => filterProject !== 'all' && event.id !== '__inline_add__'}
                 resizable={false}
                 selectable={true}
-                longPressThreshold={0}
+                longPressThreshold={150}
                 eventPropGetter={eventStyleGetter}
                 dayPropGetter={dayPropGetter}
                 components={calendarComponents}
