@@ -2987,7 +2987,7 @@ const Schedule = () => {
                             <p className="text-sm font-semibold text-gray-900 truncate">
                               {event.title}
                             </p>
-                            {event.projectName && (
+                            {event.projectName && filterProject === 'all' && (
                               <p className="text-xs text-gray-600 mt-0.5">
                                 {event.projectName}
                               </p>
