@@ -2077,7 +2077,6 @@ const Schedule = () => {
       setInlineEditEvent(null);
       setInlineEditTitle('');
       setInlineAddDate(null);
-      setInlineAddTitle('');
       // 모달 열기
       setSelectedSlot(slotInfo);
       setSelectedEvent(null);
@@ -2096,7 +2095,6 @@ const Schedule = () => {
     setInlineEditTitle('');
     // 인라인 추가 모드 열기
     setInlineAddDate(slotInfo.start);
-    setInlineAddTitle('');
   };
 
   // 인라인 입력 저장
