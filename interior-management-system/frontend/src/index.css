@@ -2996,6 +2996,19 @@ div.rbc-popup {
 
   body.printing-schedule .rbc-month-row {
     border-bottom: 1px solid #e5e7eb !important;
+    min-height: 120px !important;
+    height: 120px !important;
+    max-height: 120px !important;
+    flex: none !important;
+  }
+
+  /* 날짜 셀 높이 균일화 */
+  body.printing-schedule .rbc-row-content {
+    min-height: 100px !important;
+  }
+
+  body.printing-schedule .rbc-row-segment {
+    flex-basis: 14.2857% !important;
   }
 
   /* 일정 이벤트 스타일 */
