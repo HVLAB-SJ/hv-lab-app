@@ -1528,9 +1528,9 @@ const Schedule = () => {
   const [inlineEditEvent, setInlineEditEvent] = useState<ScheduleEvent | null>(null);
   const [inlineEditTitle, setInlineEditTitle] = useState('');
 
-  // 모바일 길게 누르기 삭제 상태
-  const [longPressDeleteEvent, setLongPressDeleteEvent] = useState<ScheduleEvent | null>(null);
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // 모바일 삭제 모드 상태
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<ScheduleEvent | null>(null);
 
   // 드래그 프리뷰 상태
   const [draggingEvent, setDraggingEvent] = useState<ScheduleEvent | null>(null);
@@ -2898,14 +2898,38 @@ const Schedule = () => {
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => setSelectedDate(null)}
-                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-                >
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <div className="flex items-center gap-1">
+                  {/* 삭제 모드 버튼 - 개별 프로젝트 선택 시에만 표시 */}
+                  {isMobileView && filterProject !== 'all' && (
+                    <button
+                      onClick={() => {
+                        setIsDeleteMode(!isDeleteMode);
+                        setDeleteConfirmEvent(null);
+                      }}
+                      className={`p-1.5 rounded-full transition-colors ${
+                        isDeleteMode
+                          ? 'bg-red-100 text-red-600'
+                          : 'hover:bg-gray-200 text-gray-500'
+                      }`}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSelectedDate(null);
+                      setIsDeleteMode(false);
+                      setDeleteConfirmEvent(null);
+                    }}
+                    className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               {/* 일정 목록 - 날짜별로 그룹핑 */}
@@ -2960,7 +2984,10 @@ const Schedule = () => {
                       const isUnassignedNoProject = !event.color && !shouldHighlight;
 
                       // 삭제 확인 중인 이벤트인지 확인
-                      const isDeleteConfirm = longPressDeleteEvent?.id === event.id;
+                      const isDeleteConfirm = deleteConfirmEvent?.id === event.id;
+
+                      // 삭제 가능한 일정인지 (AS 방문, 수금 일정 제외)
+                      const canDelete = !event.isASVisit && !event.isExpectedPayment;
 
                       return (
                         <div
@@ -2968,6 +2995,13 @@ const Schedule = () => {
                           onClick={() => {
                             // 삭제 확인 중이면 클릭 무시
                             if (isDeleteConfirm) return;
+
+                            // 삭제 모드일 때
+                            if (isDeleteMode && canDelete) {
+                              setDeleteConfirmEvent(event);
+                              return;
+                            }
+
                             // 원본 제목을 사용하여 이벤트 선택
                             const eventWithOriginalTitle = {
                               ...event,
@@ -2975,52 +3009,28 @@ const Schedule = () => {
                             };
                             onSelectEvent(eventWithOriginalTitle);
                           }}
-                          onTouchStart={(e) => {
-                            // 개별 프로젝트 선택 시에만 길게 누르기 삭제 활성화
-                            // AS 방문, 수금 일정은 제외
-                            if (filterProject === 'all' || event.isASVisit || event.isExpectedPayment) return;
-
-                            longPressTimerRef.current = setTimeout(() => {
-                              // 진동 피드백 (지원되는 경우)
-                              if (navigator.vibrate) {
-                                navigator.vibrate(50);
-                              }
-                              setLongPressDeleteEvent(event);
-                            }, 500); // 500ms 길게 누르기
-                          }}
-                          onTouchEnd={() => {
-                            if (longPressTimerRef.current) {
-                              clearTimeout(longPressTimerRef.current);
-                              longPressTimerRef.current = null;
-                            }
-                          }}
-                          onTouchMove={() => {
-                            // 터치 이동 시 길게 누르기 취소
-                            if (longPressTimerRef.current) {
-                              clearTimeout(longPressTimerRef.current);
-                              longPressTimerRef.current = null;
-                            }
-                          }}
                           className={`p-3 transition-colors cursor-pointer ${
                             isDeleteConfirm
                               ? 'bg-red-50'
+                              : isDeleteMode && canDelete
+                              ? 'bg-red-50/50 hover:bg-red-100 active:bg-red-200'
                               : shouldHighlight
                               ? 'bg-yellow-50 hover:bg-yellow-100 active:bg-yellow-200'
                               : isUnassignedNoProject
                               ? 'hover:bg-purple-50 active:bg-purple-100'
                               : 'hover:bg-gray-50 active:bg-gray-100'
                           }`}
-                          style={isUnassignedNoProject && !isDeleteConfirm ? { backgroundColor: '#f3f0f5' } : undefined}
+                          style={isUnassignedNoProject && !isDeleteConfirm && !isDeleteMode ? { backgroundColor: '#f3f0f5' } : undefined}
                         >
                         {isDeleteConfirm ? (
                           // 삭제 확인 UI
                           <div className="flex items-center justify-between">
-                            <p className="text-sm text-red-600 font-medium">'{event.title}' 삭제?</p>
-                            <div className="flex gap-2">
+                            <p className="text-sm text-red-600 font-medium truncate flex-1">삭제?</p>
+                            <div className="flex gap-2 flex-shrink-0">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setLongPressDeleteEvent(null);
+                                  setDeleteConfirmEvent(null);
                                 }}
                                 className="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg active:bg-gray-200"
                               >
@@ -3031,21 +3041,29 @@ const Schedule = () => {
                                   e.stopPropagation();
                                   try {
                                     await deleteScheduleFromAPI(event.id);
-                                    toast.success('일정이 삭제되었습니다');
+                                    toast.success('삭제됨');
                                   } catch (error) {
                                     console.error('일정 삭제 실패:', error);
-                                    toast.error('삭제에 실패했습니다');
+                                    toast.error('삭제 실패');
                                   }
-                                  setLongPressDeleteEvent(null);
+                                  setDeleteConfirmEvent(null);
                                 }}
                                 className="px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-lg active:bg-red-600"
                               >
-                                삭제
+                                확인
                               </button>
                             </div>
                           </div>
                         ) : (
                         <div className="flex items-start gap-2">
+                          {/* 삭제 모드일 때 삭제 아이콘 표시 */}
+                          {isDeleteMode && canDelete && (
+                            <div className="flex-shrink-0 text-red-400">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </div>
+                          )}
                           <div
                             className="w-1 h-full rounded-full flex-shrink-0"
                             style={{
@@ -3079,9 +3097,11 @@ const Schedule = () => {
                               </p>
                             )}
                           </div>
-                          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
+                          {!isDeleteMode && (
+                            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          )}
                         </div>
                         )}
                       </div>
