@@ -37,6 +37,7 @@ const createDrawingsTable = require('./server/migrations/create-drawings-table')
 const addPaymentImagesColumn = require('./server/migrations/add-payment-images-column');
 const addExecutionRecordsTable = require('./server/migrations/add-execution-records-table');
 const addExecutionRecordImages = require('./server/migrations/add-execution-record-images');
+const createProcessesTable = require('./server/migrations/create-processes-table');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
@@ -57,6 +58,8 @@ addExecutionRecordsTable(require('./server/config/database').db).catch(console.e
 setTimeout(() => {
   addExecutionRecordImages(require('./server/config/database').db).catch(console.error);
 }, 500);
+// 공정 테이블 생성
+createProcessesTable().catch(console.error);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
@@ -150,6 +153,7 @@ const finishCheckRoutes = require('./server/routes/finish-check');
 const siteLogsRoutes = require('./server/routes/siteLogs');
 const drawingsRoutes = require('./server/routes/drawings');
 const executionRecordsRoutes = require('./server/routes/executionRecords');
+const processesRoutes = require('./server/routes/processes');
 
 // API 라우트 설정
 app.use('/api/auth', authRoutes);
@@ -173,6 +177,7 @@ app.use('/api/estimate-preview', estimatePreviewRoutes); // 가견적서 라우�
 app.use('/api/site-logs', siteLogsRoutes); // 현장일지 라우트 추가
 app.use('/api/drawings', drawingsRoutes); // 도면 라우트 추가
 app.use('/api/execution-records', executionRecordsRoutes); // 실행내역 라우트 추가
+app.use('/api/processes', processesRoutes); // 공정 목록 라우트 추가
 
 
 // 로그인 페이지 라우트

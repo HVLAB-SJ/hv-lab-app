@@ -14,8 +14,16 @@ import { formatTimeKorean } from '../utils/formatters';
 // 드래그앤드롭 캘린더 컴포넌트
 const DragAndDropCalendar = withDragAndDrop(Calendar);
 
-// 공정 목록 (드래그앤드롭용)
-const PROCESS_LIST = [
+// 공정 타입 정의
+interface ProcessItem {
+  id: number;
+  name: string;
+  sort_order: number;
+  is_active: number;
+}
+
+// 기본 공정 목록 (API 로딩 실패 시 fallback)
+const DEFAULT_PROCESS_LIST = [
   '현장점검', '가설', '철거', '방수', '단열', '설비', '전기배선', '인터넷선',
   '에어컨배관', '전열교환기', '소방', '창호', '현관문교체', '목공', '조명타공',
   '금속', '타일', '도장', '마루', '필름', '도배', '중문', '가구', '상판',
@@ -101,11 +109,28 @@ const InlineAddInput = React.memo(({
 }) => {
   const [localTitle, setLocalTitle] = useState('');
 
+  // 세로 레이아웃 감지 (태블릿 또는 세로방향 데스크탑)
+  const checkVerticalLayout = () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    return (width >= 768 && width < 1024) || (width >= 1024 && height > width);
+  };
+  const [useVerticalLayout, setUseVerticalLayout] = useState(checkVerticalLayout);
+
+  useEffect(() => {
+    const handleResize = () => setUseVerticalLayout(checkVerticalLayout());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // 최종 표시와 동일한 폰트 크기 사용
+  const fontSize = useVerticalLayout ? '16px' : '18px';
+
   return (
     <div
       className="w-full"
       onClick={(e) => e.stopPropagation()}
-      style={{ padding: '4px 3px', minHeight: '32px' }}
+      style={{ padding: useVerticalLayout ? '4px 3px' : '10px 0', minHeight: useVerticalLayout ? '32px' : '40px' }}
     >
       <input
         type="text"
@@ -135,12 +160,12 @@ const InlineAddInput = React.memo(({
         className="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0"
         autoFocus
         style={{
-          fontSize: '13px',
+          fontSize: fontSize,
           fontWeight: 500,
           color: '#374151',
           padding: 0,
           margin: 0,
-          lineHeight: '1.4',
+          lineHeight: '1.3',
           caretColor: '#374151'
         }}
       />
@@ -775,6 +800,111 @@ const Schedule = () => {
       toast.error('일정을 불러오는데 실패했습니다');
     });
   }, [loadSchedulesFromAPI]);
+
+  // 공정 목록 상태
+  const [processList, setProcessList] = useState<ProcessItem[]>([]);
+  const [showProcessModal, setShowProcessModal] = useState(false);
+  const [newProcessName, setNewProcessName] = useState('');
+  const [editingProcess, setEditingProcess] = useState<ProcessItem | null>(null);
+  const [editProcessName, setEditProcessName] = useState('');
+
+  // API 기본 URL
+  const API_BASE = import.meta.env.VITE_API_URL || '';
+
+  // 공정 목록 불러오기
+  const loadProcessList = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/processes`);
+      if (response.ok) {
+        const data = await response.json();
+        setProcessList(data);
+      } else {
+        console.error('공정 목록 로딩 실패');
+      }
+    } catch (error) {
+      console.error('공정 목록 로딩 오류:', error);
+    }
+  }, [API_BASE]);
+
+  // 공정 목록 로딩
+  useEffect(() => {
+    loadProcessList();
+  }, [loadProcessList]);
+
+  // 공정 목록 (이름만 추출)
+  const PROCESS_LIST = useMemo(() => {
+    if (processList.length > 0) {
+      return processList.map(p => p.name);
+    }
+    return DEFAULT_PROCESS_LIST;
+  }, [processList]);
+
+  // 공정 추가
+  const handleAddProcess = async () => {
+    if (!newProcessName.trim()) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/processes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newProcessName.trim() })
+      });
+      if (response.ok) {
+        setNewProcessName('');
+        loadProcessList();
+        toast.success('공정이 추가되었습니다');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || '공정 추가 실패');
+      }
+    } catch (error) {
+      console.error('공정 추가 오류:', error);
+      toast.error('공정 추가 실패');
+    }
+  };
+
+  // 공정 수정
+  const handleUpdateProcess = async () => {
+    if (!editingProcess || !editProcessName.trim()) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/processes/${editingProcess.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editProcessName.trim() })
+      });
+      if (response.ok) {
+        setEditingProcess(null);
+        setEditProcessName('');
+        loadProcessList();
+        toast.success('공정이 수정되었습니다');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || '공정 수정 실패');
+      }
+    } catch (error) {
+      console.error('공정 수정 오류:', error);
+      toast.error('공정 수정 실패');
+    }
+  };
+
+  // 공정 삭제
+  const handleDeleteProcess = async (processId: number) => {
+    if (!confirm('정말 이 공정을 삭제하시겠습니까?')) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/processes/${processId}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        loadProcessList();
+        toast.success('공정이 삭제되었습니다');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || '공정 삭제 실패');
+      }
+    } catch (error) {
+      console.error('공정 삭제 오류:', error);
+      toast.error('공정 삭제 실패');
+    }
+  };
 
   // 프로젝트별 색상 매핑
   const getProjectColor = (projectName: string) => {
@@ -2527,6 +2657,16 @@ const Schedule = () => {
             {filterProject !== 'all' && !isMobileView && (
               <div className="hidden lg:block flex-shrink-0">
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-2 sticky top-4">
+                  {/* 설정 버튼 */}
+                  <button
+                    onClick={() => setShowProcessModal(true)}
+                    className="w-full mb-2 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                    </svg>
+                    공정 관리
+                  </button>
                   <div className="flex flex-col gap-0.5">
                     {PROCESS_LIST.map((process) => (
                       <div
@@ -2956,6 +3096,114 @@ const Schedule = () => {
             }}
           >
             {draggingEvent.originalTitle || draggingEvent.title}
+          </div>
+        )}
+
+        {/* 공정 관리 모달 */}
+        {showProcessModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden">
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-lg font-semibold">공정 관리</h2>
+                <button
+                  onClick={() => {
+                    setShowProcessModal(false);
+                    setEditingProcess(null);
+                    setNewProcessName('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* 새 공정 추가 */}
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newProcessName}
+                    onChange={(e) => setNewProcessName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddProcess()}
+                    placeholder="새 공정명 입력"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <button
+                    onClick={handleAddProcess}
+                    className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    추가
+                  </button>
+                </div>
+              </div>
+
+              {/* 공정 목록 */}
+              <div className="p-4 overflow-y-auto max-h-[50vh]">
+                <div className="space-y-2">
+                  {processList.map((process) => (
+                    <div
+                      key={process.id}
+                      className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
+                    >
+                      {editingProcess?.id === process.id ? (
+                        <>
+                          <input
+                            type="text"
+                            value={editProcessName}
+                            onChange={(e) => setEditProcessName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleUpdateProcess();
+                              if (e.key === 'Escape') {
+                                setEditingProcess(null);
+                                setEditProcessName('');
+                              }
+                            }}
+                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleUpdateProcess}
+                            className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                          >
+                            저장
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingProcess(null);
+                              setEditProcessName('');
+                            }}
+                            className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
+                          >
+                            취소
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="flex-1 text-sm">{process.name}</span>
+                          <button
+                            onClick={() => {
+                              setEditingProcess(process);
+                              setEditProcessName(process.name);
+                            }}
+                            className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300"
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProcess(process.id)}
+                            className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded hover:bg-red-200"
+                          >
+                            삭제
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
