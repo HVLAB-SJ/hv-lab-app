@@ -1060,7 +1060,7 @@ const EstimatePreview: React.FC = () => {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">줄눈</label>
                   <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                    {['스트라이크에보(친환경 에폭시)', '케라폭시(에폭시)', '푸가벨라', 'FG8(수입 고탄성 줄눈)', 'FG4(아덱스 줄눈)'].map(item => (
+                    {['에폭시줄눈', '시멘트줄눈(일반)'].map(item => (
                       <label key={item} className="flex items-center text-sm whitespace-nowrap cursor-pointer">
                         <input
                           type="checkbox"
