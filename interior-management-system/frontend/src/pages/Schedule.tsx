@@ -688,6 +688,7 @@ const Schedule = () => {
   const {
     schedules,
     setSchedules,
+    addSchedule,
     loadSchedulesFromAPI,
     addScheduleToAPI,
     updateScheduleInAPI,
@@ -3032,8 +3033,9 @@ const Schedule = () => {
                           // 선택된 날짜에 해당 공정으로 일정 추가
                           const targetDate = selectedDate || new Date();
                           if (filterProject !== 'all') {
+                            const tempId = 'temp_' + Date.now().toString() + Math.random().toString(36).substr(2, 9);
                             const newSchedule: Schedule = {
-                              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                              id: tempId,
                               title: processName,
                               start: targetDate,
                               end: targetDate,
@@ -3042,9 +3044,17 @@ const Schedule = () => {
                               type: 'construction'
                             };
 
-                            // API 호출 (addScheduleToAPI 내부에서 자동으로 스토어 업데이트)
-                            addScheduleToAPI(newSchedule).catch(error => {
+                            // 즉시 로컬에 추가 (낙관적 업데이트)
+                            addSchedule(newSchedule);
+
+                            // 백그라운드에서 API 호출 후 임시 항목 제거 (API가 자동으로 새 항목 추가)
+                            addScheduleToAPI(newSchedule).then(() => {
+                              // API 성공 시 임시 항목 제거 (API가 새 ID로 추가함)
+                              setSchedules(schedules.filter(s => s.id !== tempId));
+                            }).catch(error => {
                               console.error('일정 추가 실패:', error);
+                              // 실패 시 임시 항목 제거
+                              setSchedules(schedules.filter(s => s.id !== tempId));
                             });
                           }
                         }}
