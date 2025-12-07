@@ -2796,7 +2796,7 @@ const Schedule = () => {
           <div className="flex gap-3">
             {/* 공정 사이드바 (프로젝트 선택 시에만 표시, 데스크톱만) */}
             {filterProject !== 'all' && !isMobileView && (
-              <div className="hidden lg:block flex-shrink-0">
+              <div className="hidden lg:block flex-shrink-0 print-hide">
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-2 sticky top-4">
                   {/* 설정 버튼 */}
                   <button

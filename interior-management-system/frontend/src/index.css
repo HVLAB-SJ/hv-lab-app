@@ -2882,7 +2882,18 @@ div.rbc-popup {
 }
 
 /* ===== 일정표 인쇄 전용 스타일 ===== */
+/* 일정표 인쇄 시 페이지 설정: A3 가로, 여백 없음 */
+@page schedule {
+  size: A3 landscape;
+  margin: 0;
+}
+
 @media print {
+  /* 일정표 인쇄 모드일 때 해당 페이지 사용 */
+  body.printing-schedule {
+    page: schedule;
+  }
+
   /* 일정표 인쇄 모드일 때 모든 기본 숨김 해제 */
   body.printing-schedule,
   body.printing-schedule * {
@@ -2901,7 +2912,7 @@ div.rbc-popup {
     overflow: visible !important;
   }
 
-  /* 일정표 인쇄 시 숨길 요소들 */
+  /* 일정표 인쇄 시 숨길 요소들 (좌측 공정 사이드바, 버튼 등) */
   body.printing-schedule .print-hide,
   body.printing-schedule nav,
   body.printing-schedule aside,
@@ -2910,7 +2921,8 @@ div.rbc-popup {
   body.printing-schedule .public-process-sidebar,
   body.printing-schedule .process-button-container,
   body.printing-schedule .inline-add-input,
-  body.printing-schedule .fixed.inset-0 {
+  body.printing-schedule .fixed.inset-0,
+  body.printing-schedule .schedule-events-list {
     display: none !important;
     visibility: hidden !important;
   }
