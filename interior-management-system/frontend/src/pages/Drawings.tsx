@@ -986,7 +986,7 @@ const Drawings = () => {
               <select
                 value={selectedProject}
                 onChange={(e) => setSelectedProject(e.target.value)}
-                className="input w-full"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 {user?.name !== '안팀' && <option value="">프로젝트를 선택하세요</option>}
                 {projects
@@ -1010,7 +1010,7 @@ const Drawings = () => {
                       value={naverTypeSqm}
                       onChange={(e) => setNaverTypeSqm(e.target.value)}
                       placeholder="예: 136E"
-                      className="input w-28 h-[42px]"
+                      className="w-28 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
                     />
                     <span className="text-sm font-medium text-gray-700">㎡</span>
                   </div>
@@ -1021,7 +1021,7 @@ const Drawings = () => {
                       value={naverTypePyeong}
                       onChange={(e) => setNaverTypePyeong(e.target.value)}
                       placeholder="예: 41E"
-                      className="input w-24 h-[42px]"
+                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
                     />
                     <span className="text-sm font-medium text-gray-700">평</span>
                   </div>
@@ -1033,7 +1033,7 @@ const Drawings = () => {
                     value={naverArea}
                     onChange={(e) => setNaverArea(e.target.value)}
                     placeholder="예: 136.21㎡/101.97㎡(전용률 75%)"
-                    className="input w-80 h-[42px]"
+                    className="w-80 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
                   />
                 </div>
               </>
