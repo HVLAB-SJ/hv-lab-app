@@ -994,24 +994,12 @@ const Schedule = () => {
 
       // 사용자 일정 여부 확인 (여기서 직접 확인)
       const attendees = schedule.attendees || [];
-      const isUserSchedule = attendees.includes('상준') ||  // 직접 "상준" 체크
-                             attendees.includes(user?.name || '') ||  // 전체 이름 체크
-                             (userNameWithoutSurname && attendees.includes(userNameWithoutSurname));  // 짧은 이름 체크
-
-      // 사용자 일정은 시작 시간을 6시간 앞당김
-      const adjustedStart = isUserSchedule
-        ? new Date(schedule.start.getTime() - 21600000)  // 6시간 빼기
-        : schedule.start;
-
-      if (isUserSchedule) {
-        console.log(`✅ User schedule found: ${schedule.title}, attendees:`, attendees);
-      }
 
       return {
         id: schedule.id,
         title: schedule.title + timeText,
         originalTitle: schedule.title,  // 원본 제목 저장
-        start: adjustedStart,  // 조정된 시작 시간 사용
+        start: schedule.start,
         end: schedule.end,
         projectId: project?.id || '',
         projectName: displayProjectName || '',
