@@ -1676,7 +1676,7 @@ const Schedule = () => {
         type: 'construction',
         project: filterProject,
         location: '',
-        attendees: [],
+        attendees: user?.name ? [user.name] : [],
         description: ''
       });
       await loadSchedulesFromAPI();
@@ -1689,7 +1689,7 @@ const Schedule = () => {
         isProcessingDropRef.current = false;
       }, 500);
     }
-  }, [filterProject, addScheduleToAPI, loadSchedulesFromAPI]);
+  }, [filterProject, addScheduleToAPI, loadSchedulesFromAPI, user]);
 
   // 외부에서 드래그해서 캘린더에 드롭할 때 핸들러
   const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
@@ -1732,7 +1732,7 @@ const Schedule = () => {
         type: 'construction',
         project: filterProject,
         location: '',
-        attendees: [],
+        attendees: user?.name ? [user.name] : [],
         description: ''
       });
       loadSchedulesFromAPI();
@@ -1742,7 +1742,7 @@ const Schedule = () => {
     }
 
     setInlineAddDate(null);
-  }, [inlineAddDate, filterProject, addScheduleToAPI, loadSchedulesFromAPI]);
+  }, [inlineAddDate, filterProject, addScheduleToAPI, loadSchedulesFromAPI, user]);
 
   // 인라인 추가 취소
   const handleInlineAddCancel = useCallback(() => {
