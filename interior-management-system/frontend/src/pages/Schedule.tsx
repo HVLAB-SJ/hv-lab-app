@@ -1528,6 +1528,10 @@ const Schedule = () => {
   const [inlineEditEvent, setInlineEditEvent] = useState<ScheduleEvent | null>(null);
   const [inlineEditTitle, setInlineEditTitle] = useState('');
 
+  // 모바일 길게 누르기 삭제 상태
+  const [longPressDeleteEvent, setLongPressDeleteEvent] = useState<ScheduleEvent | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // 드래그 프리뷰 상태
   const [draggingEvent, setDraggingEvent] = useState<ScheduleEvent | null>(null);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -2955,10 +2959,15 @@ const Schedule = () => {
                       // 프로젝트가 없고 사용자에게 할당되지 않은 경우
                       const isUnassignedNoProject = !event.color && !shouldHighlight;
 
+                      // 삭제 확인 중인 이벤트인지 확인
+                      const isDeleteConfirm = longPressDeleteEvent?.id === event.id;
+
                       return (
                         <div
                           key={event.id}
                           onClick={() => {
+                            // 삭제 확인 중이면 클릭 무시
+                            if (isDeleteConfirm) return;
                             // 원본 제목을 사용하여 이벤트 선택
                             const eventWithOriginalTitle = {
                               ...event,
@@ -2966,15 +2975,76 @@ const Schedule = () => {
                             };
                             onSelectEvent(eventWithOriginalTitle);
                           }}
+                          onTouchStart={(e) => {
+                            // 개별 프로젝트 선택 시에만 길게 누르기 삭제 활성화
+                            // AS 방문, 수금 일정은 제외
+                            if (filterProject === 'all' || event.isASVisit || event.isExpectedPayment) return;
+
+                            longPressTimerRef.current = setTimeout(() => {
+                              // 진동 피드백 (지원되는 경우)
+                              if (navigator.vibrate) {
+                                navigator.vibrate(50);
+                              }
+                              setLongPressDeleteEvent(event);
+                            }, 500); // 500ms 길게 누르기
+                          }}
+                          onTouchEnd={() => {
+                            if (longPressTimerRef.current) {
+                              clearTimeout(longPressTimerRef.current);
+                              longPressTimerRef.current = null;
+                            }
+                          }}
+                          onTouchMove={() => {
+                            // 터치 이동 시 길게 누르기 취소
+                            if (longPressTimerRef.current) {
+                              clearTimeout(longPressTimerRef.current);
+                              longPressTimerRef.current = null;
+                            }
+                          }}
                           className={`p-3 transition-colors cursor-pointer ${
-                            shouldHighlight
+                            isDeleteConfirm
+                              ? 'bg-red-50'
+                              : shouldHighlight
                               ? 'bg-yellow-50 hover:bg-yellow-100 active:bg-yellow-200'
                               : isUnassignedNoProject
                               ? 'hover:bg-purple-50 active:bg-purple-100'
                               : 'hover:bg-gray-50 active:bg-gray-100'
                           }`}
-                          style={isUnassignedNoProject ? { backgroundColor: '#f3f0f5' } : undefined}
+                          style={isUnassignedNoProject && !isDeleteConfirm ? { backgroundColor: '#f3f0f5' } : undefined}
                         >
+                        {isDeleteConfirm ? (
+                          // 삭제 확인 UI
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-red-600 font-medium">'{event.title}' 삭제?</p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setLongPressDeleteEvent(null);
+                                }}
+                                className="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg active:bg-gray-200"
+                              >
+                                취소
+                              </button>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await deleteScheduleFromAPI(event.id);
+                                    toast.success('일정이 삭제되었습니다');
+                                  } catch (error) {
+                                    console.error('일정 삭제 실패:', error);
+                                    toast.error('삭제에 실패했습니다');
+                                  }
+                                  setLongPressDeleteEvent(null);
+                                }}
+                                className="px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-lg active:bg-red-600"
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
                         <div className="flex items-start gap-2">
                           <div
                             className="w-1 h-full rounded-full flex-shrink-0"
@@ -3013,6 +3083,7 @@ const Schedule = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </div>
+                        )}
                       </div>
                       );
                             })}
