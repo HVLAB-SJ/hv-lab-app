@@ -512,7 +512,7 @@ div.rbc-event.rbc-selected,
 }
 
 .rbc-event:active {
-  filter: brightness(0.9) !important;
+  filter: none !important;
 }
 
 /* 일정 호버 시 그라데이션/배경 효과 제거 (모든 모드) */

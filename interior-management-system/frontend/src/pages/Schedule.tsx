@@ -2035,14 +2035,19 @@ const Schedule = () => {
     eventClickTimerRef.current = setTimeout(() => {
       eventClickedRef.current = false;
       eventClickTimerRef.current = null;
-    }, 1500);
+    }, 300);
   };
 
   // 빈 슬롯 선택 (날짜 선택)
   const onSelectSlot = (slotInfo: { start: Date; end: Date; action: string }) => {
-    // 이벤트가 방금 클릭되었다면 슬롯 선택 무시
-    if (eventClickedRef.current) {
+    // 이벤트가 방금 클릭되었다면 슬롯 선택 무시 (개별 프로젝트만)
+    // 전체 프로젝트에서는 항상 모달이 열려야 함
+    if (eventClickedRef.current && filterProject !== 'all') {
       return;
+    }
+    // 전체 프로젝트 모드에서는 플래그 초기화
+    if (filterProject === 'all') {
+      eventClickedRef.current = false;
     }
 
     // 공정 드롭 직후라면 슬롯 선택 무시 (인라인 모드 방지)
