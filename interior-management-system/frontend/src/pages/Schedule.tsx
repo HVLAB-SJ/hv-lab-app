@@ -2903,7 +2903,7 @@ const Schedule = () => {
               </div>
 
               {/* 일정 목록 - 날짜별로 그룹핑 */}
-              <div className="max-h-[35vh] overflow-y-auto">
+              <div className="max-h-[25vh] overflow-y-auto">
                 {selectedDateEvents.length === 0 ? (
                   <div className="p-4 text-center">
                     <p className="text-sm text-gray-500">일정이 없습니다</p>
@@ -3019,6 +3019,55 @@ const Schedule = () => {
                   </div>
                 )}
               </div>
+
+              {/* 모바일 공정 버튼들 - 개별 프로젝트 선택 시에만 표시 */}
+              {isMobileView && filterProject !== 'all' && (
+                <div className="border-t border-gray-200 p-3 bg-gray-50">
+                  <p className="text-xs font-medium text-gray-500 mb-2">공정을 탭하여 일정 추가</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {processList.map((process) => (
+                      <button
+                        key={process}
+                        onClick={() => {
+                          // 선택된 날짜에 해당 공정으로 일정 추가
+                          if (selectedDate && filterProject !== 'all') {
+                            const newSchedule: Partial<ScheduleEvent> = {
+                              title: process,
+                              start: selectedDate,
+                              end: selectedDate,
+                              projectName: filterProject,
+                              color: projects.find(p => p.name === filterProject)?.color || '#6b7280',
+                              assignedTo: []
+                            };
+
+                            // 일정 저장
+                            (async () => {
+                              try {
+                                await addScheduleToAPI({
+                                  title: process,
+                                  start: selectedDate,
+                                  end: selectedDate,
+                                  projectName: filterProject,
+                                  color: projects.find(p => p.name === filterProject)?.color || '#6b7280',
+                                  assignedTo: []
+                                });
+                                await loadSchedulesFromAPI();
+                                toast.success(`'${process}' 일정이 추가되었습니다`);
+                              } catch (error) {
+                                console.error('일정 추가 실패:', error);
+                                toast.error('일정 추가에 실패했습니다');
+                              }
+                            })();
+                          }
+                        }}
+                        className="px-2.5 py-1.5 text-xs rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors font-medium"
+                      >
+                        {process}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
