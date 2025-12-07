@@ -481,11 +481,11 @@
   visibility: hidden !important;
 }
 
-/* 드래그 중인 원본 이벤트 숨김 (커스텀 프리뷰 사용) */
+/* 드래그 중인 원본 이벤트 완전히 숨김 (커스텀 프리뷰가 대신 표시) */
 .rbc-addons-dnd-dragged-event,
 .rbc-event.rbc-addons-dnd-dragged-event {
-  opacity: 0.3 !important;
-  background-color: var(--event-bg-color) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 /* 선택된 셀과 이벤트의 배경색 변경 방지 - 최우선순위 */
