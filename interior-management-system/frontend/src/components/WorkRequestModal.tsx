@@ -161,40 +161,42 @@ const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) =
 
           {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
+            <div className="relative min-w-0">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 요청일 *
               </label>
               <input
                 {...register('requestDate', { required: '요청일을 선택하세요' })}
                 type="date"
-                className="w-full px-3 py-2 border rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer text-gray-900"
+                className="w-full px-3 py-2 border rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer text-gray-900 box-border"
                 style={{
                   WebkitAppearance: 'none',
                   MozAppearance: 'none',
                   appearance: 'none',
                   backgroundColor: 'white',
-                  backgroundImage: 'none'
+                  backgroundImage: 'none',
+                  maxWidth: '100%'
                 }}
               />
               {errors.requestDate && (
                 <p className="mt-1 text-sm text-red-600">{String(errors.requestDate.message)}</p>
               )}
             </div>
-            <div className="relative">
+            <div className="relative min-w-0">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 마감일 *
               </label>
               <input
                 {...register('dueDate', { required: '마감일을 선택하세요' })}
                 type="date"
-                className="w-full px-3 py-2 border rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer text-gray-900"
+                className="w-full px-3 py-2 border rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer text-gray-900 box-border"
                 style={{
                   WebkitAppearance: 'none',
                   MozAppearance: 'none',
                   appearance: 'none',
                   backgroundColor: 'white',
-                  backgroundImage: 'none'
+                  backgroundImage: 'none',
+                  maxWidth: '100%'
                 }}
               />
               {errors.dueDate && (
