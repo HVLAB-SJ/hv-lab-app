@@ -3028,13 +3028,12 @@ const Schedule = () => {
                     {PROCESS_LIST.map((processName) => (
                       <button
                         key={processName}
-                        onClick={async () => {
+                        onClick={() => {
                           // 선택된 날짜에 해당 공정으로 일정 추가
                           const targetDate = selectedDate || new Date();
                           if (filterProject !== 'all') {
-                            const newScheduleId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
                             const newSchedule: Schedule = {
-                              id: newScheduleId,
+                              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
                               title: processName,
                               start: targetDate,
                               end: targetDate,
@@ -3043,14 +3042,9 @@ const Schedule = () => {
                               type: 'construction'
                             };
 
-                            // 낙관적 업데이트: 즉시 UI에 반영
-                            setSchedules([...schedules, newSchedule]);
-
-                            // 백그라운드에서 API 호출
+                            // API 호출 (addScheduleToAPI 내부에서 자동으로 스토어 업데이트)
                             addScheduleToAPI(newSchedule).catch(error => {
                               console.error('일정 추가 실패:', error);
-                              // 실패 시 롤백
-                              setSchedules(schedules.filter(s => s.id !== newScheduleId));
                             });
                           }
                         }}
