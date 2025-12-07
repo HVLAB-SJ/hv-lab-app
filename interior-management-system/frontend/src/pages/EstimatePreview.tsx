@@ -615,9 +615,6 @@ const EstimatePreview: React.FC = () => {
 
               {/* 마감재 섹션 */}
               <div>
-                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
-                  마감재 선택
-                </h3>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -699,9 +696,6 @@ const EstimatePreview: React.FC = () => {
 
               {/* 공사 범위 섹션 */}
               <div>
-                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
-                  공사 범위
-                </h3>
                 <div className="space-y-3">
                   <div className="space-y-3">
                     <div>
@@ -879,9 +873,6 @@ const EstimatePreview: React.FC = () => {
 
               {/* 가구 공사 섹션 */}
               <div>
-                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
-                  가구 공사
-                </h3>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -969,9 +960,6 @@ const EstimatePreview: React.FC = () => {
 
               {/* 전기/조명 섹션 */}
               <div>
-                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
-                  전기/조명
-                </h3>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -1098,9 +1086,6 @@ const EstimatePreview: React.FC = () => {
 
               {/* 기타 마감 섹션 */}
               <div>
-                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
-                  기타 마감
-                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -1143,9 +1128,6 @@ const EstimatePreview: React.FC = () => {
 
               {/* 화장실 상세 섹션 */}
               <div>
-                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
-                  화장실 상세
-                </h3>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">
