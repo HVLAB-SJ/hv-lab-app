@@ -323,7 +323,7 @@ const Layout = () => {
       {/* Main content */}
       <div className="main-content lg:pl-64">
         {/* Top header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 print-hide">
           <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
             {/* Left side - Mobile: menu button + title, Desktop: page title */}
             <div className="flex items-center space-x-3">
