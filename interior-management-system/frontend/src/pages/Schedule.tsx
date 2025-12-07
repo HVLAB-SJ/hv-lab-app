@@ -3033,24 +3033,24 @@ const Schedule = () => {
                           const targetDate = selectedDate || new Date();
                           if (filterProject !== 'all') {
                             const newScheduleId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-                            const newSchedule = {
+                            const newSchedule: Schedule = {
                               id: newScheduleId,
                               title: processName,
                               start: targetDate,
                               end: targetDate,
                               project: filterProject,
                               attendees: user?.name ? [user.name] : [],
-                              type: 'construction' as const
+                              type: 'construction'
                             };
 
                             // 낙관적 업데이트: 즉시 UI에 반영
-                            setSchedules(prev => [...prev, newSchedule]);
+                            setSchedules([...schedules, newSchedule]);
 
                             // 백그라운드에서 API 호출
                             addScheduleToAPI(newSchedule).catch(error => {
                               console.error('일정 추가 실패:', error);
                               // 실패 시 롤백
-                              setSchedules(prev => prev.filter(s => s.id !== newScheduleId));
+                              setSchedules(schedules.filter(s => s.id !== newScheduleId));
                             });
                           }
                         }}
