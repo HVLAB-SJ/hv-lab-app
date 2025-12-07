@@ -2838,9 +2838,12 @@ const Schedule = () => {
             <div
               className={`schedule-calendar bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm calendar-container flex-1 ${filterProject !== 'all' ? 'specific-project-view' : ''}`}
               style={{ paddingBottom: 0 }}
+              onClick={(e) => {
+                console.log('📌 캘린더 컨테이너 클릭됨', e.target, 'filterProject:', filterProject);
+              }}
             >
               <DragAndDropCalendar
-                key={`calendar-${selectedDate?.getTime() || 'no-selection'}`}
+                key={`calendar-${filterProject}-${selectedDate?.getTime() || 'no-selection'}`}
                 localizer={localizer}
                 events={filteredEvents}
                 startAccessor="start"
