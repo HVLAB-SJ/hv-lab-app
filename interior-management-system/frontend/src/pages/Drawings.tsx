@@ -1136,44 +1136,42 @@ const Drawings = () => {
           {/* 중앙: 작업 영역 */}
           <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* 모바일에서 네이버 도면 입력 필드 */}
+              {/* 모바일에서 네이버 도면 입력 필드 - 컴팩트 한 줄 레이아웃 */}
               {selectedDrawingType === '네이버도면' && selectedProject && (
-                <div className="md:hidden bg-white border-b px-3 py-3">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 block">평면도 타입</label>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="text"
-                            value={naverTypeSqm}
-                            onChange={(e) => setNaverTypeSqm(e.target.value)}
-                            placeholder="136E"
-                            className="input w-24 h-[36px] text-sm"
-                          />
-                          <span className="text-xs font-medium text-gray-700">㎡</span>
-                        </div>
-                        <span className="text-gray-400">/</span>
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="text"
-                            value={naverTypePyeong}
-                            onChange={(e) => setNaverTypePyeong(e.target.value)}
-                            placeholder="41E"
-                            className="input w-20 h-[36px] text-sm"
-                          />
-                          <span className="text-xs font-medium text-gray-700">평</span>
-                        </div>
-                      </div>
+                <div className="md:hidden bg-white border-b px-3 py-2">
+                  <div className="flex items-center gap-2 overflow-x-auto">
+                    {/* 평면도 타입 */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <span className="text-xs text-gray-500">타입</span>
+                      <input
+                        type="text"
+                        value={naverTypeSqm}
+                        onChange={(e) => setNaverTypeSqm(e.target.value)}
+                        placeholder="136E"
+                        className="input w-16 h-8 text-xs px-2"
+                      />
+                      <span className="text-xs text-gray-500">㎡</span>
+                      <span className="text-gray-300">/</span>
+                      <input
+                        type="text"
+                        value={naverTypePyeong}
+                        onChange={(e) => setNaverTypePyeong(e.target.value)}
+                        placeholder="41E"
+                        className="input w-14 h-8 text-xs px-2"
+                      />
+                      <span className="text-xs text-gray-500">평</span>
                     </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 block">면적 정보</label>
+                    {/* 구분선 */}
+                    <div className="w-px h-5 bg-gray-200 flex-shrink-0"></div>
+                    {/* 면적 정보 */}
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                      <span className="text-xs text-gray-500 flex-shrink-0">면적</span>
                       <input
                         type="text"
                         value={naverArea}
                         onChange={(e) => setNaverArea(e.target.value)}
-                        placeholder="136.21㎡/101.97㎡ (전용률 75%)"
-                        className="input w-full h-[36px] text-sm"
+                        placeholder="136.21㎡/101.97㎡"
+                        className="input h-8 text-xs px-2 flex-1 min-w-[120px]"
                       />
                     </div>
                   </div>
