@@ -3030,12 +3030,13 @@ const Schedule = () => {
                         key={processName}
                         onClick={async () => {
                           // 선택된 날짜에 해당 공정으로 일정 추가
-                          if (selectedDate && filterProject !== 'all') {
+                          const targetDate = selectedDate || new Date();
+                          if (filterProject !== 'all') {
                             try {
                               await addScheduleToAPI({
                                 title: processName,
-                                start: selectedDate,
-                                end: selectedDate,
+                                start: targetDate,
+                                end: targetDate,
                                 projectName: filterProject,
                                 color: projects.find(p => p.name === filterProject)?.color || '#6b7280',
                                 assignedTo: []
