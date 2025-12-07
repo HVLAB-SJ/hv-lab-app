@@ -1395,6 +1395,36 @@ const Schedule = () => {
   const isProcessingDropRef = React.useRef(false);
   // 공정 드롭 직후 플래그 (인라인 모드 방지)
   const justDroppedProcessRef = React.useRef(false);
+  // Ctrl 키 상태 추적 (드래그 시 복사용)
+  const isCtrlPressedRef = React.useRef(false);
+
+  // Ctrl 키 상태 추적
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Control') {
+        isCtrlPressedRef.current = true;
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Control') {
+        isCtrlPressedRef.current = false;
+      }
+    };
+    // 창이 포커스를 잃으면 Ctrl 상태 초기화
+    const handleBlur = () => {
+      isCtrlPressedRef.current = false;
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, []);
 
   // 드래그 중 날짜 셀 하이라이트 효과
   useEffect(() => {
@@ -1484,7 +1514,7 @@ const Schedule = () => {
   // 삭제 액션 진행 중 플래그 (onSelectEvent 방지용)
   const deleteActionRef = React.useRef<boolean>(false);
 
-  // 기존 일정 드래그하여 날짜 이동 핸들러 (낙관적 업데이트로 즉시 반영)
+  // 기존 일정 드래그하여 날짜 이동/복사 핸들러 (Ctrl+드래그 = 복사)
   const onEventDrop = useCallback(async ({ event, start, end }: { event: ScheduleEvent; start: Date | string; end: Date | string }) => {
     // AS 방문이나 수금 일정은 이동 불가
     if (event.isASVisit || event.isExpectedPayment) {
@@ -1496,32 +1526,62 @@ const Schedule = () => {
     const startDate = start instanceof Date ? start : new Date(start);
     const endDate = end instanceof Date ? end : new Date(end);
 
-    // 병합된 일정인 경우 모든 일정을 이동
-    const eventIds = event.mergedEventIds || [event.id];
+    // Ctrl 키가 눌린 상태면 복사, 아니면 이동
+    const isCopy = isCtrlPressedRef.current;
 
-    // 낙관적 업데이트: 로컬 상태 즉시 변경
-    const previousSchedules = [...schedules];
-    setSchedules(schedules.map(s =>
-      eventIds.includes(s.id)
-        ? { ...s, start: startDate, end: endDate }
-        : s
-    ));
+    if (isCopy) {
+      // 복사 모드: 새 일정 생성
+      try {
+        // 병합된 일정인 경우 모든 일정을 복사
+        const eventIds = event.mergedEventIds || [event.id];
+        const originalSchedules = schedules.filter(s => eventIds.includes(s.id));
 
-    // 백그라운드에서 API 호출
-    try {
-      for (const eventId of eventIds) {
-        await updateScheduleInAPI(eventId, {
-          start: startDate,
-          end: endDate
-        });
+        for (const originalSchedule of originalSchedules) {
+          await addScheduleToAPI({
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            title: originalSchedule.title,
+            start: startDate,
+            end: endDate,
+            project: originalSchedule.project,
+            attendees: originalSchedule.attendees || [],
+            time: originalSchedule.time,
+            priority: originalSchedule.priority || 'medium'
+          });
+        }
+        toast.success('일정이 복사되었습니다');
+        loadSchedulesFromAPI();
+      } catch (error: any) {
+        console.error('일정 복사 실패:', error);
+        toast.error('일정 복사 실패');
       }
-    } catch (error: any) {
-      // 실패 시 원래 상태로 복구
-      setSchedules(previousSchedules);
-      console.error('일정 이동 실패:', error);
-      toast.error('일정 이동 실패');
+    } else {
+      // 이동 모드: 기존 로직
+      const eventIds = event.mergedEventIds || [event.id];
+
+      // 낙관적 업데이트: 로컬 상태 즉시 변경
+      const previousSchedules = [...schedules];
+      setSchedules(schedules.map(s =>
+        eventIds.includes(s.id)
+          ? { ...s, start: startDate, end: endDate }
+          : s
+      ));
+
+      // 백그라운드에서 API 호출
+      try {
+        for (const eventId of eventIds) {
+          await updateScheduleInAPI(eventId, {
+            start: startDate,
+            end: endDate
+          });
+        }
+      } catch (error: any) {
+        // 실패 시 원래 상태로 복구
+        setSchedules(previousSchedules);
+        console.error('일정 이동 실패:', error);
+        toast.error('일정 이동 실패');
+      }
     }
-  }, [schedules, setSchedules, updateScheduleInAPI]);
+  }, [schedules, setSchedules, updateScheduleInAPI, addScheduleToAPI, loadSchedulesFromAPI]);
 
   // 드래그 시작 핸들러
   const onDragStart = useCallback(({ event, action }: { event: ScheduleEvent; action: string }) => {
