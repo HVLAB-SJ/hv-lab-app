@@ -807,12 +807,14 @@ const Schedule = () => {
   const [newProcessName, setNewProcessName] = useState('');
   const [editingProcess, setEditingProcess] = useState<ProcessItem | null>(null);
   const [editProcessName, setEditProcessName] = useState('');
+  const [processLoading, setProcessLoading] = useState(false);
 
   // API 기본 URL
   const API_BASE = import.meta.env.VITE_API_URL || '';
 
   // 공정 목록 불러오기
   const loadProcessList = useCallback(async () => {
+    setProcessLoading(true);
     try {
       const response = await fetch(`${API_BASE}/api/processes`);
       if (response.ok) {
@@ -820,9 +822,13 @@ const Schedule = () => {
         setProcessList(data);
       } else {
         console.error('공정 목록 로딩 실패');
+        toast.error('공정 목록을 불러올 수 없습니다');
       }
     } catch (error) {
       console.error('공정 목록 로딩 오류:', error);
+      toast.error('서버 연결에 실패했습니다');
+    } finally {
+      setProcessLoading(false);
     }
   }, [API_BASE]);
 
@@ -3101,38 +3107,48 @@ const Schedule = () => {
 
         {/* 공정 관리 모달 */}
         {showProcessModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                <h2 className="text-lg font-semibold">공정 관리</h2>
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+            onClick={() => {
+              setShowProcessModal(false);
+              setEditingProcess(null);
+              setNewProcessName('');
+            }}
+          >
+            <div
+              className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 헤더 */}
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h2 className="text-lg font-bold text-gray-800">공정 관리</h2>
                 <button
                   onClick={() => {
                     setShowProcessModal(false);
                     setEditingProcess(null);
                     setNewProcessName('');
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-1"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                  ✕
                 </button>
               </div>
 
               {/* 새 공정 추가 */}
-              <div className="p-4 border-b border-gray-200">
+              <div className="p-4 border-b border-gray-200 bg-blue-50">
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={newProcessName}
                     onChange={(e) => setNewProcessName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddProcess()}
-                    placeholder="새 공정명 입력"
+                    placeholder="새 공정명 입력 후 Enter"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <button
                     onClick={handleAddProcess}
-                    className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                    disabled={!newProcessName.trim()}
+                    className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     추가
                   </button>
@@ -3140,68 +3156,86 @@ const Schedule = () => {
               </div>
 
               {/* 공정 목록 */}
-              <div className="p-4 overflow-y-auto max-h-[50vh]">
-                <div className="space-y-2">
-                  {processList.map((process) => (
-                    <div
-                      key={process.id}
-                      className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
-                    >
-                      {editingProcess?.id === process.id ? (
-                        <>
-                          <input
-                            type="text"
-                            value={editProcessName}
-                            onChange={(e) => setEditProcessName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleUpdateProcess();
-                              if (e.key === 'Escape') {
+              <div className="overflow-y-auto max-h-[50vh]">
+                {processLoading ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <div className="animate-spin inline-block w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full mb-2"></div>
+                    <p>불러오는 중...</p>
+                  </div>
+                ) : processList.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <p className="mb-2">등록된 공정이 없습니다</p>
+                    <p className="text-xs">위에서 새 공정을 추가해주세요</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {processList.map((process, index) => (
+                      <div
+                        key={process.id}
+                        className="flex items-center gap-2 p-3 hover:bg-gray-50"
+                      >
+                        {editingProcess?.id === process.id ? (
+                          <>
+                            <input
+                              type="text"
+                              value={editProcessName}
+                              onChange={(e) => setEditProcessName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleUpdateProcess();
+                                if (e.key === 'Escape') {
+                                  setEditingProcess(null);
+                                  setEditProcessName('');
+                                }
+                              }}
+                              className="flex-1 px-2 py-1 border border-blue-400 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              autoFocus
+                            />
+                            <button
+                              onClick={handleUpdateProcess}
+                              className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                            >
+                              저장
+                            </button>
+                            <button
+                              onClick={() => {
                                 setEditingProcess(null);
                                 setEditProcessName('');
-                              }
-                            }}
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            autoFocus
-                          />
-                          <button
-                            onClick={handleUpdateProcess}
-                            className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
-                          >
-                            저장
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingProcess(null);
-                              setEditProcessName('');
-                            }}
-                            className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
-                          >
-                            취소
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <span className="flex-1 text-sm">{process.name}</span>
-                          <button
-                            onClick={() => {
-                              setEditingProcess(process);
-                              setEditProcessName(process.name);
-                            }}
-                            className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300"
-                          >
-                            수정
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProcess(process.id)}
-                            className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded hover:bg-red-200"
-                          >
-                            삭제
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                              }}
+                              className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300"
+                            >
+                              취소
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-gray-400 text-xs w-6">{index + 1}</span>
+                            <span
+                              className="flex-1 text-sm cursor-pointer hover:text-blue-600"
+                              onClick={() => {
+                                setEditingProcess(process);
+                                setEditProcessName(process.name);
+                              }}
+                            >
+                              {process.name}
+                            </span>
+                            <button
+                              onClick={() => handleDeleteProcess(process.id)}
+                              className="px-2 py-1 text-gray-400 hover:text-red-500 text-sm"
+                              title="삭제"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 푸터 */}
+              <div className="p-3 border-t border-gray-200 bg-gray-50 text-center text-xs text-gray-500">
+                공정명을 클릭하면 수정할 수 있습니다
               </div>
             </div>
           </div>
