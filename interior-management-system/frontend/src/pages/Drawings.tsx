@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
-import { FileImage, Trash2, Square, ArrowLeft, X, Plus, Pencil } from 'lucide-react';
+import { FileImage, Trash2, Square, ArrowLeft, X, Pencil } from 'lucide-react';
 import { drawingStorage } from '../utils/drawingStorage';
 
 // 도면 종류
@@ -1359,17 +1359,6 @@ const Drawings = () => {
 
                     </div>
 
-                    {/* 이미지 1개일 때: 우하단 추가 버튼 (canvasRef 밖에 배치) */}
-                    {uploadedImages.length === 1 && (
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="absolute bottom-3 right-3 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-500 hover:text-gray-700 hover:shadow-xl transition-all z-20 border border-gray-200"
-                        title="도면 추가"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
-                    )}
-
                     {/* 이미지 2개 이상일 때: 하단 썸네일 바 (canvasRef 밖에 배치) */}
                     {uploadedImages.length > 1 && (
                       <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 px-3 py-2 z-20">
@@ -1420,14 +1409,6 @@ const Drawings = () => {
                               )}
                             </div>
                           ))}
-                          {/* 이미지 추가 버튼 */}
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 border-2 border-dashed border-white border-opacity-50 rounded flex items-center justify-center text-white text-opacity-70 hover:border-opacity-100 hover:text-opacity-100 transition-all"
-                            title="도면 추가"
-                          >
-                            <Plus className="w-5 h-5" />
-                          </button>
                         </div>
                       </div>
                     )}
