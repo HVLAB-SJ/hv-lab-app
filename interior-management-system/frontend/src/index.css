@@ -740,6 +740,35 @@ div.rbc-popup {
   .rbc-event {
     pointer-events: auto !important;
   }
+
+  /* 모바일에서 날짜 셀 배경색 모두 제거 (붉은색, 회색, 하늘색) */
+  .rbc-day-bg,
+  .rbc-day-bg.rbc-today,
+  .rbc-day-bg.rbc-off-range-bg,
+  .rbc-day-bg.rbc-selected-cell,
+  .rbc-day-bg.rbc-now {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+
+  /* 오늘 날짜 셀 배경 제거 */
+  .rbc-today {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+
+  /* 선택된 날짜 셀 배경 제거 */
+  .rbc-selected-cell,
+  .rbc-slot-selection {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+
+  /* 범위 밖 날짜 배경 제거 */
+  .rbc-off-range-bg {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
 }
 
 /* 모바일 캘린더 최적화 */
