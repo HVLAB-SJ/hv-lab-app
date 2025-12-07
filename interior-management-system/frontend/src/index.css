@@ -2930,26 +2930,25 @@ div.rbc-popup {
     visibility: hidden !important;
   }
 
+  /* 상단 툴바 영역 전체 숨기기 (날짜 네비게이션, 인쇄 아이콘, 프로젝트 선택 포함) */
+  body.printing-schedule .calendar-toolbar {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
   /* 메인 컨텐츠 영역 왼쪽 패딩 제거 */
   body.printing-schedule .main-content {
     padding-left: 0 !important;
   }
 
-  /* 인쇄 시 프로젝트명 표시 */
+  /* 인쇄 시 프로젝트명 표시 - 더 이상 필요 없음 */
   body.printing-schedule .print-project-name {
-    display: inline !important;
+    display: none !important;
   }
 
-  /* 인쇄 시 제목 스타일 */
+  /* 인쇄 시 제목 스타일 - 숨김 */
   body.printing-schedule .print-title {
-    font-size: 18px !important;
-    font-weight: bold !important;
-    text-align: center !important;
-    display: flex !important;
-    justify-content: center !important;
-    padding: 8px 0 !important;
-    cursor: default !important;
-    background: none !important;
+    display: none !important;
   }
 
   /* 메인 컨테이너 풀 너비 */
@@ -2960,6 +2959,12 @@ div.rbc-popup {
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+  }
+
+  /* 캘린더만 표시 - rbc-calendar 직접 선택 */
+  body.printing-schedule .rbc-calendar {
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* 캘린더 헤더 (날짜 네비게이션) */
