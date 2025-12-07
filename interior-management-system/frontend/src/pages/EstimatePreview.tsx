@@ -494,7 +494,7 @@ const EstimatePreview: React.FC = () => {
   };
 
   return (
-    <div className="space-y-3 md:space-y-4">
+    <div className="space-y-2">
       {/* Tabs */}
       <div className="border-b border-gray-200 flex items-center justify-between">
         <nav className="flex space-x-4 md:space-x-8">
@@ -541,7 +541,7 @@ const EstimatePreview: React.FC = () => {
           <div className="estimate-form bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* 기본 정보 섹션 */}
-              <div className="bg-gray-50 p-3 rounded-lg md:col-span-2">
+              <div className="md:col-span-2">
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   기본 정보
                 </h3>
@@ -617,7 +617,7 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 마감재 섹션 */}
-              <div className="bg-gray-50 p-3 rounded-lg">
+              <div>
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   마감재 선택
                 </h3>
@@ -701,7 +701,7 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 공사 범위 섹션 */}
-              <div className="bg-gray-50 p-3 rounded-lg">
+              <div>
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   공사 범위
                 </h3>
@@ -881,7 +881,7 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 가구 공사 섹션 */}
-              <div className="bg-gray-50 p-3 rounded-lg">
+              <div>
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   가구 공사
                 </h3>
@@ -971,7 +971,7 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 전기/조명 섹션 */}
-              <div className="bg-gray-50 p-3 rounded-lg">
+              <div>
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   전기/조명
                 </h3>
@@ -1100,7 +1100,7 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 기타 마감 섹션 */}
-              <div className="bg-gray-50 p-3 rounded-lg">
+              <div>
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   기타 마감
                 </h3>
@@ -1145,7 +1145,7 @@ const EstimatePreview: React.FC = () => {
               </div>
 
               {/* 화장실 상세 섹션 */}
-              <div className="bg-gray-50 p-3 rounded-lg">
+              <div>
                 <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
                   화장실 상세
                 </h3>
