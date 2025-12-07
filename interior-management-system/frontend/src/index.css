@@ -2912,20 +2912,27 @@ div.rbc-popup {
     overflow: visible !important;
   }
 
-  /* 일정표 인쇄 시 숨길 요소들 (헤더, 좌측 공정 사이드바, 버튼 등) */
+  /* 일정표 인쇄 시 숨길 요소들 (헤더, 네비게이션, 좌측 공정 사이드바, 버튼 등) */
   body.printing-schedule .print-hide,
   body.printing-schedule header,
   body.printing-schedule nav,
   body.printing-schedule aside,
   body.printing-schedule .sidebar,
   body.printing-schedule .mobile-bottom-nav,
+  body.printing-schedule .portrait-top-nav,
   body.printing-schedule .public-process-sidebar,
   body.printing-schedule .process-button-container,
   body.printing-schedule .inline-add-input,
   body.printing-schedule .fixed.inset-0,
-  body.printing-schedule .schedule-events-list {
+  body.printing-schedule .schedule-events-list,
+  body.printing-schedule .lg\\:pl-64 {
     display: none !important;
     visibility: hidden !important;
+  }
+
+  /* 메인 컨텐츠 영역 왼쪽 패딩 제거 */
+  body.printing-schedule .main-content {
+    padding-left: 0 !important;
   }
 
   /* 인쇄 시 프로젝트명 표시 */
@@ -2996,15 +3003,15 @@ div.rbc-popup {
 
   body.printing-schedule .rbc-month-row {
     border-bottom: 1px solid #e5e7eb !important;
-    min-height: 120px !important;
-    height: 120px !important;
-    max-height: 120px !important;
+    min-height: 170px !important;
+    height: 170px !important;
+    max-height: 170px !important;
     flex: none !important;
   }
 
   /* 날짜 셀 높이 균일화 */
   body.printing-schedule .rbc-row-content {
-    min-height: 100px !important;
+    min-height: 150px !important;
   }
 
   body.printing-schedule .rbc-row-segment {
