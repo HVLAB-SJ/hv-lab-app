@@ -3034,12 +3034,13 @@ const Schedule = () => {
                           if (filterProject !== 'all') {
                             try {
                               await addScheduleToAPI({
+                                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
                                 title: processName,
                                 start: targetDate,
                                 end: targetDate,
-                                projectName: filterProject,
-                                color: projects.find(p => p.name === filterProject)?.color || '#6b7280',
-                                assignedTo: []
+                                project: filterProject,
+                                attendees: [],
+                                priority: 'medium'
                               });
                               await loadSchedulesFromAPI();
                               toast.success(`'${processName}' 일정이 추가되었습니다`);
