@@ -385,10 +385,6 @@ const CustomEvent = React.memo(({
   const attendees = event.assignedTo || [];
   // 호버 상태
   const [isHovered, setIsHovered] = useState(false);
-  // 삭제 확인 팝오버 상태
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  // 삭제 버튼 위치 추적
-  const [deleteButtonPos, setDeleteButtonPos] = useState<{ top: number; right: number } | null>(null);
   const deleteButtonRef = React.useRef<HTMLButtonElement>(null);
   // 태블릿 또는 세로방향 데스크탑 모니터 감지
   const checkVerticalLayout = () => {
@@ -458,7 +454,7 @@ const CustomEvent = React.memo(({
       <div
         className="w-full relative block"
         onMouseEnter={() => { setShowTooltip(true); setIsHovered(true); }}
-        onMouseLeave={() => { if (!showDeleteConfirm) { setShowTooltip(false); setIsHovered(false); } }}
+        onMouseLeave={() => { setShowTooltip(false); setIsHovered(false); }}
         style={{
           padding: isSpecificProject ? '2px 3px' : '1px 3px',
           minHeight: isSpecificProject ? '28px' : '30px',
@@ -467,8 +463,8 @@ const CustomEvent = React.memo(({
           justifyContent: 'flex-start'
         }}
       >
-        {/* 호버 시 삭제 아이콘 */}
-        {(isHovered || showDeleteConfirm) && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
+        {/* 호버 시 삭제 아이콘 - 클릭 시 바로 삭제 (Ctrl+Z로 복원 가능) */}
+        {isHovered && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
           <div className="absolute top-0 right-0 z-20" style={{ padding: '4px' }}>
             <button
               ref={deleteButtonRef}
@@ -477,43 +473,14 @@ const CustomEvent = React.memo(({
                 e.preventDefault();
                 // 삭제 액션 플래그 설정 (onSelectEvent 방지)
                 if (onDeleteAction) onDeleteAction();
-                if (deleteButtonRef.current) {
-                  const rect = deleteButtonRef.current.getBoundingClientRect();
-                  setDeleteButtonPos({ top: rect.top - 4, right: window.innerWidth - rect.left + 8 });
-                }
-                setShowDeleteConfirm(true);
+                // 바로 삭제 실행
+                onHoverDelete();
               }}
               className="p-1 text-gray-500 hover:text-red-500"
               style={{ fontSize: '14px', lineHeight: 1 }}
-              title="삭제"
+              title="삭제 (Ctrl+Z로 복원)"
             >
               ✕
-            </button>
-          </div>
-        )}
-        {/* 삭제 확인 팝오버 - fixed position으로 잘림 방지 */}
-        {showDeleteConfirm && deleteButtonPos && isSpecificProject && onHoverDelete && (
-          <div
-            className="fixed bg-white border border-gray-300 rounded-lg shadow-lg p-2 flex items-center gap-2 z-[9999]"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              top: deleteButtonPos.top,
-              right: deleteButtonPos.right,
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <span className="text-sm text-gray-700">삭제할까요?</span>
-            <button
-              onClick={(e) => { e.stopPropagation(); onHoverDelete(); setShowDeleteConfirm(false); setDeleteButtonPos(null); }}
-              className="px-2 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
-            >
-              삭제
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); setDeleteButtonPos(null); }}
-              className="px-2 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
-            >
-              취소
             </button>
           </div>
         )}
@@ -625,7 +592,7 @@ const CustomEvent = React.memo(({
     <div
       className="flex items-center justify-between w-full gap-1.5 overflow-hidden relative"
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { if (!showDeleteConfirm) setIsHovered(false); }}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         minHeight: isSpecificProject ? '32px' : '18px',
         padding: isSpecificProject ? '6px 0' : '0'
@@ -693,8 +660,8 @@ const CustomEvent = React.memo(({
           })}
         </span>
       )}
-      {/* 호버 시 삭제 아이콘 */}
-      {(isHovered || showDeleteConfirm) && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
+      {/* 호버 시 삭제 아이콘 - 클릭 시 바로 삭제 (Ctrl+Z로 복원 가능) */}
+      {isHovered && isSpecificProject && onHoverDelete && !event.isASVisit && !event.isExpectedPayment && (
         <div className="absolute top-1/2 -translate-y-1/2 right-0 z-20" style={{ padding: '2px' }}>
           <button
             ref={deleteButtonRef}
@@ -703,43 +670,14 @@ const CustomEvent = React.memo(({
               e.preventDefault();
               // 삭제 액션 플래그 설정 (onSelectEvent 방지)
               if (onDeleteAction) onDeleteAction();
-              if (deleteButtonRef.current) {
-                const rect = deleteButtonRef.current.getBoundingClientRect();
-                setDeleteButtonPos({ top: rect.top - 4, right: window.innerWidth - rect.left + 8 });
-              }
-              setShowDeleteConfirm(true);
+              // 바로 삭제 실행
+              onHoverDelete();
             }}
             className="p-1 text-gray-500 hover:text-red-500"
             style={{ fontSize: '14px', lineHeight: 1 }}
-            title="삭제"
+            title="삭제 (Ctrl+Z로 복원)"
           >
             ✕
-          </button>
-        </div>
-      )}
-      {/* 삭제 확인 팝오버 - fixed position으로 잘림 방지 */}
-      {showDeleteConfirm && deleteButtonPos && isSpecificProject && onHoverDelete && (
-        <div
-          className="fixed bg-white border border-gray-300 rounded-lg shadow-lg p-2 flex items-center gap-2 z-[9999]"
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            top: deleteButtonPos.top,
-            right: deleteButtonPos.right,
-            whiteSpace: 'nowrap'
-          }}
-        >
-          <span className="text-sm text-gray-700">삭제할까요?</span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onHoverDelete(); setShowDeleteConfirm(false); setDeleteButtonPos(null); }}
-            className="px-2 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
-          >
-            삭제
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); setDeleteButtonPos(null); }}
-            className="px-2 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
-          >
-            취소
           </button>
         </div>
       )}
@@ -801,6 +739,51 @@ const Schedule = () => {
       toast.error('일정을 불러오는데 실패했습니다');
     });
   }, [loadSchedulesFromAPI]);
+
+  // 삭제된 일정 스택 (Ctrl+Z 되돌리기용)
+  const [deletedScheduleStack, setDeletedScheduleStack] = useState<ScheduleEvent[]>([]);
+
+  // Ctrl+Z 되돌리기 핸들러
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        // 입력 필드에서는 브라우저 기본 동작 사용
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+          return;
+        }
+
+        if (deletedScheduleStack.length > 0) {
+          e.preventDefault();
+          const lastDeleted = deletedScheduleStack[deletedScheduleStack.length - 1];
+
+          try {
+            // 삭제된 일정 복원
+            await addScheduleToAPI({
+              projectId: lastDeleted.projectId || '',
+              title: lastDeleted.title,
+              date: moment(lastDeleted.start).format('YYYY-MM-DD'),
+              startTime: lastDeleted.startTime || '',
+              endTime: lastDeleted.endTime || '',
+              assignedTo: lastDeleted.assignedTo || [],
+              color: lastDeleted.color
+            });
+
+            // 스택에서 제거
+            setDeletedScheduleStack(prev => prev.slice(0, -1));
+            loadSchedulesFromAPI();
+            toast.success('일정이 복원되었습니다');
+          } catch (error) {
+            console.error('일정 복원 실패:', error);
+            toast.error('일정 복원에 실패했습니다');
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [deletedScheduleStack, addScheduleToAPI, loadSchedulesFromAPI]);
 
   // 공정 목록 상태
   const [processList, setProcessList] = useState<ProcessItem[]>([]);
@@ -1784,18 +1767,24 @@ const Schedule = () => {
     setInlineEditTitle('');
   }, [inlineEditEvent, inlineEditTitle, updateScheduleInAPI, loadSchedulesFromAPI]);
 
-  // 인라인 일정 삭제 (확인은 커스텀 팝오버에서 이미 처리됨)
+  // 인라인 일정 삭제 (확인 없이 바로 삭제, Ctrl+Z로 복원 가능)
   const handleInlineDelete = useCallback(async (event: ScheduleEvent) => {
     try {
+      // 삭제 전에 스택에 저장 (되돌리기용)
+      setDeletedScheduleStack(prev => [...prev, event]);
+
       // 병합된 일정인 경우 모든 이벤트 삭제
       const eventIds = event.mergedEventIds || [event.id];
       for (const eventId of eventIds) {
         await deleteScheduleFromAPI(eventId);
       }
       loadSchedulesFromAPI();
+      toast.success('삭제됨 (Ctrl+Z로 복원)', { duration: 2000 });
     } catch (error) {
       console.error('일정 삭제 실패:', error);
       toast.error('일정 삭제에 실패했습니다');
+      // 실패 시 스택에서 제거
+      setDeletedScheduleStack(prev => prev.slice(0, -1));
     }
 
     setInlineEditEvent(null);
