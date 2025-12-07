@@ -2039,30 +2039,19 @@ const Schedule = () => {
   };
 
   // 빈 슬롯 선택 (날짜 선택)
-  const onSelectSlot = useCallback((slotInfo: { start: Date; end: Date; action: string }) => {
-    console.log('🔔 onSelectSlot 호출됨:', {
-      action: slotInfo.action,
-      start: slotInfo.start,
-      filterProject,
-      justDroppedProcess: justDroppedProcessRef.current
-    });
-
+  const onSelectSlot = (slotInfo: { start: Date; end: Date; action: string }) => {
     const windowWidth = window.innerWidth;
     const isMobile = windowWidth < 768;
     const isTablet = windowWidth >= 768 && windowWidth < 1024;
     const isAllProjects = filterProject === 'all';
 
-    console.log('🔔 환경:', { windowWidth, isMobile, isTablet, isAllProjects });
-
     // 공정 드롭 직후라면 슬롯 선택 무시 (인라인 모드 방지)
     if (justDroppedProcessRef.current) {
-      console.log('❌ justDroppedProcessRef로 인해 종료');
       return;
     }
 
     // 모바일에서는 날짜 선택 처리
     if (isMobile) {
-      console.log('📱 모바일 모드 - 날짜 선택');
       if (slotInfo.start) {
         setSelectedDate(slotInfo.start);
         const scheduleSection = document.querySelector('.md\\:hidden.mt-3.bg-white');
@@ -2077,13 +2066,11 @@ const Schedule = () => {
     const isSimpleClick = slotInfo.action === 'click' || slotInfo.action === 'select';
 
     if (isTablet && !isSimpleClick) {
-      console.log('❌ 태블릿 드래그 선택으로 인해 종료');
       return;
     }
 
     // 전체 프로젝트 모드: 모달 방식으로 일정 추가
     if (isAllProjects) {
-      console.log('✅ 전체 프로젝트 모드 - 모달 열기');
       // 이벤트 클릭 플래그 초기화
       eventClickedRef.current = false;
       // 인라인 편집 모드 닫기
@@ -2095,25 +2082,22 @@ const Schedule = () => {
       setSelectedSlot(slotInfo);
       setSelectedEvent(null);
       setShowModal(true);
-      console.log('✅ setShowModal(true) 호출됨');
       return;
     }
 
     // 개별 프로젝트 모드: 이벤트 클릭 직후면 무시
     if (eventClickedRef.current) {
-      console.log('❌ eventClickedRef로 인해 종료');
       return;
     }
 
     // 개별 프로젝트 선택 시 인라인 추가 모드
-    console.log('📝 개별 프로젝트 모드 - 인라인 추가');
     // 인라인 편집 모드 닫기
     setInlineEditEvent(null);
     setInlineEditTitle('');
     // 인라인 추가 모드 열기
     setInlineAddDate(slotInfo.start);
     setInlineAddTitle('');
-  }, [filterProject]);
+  };
 
   // 인라인 입력 저장
   const handleInlineSave = async () => {
@@ -2838,9 +2822,6 @@ const Schedule = () => {
             <div
               className={`schedule-calendar bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm calendar-container flex-1 ${filterProject !== 'all' ? 'specific-project-view' : ''}`}
               style={{ paddingBottom: 0 }}
-              onClick={(e) => {
-                console.log('📌 캘린더 컨테이너 클릭됨', e.target, 'filterProject:', filterProject);
-              }}
             >
               <DragAndDropCalendar
                 key={`calendar-${filterProject}-${selectedDate?.getTime() || 'no-selection'}`}
