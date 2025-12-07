@@ -91,6 +91,63 @@ const projectColors = [
   '#F3F4F6', // 연한 회색
 ];
 
+// 인라인 추가 입력 컴포넌트 (로컬 상태 관리로 중복 입력 방지)
+const InlineAddInput = React.memo(({
+  onSave,
+  onCancel
+}: {
+  onSave: (title: string) => void;
+  onCancel: () => void;
+}) => {
+  const [localTitle, setLocalTitle] = useState('');
+
+  return (
+    <div
+      className="w-full"
+      onClick={(e) => e.stopPropagation()}
+      style={{ padding: '4px 3px', minHeight: '32px' }}
+    >
+      <input
+        type="text"
+        value={localTitle}
+        onChange={(e) => setLocalTitle(e.target.value)}
+        onBlur={() => {
+          if (localTitle.trim()) {
+            onSave(localTitle.trim());
+          } else {
+            onCancel();
+          }
+        }}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === 'Enter') {
+            if (localTitle.trim()) {
+              onSave(localTitle.trim());
+            } else {
+              onCancel();
+            }
+          } else if (e.key === 'Escape') {
+            onCancel();
+          }
+        }}
+        onClick={(e) => e.stopPropagation()}
+        placeholder=""
+        className="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0"
+        autoFocus
+        style={{
+          fontSize: '13px',
+          fontWeight: 500,
+          color: '#374151',
+          padding: 0,
+          margin: 0,
+          lineHeight: '1.4',
+          caretColor: '#374151'
+        }}
+      />
+    </div>
+  );
+});
+
 // 프로젝트명 축약 함수 (이미 축약된 형식이면 그대로 반환)
 const shortenProjectName = (projectName: string): string => {
   if (!projectName) return projectName;
@@ -1256,7 +1313,6 @@ const Schedule = () => {
 
   // 인라인 편집 상태 (개별 프로젝트 선택 시)
   const [inlineAddDate, setInlineAddDate] = useState<Date | null>(null);
-  const [inlineAddTitle, setInlineAddTitle] = useState('');
   const [inlineEditEvent, setInlineEditEvent] = useState<ScheduleEvent | null>(null);
   const [inlineEditTitle, setInlineEditTitle] = useState('');
 
@@ -1399,7 +1455,6 @@ const Schedule = () => {
 
       // 인라인 추가/편집 모드 즉시 클리어
       setInlineAddDate(null);
-      setInlineAddTitle('');
       setInlineEditEvent(null);
       setInlineEditTitle('');
 
@@ -1414,18 +1469,17 @@ const Schedule = () => {
     return draggedProcess ? { title: draggedProcess } : null;
   }, [draggedProcess]);
 
-  // 인라인 일정 추가 저장
-  const handleInlineAdd = useCallback(async () => {
-    if (!inlineAddTitle.trim() || !inlineAddDate || filterProject === 'all') {
+  // 인라인 일정 추가 저장 (title을 파라미터로 받음)
+  const handleInlineAdd = useCallback(async (title: string) => {
+    if (!title.trim() || !inlineAddDate || filterProject === 'all') {
       setInlineAddDate(null);
-      setInlineAddTitle('');
       return;
     }
 
     try {
       await addScheduleToAPI({
         id: Date.now().toString(),
-        title: inlineAddTitle.trim(),
+        title: title.trim(),
         start: inlineAddDate,
         end: inlineAddDate,
         type: 'construction',
@@ -1441,8 +1495,12 @@ const Schedule = () => {
     }
 
     setInlineAddDate(null);
-    setInlineAddTitle('');
-  }, [inlineAddTitle, inlineAddDate, filterProject, addScheduleToAPI, loadSchedulesFromAPI]);
+  }, [inlineAddDate, filterProject, addScheduleToAPI, loadSchedulesFromAPI]);
+
+  // 인라인 추가 취소
+  const handleInlineAddCancel = useCallback(() => {
+    setInlineAddDate(null);
+  }, []);
 
   // 인라인 일정 수정 저장
   const handleInlineEditSave = useCallback(async () => {
@@ -1707,7 +1765,6 @@ const Schedule = () => {
     if (isSpecificProject && !isMobile && !event.isASVisit && !event.isExpectedPayment) {
       // 인라인 추가 모드 닫기
       setInlineAddDate(null);
-      setInlineAddTitle('');
       // 인라인 편집 모드 열기
       setInlineEditEvent(event);
       setInlineEditTitle(event.originalTitle || event.title);
@@ -1943,55 +2000,13 @@ const Schedule = () => {
 
   // 커스텀 이벤트 래퍼 컴포넌트 (props 전달용)
   const CustomEventWrapper = React.useCallback(({ event }: { event: ScheduleEvent }) => {
-    // 인라인 추가 이벤트일 때 입력 필드 렌더링 (텍스트 편집과 동일한 스타일)
+    // 인라인 추가 이벤트일 때 별도 컴포넌트 사용 (중복 입력 방지)
     if (event.id === '__inline_add__') {
       return (
-        <div
-          className="w-full"
-          onClick={(e) => e.stopPropagation()}
-          style={{ padding: '4px 3px', minHeight: '32px' }}
-        >
-          <input
-            type="text"
-            value={inlineAddTitle}
-            onChange={(e) => setInlineAddTitle(e.target.value)}
-            onBlur={() => {
-              if (inlineAddTitle.trim()) {
-                handleInlineAdd();
-              } else {
-                setInlineAddDate(null);
-                setInlineAddTitle('');
-              }
-            }}
-            onKeyDown={(e) => {
-              e.stopPropagation();
-              if (e.key === 'Enter') {
-                if (inlineAddTitle.trim()) {
-                  handleInlineAdd();
-                } else {
-                  setInlineAddDate(null);
-                  setInlineAddTitle('');
-                }
-              } else if (e.key === 'Escape') {
-                setInlineAddDate(null);
-                setInlineAddTitle('');
-              }
-            }}
-            onClick={(e) => e.stopPropagation()}
-            placeholder=""
-            className="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0"
-            autoFocus
-            style={{
-              fontSize: '13px',
-              fontWeight: 500,
-              color: '#374151',
-              padding: 0,
-              margin: 0,
-              lineHeight: '1.4',
-              caretColor: '#374151'
-            }}
-          />
-        </div>
+        <InlineAddInput
+          onSave={handleInlineAdd}
+          onCancel={handleInlineAddCancel}
+        />
       );
     }
 
@@ -2013,7 +2028,7 @@ const Schedule = () => {
         onDeleteAction={() => { deleteActionRef.current = true; }}
       />
     );
-  }, [user, filterProject, inlineEditEvent, inlineEditTitle, handleInlineEditSave, handleInlineDelete, inlineAddTitle, handleInlineAdd]);
+  }, [user, filterProject, inlineEditEvent, inlineEditTitle, handleInlineEditSave, handleInlineDelete, handleInlineAdd, handleInlineAddCancel]);
 
   // 커스텀 툴바
   const CustomToolbar = ({ onNavigate }: { onNavigate: (action: string) => void }) => {
