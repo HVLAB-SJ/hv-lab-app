@@ -2913,11 +2913,7 @@ const Schedule = () => {
               padding: '4px 8px',
               fontWeight: 500,
               fontSize: '16px',
-              boxShadow: isDragging ? '0 8px 20px rgba(0,0,0,0.25)' : '0 2px 8px rgba(0,0,0,0.1)',
-              maxWidth: '250px',
-              opacity: 1,
-              transform: isDragging ? 'scale(1.02)' : 'scale(1)',
-              transition: 'box-shadow 0.15s ease, transform 0.15s ease'
+              maxWidth: '250px'
             }}
           >
             {draggingEvent.originalTitle || draggingEvent.title}
