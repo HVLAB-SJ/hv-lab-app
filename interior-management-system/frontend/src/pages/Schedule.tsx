@@ -130,7 +130,7 @@ const InlineAddInput = React.memo(({
     <div
       className="w-full"
       onClick={(e) => e.stopPropagation()}
-      style={{ padding: useVerticalLayout ? '4px 3px' : '10px 0', minHeight: useVerticalLayout ? '32px' : '40px' }}
+      style={{ padding: useVerticalLayout ? '2px 3px' : '6px 0', minHeight: useVerticalLayout ? '28px' : '32px' }}
     >
       <input
         type="text"
@@ -459,8 +459,8 @@ const CustomEvent = React.memo(({
         onMouseEnter={() => { setShowTooltip(true); setIsHovered(true); }}
         onMouseLeave={() => { if (!showDeleteConfirm) { setShowTooltip(false); setIsHovered(false); } }}
         style={{
-          padding: isSpecificProject ? '4px 3px' : '1px 3px',
-          minHeight: isSpecificProject ? '32px' : '30px',
+          padding: isSpecificProject ? '2px 3px' : '1px 3px',
+          minHeight: isSpecificProject ? '28px' : '30px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'flex-start'
@@ -626,8 +626,8 @@ const CustomEvent = React.memo(({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => { if (!showDeleteConfirm) setIsHovered(false); }}
       style={{
-        minHeight: isSpecificProject ? '40px' : '18px',
-        padding: isSpecificProject ? '10px 0' : '0'
+        minHeight: isSpecificProject ? '32px' : '18px',
+        padding: isSpecificProject ? '6px 0' : '0'
       }}
     >
       <div className="flex items-center gap-1.5 overflow-hidden flex-1">
