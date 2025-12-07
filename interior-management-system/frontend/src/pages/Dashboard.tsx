@@ -159,14 +159,14 @@ const Dashboard = () => {
                               key={projectName}
                               className={`border-l-3 ${isCurrentUser ? 'border-gray-400' : 'border-gray-900'} ${isCurrentUser ? 'bg-amber-50' : 'bg-gray-50'} rounded-r overflow-hidden`}
                             >
-                              <div className={`px-3 py-1.5 ${isCurrentUser ? 'bg-amber-100' : 'bg-gray-100'} border-b ${isCurrentUser ? 'border-amber-200' : 'border-gray-200'}`}>
+                              <div className={`px-3 py-1 ${isCurrentUser ? 'bg-amber-100' : 'bg-gray-100'} border-b ${isCurrentUser ? 'border-amber-200' : 'border-gray-200'}`}>
                                 <span className="text-xs font-semibold text-gray-900">{projectName}</span>
                               </div>
-                              <div className="px-3 py-2 space-y-1">
+                              <div className="px-3 py-1.5 space-y-0.5">
                                 {schedules.map((schedule) => {
                                   const timeText = schedule.time && schedule.time !== '-' ? ` - ${formatTimeKorean(schedule.time)}` : '';
                                   return (
-                                    <p key={schedule.id} className="font-medium text-gray-900 text-sm leading-relaxed">
+                                    <p key={schedule.id} className="font-medium text-gray-900 text-sm leading-snug">
                                       • {schedule.title}{timeText}
                                     </p>
                                   );
@@ -206,15 +206,15 @@ const Dashboard = () => {
 
                           return (
                             <div key={`${date}-${project}`} className="border-l-3 border-gray-400 bg-gray-50 rounded-r overflow-hidden">
-                              <div className="px-3 py-1.5 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
+                              <div className="px-3 py-1 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
                                 <span className="text-xs font-semibold text-gray-700">{project}</span>
                                 <span className="text-xs text-gray-500 font-medium">{dateDisplay}</span>
                               </div>
-                              <div className="px-3 py-2 space-y-1">
+                              <div className="px-3 py-1.5 space-y-0.5">
                                 {schedules.map((schedule) => {
                                   const timeText = schedule.time && schedule.time !== '-' ? ` - ${formatTimeKorean(schedule.time)}` : '';
                                   return (
-                                    <p key={schedule.id} className="font-medium text-gray-900 text-sm leading-relaxed">
+                                    <p key={schedule.id} className="font-medium text-gray-900 text-sm leading-snug">
                                       • {schedule.title}{timeText}
                                     </p>
                                   );
