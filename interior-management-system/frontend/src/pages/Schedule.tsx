@@ -808,6 +808,9 @@ const Schedule = () => {
   const [editingProcess, setEditingProcess] = useState<ProcessItem | null>(null);
   const [editProcessName, setEditProcessName] = useState('');
   const [processLoading, setProcessLoading] = useState(false);
+  // 공정 드래그 상태
+  const [draggedProcessIndex, setDraggedProcessIndex] = useState<number | null>(null);
+  const [dragOverProcessIndex, setDragOverProcessIndex] = useState<number | null>(null);
 
   // 공정 목록 불러오기
   const loadProcessList = useCallback(async () => {
@@ -907,6 +910,50 @@ const Schedule = () => {
       console.error('공정 삭제 오류:', error);
       toast.error('공정 삭제 실패');
     }
+  };
+
+  // 공정 순서 변경 (드래그앤드롭)
+  const handleProcessDragStart = (index: number) => {
+    setDraggedProcessIndex(index);
+  };
+
+  const handleProcessDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedProcessIndex !== null && draggedProcessIndex !== index) {
+      setDragOverProcessIndex(index);
+    }
+  };
+
+  const handleProcessDragEnd = async () => {
+    if (draggedProcessIndex !== null && dragOverProcessIndex !== null && draggedProcessIndex !== dragOverProcessIndex) {
+      // 새 순서로 배열 재정렬
+      const newList = [...processList];
+      const [draggedItem] = newList.splice(draggedProcessIndex, 1);
+      newList.splice(dragOverProcessIndex, 0, draggedItem);
+
+      // 낙관적 업데이트
+      setProcessList(newList);
+
+      // API 호출
+      try {
+        const response = await fetch('/api/processes/reorder/bulk', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orders: newList.map(p => ({ id: p.id })) })
+        });
+        if (!response.ok) {
+          // 실패 시 원복
+          loadProcessList();
+          toast.error('순서 변경 실패');
+        }
+      } catch (error) {
+        console.error('순서 변경 오류:', error);
+        loadProcessList();
+        toast.error('순서 변경 실패');
+      }
+    }
+    setDraggedProcessIndex(null);
+    setDragOverProcessIndex(null);
   };
 
   // 프로젝트별 색상 매핑
@@ -3230,7 +3277,18 @@ const Schedule = () => {
                     {processList.map((process, index) => (
                       <div
                         key={process.id}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 group"
+                        draggable={editingProcess?.id !== process.id}
+                        onDragStart={() => handleProcessDragStart(index)}
+                        onDragOver={(e) => handleProcessDragOver(e, index)}
+                        onDragEnd={handleProcessDragEnd}
+                        onDragLeave={() => setDragOverProcessIndex(null)}
+                        className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50 group transition-all ${
+                          draggedProcessIndex === index ? 'opacity-50 bg-gray-100' : ''
+                        } ${
+                          dragOverProcessIndex === index ? 'border-t-2 border-gray-400' : ''
+                        } ${
+                          editingProcess?.id !== process.id ? 'cursor-grab active:cursor-grabbing' : ''
+                        }`}
                       >
                         {editingProcess?.id === process.id ? (
                           <>
@@ -3266,8 +3324,9 @@ const Schedule = () => {
                           </>
                         ) : (
                           <>
-                            <span className="text-gray-300 text-xs w-5 text-right">{index + 1}</span>
-                            <span className="flex-1 text-sm text-gray-700">{process.name}</span>
+                            <span className="text-gray-300 text-xs select-none">☰</span>
+                            <span className="text-gray-300 text-xs w-5 text-right select-none">{index + 1}</span>
+                            <span className="flex-1 text-sm text-gray-700 select-none">{process.name}</span>
                             <button
                               onClick={() => {
                                 setEditingProcess(process);
@@ -3294,7 +3353,7 @@ const Schedule = () => {
               {/* 푸터 */}
               {processList.length > 0 && (
                 <div className="p-3 border-t border-gray-100 bg-gray-50 text-center text-xs text-gray-400">
-                  항목에 마우스를 올리면 수정/삭제 버튼이 나타납니다
+                  드래그하여 순서 변경 · 호버하여 수정/삭제
                 </div>
               )}
             </div>
