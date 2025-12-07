@@ -1262,6 +1262,8 @@ const Schedule = () => {
   // 드래그 프리뷰 상태
   const [draggingEvent, setDraggingEvent] = useState<ScheduleEvent | null>(null);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const [dragStartPosition, setDragStartPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
 
   // 드래그 중 마우스 위치 추적
   useEffect(() => {
@@ -1269,10 +1271,12 @@ const Schedule = () => {
 
     const handleMouseMove = (e: MouseEvent) => {
       setDragPosition({ x: e.clientX, y: e.clientY });
+      setIsDragging(true);
     };
 
     const handleMouseUp = () => {
       setDraggingEvent(null);
+      setIsDragging(false);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -1325,10 +1329,21 @@ const Schedule = () => {
   }, [updateScheduleInAPI, loadSchedulesFromAPI]);
 
   // 드래그 시작 핸들러
-  const onDragStart = useCallback(({ event }: { event: ScheduleEvent }) => {
+  const onDragStart = useCallback(({ event, action }: { event: ScheduleEvent; action: string }) => {
     if (event.isASVisit || event.isExpectedPayment || event.id === '__inline_add__') {
       return;
     }
+    // 드래그 시작 시 해당 이벤트 요소의 위치 찾기
+    const eventElements = document.querySelectorAll('.rbc-event');
+    for (const el of eventElements) {
+      if (el.textContent?.includes(event.originalTitle || event.title)) {
+        const rect = el.getBoundingClientRect();
+        setDragStartPosition({ x: rect.left, y: rect.top });
+        setDragPosition({ x: rect.left, y: rect.top });
+        break;
+      }
+    }
+    setIsDragging(false);
     setDraggingEvent(event);
   }, []);
 
@@ -2884,22 +2899,25 @@ const Schedule = () => {
           />
         )}
 
-        {/* 드래그 프리뷰 - 원본 일정과 동일한 스타일 */}
+        {/* 드래그 프리뷰 - 원본 위치에서 떨어져 나오는 효과 */}
         {draggingEvent && (
           <div
             className="fixed pointer-events-none z-[9999]"
             style={{
-              left: dragPosition.x - 50,
-              top: dragPosition.y - 15,
+              // 드래그 시작 시에는 원본 위치, 이동 중에는 마우스 위치
+              left: isDragging ? dragPosition.x - 50 : dragStartPosition.x,
+              top: isDragging ? dragPosition.y - 15 : dragStartPosition.y,
               backgroundColor: draggingEvent.color || '#F3F4F6',
               borderRadius: '6px',
               color: '#1f2937',
               padding: '4px 8px',
               fontWeight: 500,
               fontSize: '16px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              boxShadow: isDragging ? '0 8px 20px rgba(0,0,0,0.25)' : '0 2px 8px rgba(0,0,0,0.1)',
               maxWidth: '250px',
-              opacity: 0.95
+              opacity: 1,
+              transform: isDragging ? 'scale(1.02)' : 'scale(1)',
+              transition: 'box-shadow 0.15s ease, transform 0.15s ease'
             }}
           >
             {draggingEvent.originalTitle || draggingEvent.title}
