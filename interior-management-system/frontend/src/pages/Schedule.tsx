@@ -3039,7 +3039,7 @@ const Schedule = () => {
                                 start: targetDate,
                                 end: targetDate,
                                 project: filterProject,
-                                attendees: [],
+                                attendees: user?.name ? [user.name] : [],
                                 priority: 'medium'
                               });
                               await loadSchedulesFromAPI();
