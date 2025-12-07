@@ -296,22 +296,50 @@ const FinishCheck = () => {
       return;
     }
 
+    // 낙관적 업데이트: 임시 ID로 즉시 UI에 추가
+    const tempId = -Date.now();
+    const tempItem = {
+      id: tempId,
+      space_id: spaceId,
+      content: newItemContent.trim(),
+      is_checked: false,
+      is_priority: false,
+      images: []
+    };
+
+    // 즉시 UI 업데이트
+    setSpaces(spaces.map(space =>
+      space.id === spaceId
+        ? { ...space, items: [...space.items, tempItem] }
+        : space
+    ));
+    const savedContent = newItemContent.trim();
+    setNewItemContent('');
+    setSelectedSpaceIdForNewItem(null);
+
+    // 백그라운드에서 API 호출
     try {
       const response = await api.post('/finish-check/items', {
         space_id: spaceId,
-        content: newItemContent.trim()
+        content: savedContent
       });
 
-      setSpaces(spaces.map(space =>
+      // API 성공 시 임시 항목을 실제 데이터로 교체
+      setSpaces(prev => prev.map(space =>
         space.id === spaceId
-          ? { ...space, items: [...space.items, { ...response.data, images: [] }] }
+          ? { ...space, items: space.items.map(item =>
+              item.id === tempId ? { ...response.data, images: [] } : item
+            )}
           : space
       ));
-      setNewItemContent('');
-      setSelectedSpaceIdForNewItem(null);
-      toast.success('항목이 추가되었습니다');
     } catch (error) {
       console.error('Failed to add item:', error);
+      // 실패 시 임시 항목 제거
+      setSpaces(prev => prev.map(space =>
+        space.id === spaceId
+          ? { ...space, items: space.items.filter(item => item.id !== tempId) }
+          : space
+      ));
       toast.error('항목 추가에 실패했습니다');
     }
   };
