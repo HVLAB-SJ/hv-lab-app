@@ -705,6 +705,17 @@ div.rbc-popup {
     position: relative !important;
     -webkit-tap-highlight-color: transparent !important;
     touch-action: manipulation !important;
+    pointer-events: auto !important;
+    z-index: 2 !important;
+  }
+
+  /* 날짜 버튼 클릭 가능하게 */
+  .rbc-date-cell button,
+  .rbc-date-cell .rbc-button-link {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    cursor: pointer !important;
   }
 
   /* 날짜 배경 셀도 클릭 가능하게 - 피드백 제거 */
@@ -712,6 +723,22 @@ div.rbc-popup {
     cursor: pointer !important;
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
+    pointer-events: auto !important;
+    z-index: 1 !important;
+  }
+
+  /* 월 행 전체 터치 이벤트 허용 */
+  .rbc-month-row {
+    pointer-events: auto !important;
+  }
+
+  .rbc-row-content {
+    pointer-events: auto !important;
+  }
+
+  /* 이벤트가 날짜 클릭을 막지 않도록 */
+  .rbc-event {
+    pointer-events: auto !important;
   }
 }
 
@@ -740,14 +767,30 @@ div.rbc-popup {
     font-size: 15px !important;
   }
 
-  /* 이벤트 폰트 크기 */
+  /* 이벤트 스타일 - 모바일에서 배경색 제거 */
   .rbc-event {
     font-size: 10px !important;
     padding: 2px 4px !important;
+    background-color: transparent !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
   .rbc-event-content {
     font-size: 10px !important;
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+
+  /* 이벤트 행 배경도 투명하게 */
+  .rbc-row-segment {
+    background-color: transparent !important;
+  }
+
+  .rbc-event-allday {
+    background-color: transparent !important;
+    background: transparent !important;
   }
 
   /* 날짜 셀 - 완전한 가운데 정렬 */

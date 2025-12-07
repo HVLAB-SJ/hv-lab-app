@@ -2840,7 +2840,7 @@ const Schedule = () => {
                 draggableAccessor={(event: ScheduleEvent) => filterProject !== 'all' && event.id !== '__inline_add__'}
                 resizable={false}
                 selectable={true}
-                longPressThreshold={150}
+                longPressThreshold={50}
                 eventPropGetter={eventStyleGetter}
                 dayPropGetter={dayPropGetter}
                 components={calendarComponents}
