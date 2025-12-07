@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import React from 'react';
 import { Calendar, momentLocalizer, type View } from 'react-big-calendar';
-import { Printer } from 'lucide-react';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import moment from 'moment';
@@ -2332,15 +2331,6 @@ const Schedule = () => {
             </div>
 
             <div className="flex items-center space-x-2">
-              {/* 인쇄 버튼 */}
-              <button
-                onClick={handlePrintSchedule}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors print-hide"
-                title="일정표 인쇄"
-              >
-                <Printer className="w-5 h-5" />
-              </button>
-
               {/* 프로젝트 필터 */}
               <select
                 className="px-3 md:px-4 py-1.5 md:py-2 bg-white text-gray-700 rounded-lg text-xs md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-300 border border-gray-300 print-hide"
