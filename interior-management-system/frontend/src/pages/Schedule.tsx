@@ -3025,15 +3025,15 @@ const Schedule = () => {
                 <div className="border-t border-gray-200 p-3 bg-gray-50">
                   <p className="text-xs font-medium text-gray-500 mb-2">공정을 탭하여 일정 추가</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {processList.map((process) => (
+                    {PROCESS_LIST.map((processName) => (
                       <button
-                        key={process}
+                        key={processName}
                         onClick={async () => {
                           // 선택된 날짜에 해당 공정으로 일정 추가
                           if (selectedDate && filterProject !== 'all') {
                             try {
                               await addScheduleToAPI({
-                                title: process,
+                                title: processName,
                                 start: selectedDate,
                                 end: selectedDate,
                                 projectName: filterProject,
@@ -3041,7 +3041,7 @@ const Schedule = () => {
                                 assignedTo: []
                               });
                               await loadSchedulesFromAPI();
-                              toast.success(`'${process}' 일정이 추가되었습니다`);
+                              toast.success(`'${processName}' 일정이 추가되었습니다`);
                             } catch (error) {
                               console.error('일정 추가 실패:', error);
                               toast.error('일정 추가에 실패했습니다');
@@ -3050,7 +3050,7 @@ const Schedule = () => {
                         }}
                         className="px-2.5 py-1.5 text-xs rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors font-medium"
                       >
-                        {process}
+                        {processName}
                       </button>
                     ))}
                   </div>
