@@ -2039,26 +2039,16 @@ const Schedule = () => {
   };
 
   // 빈 슬롯 선택 (날짜 선택)
-  const onSelectSlot = (slotInfo: { start: Date; end: Date; action: string }) => {
-    // 이벤트가 방금 클릭되었다면 슬롯 선택 무시 (개별 프로젝트만)
-    // 전체 프로젝트에서는 항상 모달이 열려야 함
-    if (eventClickedRef.current && filterProject !== 'all') {
-      return;
-    }
-    // 전체 프로젝트 모드에서는 플래그 초기화
-    if (filterProject === 'all') {
-      eventClickedRef.current = false;
-    }
+  const onSelectSlot = useCallback((slotInfo: { start: Date; end: Date; action: string }) => {
+    const windowWidth = window.innerWidth;
+    const isMobile = windowWidth < 768;
+    const isTablet = windowWidth >= 768 && windowWidth < 1024;
+    const isAllProjects = filterProject === 'all';
 
     // 공정 드롭 직후라면 슬롯 선택 무시 (인라인 모드 방지)
     if (justDroppedProcessRef.current) {
       return;
     }
-
-    const windowWidth = window.innerWidth;
-    const isMobile = windowWidth < 768;
-    const isTablet = windowWidth >= 768 && windowWidth < 1024;
-    const isSpecificProject = filterProject !== 'all';
 
     // 모바일에서는 날짜 선택 처리
     if (isMobile) {
@@ -2079,19 +2069,10 @@ const Schedule = () => {
       return;
     }
 
-    // 개별 프로젝트 선택 시 인라인 추가 모드
-    if (isSpecificProject && !isMobile) {
-      // 인라인 편집 모드 닫기
-      setInlineEditEvent(null);
-      setInlineEditTitle('');
-      // 인라인 추가 모드 열기
-      setInlineAddDate(slotInfo.start);
-      setInlineAddTitle('');
-      return;
-    }
-
-    // 전체 프로젝트에서는 모달 방식으로 일정 추가
-    if (!isMobile) {
+    // 전체 프로젝트 모드: 모달 방식으로 일정 추가
+    if (isAllProjects) {
+      // 이벤트 클릭 플래그 초기화
+      eventClickedRef.current = false;
       // 인라인 편집 모드 닫기
       setInlineEditEvent(null);
       setInlineEditTitle('');
@@ -2101,8 +2082,22 @@ const Schedule = () => {
       setSelectedSlot(slotInfo);
       setSelectedEvent(null);
       setShowModal(true);
+      return;
     }
-  };
+
+    // 개별 프로젝트 모드: 이벤트 클릭 직후면 무시
+    if (eventClickedRef.current) {
+      return;
+    }
+
+    // 개별 프로젝트 선택 시 인라인 추가 모드
+    // 인라인 편집 모드 닫기
+    setInlineEditEvent(null);
+    setInlineEditTitle('');
+    // 인라인 추가 모드 열기
+    setInlineAddDate(slotInfo.start);
+    setInlineAddTitle('');
+  }, [filterProject]);
 
   // 인라인 입력 저장
   const handleInlineSave = async () => {
