@@ -1659,7 +1659,7 @@ const Schedule = () => {
   }, []);
 
   // 사이드바에서 공정을 드래그하여 날짜에 드롭했을 때 핸들러
-  const handleProcessDrop = useCallback(async (processName: string, dropDate: Date) => {
+  const handleProcessDrop = useCallback((processName: string, dropDate: Date) => {
     // 이미 처리 중이면 중복 실행 방지
     if (isProcessingDropRef.current) {
       return;
@@ -1672,29 +1672,37 @@ const Schedule = () => {
 
     isProcessingDropRef.current = true;
 
-    try {
-      await addScheduleToAPI({
-        id: Date.now().toString(),
-        title: processName,
-        start: dropDate,
-        end: dropDate,
-        type: 'construction',
-        project: filterProject,
-        location: '',
-        attendees: user?.name ? [user.name] : [],
-        description: ''
-      });
-      await loadSchedulesFromAPI();
-    } catch (error) {
+    // 낙관적 업데이트: 임시 ID로 즉시 UI에 추가
+    const tempId = 'temp_' + Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    const newSchedule: Schedule = {
+      id: tempId,
+      title: processName,
+      start: dropDate,
+      end: dropDate,
+      project: filterProject,
+      attendees: user?.name ? [user.name] : [],
+      type: 'construction'
+    };
+
+    // 즉시 로컬에 추가
+    addSchedule(newSchedule);
+
+    // 백그라운드에서 API 호출
+    addScheduleToAPI(newSchedule).then(() => {
+      // API 성공 시 임시 항목 제거 (API가 새 ID로 추가함)
+      deleteSchedule(tempId);
+    }).catch(error => {
       console.error('일정 추가 실패:', error);
       toast.error('일정 추가에 실패했습니다');
-    } finally {
+      // 실패 시 임시 항목 제거
+      deleteSchedule(tempId);
+    }).finally(() => {
       // 약간의 딜레이 후 플래그 해제 (연속 드롭 방지)
       setTimeout(() => {
         isProcessingDropRef.current = false;
-      }, 500);
-    }
-  }, [filterProject, addScheduleToAPI, loadSchedulesFromAPI, user]);
+      }, 300);
+    });
+  }, [filterProject, addScheduleToAPI, addSchedule, deleteSchedule, user]);
 
   // 외부에서 드래그해서 캘린더에 드롭할 때 핸들러
   const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
