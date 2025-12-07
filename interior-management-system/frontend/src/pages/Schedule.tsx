@@ -3032,21 +3032,29 @@ const Schedule = () => {
                           // 선택된 날짜에 해당 공정으로 일정 추가
                           const targetDate = selectedDate || new Date();
                           if (filterProject !== 'all') {
+                            const newScheduleId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+                            const projectColor = projects.find(p => p.name === filterProject)?.color || '#6b7280';
+                            const newSchedule = {
+                              id: newScheduleId,
+                              title: processName,
+                              start: targetDate,
+                              end: targetDate,
+                              project: filterProject,
+                              attendees: user?.name ? [user.name] : [],
+                              priority: 'medium' as const,
+                              color: projectColor
+                            };
+
+                            // 낙관적 업데이트: 즉시 UI에 반영
+                            setSchedules(prev => [...prev, newSchedule]);
+
+                            // 백그라운드에서 API 호출
                             try {
-                              await addScheduleToAPI({
-                                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-                                title: processName,
-                                start: targetDate,
-                                end: targetDate,
-                                project: filterProject,
-                                attendees: user?.name ? [user.name] : [],
-                                priority: 'medium'
-                              });
-                              await loadSchedulesFromAPI();
-                              toast.success(`'${processName}' 일정이 추가되었습니다`);
+                              await addScheduleToAPI(newSchedule);
                             } catch (error) {
                               console.error('일정 추가 실패:', error);
-                              toast.error('일정 추가에 실패했습니다');
+                              // 실패 시 롤백
+                              setSchedules(prev => prev.filter(s => s.id !== newScheduleId));
                             }
                           }
                         }}
