@@ -664,6 +664,19 @@ const ExecutionHistory = () => {
       const laborCost = Number(formData.laborCost) || 0;
       const totalAmount = materialCost + laborCost;
 
+      // 청구내역 붙여넣기 내용을 메모에 추가
+      let updatedNotes = editingRecord.notes || '';
+      if (formData.quickText.trim()) {
+        // 기존 메모가 있으면 줄바꿈 후 추가, 없으면 그냥 추가
+        updatedNotes = updatedNotes
+          ? `${updatedNotes}\n${formData.quickText.trim()}`
+          : formData.quickText.trim();
+      }
+
+      // 청구내역 이미지도 기존 이미지에 추가
+      const existingImages = editingRecord.images || [];
+      const updatedImages = [...existingImages, ...formData.quickImages];
+
       // 타입에 따라 다른 API 호출
       if ((editingRecord as any).type === 'payment') {
         // 결제요청 수정 - 기존 payment 데이터 찾기
@@ -693,7 +706,8 @@ const ExecutionHistory = () => {
           laborCost,
           totalAmount,
           date: new Date(formData.date),
-          notes: editingRecord.notes,
+          notes: updatedNotes,
+          images: updatedImages,
           paymentId: editingRecord.paymentId
         });
         await loadExecutionRecordsFromAPI();
