@@ -1490,10 +1490,13 @@ const Schedule = () => {
     ? events
     : events.filter(e => (e.originalProjectName || e.projectName) === filterProject));
 
-  // 각 날짜별로 로그인한 사용자의 일정을 최상단에 배치
-  // react-big-calendar가 start 시간으로 정렬하므로, 사용자 일정의 시작 시간을 미세 조정
+  // 각 날짜별로 일정 정렬
+  // - 전체 프로젝트: 사용자 일정을 최상단에 배치
+  // - 개별 프로젝트: 작성 순서(ID 순)대로 배치
   const filteredEventsSorted = React.useMemo(() => {
-    // 날짜별로 그룹화하여 사용자 일정 순서 조정
+    const isSpecificProject = filterProject !== 'all';
+
+    // 날짜별로 그룹화
     const eventsByDate = new Map<string, ScheduleEvent[]>();
 
     filteredEventsRaw.forEach(event => {
@@ -1507,43 +1510,61 @@ const Schedule = () => {
     const result: ScheduleEvent[] = [];
 
     eventsByDate.forEach((dayEvents) => {
-      // 사용자 일정과 비사용자 일정 분리
-      const userEvents: ScheduleEvent[] = [];
-      const otherEvents: ScheduleEvent[] = [];
-
-      dayEvents.forEach(event => {
-        if (isUserAssignedEvent(event)) {
-          userEvents.push(event);
-        } else {
-          otherEvents.push(event);
-        }
-      });
-
-      // 사용자 일정의 시작 시간을 00:00:00.xxx로 설정하여 먼저 표시되게 함
-      // allDay: false로 설정해야 react-big-calendar가 시간 기반 정렬을 적용함
-      userEvents.forEach((event, idx) => {
-        const adjustedStart = moment(event.start).startOf('day').add(idx, 'milliseconds').toDate();
-        result.push({
-          ...event,
-          start: adjustedStart,
-          allDay: false  // 시간 기반 정렬을 위해 false로 설정
+      if (isSpecificProject) {
+        // 개별 프로젝트: ID순으로 정렬 (작성 순서)
+        const sortedByCreation = [...dayEvents].sort((a, b) => {
+          // ID가 숫자인 경우 숫자 비교, 아니면 문자열 비교
+          const aId = parseInt(a.id) || 0;
+          const bId = parseInt(b.id) || 0;
+          return aId - bId;
         });
-      });
 
-      // 비사용자 일정은 00:00:01.xxx부터 시작하도록 설정
-      otherEvents.forEach((event, idx) => {
-        const adjustedStart = moment(event.start).startOf('day').add(1000 + idx, 'milliseconds').toDate();
-        result.push({
-          ...event,
-          start: adjustedStart,
-          allDay: false  // 시간 기반 정렬을 위해 false로 설정
+        sortedByCreation.forEach((event, idx) => {
+          const adjustedStart = moment(event.start).startOf('day').add(idx, 'milliseconds').toDate();
+          result.push({
+            ...event,
+            start: adjustedStart,
+            allDay: false
+          });
         });
-      });
+      } else {
+        // 전체 프로젝트: 사용자 일정과 비사용자 일정 분리
+        const userEvents: ScheduleEvent[] = [];
+        const otherEvents: ScheduleEvent[] = [];
+
+        dayEvents.forEach(event => {
+          if (isUserAssignedEvent(event)) {
+            userEvents.push(event);
+          } else {
+            otherEvents.push(event);
+          }
+        });
+
+        // 사용자 일정의 시작 시간을 00:00:00.xxx로 설정하여 먼저 표시되게 함
+        userEvents.forEach((event, idx) => {
+          const adjustedStart = moment(event.start).startOf('day').add(idx, 'milliseconds').toDate();
+          result.push({
+            ...event,
+            start: adjustedStart,
+            allDay: false
+          });
+        });
+
+        // 비사용자 일정은 00:00:01.xxx부터 시작하도록 설정
+        otherEvents.forEach((event, idx) => {
+          const adjustedStart = moment(event.start).startOf('day').add(1000 + idx, 'milliseconds').toDate();
+          result.push({
+            ...event,
+            start: adjustedStart,
+            allDay: false
+          });
+        });
+      }
     });
 
     // 최종 시간순 정렬
     return result.sort((a, b) => a.start.getTime() - b.start.getTime());
-  }, [filteredEventsRaw, isUserAssignedEvent]);
+  }, [filteredEventsRaw, isUserAssignedEvent, filterProject]);
 
   // 인라인 추가 이벤트 포함 (날짜 셀에 직접 입력 필드 표시)
   // 해당 날짜의 마지막 일정 다음에 위치하도록 시간 조정
