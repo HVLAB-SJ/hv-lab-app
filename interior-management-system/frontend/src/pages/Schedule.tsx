@@ -667,6 +667,7 @@ const CustomEvent = React.memo(({
 const Schedule = () => {
   const {
     schedules,
+    setSchedules,
     loadSchedulesFromAPI,
     addScheduleToAPI,
     updateScheduleInAPI,
@@ -1291,42 +1292,44 @@ const Schedule = () => {
   // 삭제 액션 진행 중 플래그 (onSelectEvent 방지용)
   const deleteActionRef = React.useRef<boolean>(false);
 
-  // 기존 일정 드래그하여 날짜 이동 핸들러
+  // 기존 일정 드래그하여 날짜 이동 핸들러 (낙관적 업데이트로 즉시 반영)
   const onEventDrop = useCallback(async ({ event, start, end }: { event: ScheduleEvent; start: Date | string; end: Date | string }) => {
-    console.log('🔄 onEventDrop called:', { event, start, end, eventId: event.id, mergedEventIds: event.mergedEventIds });
-
     // AS 방문이나 수금 일정은 이동 불가
     if (event.isASVisit || event.isExpectedPayment) {
       toast.error('이 일정은 이동할 수 없습니다');
       return;
     }
 
-    // 날짜를 Date 객체로 변환 (react-big-calendar이 문자열로 전달할 수 있음)
+    // 날짜를 Date 객체로 변환
     const startDate = start instanceof Date ? start : new Date(start);
     const endDate = end instanceof Date ? end : new Date(end);
 
-    console.log('📅 Converted dates:', { startDate, endDate });
-
     // 병합된 일정인 경우 모든 일정을 이동
     const eventIds = event.mergedEventIds || [event.id];
-    console.log('🆔 Event IDs to update:', eventIds);
 
+    // 낙관적 업데이트: 로컬 상태 즉시 변경
+    const previousSchedules = [...schedules];
+    setSchedules(schedules.map(s =>
+      eventIds.includes(s.id)
+        ? { ...s, start: startDate, end: endDate }
+        : s
+    ));
+
+    // 백그라운드에서 API 호출
     try {
       for (const eventId of eventIds) {
-        console.log('📤 Updating event:', eventId);
         await updateScheduleInAPI(eventId, {
           start: startDate,
           end: endDate
         });
       }
-      await loadSchedulesFromAPI();
     } catch (error: any) {
+      // 실패 시 원래 상태로 복구
+      setSchedules(previousSchedules);
       console.error('일정 이동 실패:', error);
-      const errorMessage = error?.response?.data?.details || error?.response?.data?.error || error?.message || '알 수 없는 오류';
-      console.error('오류 상세:', errorMessage);
-      toast.error(`일정 이동 실패: ${errorMessage}`);
+      toast.error('일정 이동 실패');
     }
-  }, [updateScheduleInAPI, loadSchedulesFromAPI]);
+  }, [schedules, setSchedules, updateScheduleInAPI]);
 
   // 드래그 시작 핸들러
   const onDragStart = useCallback(({ event, action }: { event: ScheduleEvent; action: string }) => {
