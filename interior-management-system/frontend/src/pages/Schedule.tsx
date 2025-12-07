@@ -809,14 +809,11 @@ const Schedule = () => {
   const [editProcessName, setEditProcessName] = useState('');
   const [processLoading, setProcessLoading] = useState(false);
 
-  // API 기본 URL
-  const API_BASE = import.meta.env.VITE_API_URL || '';
-
   // 공정 목록 불러오기
   const loadProcessList = useCallback(async () => {
     setProcessLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/processes`);
+      const response = await fetch('/api/processes');
       if (response.ok) {
         const data = await response.json();
         setProcessList(data);
@@ -830,7 +827,7 @@ const Schedule = () => {
     } finally {
       setProcessLoading(false);
     }
-  }, [API_BASE]);
+  }, []);
 
   // 공정 목록 로딩
   useEffect(() => {
@@ -849,7 +846,7 @@ const Schedule = () => {
   const handleAddProcess = async () => {
     if (!newProcessName.trim()) return;
     try {
-      const response = await fetch(`${API_BASE}/api/processes`, {
+      const response = await fetch('/api/processes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newProcessName.trim() })
@@ -872,7 +869,7 @@ const Schedule = () => {
   const handleUpdateProcess = async () => {
     if (!editingProcess || !editProcessName.trim()) return;
     try {
-      const response = await fetch(`${API_BASE}/api/processes/${editingProcess.id}`, {
+      const response = await fetch(`/api/processes/${editingProcess.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editProcessName.trim() })
@@ -896,7 +893,7 @@ const Schedule = () => {
   const handleDeleteProcess = async (processId: number) => {
     if (!confirm('정말 이 공정을 삭제하시겠습니까?')) return;
     try {
-      const response = await fetch(`${API_BASE}/api/processes/${processId}`, {
+      const response = await fetch(`/api/processes/${processId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -3168,7 +3165,7 @@ const Schedule = () => {
         {/* 공정 관리 모달 */}
         {showProcessModal && (
           <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
             onClick={() => {
               setShowProcessModal(false);
               setEditingProcess(null);
@@ -3176,11 +3173,11 @@ const Schedule = () => {
             }}
           >
             <div
-              className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden mx-4"
+              className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden mx-4"
               onClick={(e) => e.stopPropagation()}
             >
               {/* 헤더 */}
-              <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center">
                 <h2 className="text-lg font-bold text-gray-800">공정 관리</h2>
                 <button
                   onClick={() => {
@@ -3188,27 +3185,28 @@ const Schedule = () => {
                     setEditingProcess(null);
                     setNewProcessName('');
                   }}
-                  className="text-gray-400 hover:text-gray-600 p-1"
+                  className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded"
                 >
                   ✕
                 </button>
               </div>
 
               {/* 새 공정 추가 */}
-              <div className="p-4 border-b border-gray-200 bg-blue-50">
+              <div className="p-4 border-b border-gray-100 bg-gray-50">
+                <label className="block text-xs text-gray-500 mb-2">새 공정 추가</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={newProcessName}
                     onChange={(e) => setNewProcessName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddProcess()}
-                    placeholder="새 공정명 입력 후 Enter"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="공정명 입력"
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-gray-300 focus:border-gray-400 bg-white"
                   />
                   <button
                     onClick={handleAddProcess}
                     disabled={!newProcessName.trim()}
-                    className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     추가
                   </button>
@@ -3219,20 +3217,20 @@ const Schedule = () => {
               <div className="overflow-y-auto max-h-[50vh]">
                 {processLoading ? (
                   <div className="p-8 text-center text-gray-500">
-                    <div className="animate-spin inline-block w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full mb-2"></div>
+                    <div className="animate-spin inline-block w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full mb-2"></div>
                     <p>불러오는 중...</p>
                   </div>
                 ) : processList.length === 0 ? (
-                  <div className="p-8 text-center text-gray-500">
+                  <div className="p-8 text-center text-gray-400">
                     <p className="mb-2">등록된 공정이 없습니다</p>
                     <p className="text-xs">위에서 새 공정을 추가해주세요</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-gray-50">
                     {processList.map((process, index) => (
                       <div
                         key={process.id}
-                        className="flex items-center gap-2 p-3 hover:bg-gray-50"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 group"
                       >
                         {editingProcess?.id === process.id ? (
                           <>
@@ -3247,12 +3245,12 @@ const Schedule = () => {
                                   setEditProcessName('');
                                 }
                               }}
-                              className="flex-1 px-2 py-1 border border-blue-400 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-300 focus:border-gray-400"
                               autoFocus
                             />
                             <button
                               onClick={handleUpdateProcess}
-                              className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                              className="px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700"
                             >
                               저장
                             </button>
@@ -3261,29 +3259,29 @@ const Schedule = () => {
                                 setEditingProcess(null);
                                 setEditProcessName('');
                               }}
-                              className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300"
+                              className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs rounded-lg hover:bg-gray-200"
                             >
                               취소
                             </button>
                           </>
                         ) : (
                           <>
-                            <span className="text-gray-400 text-xs w-6">{index + 1}</span>
-                            <span
-                              className="flex-1 text-sm cursor-pointer hover:text-blue-600"
+                            <span className="text-gray-300 text-xs w-5 text-right">{index + 1}</span>
+                            <span className="flex-1 text-sm text-gray-700">{process.name}</span>
+                            <button
                               onClick={() => {
                                 setEditingProcess(process);
                                 setEditProcessName(process.name);
                               }}
+                              className="px-2 py-1 text-gray-400 hover:text-gray-700 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                              {process.name}
-                            </span>
+                              수정
+                            </button>
                             <button
                               onClick={() => handleDeleteProcess(process.id)}
-                              className="px-2 py-1 text-gray-400 hover:text-red-500 text-sm"
-                              title="삭제"
+                              className="px-2 py-1 text-gray-400 hover:text-red-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                              ✕
+                              삭제
                             </button>
                           </>
                         )}
@@ -3294,9 +3292,11 @@ const Schedule = () => {
               </div>
 
               {/* 푸터 */}
-              <div className="p-3 border-t border-gray-200 bg-gray-50 text-center text-xs text-gray-500">
-                공정명을 클릭하면 수정할 수 있습니다
-              </div>
+              {processList.length > 0 && (
+                <div className="p-3 border-t border-gray-100 bg-gray-50 text-center text-xs text-gray-400">
+                  항목에 마우스를 올리면 수정/삭제 버튼이 나타납니다
+                </div>
+              )}
             </div>
           </div>
         )}
