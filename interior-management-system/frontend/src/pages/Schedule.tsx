@@ -758,15 +758,21 @@ const Schedule = () => {
           const lastDeleted = deletedScheduleStack[deletedScheduleStack.length - 1];
 
           try {
-            // 삭제된 일정 복원
+            // 삭제된 일정 복원 (Schedule 타입에 맞게 변환)
+            const scheduleType = lastDeleted.type === 'as_visit' || lastDeleted.type === 'expected_payment'
+              ? 'other'
+              : lastDeleted.type;
+
             await addScheduleToAPI({
-              projectId: lastDeleted.projectId || '',
-              title: lastDeleted.title,
-              date: moment(lastDeleted.start).format('YYYY-MM-DD'),
-              startTime: lastDeleted.startTime || '',
-              endTime: lastDeleted.endTime || '',
-              assignedTo: lastDeleted.assignedTo || [],
-              color: lastDeleted.color
+              id: '',
+              title: lastDeleted.originalTitle || lastDeleted.title,
+              start: lastDeleted.start,
+              end: lastDeleted.end,
+              type: scheduleType as 'construction' | 'material' | 'inspection' | 'meeting' | 'other',
+              project: lastDeleted.originalProjectName || lastDeleted.projectName,
+              attendees: lastDeleted.assignedTo || [],
+              time: lastDeleted.time,
+              description: lastDeleted.description
             });
 
             // 스택에서 제거
