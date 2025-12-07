@@ -1531,20 +1531,32 @@ const Schedule = () => {
   }, [filteredEventsRaw, isUserAssignedEvent]);
 
   // 인라인 추가 이벤트 포함 (날짜 셀에 직접 입력 필드 표시)
+  // 해당 날짜의 마지막 일정 다음에 위치하도록 시간 조정
   const filteredEvents = React.useMemo(() => {
     if (inlineAddDate && filterProject !== 'all') {
+      // 해당 날짜의 기존 일정 개수 확인
+      const dateKey = moment(inlineAddDate).format('YYYY-MM-DD');
+      const eventsOnSameDay = filteredEventsSorted.filter(e =>
+        moment(e.start).format('YYYY-MM-DD') === dateKey
+      );
+      // 마지막 일정 다음 위치에 배치 (밀리초 단위로 조정)
+      const lastEventTime = eventsOnSameDay.length > 0
+        ? Math.max(...eventsOnSameDay.map(e => e.start.getTime()))
+        : moment(inlineAddDate).startOf('day').valueOf();
+      const inlineAddStart = new Date(lastEventTime + 1);
+
       const inlineAddEvent: ScheduleEvent = {
         id: '__inline_add__',
         title: '',
-        start: inlineAddDate,
-        end: inlineAddDate,
+        start: inlineAddStart,
+        end: inlineAddStart,
         projectId: '',
         projectName: filterProject,
         type: 'other',
         phase: '',
         assignedTo: [],
         priority: 'medium',
-        allDay: true
+        allDay: false  // 시간 기반 정렬을 위해 false
       };
       return [...filteredEventsSorted, inlineAddEvent];
     }
@@ -2872,22 +2884,25 @@ const Schedule = () => {
           />
         )}
 
-        {/* 드래그 프리뷰 */}
+        {/* 드래그 프리뷰 - 원본 일정과 동일한 스타일 */}
         {draggingEvent && (
           <div
-            className="fixed pointer-events-none z-[9999] bg-white border border-gray-300 rounded-md shadow-lg px-3 py-2"
+            className="fixed pointer-events-none z-[9999]"
             style={{
-              left: dragPosition.x + 15,
-              top: dragPosition.y + 15,
-              maxWidth: '200px'
+              left: dragPosition.x - 50,
+              top: dragPosition.y - 15,
+              backgroundColor: draggingEvent.color || '#F3F4F6',
+              borderRadius: '6px',
+              color: '#1f2937',
+              padding: '4px 8px',
+              fontWeight: 500,
+              fontSize: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              maxWidth: '250px',
+              opacity: 0.95
             }}
           >
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {draggingEvent.originalTitle || draggingEvent.title}
-            </p>
-            <p className="text-xs text-gray-500">
-              {draggingEvent.projectName}
-            </p>
+            {draggingEvent.originalTitle || draggingEvent.title}
           </div>
         )}
       </div>

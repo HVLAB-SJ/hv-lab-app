@@ -481,9 +481,10 @@
   visibility: hidden !important;
 }
 
-/* 드래그 아이템 자체에는 하이라이트 제거 */
+/* 드래그 중인 원본 이벤트 숨김 (커스텀 프리뷰 사용) */
 .rbc-addons-dnd-dragged-event,
 .rbc-event.rbc-addons-dnd-dragged-event {
+  opacity: 0.3 !important;
   background-color: var(--event-bg-color) !important;
 }
 
