@@ -162,26 +162,40 @@ const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) =
           {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 요청일 *
               </label>
               <input
                 {...register('requestDate', { required: '요청일을 선택하세요' })}
                 type="date"
-                className="input w-full h-11 px-3 text-sm"
+                className="w-full px-3 py-2 border rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer text-gray-900"
+                style={{
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  appearance: 'none',
+                  backgroundColor: 'white',
+                  backgroundImage: 'none'
+                }}
               />
               {errors.requestDate && (
                 <p className="mt-1 text-sm text-red-600">{String(errors.requestDate.message)}</p>
               )}
             </div>
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 마감일 *
               </label>
               <input
                 {...register('dueDate', { required: '마감일을 선택하세요' })}
                 type="date"
-                className="input w-full h-11 px-3 text-sm"
+                className="w-full px-3 py-2 border rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer text-gray-900"
+                style={{
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  appearance: 'none',
+                  backgroundColor: 'white',
+                  backgroundImage: 'none'
+                }}
               />
               {errors.dueDate && (
                 <p className="mt-1 text-sm text-red-600">{String(errors.dueDate.message)}</p>
