@@ -741,12 +741,15 @@ div.rbc-popup {
     pointer-events: auto !important;
   }
 
-  /* 모바일에서 날짜 셀 배경색 모두 제거 (붉은색, 회색, 하늘색) */
+  /* 모바일에서 날짜 셀 배경색 모두 제거 (붉은색, 회색, 하늘색, 토요일, 일요일) */
   .rbc-day-bg,
   .rbc-day-bg.rbc-today,
   .rbc-day-bg.rbc-off-range-bg,
   .rbc-day-bg.rbc-selected-cell,
-  .rbc-day-bg.rbc-now {
+  .rbc-day-bg.rbc-now,
+  .rbc-day-bg:nth-child(1),
+  .rbc-day-bg:nth-child(7),
+  .rbc-row-bg .rbc-day-bg {
     background-color: transparent !important;
     background: transparent !important;
   }
@@ -766,6 +769,15 @@ div.rbc-popup {
 
   /* 범위 밖 날짜 배경 제거 */
   .rbc-off-range-bg {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+
+  /* 토요일/일요일 배경색 제거 */
+  .saturday-bg,
+  .sunday-bg,
+  [class*="saturday"],
+  [class*="sunday"] {
     background-color: transparent !important;
     background: transparent !important;
   }

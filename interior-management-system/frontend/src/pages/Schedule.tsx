@@ -2196,14 +2196,21 @@ const Schedule = () => {
     const dateKey = moment(date).format('YYYY-MM-DD');
     const isHoliday = !!holidays[dateKey];
     const isSelected = selectedDate && moment(date).isSame(selectedDate, 'day');
+    const isMobile = window.innerWidth < 768;
 
     let className = '';
     if (isSelected) className += 'selected-date ';
     if (isHoliday) className += 'holiday-date ';
 
+    // 모바일에서는 모든 배경색 제거
+    const style: React.CSSProperties = isMobile ? {
+      backgroundColor: 'transparent',
+      background: 'transparent'
+    } : {};
+
     return {
       className: className.trim(),
-      style: {}
+      style
     };
   }, [selectedDate]);
 
@@ -2840,7 +2847,7 @@ const Schedule = () => {
                 draggableAccessor={(event: ScheduleEvent) => filterProject !== 'all' && event.id !== '__inline_add__'}
                 resizable={false}
                 selectable={true}
-                longPressThreshold={50}
+                longPressThreshold={1}
                 eventPropGetter={eventStyleGetter}
                 dayPropGetter={dayPropGetter}
                 components={calendarComponents}
