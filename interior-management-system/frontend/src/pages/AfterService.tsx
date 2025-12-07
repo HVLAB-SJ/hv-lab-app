@@ -411,10 +411,6 @@ const AfterService = () => {
       {/* 좌측: AS 요청 폼 */}
       <div className={`as-form lg:col-span-1 ${showMobileForm ? 'block' : 'hidden lg:block'}`}>
         <div className="card p-4 sticky top-4">
-          <h2 className="text-lg font-semibold mb-4">
-            {selectedRequest ? 'AS 요청 수정' : 'AS 요청 추가'}
-          </h2>
-
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Project & Client */}
             <div>
