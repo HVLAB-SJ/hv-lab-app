@@ -628,7 +628,7 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
             </label>
             <textarea
               {...register('description')}
-              rows={4}
+              rows={2}
               className="input w-full text-sm md:text-base"
             />
           </div>
