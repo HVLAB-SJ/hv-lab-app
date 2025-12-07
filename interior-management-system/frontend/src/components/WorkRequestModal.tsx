@@ -160,7 +160,7 @@ const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) =
           </div>
 
           {/* Dates */}
-          <div className="grid grid-cols-2 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 요청일 *
@@ -168,8 +168,7 @@ const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) =
               <input
                 {...register('requestDate', { required: '요청일을 선택하세요' })}
                 type="date"
-                className="input w-full h-10"
-                style={{ position: 'relative' }}
+                className="input w-full h-11 px-3 text-sm"
               />
               {errors.requestDate && (
                 <p className="mt-1 text-sm text-red-600">{String(errors.requestDate.message)}</p>
@@ -182,8 +181,7 @@ const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) =
               <input
                 {...register('dueDate', { required: '마감일을 선택하세요' })}
                 type="date"
-                className="input w-full h-10"
-                style={{ position: 'relative' }}
+                className="input w-full h-11 px-3 text-sm"
               />
               {errors.dueDate && (
                 <p className="mt-1 text-sm text-red-600">{String(errors.dueDate.message)}</p>
@@ -192,14 +190,14 @@ const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) =
           </div>
 
           {/* People */}
-          <div className="grid grid-cols-2 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 요청자 *
               </label>
               <select
                 {...register('requestedBy', { required: '요청자를 선택하세요' })}
-                className="input w-full h-10"
+                className="input w-full h-11 px-3 text-sm"
               >
                 <option value="">선택하세요</option>
                 {TEAM_MEMBERS.map((member) => (
@@ -218,7 +216,7 @@ const WorkRequestModal = ({ request, onClose, onSave }: WorkRequestModalProps) =
               </label>
               <select
                 {...register('assignedTo', { required: '담당자를 선택하세요' })}
-                className="input w-full h-10"
+                className="input w-full h-11 px-3 text-sm"
               >
                 <option value="">선택하세요</option>
                 {TEAM_MEMBERS.map((member) => (
