@@ -542,9 +542,6 @@ const EstimatePreview: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* 기본 정보 섹션 */}
               <div className="md:col-span-2">
-                <h3 className="text-sm font-bold text-gray-800 mb-2 pb-1 border-b border-gray-200">
-                  기본 정보
-                </h3>
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
