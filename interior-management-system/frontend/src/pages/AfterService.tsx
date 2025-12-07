@@ -414,9 +414,6 @@ const AfterService = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Project & Client */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                프로젝트명 * (공사완료 현장)
-              </label>
               <select
                 {...register('project', { required: '프로젝트를 선택하세요' })}
                 className="input text-sm"
@@ -428,7 +425,7 @@ const AfterService = () => {
                   }
                 }}
               >
-                <option value="">선택하세요</option>
+                <option value="">프로젝트 선택 (공사완료 현장)</option>
                 {completedProjects.map((project) => (
                   <option key={project.id} value={project.name}>
                     {project.name}
