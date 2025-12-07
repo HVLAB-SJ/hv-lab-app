@@ -2990,8 +2990,8 @@ const Schedule = () => {
                               <p className="text-sm font-semibold text-gray-900 truncate">
                                 {event.title}
                               </p>
-                              {/* 개별 프로젝트 선택 시 담당자를 우측에 표시 */}
-                              {filterProject !== 'all' && event.assignedTo && event.assignedTo.length > 0 && (
+                              {/* 담당자를 우측에 표시 */}
+                              {event.assignedTo && event.assignedTo.length > 0 && (
                                 <p className="text-xs text-gray-500 flex-shrink-0">
                                   {(() => {
                                     const designTeam = ['신애', '재성', '재현'];
@@ -3006,19 +3006,6 @@ const Schedule = () => {
                             {event.projectName && filterProject === 'all' && (
                               <p className="text-xs text-gray-600 mt-0.5">
                                 {event.projectName}
-                              </p>
-                            )}
-                            {/* 전체 프로젝트일 때만 담당자를 아래에 표시 */}
-                            {filterProject === 'all' && event.assignedTo && event.assignedTo.length > 0 && (
-                              <p className="text-xs text-gray-500 mt-0.5">
-                                {(() => {
-                                  // 디자인팀 3명이 모두 포함되어 있으면 "디자인팀"으로 표시
-                                  const designTeam = ['신애', '재성', '재현'];
-                                  const hasAllDesignTeam = designTeam.every(member =>
-                                    event.assignedTo.includes(member)
-                                  );
-                                  return hasAllDesignTeam ? '디자인팀' : event.assignedTo.join(', ');
-                                })()}
                               </p>
                             )}
                           </div>
