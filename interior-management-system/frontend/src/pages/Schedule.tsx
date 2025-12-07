@@ -3033,7 +3033,6 @@ const Schedule = () => {
                           const targetDate = selectedDate || new Date();
                           if (filterProject !== 'all') {
                             const newScheduleId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-                            const projectColor = projects.find(p => p.name === filterProject)?.color || '#6b7280';
                             const newSchedule = {
                               id: newScheduleId,
                               title: processName,
@@ -3041,21 +3040,18 @@ const Schedule = () => {
                               end: targetDate,
                               project: filterProject,
                               attendees: user?.name ? [user.name] : [],
-                              priority: 'medium' as const,
-                              color: projectColor
+                              type: 'construction' as const
                             };
 
                             // 낙관적 업데이트: 즉시 UI에 반영
                             setSchedules(prev => [...prev, newSchedule]);
 
                             // 백그라운드에서 API 호출
-                            try {
-                              await addScheduleToAPI(newSchedule);
-                            } catch (error) {
+                            addScheduleToAPI(newSchedule).catch(error => {
                               console.error('일정 추가 실패:', error);
                               // 실패 시 롤백
                               setSchedules(prev => prev.filter(s => s.id !== newScheduleId));
-                            }
+                            });
                           }
                         }}
                         className="px-2.5 py-1.5 text-xs rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors font-medium"
