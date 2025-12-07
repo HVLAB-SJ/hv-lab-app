@@ -1142,36 +1142,36 @@ const Drawings = () => {
                   <div className="flex items-center gap-1.5 overflow-x-auto">
                     {/* 평면도 타입 */}
                     <div className="flex items-center gap-0.5 flex-shrink-0">
-                      <span className="text-[10px] text-gray-500">타입</span>
+                      <span className="text-[11px] text-gray-500">타입</span>
                       <input
                         type="text"
                         value={naverTypeSqm}
                         onChange={(e) => setNaverTypeSqm(e.target.value)}
                         placeholder="136E"
-                        className="input w-12 h-5 text-[11px] px-1"
+                        className="input w-12 h-5 text-[12px] px-1"
                       />
-                      <span className="text-[10px] text-gray-500">㎡</span>
+                      <span className="text-[11px] text-gray-500">㎡</span>
                       <span className="text-gray-300 text-xs">/</span>
                       <input
                         type="text"
                         value={naverTypePyeong}
                         onChange={(e) => setNaverTypePyeong(e.target.value)}
                         placeholder="41E"
-                        className="input w-10 h-5 text-[11px] px-1"
+                        className="input w-10 h-5 text-[12px] px-1"
                       />
-                      <span className="text-[10px] text-gray-500">평</span>
+                      <span className="text-[11px] text-gray-500">평</span>
                     </div>
                     {/* 구분선 */}
                     <div className="w-px h-3 bg-gray-200 flex-shrink-0"></div>
                     {/* 공급/전용 면적 정보 */}
                     <div className="flex items-center gap-0.5 flex-1 min-w-0">
-                      <span className="text-[10px] text-gray-500 flex-shrink-0">공급/전용</span>
+                      <span className="text-[11px] text-gray-500 flex-shrink-0">공급/전용</span>
                       <input
                         type="text"
                         value={naverArea}
                         onChange={(e) => setNaverArea(e.target.value)}
                         placeholder="136.21㎡/101.97㎡"
-                        className="input h-5 text-[11px] px-1 flex-1 min-w-[100px]"
+                        className="input h-5 text-[12px] px-1 flex-1 min-w-[100px]"
                       />
                     </div>
                   </div>
