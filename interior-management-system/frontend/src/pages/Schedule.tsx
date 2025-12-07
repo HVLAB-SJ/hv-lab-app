@@ -689,6 +689,7 @@ const Schedule = () => {
     schedules,
     setSchedules,
     addSchedule,
+    deleteSchedule,
     loadSchedulesFromAPI,
     addScheduleToAPI,
     updateScheduleInAPI,
@@ -2985,15 +2986,30 @@ const Schedule = () => {
                             }}
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 truncate">
-                              {event.title}
-                            </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-semibold text-gray-900 truncate">
+                                {event.title}
+                              </p>
+                              {/* 개별 프로젝트 선택 시 담당자를 우측에 표시 */}
+                              {filterProject !== 'all' && event.assignedTo && event.assignedTo.length > 0 && (
+                                <p className="text-xs text-gray-500 flex-shrink-0">
+                                  {(() => {
+                                    const designTeam = ['신애', '재성', '재현'];
+                                    const hasAllDesignTeam = designTeam.every(member =>
+                                      event.assignedTo.includes(member)
+                                    );
+                                    return hasAllDesignTeam ? '디자인팀' : event.assignedTo.join(', ');
+                                  })()}
+                                </p>
+                              )}
+                            </div>
                             {event.projectName && filterProject === 'all' && (
                               <p className="text-xs text-gray-600 mt-0.5">
                                 {event.projectName}
                               </p>
                             )}
-                            {event.assignedTo && event.assignedTo.length > 0 && (
+                            {/* 전체 프로젝트일 때만 담당자를 아래에 표시 */}
+                            {filterProject === 'all' && event.assignedTo && event.assignedTo.length > 0 && (
                               <p className="text-xs text-gray-500 mt-0.5">
                                 {(() => {
                                   // 디자인팀 3명이 모두 포함되어 있으면 "디자인팀"으로 표시
@@ -3050,11 +3066,11 @@ const Schedule = () => {
                             // 백그라운드에서 API 호출 후 임시 항목 제거 (API가 자동으로 새 항목 추가)
                             addScheduleToAPI(newSchedule).then(() => {
                               // API 성공 시 임시 항목 제거 (API가 새 ID로 추가함)
-                              setSchedules(schedules.filter(s => s.id !== tempId));
+                              deleteSchedule(tempId);
                             }).catch(error => {
                               console.error('일정 추가 실패:', error);
                               // 실패 시 임시 항목 제거
-                              setSchedules(schedules.filter(s => s.id !== tempId));
+                              deleteSchedule(tempId);
                             });
                           }
                         }}
