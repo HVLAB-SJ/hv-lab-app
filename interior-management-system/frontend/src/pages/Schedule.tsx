@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import React from 'react';
 import { Calendar, momentLocalizer, type View } from 'react-big-calendar';
+import { Printer } from 'lucide-react';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import moment from 'moment';
@@ -1414,6 +1415,29 @@ const Schedule = () => {
     localStorage.setItem(filterStorageKey, filterProject);
   }, [filterProject, filterStorageKey]);
 
+  // 일정표 인쇄 핸들러
+  const handlePrintSchedule = useCallback(() => {
+    // 인쇄 모드 클래스 추가
+    document.body.classList.add('printing-schedule');
+
+    // 선택된 프로젝트명 가져오기
+    const projectName = filterProject === 'all' ? '전체 프로젝트' : filterProject;
+    const monthYear = moment(date).format('YYYY년 MM월');
+
+    // 인쇄 제목 설정
+    const originalTitle = document.title;
+    document.title = `${projectName} - ${monthYear} 일정표`;
+
+    // 잠시 후 인쇄 (DOM 업데이트 대기)
+    setTimeout(() => {
+      window.print();
+
+      // 인쇄 후 원래 상태로 복원
+      document.body.classList.remove('printing-schedule');
+      document.title = originalTitle;
+    }, 100);
+  }, [filterProject, date]);
+
   // 그룹화 적용 (전체 프로젝트 보기에서만 병합)
   const events = groupEventsByProjectAndDate(allEvents, filterProject === 'all');
   // 모바일에서는 오늘 날짜를 기본 선택
@@ -2292,48 +2316,61 @@ const Schedule = () => {
             <div className="flex items-center space-x-1">
               <button
                 onClick={() => onNavigate('PREV')}
-                className="px-2 py-1.5 text-2xl md:text-3xl text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-bold"
+                className="px-2 py-1.5 text-2xl md:text-3xl text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-bold print-hide"
               >
                 ‹
               </button>
               <div
-                className="text-base md:text-lg font-bold text-gray-900 hover:bg-gray-50 px-2 md:px-3 py-1 rounded-lg transition-colors cursor-pointer"
+                className="text-base md:text-lg font-bold text-gray-900 hover:bg-gray-50 px-2 md:px-3 py-1 rounded-lg transition-colors cursor-pointer print-title"
                 onClick={handleOpenMonthPicker}
               >
                 <span>{moment(date).format('YYYY년 MM월')}</span>
+                {/* 인쇄 시 프로젝트명 표시 */}
+                <span className="print-project-name hidden"> - {filterProject === 'all' ? '전체 프로젝트' : filterProject}</span>
               </div>
               <button
                 onClick={() => onNavigate('NEXT')}
-                className="px-2 py-1.5 text-2xl md:text-3xl text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-bold"
+                className="px-2 py-1.5 text-2xl md:text-3xl text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-bold print-hide"
               >
                 ›
               </button>
             </div>
 
-            {/* 프로젝트 필터 */}
-            <select
-              className="px-3 md:px-4 py-1.5 md:py-2 bg-white text-gray-700 rounded-lg text-xs md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-300 border border-gray-300"
-              value={filterProject}
-              onChange={(e) => setFilterProject(e.target.value)}
-              style={{
-                appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.5rem center',
-                backgroundSize: '1.25rem',
-                paddingRight: '2.5rem'
-              }}
-            >
-              {/* 안팀 사용자는 전체 프로젝트 옵션을 보지 못함 */}
-              {user?.name !== '안팀' && <option value="all">전체 프로젝트</option>}
-              {projects
-                .filter(project => project.status !== 'completed')
-                .map((project) => (
-                  <option key={project.id} value={project.name}>
-                    {project.name}
-                  </option>
-                ))}
-            </select>
+            <div className="flex items-center space-x-2">
+              {/* 인쇄 버튼 */}
+              <button
+                onClick={handlePrintSchedule}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors print-hide"
+                title="일정표 인쇄"
+              >
+                <Printer className="w-5 h-5" />
+              </button>
+
+              {/* 프로젝트 필터 */}
+              <select
+                className="px-3 md:px-4 py-1.5 md:py-2 bg-white text-gray-700 rounded-lg text-xs md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-300 border border-gray-300 print-hide"
+                value={filterProject}
+                onChange={(e) => setFilterProject(e.target.value)}
+                style={{
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundSize: '1.25rem',
+                  paddingRight: '2.5rem'
+                }}
+              >
+                {/* 안팀 사용자는 전체 프로젝트 옵션을 보지 못함 */}
+                {user?.name !== '안팀' && <option value="all">전체 프로젝트</option>}
+                {projects
+                  .filter(project => project.status !== 'completed')
+                  .map((project) => (
+                    <option key={project.id} value={project.name}>
+                      {project.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
           </div>
         </div>
 

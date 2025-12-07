@@ -2878,4 +2878,145 @@ div.rbc-popup {
   .print\\:hidden {
     display: none !important;
   }
+
+}
+
+/* ===== 일정표 인쇄 전용 스타일 ===== */
+@media print {
+  /* 일정표 인쇄 모드일 때 모든 기본 숨김 해제 */
+  body.printing-schedule,
+  body.printing-schedule * {
+    visibility: visible !important;
+  }
+
+  body.printing-schedule {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body.printing-schedule html,
+  body.printing-schedule body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* 일정표 인쇄 시 숨길 요소들 */
+  body.printing-schedule .print-hide,
+  body.printing-schedule nav,
+  body.printing-schedule aside,
+  body.printing-schedule .sidebar,
+  body.printing-schedule .mobile-bottom-nav,
+  body.printing-schedule .public-process-sidebar,
+  body.printing-schedule .process-button-container,
+  body.printing-schedule .inline-add-input,
+  body.printing-schedule .fixed.inset-0 {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* 인쇄 시 프로젝트명 표시 */
+  body.printing-schedule .print-project-name {
+    display: inline !important;
+  }
+
+  /* 인쇄 시 제목 스타일 */
+  body.printing-schedule .print-title {
+    font-size: 18px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    display: flex !important;
+    justify-content: center !important;
+    padding: 8px 0 !important;
+    cursor: default !important;
+    background: none !important;
+  }
+
+  /* 메인 컨테이너 풀 너비 */
+  body.printing-schedule main,
+  body.printing-schedule .flex-1,
+  body.printing-schedule .schedule-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* 캘린더 헤더 (날짜 네비게이션) */
+  body.printing-schedule .schedule-calendar {
+    border: none !important;
+    box-shadow: none !important;
+    height: auto !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* 캘린더 내부 스타일 */
+  body.printing-schedule .rbc-calendar {
+    height: auto !important;
+  }
+
+  body.printing-schedule .rbc-month-view {
+    border: 1px solid #d1d5db !important;
+  }
+
+  body.printing-schedule .rbc-header {
+    padding: 6px 4px !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    background: #f3f4f6 !important;
+    border-bottom: 1px solid #d1d5db !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.printing-schedule .rbc-date-cell {
+    padding: 3px 4px !important;
+    font-weight: 500 !important;
+    font-size: 11px !important;
+  }
+
+  body.printing-schedule .rbc-day-bg {
+    border-left: 1px solid #e5e7eb !important;
+  }
+
+  body.printing-schedule .rbc-month-row {
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  /* 일정 이벤트 스타일 */
+  body.printing-schedule .rbc-event {
+    font-size: 10px !important;
+    padding: 1px 3px !important;
+    margin: 1px 2px !important;
+    border-radius: 2px !important;
+    line-height: 1.3 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.printing-schedule .rbc-event-content {
+    font-size: 10px !important;
+  }
+
+  /* 일정 내용 - 삭제 버튼 등 숨기기 */
+  body.printing-schedule .rbc-event button,
+  body.printing-schedule .rbc-event .delete-btn,
+  body.printing-schedule .rbc-event svg {
+    display: none !important;
+  }
+
+  /* +더보기 링크 스타일 */
+  body.printing-schedule .rbc-show-more {
+    font-size: 9px !important;
+    color: #6b7280 !important;
+  }
+
+  /* 오늘 날짜 표시 */
+  body.printing-schedule .rbc-today {
+    background-color: #fef3c7 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
