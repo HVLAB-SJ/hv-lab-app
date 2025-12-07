@@ -2904,7 +2904,7 @@ const Schedule = () => {
               </div>
 
               {/* 일정 목록 - 날짜별로 그룹핑 */}
-              <div className="max-h-[25vh] overflow-y-auto">
+              <div>
                 {selectedDateEvents.length === 0 ? (
                   <div className="p-4 text-center">
                     <p className="text-sm text-gray-500">일정이 없습니다</p>
