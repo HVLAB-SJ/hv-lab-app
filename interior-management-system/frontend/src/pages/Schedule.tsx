@@ -3009,16 +3009,14 @@ const Schedule = () => {
                             };
                             onSelectEvent(eventWithOriginalTitle);
                           }}
-                          className={`p-3 transition-colors cursor-pointer ${
+                          className={`p-3 cursor-pointer ${
                             isDeleteConfirm
                               ? 'bg-red-50'
                               : isDeleteMode && canDelete
-                              ? 'bg-red-50/50 hover:bg-red-100 active:bg-red-200'
+                              ? 'bg-red-50/50'
                               : shouldHighlight
-                              ? 'bg-yellow-50 hover:bg-yellow-100 active:bg-yellow-200'
-                              : isUnassignedNoProject
-                              ? 'hover:bg-purple-50 active:bg-purple-100'
-                              : 'hover:bg-gray-50 active:bg-gray-100'
+                              ? 'bg-yellow-50'
+                              : ''
                           }`}
                           style={isUnassignedNoProject && !isDeleteConfirm && !isDeleteMode ? { backgroundColor: '#f3f0f5' } : undefined}
                         >
