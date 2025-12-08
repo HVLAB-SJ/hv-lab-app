@@ -67,6 +67,7 @@ const FinishCheck = () => {
     return saved === 'true';
   });
   const [showAddSpaceModal, setShowAddSpaceModal] = useState(false);
+  const [isAddingSpace, setIsAddingSpace] = useState(false); // 중복 실행 방지
 
   // showOnlyIncomplete 상태 저장
   useEffect(() => {
@@ -179,6 +180,9 @@ const FinishCheck = () => {
   };
 
   const handleAddSpace = async () => {
+    // 중복 실행 방지
+    if (isAddingSpace) return;
+
     if (!newSpaceName.trim()) {
       toast.error('공간 이름을 입력하세요');
       return;
@@ -188,6 +192,8 @@ const FinishCheck = () => {
       toast.error('프로젝트를 선택하세요');
       return;
     }
+
+    setIsAddingSpace(true);
 
     try {
       const response = await api.post('/finish-check/spaces', {
@@ -206,6 +212,8 @@ const FinishCheck = () => {
     } catch (error) {
       console.error('Failed to add space:', error);
       toast.error('공간 추가에 실패했습니다');
+    } finally {
+      setIsAddingSpace(false);
     }
   };
 
@@ -657,7 +665,8 @@ const FinishCheck = () => {
                   />
                   <button
                     onClick={handleAddSpace}
-                    className="p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center justify-center min-w-[44px]"
+                    disabled={isAddingSpace}
+                    className="p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center justify-center min-w-[44px] disabled:opacity-50"
                     title="공간 추가"
                   >
                     <Plus className="w-5 h-5" />
@@ -1213,10 +1222,10 @@ const FinishCheck = () => {
                 </button>
                 <button
                   onClick={handleAddSpace}
-                  disabled={!newSpaceName.trim()}
+                  disabled={!newSpaceName.trim() || isAddingSpace}
                   className="flex-1 px-4 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  추가
+                  {isAddingSpace ? '추가 중...' : '추가'}
                 </button>
               </div>
             </div>
