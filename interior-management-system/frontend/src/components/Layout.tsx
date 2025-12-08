@@ -39,8 +39,16 @@ const Layout = () => {
 
   // Pull-to-refresh 핸들러
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // 모바일에서만, 스크롤이 맨 위일 때만 동작
-    if (window.scrollY === 0 && window.innerWidth < 768) {
+    // 모바일에서만 동작
+    if (window.innerWidth >= 768) return;
+
+    // 현재 스크롤 위치 확인 (window와 main 요소 모두 체크)
+    const mainElement = mainRef.current;
+    const windowAtTop = window.scrollY <= 0;
+    const mainAtTop = !mainElement || mainElement.scrollTop <= 0;
+
+    // 둘 다 최상단일 때만 pull-to-refresh 활성화
+    if (windowAtTop && mainAtTop) {
       touchStartY.current = e.touches[0].clientY;
       setIsPulling(true);
     }
@@ -49,14 +57,30 @@ const Layout = () => {
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isPulling || isRefreshing) return;
 
+    // 스크롤 위치 재확인 (스크롤 중 변경될 수 있음)
+    const mainElement = mainRef.current;
+    const windowAtTop = window.scrollY <= 0;
+    const mainAtTop = !mainElement || mainElement.scrollTop <= 0;
+
+    // 스크롤이 발생했으면 pull-to-refresh 취소
+    if (!windowAtTop || !mainAtTop) {
+      setIsPulling(false);
+      setPullDistance(0);
+      return;
+    }
+
     const touchY = e.touches[0].clientY;
     const diff = touchY - touchStartY.current;
 
     // 아래로 당길 때만 (양수 값)
-    if (diff > 0 && window.scrollY === 0) {
+    if (diff > 0) {
       // 저항 효과 적용 (당길수록 덜 움직임)
       const distance = Math.min(diff * 0.5, 120);
       setPullDistance(distance);
+    } else {
+      // 위로 스크롤하려는 경우 pull-to-refresh 취소
+      setIsPulling(false);
+      setPullDistance(0);
     }
   }, [isPulling, isRefreshing]);
 
