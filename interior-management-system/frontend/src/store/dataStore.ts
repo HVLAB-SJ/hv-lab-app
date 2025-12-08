@@ -385,8 +385,13 @@ export const useDataStore = create<DataStore>()(
 
   addPaymentToAPI: async (payment: Payment) => {
     try {
+      // 프로젝트 이름을 ID로 변환
+      const state = get();
+      const project = state.projects.find(p => p.name === payment.project);
+      const projectId = project ? project.id : payment.project;
+
       const paymentData = {
-        projectId: payment.project,
+        projectId: projectId,
         purpose: payment.purpose,
         process: payment.process,
         itemName: payment.itemName,
