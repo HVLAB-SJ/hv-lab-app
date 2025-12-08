@@ -1780,22 +1780,24 @@ const Payments = () => {
 
   // 송금완료 처리
   const handleMarkAsCompleted = async (paymentId: string) => {
-    try {
-      // 송금완료 전에 해당 결제요청의 quickText를 실행내역 메모로 저장
-      const payment = payments.find(p => p.id === paymentId);
-      if (payment && (payment as any).quickText) {
-        const storedMemos = localStorage.getItem('executionMemos');
-        const executionMemos = storedMemos ? JSON.parse(storedMemos) : {};
-        executionMemos[paymentId] = (payment as any).quickText;
-        localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
-      }
-
-      await updatePaymentInAPI(paymentId, { status: 'completed' });
-      toast.success('송금완료 처리되었습니다');
-      setShowDetailModal(false);
-    } catch (error) {
-      toast.error('송금완료 처리 실패');
+    // 송금완료 전에 해당 결제요청의 quickText를 실행내역 메모로 저장
+    const payment = payments.find(p => p.id === paymentId);
+    if (payment && (payment as any).quickText) {
+      const storedMemos = localStorage.getItem('executionMemos');
+      const executionMemos = storedMemos ? JSON.parse(storedMemos) : {};
+      executionMemos[paymentId] = (payment as any).quickText;
+      localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
     }
+
+    // 낙관적 업데이트: 즉시 UI 반영
+    setShowDetailModal(false);
+    toast.success('송금완료 처리되었습니다');
+
+    // 백그라운드에서 API 호출
+    updatePaymentInAPI(paymentId, { status: 'completed' }).catch((error) => {
+      console.error('송금완료 처리 실패:', error);
+      toast.error('송금완료 처리 실패 - 새로고침 해주세요');
+    });
   };
 
   // 파일 선택 처리
