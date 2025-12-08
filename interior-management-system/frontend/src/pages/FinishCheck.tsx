@@ -47,7 +47,7 @@ const FinishCheck = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [spaces, setSpaces] = useState<FinishCheckSpace[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [newSpaceName, setNewSpaceName] = useState('');
   const [newItemContent, setNewItemContent] = useState('');
   const [selectedSpaceIdForNewItem, setSelectedSpaceIdForNewItem] = useState<number | null>(null);
@@ -155,7 +155,10 @@ const FinishCheck = () => {
 
   const loadSpaces = async () => {
     try {
-      setLoading(true);
+      // 데이터가 없을 때만 로딩 표시
+      if (spaces.length === 0) {
+        setLoading(true);
+      }
       const url = selectedProjectId
         ? `/finish-check/spaces?project_id=${selectedProjectId}`
         : '/finish-check/spaces';

@@ -282,7 +282,7 @@ const SpecBook = () => {
     const saved = localStorage.getItem('specBook_lastProject');
     return saved ? Number(saved) : null;
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState<SpecBookItem | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -448,7 +448,10 @@ const SpecBook = () => {
 
   const loadItems = async () => {
     try {
-      setLoading(true);
+      // 데이터가 없을 때만 로딩 표시 (이미 데이터가 있으면 백그라운드에서 업데이트)
+      if (items.length === 0) {
+        setLoading(true);
+      }
       const params: any = {};
       if (selectedCategory !== '전체') {
         params.category = selectedCategory;

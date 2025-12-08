@@ -6,7 +6,7 @@ import { removePosition, extractPosition } from '../utils/formatters';
 
 export default function Contractors() {
   const [contractors, setContractors] = useState<Contractor[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingContractor, setEditingContractor] = useState<Contractor | null>(null);
@@ -42,7 +42,10 @@ export default function Contractors() {
 
   const loadContractors = async () => {
     try {
-      setLoading(true);
+      // 데이터가 없을 때만 로딩 표시
+      if (contractors.length === 0) {
+        setLoading(true);
+      }
       setError(null);
       const data = await contractorService.getAllContractors();
       setContractors(data.map((c) => ({

@@ -20,7 +20,7 @@ interface QuoteInquiry {
 const QuoteInquiry = () => {
   const [inquiries, setInquiries] = useState<QuoteInquiry[]>([]);
   const [selectedInquiry, setSelectedInquiry] = useState<QuoteInquiry | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadInquiries();
@@ -28,7 +28,10 @@ const QuoteInquiry = () => {
 
   const loadInquiries = async () => {
     try {
-      setLoading(true);
+      // 데이터가 없을 때만 로딩 표시
+      if (inquiries.length === 0) {
+        setLoading(true);
+      }
       const response = await api.get('/quote-inquiries');
       setInquiries(response.data);
     } catch (error) {
