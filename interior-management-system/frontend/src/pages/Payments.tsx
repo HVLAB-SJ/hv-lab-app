@@ -1793,6 +1793,9 @@ const Payments = () => {
     setShowDetailModal(false);
     toast.success('송금완료 처리되었습니다');
 
+    // 배지 카운트 즉시 업데이트 이벤트 발생
+    window.dispatchEvent(new CustomEvent('paymentCompleted'));
+
     // 백그라운드에서 API 호출
     updatePaymentInAPI(paymentId, { status: 'completed' }).catch((error) => {
       console.error('송금완료 처리 실패:', error);

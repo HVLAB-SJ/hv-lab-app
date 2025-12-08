@@ -143,6 +143,16 @@ const Layout = () => {
     return () => window.removeEventListener('quoteInquiryRead', handleQuoteInquiryRead);
   }, []);
 
+  // 결제요청 송금완료 처리 시 배지 즉시 업데이트
+  useEffect(() => {
+    const handlePaymentCompleted = () => {
+      setPendingPaymentCount(prev => Math.max(0, prev - 1));
+    };
+
+    window.addEventListener('paymentCompleted', handlePaymentCompleted);
+    return () => window.removeEventListener('paymentCompleted', handlePaymentCompleted);
+  }, []);
+
   // Load all badge counts in a single effect (optimized)
   useEffect(() => {
     if (!user) return;
