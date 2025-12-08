@@ -734,14 +734,34 @@ const SpecBook = () => {
     processSubImageFiles(files);
   };
 
-  // 파일 처리 함수
+  // 파일 처리 함수 (이미지, PDF, 문서 파일 지원)
   const processSubImageFiles = (files: File[]) => {
+    const supportedTypes = [
+      'image/', // 모든 이미지
+      'application/pdf', // PDF
+      'application/msword', // DOC
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+      'application/vnd.ms-excel', // XLS
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
+      'application/vnd.ms-powerpoint', // PPT
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
+      'application/zip', // ZIP
+      'application/x-hwp', // HWP
+      'text/plain', // TXT
+    ];
+
     files.forEach(file => {
-      if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+      const isSupported = supportedTypes.some(type =>
+        type.endsWith('/') ? file.type.startsWith(type) : file.type === type
+      ) || file.name.endsWith('.hwp'); // HWP 파일 확장자 체크
+
+      if (isSupported) {
         const reader = new FileReader();
         reader.onload = (event) => {
           const base64 = event.target?.result as string;
-          setSubImages(prev => [...prev, base64]);
+          // 파일명을 base64에 포함시켜 저장 (파일명|base64 형식)
+          const dataWithName = file.type.startsWith('image/') ? base64 : `${file.name}|${base64}`;
+          setSubImages(prev => [...prev, dataWithName]);
         };
         reader.readAsDataURL(file);
       } else {
@@ -838,11 +858,33 @@ const SpecBook = () => {
   };
 
   // Sub 이미지 모달 닫기
-  const handleCloseSubImageModal = () => {
+  const handleCloseSubImageModal = async () => {
     // 저장 중이면 타이머 취소
     if (subImagesSaveTimeoutRef.current) {
       clearTimeout(subImagesSaveTimeoutRef.current);
     }
+
+    // 변경사항이 있으면 즉시 저장
+    const hasChanged = JSON.stringify(subImages) !== JSON.stringify(initialSubImagesRef.current);
+    if (hasChanged && selectedItemForImages) {
+      setIsSavingSubImages(true);
+      try {
+        await api.put(`/specbook/${selectedItemForImages.id}/sub-images`, {
+          sub_images: subImages
+        });
+        // 아이템 목록 업데이트
+        loadItems();
+        if (view === 'library') {
+          loadAllLibraryItems();
+        } else if (view === 'project' && selectedProject) {
+          loadAllProjectItems();
+        }
+      } catch (error) {
+        console.error('Sub 이미지 저장 실패:', error);
+        toast.error('파일 저장에 실패했습니다');
+      }
+    }
+
     setIsSubImageModalOpen(false);
     setSelectedItemForImages(null);
     setSubImages([]);
@@ -1814,7 +1856,7 @@ const SpecBook = () => {
               <input
                 ref={subImageFileInputRef}
                 type="file"
-                accept="image/*,application/pdf"
+                accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,.txt,.zip"
                 multiple
                 onChange={handleAddSubImage}
                 className="hidden"
@@ -1841,33 +1883,79 @@ const SpecBook = () => {
                   </div>
                 )}
 
-                {/* Sub 이미지들 */}
+                {/* Sub 이미지/파일들 */}
                 {subImages.map((fileData, index) => {
-                  const isPDF = fileData.startsWith('data:application/pdf');
+                  // 파일명|base64 형식인지 확인
+                  const hasFileName = fileData.includes('|') && !fileData.startsWith('data:image');
+                  const fileName = hasFileName ? fileData.split('|')[0] : '';
+                  const actualData = hasFileName ? fileData.split('|')[1] : fileData;
+
+                  const isImage = actualData.startsWith('data:image');
+                  const isPDF = actualData.startsWith('data:application/pdf');
+                  const isWord = actualData.includes('wordprocessingml') || actualData.includes('msword');
+                  const isExcel = actualData.includes('spreadsheetml') || actualData.includes('ms-excel');
+                  const isPPT = actualData.includes('presentationml') || actualData.includes('ms-powerpoint');
+                  const isZip = actualData.includes('application/zip');
+                  const isText = actualData.startsWith('data:text/plain');
+                  const isHWP = fileName.endsWith('.hwp') || actualData.includes('x-hwp');
+
+                  const getFileIcon = () => {
+                    if (isPDF) return { color: 'text-red-600', label: 'PDF' };
+                    if (isWord) return { color: 'text-blue-600', label: 'DOC' };
+                    if (isExcel) return { color: 'text-green-600', label: 'XLS' };
+                    if (isPPT) return { color: 'text-orange-600', label: 'PPT' };
+                    if (isZip) return { color: 'text-yellow-600', label: 'ZIP' };
+                    if (isText) return { color: 'text-gray-600', label: 'TXT' };
+                    if (isHWP) return { color: 'text-sky-600', label: 'HWP' };
+                    return { color: 'text-gray-600', label: 'FILE' };
+                  };
+
+                  const fileIcon = getFileIcon();
+
+                  const handleFileClick = () => {
+                    if (isImage) {
+                      setViewingImage(actualData);
+                    } else {
+                      // 파일 다운로드
+                      const link = document.createElement('a');
+                      link.href = actualData;
+                      link.download = fileName || `file_${index + 1}`;
+                      link.click();
+                    }
+                  };
+
                   return (
                     <div key={index} className="relative group">
                       <div
                         className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-400 transition-colors cursor-pointer"
-                        onClick={() => !isPDF && setViewingImage(fileData)}
+                        onClick={handleFileClick}
                       >
-                        {isPDF ? (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-red-600">
-                            <svg className="h-16 w-16 mb-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
-                              <path d="M14 2v6h6M10 12h4M10 16h4"/>
-                            </svg>
-                            <span className="text-xs font-medium">PDF</span>
-                          </div>
-                        ) : (
+                        {isImage ? (
                           <img
-                            src={fileData}
+                            src={actualData}
                             alt={`상세 이미지 ${index + 1}`}
                             className="w-full h-full object-contain"
                           />
+                        ) : (
+                          <div className={`w-full h-full flex flex-col items-center justify-center ${fileIcon.color}`}>
+                            <svg className="h-12 w-12 mb-2" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                              <path d="M14 2v6h6"/>
+                            </svg>
+                            <span className="text-xs font-bold">{fileIcon.label}</span>
+                            {fileName && (
+                              <span className="text-xs text-gray-500 mt-1 px-2 truncate max-w-full">
+                                {fileName.length > 15 ? fileName.slice(0, 12) + '...' : fileName}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                       <button
-                        onClick={() => handleDeleteSubImage(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSubImage(index);
+                        }}
                         className="absolute top-2 right-2 p-1.5 bg-gray-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-800"
                       >
                         <Trash2 className="h-4 w-4" />
