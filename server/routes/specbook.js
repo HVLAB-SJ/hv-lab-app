@@ -51,6 +51,28 @@ const validateBase64Image = (base64Data) => {
   return base64Data; // 유효한 base64 데이터를 그대로 반환
 };
 
+// Base64 파일 검증 함수 (이미지, PDF, 문서 등 모든 파일 지원)
+const validateBase64File = (base64Data) => {
+  // 파일명|base64 형식인 경우 파일명 분리
+  if (base64Data.includes('|data:')) {
+    const parts = base64Data.split('|');
+    if (parts.length === 2) {
+      const actualData = parts[1];
+      const matches = actualData.match(/^data:([^;]+);base64,(.+)$/);
+      if (!matches || matches.length !== 3) {
+        throw new Error('Invalid base64 file data');
+      }
+      return base64Data;
+    }
+  }
+  // 일반 base64 형식
+  const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/);
+  if (!matches || matches.length !== 3) {
+    throw new Error('Invalid base64 file data');
+  }
+  return base64Data;
+};
+
 // 파일을 Base64로 변환하는 함수
 const fileToBase64 = (filePath, mimeType) => {
   const fileBuffer = fs.readFileSync(filePath);
@@ -574,14 +596,14 @@ router.put('/:id/sub-images', authenticateToken, isManager, (req, res) => {
     return res.status(400).json({ error: 'sub_images 배열이 필요합니다.' });
   }
 
-  // 각 이미지가 유효한 base64인지 검증
+  // 각 파일이 유효한 base64인지 검증 (이미지, PDF, 문서 등 모든 파일 지원)
   try {
     sub_images.forEach((img) => {
-      if (img) validateBase64Image(img);
+      if (img) validateBase64File(img);
     });
   } catch (error) {
-    console.error('Sub 이미지 검증 실패:', error);
-    return res.status(400).json({ error: 'Sub 이미지 검증 실패' });
+    console.error('Sub 파일 검증 실패:', error);
+    return res.status(400).json({ error: 'Sub 파일 검증 실패' });
   }
 
   // JSON 문자열로 변환하여 저장
