@@ -754,7 +754,7 @@ const SpecBook = () => {
     ];
 
     // 확장자로 체크해야 하는 파일들
-    const supportedExtensions = ['.hwp', '.dwg', '.skp', '.3dm'];
+    const supportedExtensions = ['.hwp', '.dwg', '.skp', '.3dm', '.dxf'];
 
     files.forEach(file => {
       const fileExt = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
@@ -1863,7 +1863,7 @@ const SpecBook = () => {
               <input
                 ref={subImageFileInputRef}
                 type="file"
-                accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,.txt,.zip,.dwg,.skp,.3dm"
+                accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,.txt,.zip,.dwg,.skp,.3dm,.dxf"
                 multiple
                 onChange={handleAddSubImage}
                 className="hidden"
@@ -1906,6 +1906,7 @@ const SpecBook = () => {
                   const isText = actualData.startsWith('data:text/plain');
                   const isHWP = fileName.endsWith('.hwp') || actualData.includes('x-hwp');
                   const isDWG = fileName.toLowerCase().endsWith('.dwg') || actualData.includes('autocad') || actualData.includes('vnd.dwg');
+                  const isDXF = fileName.toLowerCase().endsWith('.dxf');
                   const isSKP = fileName.toLowerCase().endsWith('.skp');
                   const is3DM = fileName.toLowerCase().endsWith('.3dm');
 
@@ -1918,6 +1919,7 @@ const SpecBook = () => {
                     if (isText) return { color: 'text-gray-600', label: 'TXT' };
                     if (isHWP) return { color: 'text-sky-600', label: 'HWP' };
                     if (isDWG) return { color: 'text-purple-600', label: 'DWG' };
+                    if (isDXF) return { color: 'text-violet-600', label: 'DXF' };
                     if (isSKP) return { color: 'text-amber-600', label: 'SKP' };
                     if (is3DM) return { color: 'text-teal-600', label: '3DM' };
                     return { color: 'text-gray-600', label: 'FILE' };
