@@ -1930,8 +1930,21 @@ const SpecBook = () => {
                   const handleFileClick = () => {
                     if (isImage) {
                       setViewingImage(actualData);
+                    } else if (isPDF) {
+                      // PDF는 새 탭에서 열기
+                      const newWindow = window.open();
+                      if (newWindow) {
+                        newWindow.document.write(`
+                          <html>
+                            <head><title>${fileName || 'PDF 파일'}</title></head>
+                            <body style="margin:0;padding:0;overflow:hidden;">
+                              <iframe src="${actualData}" style="width:100%;height:100vh;border:none;"></iframe>
+                            </body>
+                          </html>
+                        `);
+                      }
                     } else {
-                      // 파일 다운로드
+                      // 다른 파일은 다운로드
                       const link = document.createElement('a');
                       link.href = actualData;
                       link.download = fileName || `file_${index + 1}`;
