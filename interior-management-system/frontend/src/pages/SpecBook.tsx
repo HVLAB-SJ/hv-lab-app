@@ -20,6 +20,7 @@ import {
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
+  rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -78,6 +79,113 @@ const getGradeColor = (gradeString: string | undefined): string => {
   if (grades.includes('알뜰')) return 'bg-yellow-100 text-yellow-700';
 
   return 'bg-gray-100 text-gray-700';
+};
+
+// Sortable Sub Image 컴포넌트
+const SortableSubImage = ({
+  id,
+  fileData,
+  index,
+  onDelete,
+  onFileClick,
+}: {
+  id: string;
+  fileData: string;
+  index: number;
+  onDelete: (index: number) => void;
+  onFileClick: (fileData: string, fileName: string, isImage: boolean, isPDF: boolean) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 100 : 1,
+  };
+
+  // 파일명|base64 형식인지 확인
+  const hasFileName = fileData.includes('|') && !fileData.startsWith('data:image');
+  const fileName = hasFileName ? fileData.split('|')[0] : '';
+  const actualData = hasFileName ? fileData.split('|')[1] : fileData;
+
+  const isImage = actualData.startsWith('data:image');
+  const isPDF = actualData.startsWith('data:application/pdf');
+  const isWord = actualData.includes('wordprocessingml') || actualData.includes('msword');
+  const isExcel = actualData.includes('spreadsheetml') || actualData.includes('ms-excel');
+  const isPPT = actualData.includes('presentationml') || actualData.includes('ms-powerpoint');
+  const isZip = actualData.includes('application/zip');
+  const isText = actualData.startsWith('data:text/plain');
+  const isHWP = fileName.endsWith('.hwp') || actualData.includes('x-hwp');
+  const isDWG = fileName.toLowerCase().endsWith('.dwg') || actualData.includes('autocad') || actualData.includes('vnd.dwg');
+  const isDXF = fileName.toLowerCase().endsWith('.dxf');
+  const isSKP = fileName.toLowerCase().endsWith('.skp');
+  const is3DM = fileName.toLowerCase().endsWith('.3dm');
+
+  const getFileIcon = () => {
+    if (isPDF) return { color: 'text-red-600', label: 'PDF' };
+    if (isWord) return { color: 'text-blue-600', label: 'DOC' };
+    if (isExcel) return { color: 'text-green-600', label: 'XLS' };
+    if (isPPT) return { color: 'text-orange-600', label: 'PPT' };
+    if (isZip) return { color: 'text-yellow-600', label: 'ZIP' };
+    if (isText) return { color: 'text-gray-600', label: 'TXT' };
+    if (isHWP) return { color: 'text-sky-600', label: 'HWP' };
+    if (isDWG) return { color: 'text-purple-600', label: 'DWG' };
+    if (isDXF) return { color: 'text-violet-600', label: 'DXF' };
+    if (isSKP) return { color: 'text-amber-600', label: 'SKP' };
+    if (is3DM) return { color: 'text-teal-600', label: '3DM' };
+    return { color: 'text-gray-600', label: 'FILE' };
+  };
+
+  const fileIcon = getFileIcon();
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group">
+      <div
+        {...attributes}
+        {...listeners}
+        className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-400 transition-colors cursor-grab active:cursor-grabbing touch-none"
+        onClick={() => onFileClick(actualData, fileName, isImage, isPDF)}
+      >
+        {isImage ? (
+          <img
+            src={actualData}
+            alt={`상세 이미지 ${index + 1}`}
+            className="w-full h-full object-contain pointer-events-none"
+          />
+        ) : (
+          <div className={`w-full h-full flex flex-col items-center justify-center ${fileIcon.color}`}>
+            <svg className="h-12 w-12 mb-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+              <path d="M14 2v6h6"/>
+            </svg>
+            <span className="text-xs font-bold">{fileIcon.label}</span>
+            {fileName && (
+              <span className="text-xs text-gray-500 mt-1 px-2 truncate max-w-full">
+                {fileName.length > 15 ? fileName.slice(0, 12) + '...' : fileName}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(index);
+        }}
+        className="absolute top-2 right-2 p-1.5 bg-gray-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-800"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
+  );
 };
 
 // Sortable 스펙북 아이템 컴포넌트
@@ -862,6 +970,45 @@ const SpecBook = () => {
   // Sub 이미지 삭제
   const handleDeleteSubImage = (index: number) => {
     setSubImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Sub 이미지 드래그 종료 핸들러
+  const handleSubImageDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setSubImages((items) => {
+        const oldIndex = items.findIndex((_, i) => `subimg-${i}` === active.id);
+        const newIndex = items.findIndex((_, i) => `subimg-${i}` === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  // Sub 이미지/파일 클릭 핸들러
+  const handleSubImageFileClick = (actualData: string, fileName: string, isImage: boolean, isPDF: boolean) => {
+    if (isImage) {
+      setViewingImage(actualData);
+    } else if (isPDF) {
+      // PDF는 새 탭에서 열기
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head><title>${fileName || 'PDF 파일'}</title></head>
+            <body style="margin:0;padding:0;overflow:hidden;">
+              <iframe src="${actualData}" style="width:100%;height:100vh;border:none;"></iframe>
+            </body>
+          </html>
+        `);
+      }
+    } else {
+      // 다른 파일은 다운로드
+      const link = document.createElement('a');
+      link.href = actualData;
+      link.download = fileName || 'file';
+      link.click();
+    }
   };
 
   // Sub 이미지 모달 닫기
@@ -1890,107 +2037,28 @@ const SpecBook = () => {
                   </div>
                 )}
 
-                {/* Sub 이미지/파일들 */}
-                {subImages.map((fileData, index) => {
-                  // 파일명|base64 형식인지 확인
-                  const hasFileName = fileData.includes('|') && !fileData.startsWith('data:image');
-                  const fileName = hasFileName ? fileData.split('|')[0] : '';
-                  const actualData = hasFileName ? fileData.split('|')[1] : fileData;
-
-                  const isImage = actualData.startsWith('data:image');
-                  const isPDF = actualData.startsWith('data:application/pdf');
-                  const isWord = actualData.includes('wordprocessingml') || actualData.includes('msword');
-                  const isExcel = actualData.includes('spreadsheetml') || actualData.includes('ms-excel');
-                  const isPPT = actualData.includes('presentationml') || actualData.includes('ms-powerpoint');
-                  const isZip = actualData.includes('application/zip');
-                  const isText = actualData.startsWith('data:text/plain');
-                  const isHWP = fileName.endsWith('.hwp') || actualData.includes('x-hwp');
-                  const isDWG = fileName.toLowerCase().endsWith('.dwg') || actualData.includes('autocad') || actualData.includes('vnd.dwg');
-                  const isDXF = fileName.toLowerCase().endsWith('.dxf');
-                  const isSKP = fileName.toLowerCase().endsWith('.skp');
-                  const is3DM = fileName.toLowerCase().endsWith('.3dm');
-
-                  const getFileIcon = () => {
-                    if (isPDF) return { color: 'text-red-600', label: 'PDF' };
-                    if (isWord) return { color: 'text-blue-600', label: 'DOC' };
-                    if (isExcel) return { color: 'text-green-600', label: 'XLS' };
-                    if (isPPT) return { color: 'text-orange-600', label: 'PPT' };
-                    if (isZip) return { color: 'text-yellow-600', label: 'ZIP' };
-                    if (isText) return { color: 'text-gray-600', label: 'TXT' };
-                    if (isHWP) return { color: 'text-sky-600', label: 'HWP' };
-                    if (isDWG) return { color: 'text-purple-600', label: 'DWG' };
-                    if (isDXF) return { color: 'text-violet-600', label: 'DXF' };
-                    if (isSKP) return { color: 'text-amber-600', label: 'SKP' };
-                    if (is3DM) return { color: 'text-teal-600', label: '3DM' };
-                    return { color: 'text-gray-600', label: 'FILE' };
-                  };
-
-                  const fileIcon = getFileIcon();
-
-                  const handleFileClick = () => {
-                    if (isImage) {
-                      setViewingImage(actualData);
-                    } else if (isPDF) {
-                      // PDF는 새 탭에서 열기
-                      const newWindow = window.open();
-                      if (newWindow) {
-                        newWindow.document.write(`
-                          <html>
-                            <head><title>${fileName || 'PDF 파일'}</title></head>
-                            <body style="margin:0;padding:0;overflow:hidden;">
-                              <iframe src="${actualData}" style="width:100%;height:100vh;border:none;"></iframe>
-                            </body>
-                          </html>
-                        `);
-                      }
-                    } else {
-                      // 다른 파일은 다운로드
-                      const link = document.createElement('a');
-                      link.href = actualData;
-                      link.download = fileName || `file_${index + 1}`;
-                      link.click();
-                    }
-                  };
-
-                  return (
-                    <div key={index} className="relative group">
-                      <div
-                        className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-400 transition-colors cursor-pointer"
-                        onClick={handleFileClick}
-                      >
-                        {isImage ? (
-                          <img
-                            src={actualData}
-                            alt={`상세 이미지 ${index + 1}`}
-                            className="w-full h-full object-contain"
-                          />
-                        ) : (
-                          <div className={`w-full h-full flex flex-col items-center justify-center ${fileIcon.color}`}>
-                            <svg className="h-12 w-12 mb-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
-                              <path d="M14 2v6h6"/>
-                            </svg>
-                            <span className="text-xs font-bold">{fileIcon.label}</span>
-                            {fileName && (
-                              <span className="text-xs text-gray-500 mt-1 px-2 truncate max-w-full">
-                                {fileName.length > 15 ? fileName.slice(0, 12) + '...' : fileName}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSubImage(index);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 bg-gray-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-800"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  );
-                })}
+                {/* Sub 이미지/파일들 (드래그 정렬 가능) */}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleSubImageDragEnd}
+                >
+                  <SortableContext
+                    items={subImages.map((_, index) => `subimg-${index}`)}
+                    strategy={rectSortingStrategy}
+                  >
+                    {subImages.map((fileData, index) => (
+                      <SortableSubImage
+                        key={`subimg-${index}`}
+                        id={`subimg-${index}`}
+                        fileData={fileData}
+                        index={index}
+                        onDelete={handleDeleteSubImage}
+                        onFileClick={handleSubImageFileClick}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
 
                 {/* 이미지 추가 버튼 */}
                 <div
