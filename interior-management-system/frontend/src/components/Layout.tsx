@@ -37,33 +37,48 @@ const Layout = () => {
   const mainRef = useRef<HTMLDivElement>(null);
   const PULL_THRESHOLD = 80; // 새로고침 트리거 거리
 
+  // 스크롤 가능한 모든 부모 요소가 최상단인지 확인
+  const isAllScrollableAtTop = useCallback((element: HTMLElement | null): boolean => {
+    // window 스크롤 체크
+    if (window.scrollY > 0) return false;
+
+    // 터치 시작 요소부터 상위로 올라가며 스크롤 가능한 요소 체크
+    let current = element;
+    while (current && current !== document.body) {
+      const style = window.getComputedStyle(current);
+      const overflowY = style.overflowY;
+
+      // 스크롤 가능한 요소인지 확인
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        // 스크롤이 최상단이 아니면 false
+        if (current.scrollTop > 0) {
+          return false;
+        }
+      }
+      current = current.parentElement;
+    }
+    return true;
+  }, []);
+
   // Pull-to-refresh 핸들러
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     // 모바일에서만 동작
     if (window.innerWidth >= 768) return;
 
-    // 현재 스크롤 위치 확인 (window와 main 요소 모두 체크)
-    const mainElement = mainRef.current;
-    const windowAtTop = window.scrollY <= 0;
-    const mainAtTop = !mainElement || mainElement.scrollTop <= 0;
-
-    // 둘 다 최상단일 때만 pull-to-refresh 활성화
-    if (windowAtTop && mainAtTop) {
+    // 터치 시작 요소부터 모든 스크롤 가능한 부모가 최상단인지 확인
+    const touchTarget = e.target as HTMLElement;
+    if (isAllScrollableAtTop(touchTarget)) {
       touchStartY.current = e.touches[0].clientY;
       setIsPulling(true);
     }
-  }, []);
+  }, [isAllScrollableAtTop]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isPulling || isRefreshing) return;
 
-    // 스크롤 위치 재확인 (스크롤 중 변경될 수 있음)
-    const mainElement = mainRef.current;
-    const windowAtTop = window.scrollY <= 0;
-    const mainAtTop = !mainElement || mainElement.scrollTop <= 0;
-
-    // 스크롤이 발생했으면 pull-to-refresh 취소
-    if (!windowAtTop || !mainAtTop) {
+    // 스크롤 위치 재확인
+    const touchTarget = e.target as HTMLElement;
+    if (!isAllScrollableAtTop(touchTarget)) {
       setIsPulling(false);
       setPullDistance(0);
       return;
@@ -82,7 +97,7 @@ const Layout = () => {
       setIsPulling(false);
       setPullDistance(0);
     }
-  }, [isPulling, isRefreshing]);
+  }, [isPulling, isRefreshing, isAllScrollableAtTop]);
 
   const handleTouchEnd = useCallback(() => {
     if (!isPulling) return;
