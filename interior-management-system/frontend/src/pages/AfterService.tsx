@@ -41,6 +41,7 @@ const AfterService = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImage, setModalImage] = useState<string>('');
   const [showMobileForm, setShowMobileForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // 중복 제출 방지
 
   // 폼 관련 state
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
@@ -136,6 +137,10 @@ const AfterService = () => {
   };
 
   const onSubmit = async (data: any) => {
+    // 중복 제출 방지
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       // Convert time to HH:mm format (only if visit date is set)
       let timeString: string | undefined = undefined;
@@ -175,6 +180,8 @@ const AfterService = () => {
     } catch (error) {
       console.error('Failed to save AS request:', error);
       toast.error('AS 요청 저장에 실패했습니다');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -608,9 +615,10 @@ const AfterService = () => {
               )}
               <button
                 type="submit"
-                className="flex-1 btn btn-primary text-sm py-2"
+                disabled={isSubmitting}
+                className="flex-1 btn btn-primary text-sm py-2 disabled:opacity-50"
               >
-                {selectedRequest ? '수정' : '추가'}
+                {isSubmitting ? '저장 중...' : (selectedRequest ? '수정' : '추가')}
               </button>
             </div>
           </form>

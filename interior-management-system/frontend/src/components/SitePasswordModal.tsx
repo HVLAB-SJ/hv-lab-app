@@ -19,14 +19,21 @@ const SitePasswordModal = ({
   const [entrancePassword, setEntrancePassword] = useState(initialEntrancePassword || '');
   const [sitePassword, setSitePassword] = useState(initialSitePassword || '');
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleEdit = () => {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    onSave(entrancePassword, sitePassword);
-    setIsEditing(false);
+  const handleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSave(entrancePassword, sitePassword);
+      setIsEditing(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -115,13 +122,15 @@ const SitePasswordModal = ({
             <>
               <button
                 onClick={handleSave}
-                className="flex-1 px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-800 transition-colors"
+                disabled={isSaving}
+                className="flex-1 px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
               >
-                저장
+                {isSaving ? '저장 중...' : '저장'}
               </button>
               <button
                 onClick={handleCancel}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors"
+                disabled={isSaving}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors disabled:opacity-50"
               >
                 취소
               </button>

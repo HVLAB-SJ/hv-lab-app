@@ -46,6 +46,7 @@ const ASRequestModal = ({ request, onClose, onSave }: ASRequestModalProps) => {
   const [visitTimePeriod, setVisitTimePeriod] = useState<'오전' | '오후'>('오전');
   const [visitTimeHour, setVisitTimeHour] = useState<number>(9);
   const [visitTimeMinute, setVisitTimeMinute] = useState<number>(0);
+  const [isSaving, setIsSaving] = useState(false);
 
   // 공사완료된 프로젝트만 필터링
   const completedProjects = projects.filter(p => p.status === 'completed');
@@ -107,7 +108,10 @@ const ASRequestModal = ({ request, onClose, onSave }: ASRequestModalProps) => {
     setSelectedMembers(prev => prev.filter(m => m !== member));
   };
 
-  const onSubmit = (data: ASRequestFormData) => {
+  const onSubmit = async (data: ASRequestFormData) => {
+    if (isSaving) return;
+    setIsSaving(true);
+
     // Convert time to HH:mm format
     let hours24 = visitTimeHour;
     if (visitTimePeriod === '오후' && visitTimeHour !== 12) {
@@ -124,7 +128,12 @@ const ASRequestModal = ({ request, onClose, onSave }: ASRequestModalProps) => {
       scheduledVisitTime: timeString,
       assignedTo: selectedMembers,
     };
-    onSave(formData);
+    try {
+      await onSave(formData);
+    } catch (error) {
+      setIsSaving(false);
+      throw error;
+    }
   };
 
   return (
@@ -393,9 +402,10 @@ const ASRequestModal = ({ request, onClose, onSave }: ASRequestModalProps) => {
             </button>
             <button
               type="submit"
-              className="btn btn-primary"
+              disabled={isSaving}
+              className="btn btn-primary disabled:opacity-50"
             >
-              {request ? '수정' : '추가'}
+              {isSaving ? '저장 중...' : (request ? '수정' : '추가')}
             </button>
           </div>
         </form>

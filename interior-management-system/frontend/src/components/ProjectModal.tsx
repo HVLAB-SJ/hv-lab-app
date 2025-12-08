@@ -48,6 +48,7 @@ const ProjectModal = ({ project, onClose, onSave }: ProjectModalProps) => {
   const [customManager, setCustomManager] = useState('');
   const [fullLocation, setFullLocation] = useState('');
   const [detailLocation, setDetailLocation] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (project) {
@@ -109,7 +110,10 @@ const ProjectModal = ({ project, onClose, onSave }: ProjectModalProps) => {
     setSelectedManagers(prev => prev.filter(m => m !== name));
   };
 
-  const onSubmit = (data: ProjectFormData) => {
+  const onSubmit = async (data: ProjectFormData) => {
+    if (isSaving) return;
+    setIsSaving(true);
+
     console.log('📋 ProjectModal onSubmit - Raw form data:', data);
 
     // 전체 주소 조합
@@ -166,7 +170,12 @@ const ProjectModal = ({ project, onClose, onSave }: ProjectModalProps) => {
     // If no date at all, don't include the field
 
     console.log('📋 ProjectModal onSubmit - Final formData:', formData);
-    onSave(formData);
+    try {
+      await onSave(formData);
+    } catch (error) {
+      setIsSaving(false);
+      throw error;
+    }
   };
 
   return (
@@ -342,9 +351,10 @@ const ProjectModal = ({ project, onClose, onSave }: ProjectModalProps) => {
             </button>
             <button
               type="submit"
-              className="btn btn-primary text-sm md:text-base"
+              disabled={isSaving}
+              className="btn btn-primary text-sm md:text-base disabled:opacity-50"
             >
-              {project ? '수정' : '생성'}
+              {isSaving ? '저장 중...' : (project ? '수정' : '생성')}
             </button>
           </div>
         </form>

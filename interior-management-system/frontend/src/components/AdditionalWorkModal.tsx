@@ -38,6 +38,7 @@ const AdditionalWorkModal = ({ work, onClose, onSave, initialProject }: Addition
   const [isDragging, setIsDragging] = useState(false);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (work) {
@@ -153,14 +154,22 @@ const AdditionalWorkModal = ({ work, onClose, onSave, initialProject }: Addition
     toast.success('이미지가 삭제되었습니다');
   };
 
-  const onSubmit = (data: AdditionalWorkFormData) => {
+  const onSubmit = async (data: AdditionalWorkFormData) => {
+    if (isSaving) return;
+    setIsSaving(true);
+
     const formData = {
       ...data,
       amount: Number(data.amount),
       date: new Date(data.date),
       images: images,
     };
-    onSave(formData);
+    try {
+      await onSave(formData);
+    } catch (error) {
+      setIsSaving(false);
+      throw error;
+    }
   };
 
   return (
@@ -340,9 +349,10 @@ const AdditionalWorkModal = ({ work, onClose, onSave, initialProject }: Addition
             </button>
             <button
               type="submit"
-              className="btn btn-primary"
+              disabled={isSaving}
+              className="btn btn-primary disabled:opacity-50"
             >
-              {work ? '수정' : '등록'}
+              {isSaving ? '저장 중...' : (work ? '수정' : '등록')}
             </button>
           </div>
         </form>

@@ -59,6 +59,7 @@ const WorkRequest = () => {
   const [customRequestType, setCustomRequestType] = useState('');
   const [editingRequest, setEditingRequest] = useState<WorkRequest | null>(null);
   const [showMobileForm, setShowMobileForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load work requests from API on mount
   useEffect(() => {
@@ -233,12 +234,14 @@ const WorkRequest = () => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     if (!formData.requestedBy || !formData.assignedTo || !formData.requestDate || !formData.dueDate) {
       toast.error('필수 항목을 모두 입력하세요');
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const requestType = formData.requestType === '직접입력' ? customRequestType : formData.requestType;
 
@@ -401,6 +404,8 @@ const WorkRequest = () => {
     } catch (error) {
       console.error('Failed to save work request:', error);
       toast.error('업무요청 저장에 실패했습니다');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -789,8 +794,8 @@ const WorkRequest = () => {
                   취소
                 </button>
               )}
-              <button type="submit" className="flex-1 btn btn-primary">
-                {editingRequest ? '수정' : '추가'}
+              <button type="submit" disabled={isSubmitting} className="flex-1 btn btn-primary disabled:opacity-50">
+                {isSubmitting ? '저장 중...' : (editingRequest ? '수정' : '추가')}
               </button>
             </div>
           </form>
@@ -1231,9 +1236,10 @@ const WorkRequest = () => {
                   )}
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
                   >
-                    {editingRequest ? '수정' : '추가'}
+                    {isSubmitting ? '저장 중...' : (editingRequest ? '수정' : '추가')}
                   </button>
                 </div>
               </form>

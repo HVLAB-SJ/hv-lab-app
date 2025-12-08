@@ -316,6 +316,7 @@ const SpecBook = () => {
   const [isDraggingItem, setIsDraggingItem] = useState(false);
   const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [lastTapPosition, setLastTapPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subImageFileInputRef = useRef<HTMLInputElement>(null);
   const subImagesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -555,6 +556,7 @@ const SpecBook = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     if (!formData.name || !formData.category) {
       toast.error('제품명과 카테고리는 필수입니다');
@@ -566,6 +568,7 @@ const SpecBook = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const gradeString = formData.grades.join(',');
 
@@ -647,6 +650,8 @@ const SpecBook = () => {
     } catch (error: any) {
       console.error('스펙북 아이템 저장 실패:', error);
       toast.error(error.response?.data?.error || '저장에 실패했습니다');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1127,9 +1132,10 @@ const SpecBook = () => {
                     <div className="flex gap-1.5 mt-3">
                       <button
                         type="submit"
-                        className="flex-1 px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+                        disabled={isSubmitting}
+                        className="flex-1 px-3 py-1.5 text-xs bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors disabled:opacity-50"
                       >
-                        {editingItem ? '수정' : '추가'}
+                        {isSubmitting ? '저장 중...' : (editingItem ? '수정' : '추가')}
                       </button>
                       {editingItem && (
                         <button

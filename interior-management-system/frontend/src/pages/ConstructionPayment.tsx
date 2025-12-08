@@ -119,6 +119,8 @@ const ConstructionPayment = () => {
   const [selectedRecord, setSelectedRecord] = useState<PaymentRecord | null>(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isSavingProject, setIsSavingProject] = useState(false);
+  const [isSavingPayment, setIsSavingPayment] = useState(false);
   const [editingPaymentIndex, setEditingPaymentIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'completed' | 'remaining'>('remaining');
   const [newProject, setNewProject] = useState({
@@ -291,6 +293,8 @@ const ConstructionPayment = () => {
   };
 
   const handleSaveProject = async () => {
+    if (isSavingProject) return;
+
     console.log('💰 handleSaveProject called');
     console.log('💰 newProject:', newProject);
     console.log('💰 projects:', projects);
@@ -314,6 +318,7 @@ const ConstructionPayment = () => {
       return;
     }
 
+    setIsSavingProject(true);
     try {
       const newRecord: Partial<ConstructionPayment> = {
         id: '',
@@ -335,6 +340,8 @@ const ConstructionPayment = () => {
     } catch (error) {
       console.error('Failed to add construction payment:', error);
       toast.error('프로젝트 추가에 실패했습니다');
+    } finally {
+      setIsSavingProject(false);
     }
   };
 
@@ -373,11 +380,14 @@ const ConstructionPayment = () => {
   };
 
   const handleSavePayment = async () => {
+    if (isSavingPayment) return;
+
     if (!selectedRecord || !newPayment.date || newPayment.amount <= 0 || newPayment.types.length === 0) {
       alert('모든 필드를 입력하세요');
       return;
     }
 
+    setIsSavingPayment(true);
     try {
       let updatedPayments;
       if (editingPaymentIndex !== null) {
@@ -435,6 +445,8 @@ const ConstructionPayment = () => {
     } catch (error) {
       console.error('Failed to save payment:', error);
       toast.error('입금 저장에 실패했습니다');
+    } finally {
+      setIsSavingPayment(false);
     }
   };
 
@@ -1298,9 +1310,10 @@ const ConstructionPayment = () => {
               </button>
               <button
                 onClick={handleSaveProject}
-                className="btn btn-primary"
+                disabled={isSavingProject}
+                className="btn btn-primary disabled:opacity-50"
               >
-                추가
+                {isSavingProject ? '저장 중...' : '추가'}
               </button>
             </div>
           </div>
@@ -1568,9 +1581,10 @@ const ConstructionPayment = () => {
                 </button>
                 <button
                   onClick={handleSavePayment}
-                  className="btn btn-primary"
+                  disabled={isSavingPayment}
+                  className="btn btn-primary disabled:opacity-50"
                 >
-                  {editingPaymentIndex !== null ? '수정' : '추가'}
+                  {isSavingPayment ? '저장 중...' : (editingPaymentIndex !== null ? '수정' : '추가')}
                 </button>
               </div>
             </div>

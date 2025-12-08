@@ -23,6 +23,7 @@ export default function Contractors() {
     accountNumber: '',
     notes: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load contractors from API
   useEffect(() => {
@@ -187,6 +188,8 @@ export default function Contractors() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     // 은행명과 계좌번호를 하나의 문자열로 합치기
     const fullAccountNumber = formData.bankName && formData.accountNumber
@@ -217,6 +220,8 @@ export default function Contractors() {
       console.error('Failed to save contractor:', err);
       const errorMessage = err instanceof Error && (err as Error & { response?: { data?: { message?: string } } }).response?.data?.message;
       alert(errorMessage || '협력업체 저장에 실패했습니다.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -688,9 +693,10 @@ export default function Contractors() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
                   >
-                    {editingContractor ? '수정' : '등록'}
+                    {isSubmitting ? '저장 중...' : (editingContractor ? '수정' : '등록')}
                   </button>
                 </div>
               </form>

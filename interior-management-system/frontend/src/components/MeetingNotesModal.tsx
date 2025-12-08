@@ -27,6 +27,7 @@ const MeetingNotesModal = ({
   const [newContent, setNewContent] = useState('');
   const [meetingDate, setMeetingDate] = useState(new Date().toISOString().split('T')[0]);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleAddNew = () => {
     setIsAddingNew(true);
@@ -34,7 +35,8 @@ const MeetingNotesModal = ({
     setMeetingDate(new Date().toISOString().split('T')[0]);
   };
 
-  const handleSaveNew = () => {
+  const handleSaveNew = async () => {
+    if (isSaving) return;
     if (!newContent.trim()) {
       alert('내용을 입력하세요');
       return;
@@ -43,10 +45,15 @@ const MeetingNotesModal = ({
       alert('미팅일자를 선택하세요');
       return;
     }
-    onSave(newContent.trim(), new Date(meetingDate));
-    setNewContent('');
-    setMeetingDate(new Date().toISOString().split('T')[0]);
-    setIsAddingNew(false);
+    setIsSaving(true);
+    try {
+      await onSave(newContent.trim(), new Date(meetingDate));
+      setNewContent('');
+      setMeetingDate(new Date().toISOString().split('T')[0]);
+      setIsAddingNew(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancelNew = () => {
@@ -125,13 +132,15 @@ const MeetingNotesModal = ({
               <div className="flex gap-2">
                 <button
                   onClick={handleSaveNew}
-                  className="px-4 py-1.5 bg-gray-900 text-white text-sm rounded hover:bg-gray-800 transition-colors"
+                  disabled={isSaving}
+                  className="px-4 py-1.5 bg-gray-900 text-white text-sm rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
                 >
-                  저장
+                  {isSaving ? '저장 중...' : '저장'}
                 </button>
                 <button
                   onClick={handleCancelNew}
-                  className="px-4 py-1.5 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors"
+                  disabled={isSaving}
+                  className="px-4 py-1.5 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors disabled:opacity-50"
                 >
                   취소
                 </button>

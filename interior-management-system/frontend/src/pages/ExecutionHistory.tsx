@@ -177,6 +177,7 @@ const ExecutionHistory = () => {
     quickText: '',
     quickImages: [] as string[]
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   // 실행내역별 메모 저장을 위한 상태
   const [executionMemos, setExecutionMemos] = useState<Record<string, string>>(() => {
@@ -535,10 +536,14 @@ const ExecutionHistory = () => {
 
   // 폼 저장
   const handleSave = async () => {
+    if (isSaving) return;
+
     if (!formData.project) {
       toast.error('프로젝트를 선택해주세요');
       return;
     }
+
+    setIsSaving(true);
 
     const now = new Date();
     let materialCost = Number(formData.materialCost) || 0;
@@ -611,6 +616,8 @@ const ExecutionHistory = () => {
     } catch (error) {
       console.error('실행내역 저장 실패:', error);
       toast.error('실행내역 저장에 실패했습니다');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1343,9 +1350,10 @@ const ExecutionHistory = () => {
                 ) : (
                   <button
                     onClick={handleSave}
-                    className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+                    disabled={isSaving}
+                    className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
                   >
-                    내역추가
+                    {isSaving ? '저장 중...' : '내역추가'}
                   </button>
                 )}
               </div>

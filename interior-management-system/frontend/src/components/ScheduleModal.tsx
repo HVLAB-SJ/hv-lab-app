@@ -44,6 +44,8 @@ interface ScheduleModalProps {
 const TEAM_MEMBERS = ['상준', '신애', '재천', '민기', '재성', '재현', '안팀'];
 
 const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, onDelete }: ScheduleModalProps) => {
+  const [isSaving, setIsSaving] = useState(false); // 중복 저장 방지
+
   // localStorage에서 마지막 선택한 프로젝트 ID 가져오기
   const getLastProjectId = () => {
     const lastProjectId = localStorage.getItem('lastSelectedProjectId');
@@ -353,12 +355,17 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
       mergedEventIds: event?.mergedEventIds // 병합된 ID들 유지
     };
 
+    // 중복 저장 방지
+    if (isSaving) return;
+    setIsSaving(true);
+
     console.log('🔴 Calling onSave with newEvent:', newEvent);
     try {
       await onSave(newEvent);
       console.log('🔴 onSave completed successfully');
     } catch (error) {
       console.error('🔴 onSave failed:', error);
+      setIsSaving(false);
       throw error;
     }
   };
@@ -659,8 +666,8 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
               >
                 취소
               </button>
-              <button type="submit" className="btn btn-primary flex-1 sm:flex-none text-sm md:text-base">
-                {event ? '수정' : '추가'}
+              <button type="submit" disabled={isSaving} className="btn btn-primary flex-1 sm:flex-none text-sm md:text-base disabled:opacity-50">
+                {isSaving ? '저장 중...' : (event ? '수정' : '추가')}
               </button>
             </div>
           </div>

@@ -43,6 +43,7 @@ const AdditionalWork = () => {
   const formFileInputRef = useRef<HTMLInputElement>(null); // 폼용 파일 입력
   const [showMobileForm, setShowMobileForm] = useState(false);
   const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // 중복 제출 방지
 
   // 프로젝트별 추가내역 총 합계 계산
   const calculateAdditionalWorkTotal = (projectName: string) => {
@@ -310,10 +311,15 @@ const AdditionalWork = () => {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 중복 제출 방지
+    if (isSubmitting) return;
+
     if (!formData.project || !formData.description || !formData.amount || !formData.date) {
       toast.error('모든 필수 항목을 입력해주세요');
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const newWork = await additionalWorkService.createAdditionalWork({
@@ -352,6 +358,8 @@ const AdditionalWork = () => {
     } catch (error) {
       console.error('Failed to create additional work:', error);
       toast.error('추가내역 등록에 실패했습니다');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -531,9 +539,10 @@ const AdditionalWork = () => {
             {/* 등록 버튼 */}
             <button
               onClick={handleFormSubmit}
-              className="aw-submit w-full py-3.5 bg-gray-900 text-white text-base font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+              disabled={isSubmitting}
+              className="aw-submit w-full py-3.5 bg-gray-900 text-white text-base font-semibold rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              추가내역 등록
+              {isSubmitting ? '등록 중...' : '추가내역 등록'}
             </button>
           </div>
         </div>
@@ -790,9 +799,10 @@ const AdditionalWork = () => {
               {/* 등록 버튼 */}
               <button
                 onClick={handleFormSubmit}
-                className="w-full py-3 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+                disabled={isSubmitting}
+                className="w-full py-3 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                추가내역 등록
+                {isSubmitting ? '등록 중...' : '추가내역 등록'}
               </button>
             </div>
           </div>
