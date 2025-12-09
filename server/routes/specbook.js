@@ -5,12 +5,6 @@ const { authenticateToken, isManager } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const sharp = require('sharp');
-
-// 썸네일 캐시 (메모리)
-const thumbnailCache = new Map();
-const THUMBNAIL_SIZE = 200; // 썸네일 크기 (px)
-const THUMBNAIL_QUALITY = 60; // JPEG 품질 (0-100)
 
 // 카테고리 파일 경로
 const CATEGORIES_FILE = path.join(__dirname, '..', 'data', 'categories.json');
@@ -55,47 +49,6 @@ const validateBase64Image = (base64Data) => {
     throw new Error('Invalid base64 image data');
   }
   return base64Data; // 유효한 base64 데이터를 그대로 반환
-};
-
-// Base64 이미지를 썸네일로 변환하는 함수
-const generateThumbnail = async (base64Data, itemId) => {
-  // 캐시 확인
-  if (thumbnailCache.has(itemId)) {
-    return thumbnailCache.get(itemId);
-  }
-
-  if (!base64Data || !base64Data.startsWith('data:image')) {
-    return null;
-  }
-
-  try {
-    // Base64에서 버퍼로 변환
-    const matches = base64Data.match(/^data:image\/([a-zA-Z]*);base64,(.+)$/);
-    if (!matches || matches.length !== 3) {
-      return null;
-    }
-
-    const imageBuffer = Buffer.from(matches[2], 'base64');
-
-    // sharp로 리사이즈 및 압축
-    const thumbnailBuffer = await sharp(imageBuffer)
-      .resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, {
-        fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 1 }
-      })
-      .jpeg({ quality: THUMBNAIL_QUALITY })
-      .toBuffer();
-
-    const thumbnail = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
-
-    // 캐시에 저장
-    thumbnailCache.set(itemId, thumbnail);
-
-    return thumbnail;
-  } catch (error) {
-    console.error('썸네일 생성 실패:', error);
-    return null;
-  }
 };
 
 // Base64 파일 검증 함수 (이미지, PDF, 문서 등 모든 파일 지원)
@@ -236,12 +189,12 @@ router.put('/categories', authenticateToken, async (req, res) => {
   }
 });
 
-// 스펙북 라이브러리 조회 (썸네일 포함 - 빠른 로딩용)
-router.get('/library/meta', authenticateToken, async (req, res) => {
+// 스펙북 라이브러리 조회 (원본 이미지 포함)
+router.get('/library/meta', authenticateToken, (req, res) => {
   const { category, grades } = req.query;
 
-  // 이미지 포함해서 조회 (썸네일 생성용)
-  let query = 'SELECT id, name, category, brand, price, description, project_id, is_library, display_order, grade, image_url, created_at, updated_at FROM specbook_items WHERE is_library = 1';
+  // 모든 데이터 포함해서 조회
+  let query = 'SELECT * FROM specbook_items WHERE is_library = 1';
   let params = [];
 
   if (category && category !== '전체') {
@@ -262,21 +215,25 @@ router.get('/library/meta', authenticateToken, async (req, res) => {
 
   query += ' ORDER BY category ASC, display_order ASC, created_at DESC';
 
-  db.all(query, params, async (err, rows) => {
+  db.all(query, params, (err, rows) => {
     if (err) {
-      console.error('스펙북 라이브러리 메타 조회 실패:', err);
+      console.error('스펙북 라이브러리 조회 실패:', err);
       return res.status(500).json({ error: '스펙북 라이브러리 조회 실패' });
     }
 
-    // 썸네일 생성 (병렬 처리)
-    const result = await Promise.all(rows.map(async (row) => {
-      const thumbnail = await generateThumbnail(row.image_url, row.id);
-      return {
-        ...row,
-        image_url: thumbnail, // 썸네일을 image_url로 반환
-        sub_images: []
-      };
-    }));
+    // sub_images JSON 파싱
+    const result = rows.map(row => {
+      if (row.sub_images) {
+        try {
+          row.sub_images = JSON.parse(row.sub_images);
+        } catch (e) {
+          row.sub_images = [];
+        }
+      } else {
+        row.sub_images = [];
+      }
+      return row;
+    });
 
     res.json(result);
   });
@@ -365,12 +322,12 @@ router.get('/library', authenticateToken, (req, res) => {
   });
 });
 
-// 프로젝트별 스펙 조회 (썸네일 포함 - 빠른 로딩용)
-router.get('/project/:projectId/meta', authenticateToken, async (req, res) => {
+// 프로젝트별 스펙 조회 (원본 이미지 포함)
+router.get('/project/:projectId/meta', authenticateToken, (req, res) => {
   const { projectId } = req.params;
   const { category, grades } = req.query;
 
-  let query = 'SELECT id, name, category, brand, price, description, project_id, is_library, display_order, grade, image_url, created_at, updated_at FROM specbook_items WHERE project_id = ?';
+  let query = 'SELECT * FROM specbook_items WHERE project_id = ?';
   let params = [projectId];
 
   if (category && category !== '전체') {
@@ -391,21 +348,25 @@ router.get('/project/:projectId/meta', authenticateToken, async (req, res) => {
 
   query += ' ORDER BY category ASC, display_order ASC, created_at DESC';
 
-  db.all(query, params, async (err, rows) => {
+  db.all(query, params, (err, rows) => {
     if (err) {
-      console.error('프로젝트 스펙 메타 조회 실패:', err);
+      console.error('프로젝트 스펙 조회 실패:', err);
       return res.status(500).json({ error: '프로젝트 스펙 조회 실패' });
     }
 
-    // 썸네일 생성 (병렬 처리)
-    const result = await Promise.all(rows.map(async (row) => {
-      const thumbnail = await generateThumbnail(row.image_url, row.id);
-      return {
-        ...row,
-        image_url: thumbnail,
-        sub_images: []
-      };
-    }));
+    // sub_images JSON 파싱
+    const result = rows.map(row => {
+      if (row.sub_images) {
+        try {
+          row.sub_images = JSON.parse(row.sub_images);
+        } catch (e) {
+          row.sub_images = [];
+        }
+      } else {
+        row.sub_images = [];
+      }
+      return row;
+    });
 
     res.json(result);
   });

@@ -837,24 +837,13 @@ const SpecBook = () => {
     setImageToCrop(null);
   };
 
-  // 이미지 클릭 - Sub 이미지 모달 열기 (원본 이미지 로드)
-  const handleImageClick = async (item: SpecBookItem) => {
+  // 이미지 클릭 - Sub 이미지 모달 열기
+  const handleImageClick = (item: SpecBookItem) => {
     setSelectedItemForImages(item);
     const initialImages = item.sub_images || [];
     setSubImages(initialImages);
     initialSubImagesRef.current = initialImages;
     setIsSubImageModalOpen(true);
-
-    // 원본 이미지 로드 (썸네일인 경우)
-    try {
-      const response = await api.get(`/specbook/item/${item.id}/image`);
-      if (response.data.image_url && isMountedRef.current) {
-        // 선택된 아이템의 원본 이미지 업데이트
-        setSelectedItemForImages(prev => prev ? { ...prev, image_url: response.data.image_url } : null);
-      }
-    } catch (error) {
-      console.error('원본 이미지 로드 실패:', error);
-    }
   };
 
   // Sub 이미지 추가 (이미지 및 PDF 지원)
