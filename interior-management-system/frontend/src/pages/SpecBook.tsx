@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Pencil, Trash2, Upload, Settings, X, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -193,14 +193,12 @@ const SortableSpecBookItem = ({
   item,
   onEdit,
   onDelete,
-  onImageClick,
-  isImageLoading = false
+  onImageClick
 }: {
   item: SpecBookItem;
   onEdit: (item: SpecBookItem) => void;
   onDelete: (id: number) => void;
   onImageClick: (item: SpecBookItem) => void;
-  isImageLoading?: boolean;
 }) => {
   const {
     attributes,
@@ -221,13 +219,12 @@ const SortableSpecBookItem = ({
     <div
       ref={setNodeRef}
       style={style}
-      data-item-id={item.id}
       {...attributes}
       {...listeners}
       className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group relative cursor-move"
     >
 
-      {/* 상단: 정사각형 이미지 */}
+      {/* 상단: 정사각형 이미지 (썸네일) */}
       <div className="w-full aspect-square bg-gray-100 flex-shrink-0 relative">
         {item.image_url ? (
           <img
@@ -241,10 +238,6 @@ const SortableSpecBookItem = ({
             }}
             onPointerDown={(e) => e.stopPropagation()}
           />
-        ) : isImageLoading ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="animate-pulse bg-gray-200 w-full h-full"></div>
-          </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
             이미지 없음
@@ -399,13 +392,6 @@ const SpecBook = () => {
     return saved ? Number(saved) : null;
   });
   const [loading, setLoading] = useState(false);
-
-  // 이미지 캐시 (id -> image_url)
-  const [imageCache, setImageCache] = useState<Record<number, string | null>>({});
-  // 로딩 중인 이미지 ID들
-  const loadingImagesRef = useRef<Set<number>>(new Set());
-  // 그리드 컨테이너 ref
-  const gridContainerRef = useRef<HTMLDivElement>(null);
   const [editingItem, setEditingItem] = useState<SpecBookItem | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -510,24 +496,6 @@ const SpecBook = () => {
     }
   }, [selectedProject]);
 
-  // 이미지 캐시가 업데이트되면 items에 이미지 반영
-  useEffect(() => {
-    if (Object.keys(imageCache).length > 0 && items.length > 0) {
-      setItems(prevItems => prevItems.map(item => ({
-        ...item,
-        image_url: imageCache[item.id] !== undefined ? imageCache[item.id] : item.image_url
-      })));
-    }
-  }, [imageCache]);
-
-  // 라이브러리 아이템이 로드되면 처음 20개 이미지 자동 로드
-  useEffect(() => {
-    if (allLibraryItems.length > 0) {
-      const first20Ids = allLibraryItems.slice(0, 20).map(item => item.id);
-      loadImagesForItems(first20Ids);
-    }
-  }, [allLibraryItems.length]);
-
   const loadCategories = async () => {
     try {
       const response = await api.get('/specbook/categories');
@@ -592,58 +560,6 @@ const SpecBook = () => {
     }
   };
 
-  // 배치로 이미지 로드
-  const loadImagesForItems = useCallback(async (itemIds: number[]) => {
-    // 이미 캐시되었거나 로딩 중인 이미지 제외
-    const idsToLoad = itemIds.filter(id =>
-      imageCache[id] === undefined && !loadingImagesRef.current.has(id)
-    );
-
-    if (idsToLoad.length === 0) return;
-
-    // 로딩 중 표시
-    idsToLoad.forEach(id => loadingImagesRef.current.add(id));
-
-    try {
-      const response = await api.post('/specbook/library/images', { ids: idsToLoad });
-      if (isMountedRef.current) {
-        setImageCache(prev => ({ ...prev, ...response.data }));
-      }
-    } catch (error) {
-      console.error('이미지 배치 로드 실패:', error);
-    } finally {
-      // 로딩 완료 표시
-      idsToLoad.forEach(id => loadingImagesRef.current.delete(id));
-    }
-  }, [imageCache]);
-
-  // 스크롤 시 보이는 아이템의 이미지 로드
-  const handleGridScroll = useCallback(() => {
-    if (!gridContainerRef.current) return;
-
-    const container = gridContainerRef.current;
-    const containerRect = container.getBoundingClientRect();
-
-    // 현재 보이는 아이템들의 ID 수집
-    const visibleIds: number[] = [];
-    const itemElements = container.querySelectorAll('[data-item-id]');
-
-    itemElements.forEach((el) => {
-      const rect = el.getBoundingClientRect();
-      // 컨테이너 안에 보이는지 확인 (위아래 100px 여유)
-      if (rect.bottom > containerRect.top - 100 && rect.top < containerRect.bottom + 100) {
-        const id = parseInt(el.getAttribute('data-item-id') || '0', 10);
-        if (id && imageCache[id] === undefined) {
-          visibleIds.push(id);
-        }
-      }
-    });
-
-    if (visibleIds.length > 0) {
-      loadImagesForItems(visibleIds);
-    }
-  }, [imageCache, loadImagesForItems]);
-
   const loadItems = async () => {
     try {
       // 데이터가 없을 때만 로딩 표시 (이미 데이터가 있으면 백그라운드에서 업데이트)
@@ -660,7 +576,7 @@ const SpecBook = () => {
 
       let response;
       if (view === 'library') {
-        // 메타데이터만 먼저 빠르게 로드
+        // 썸네일 포함 메타데이터 로드
         response = await api.get('/specbook/library/meta', { params });
       } else {
         if (!selectedProject) {
@@ -668,23 +584,15 @@ const SpecBook = () => {
           setLoading(false);
           return;
         }
-        // 메타데이터만 먼저 빠르게 로드
+        // 썸네일 포함 메타데이터 로드
         response = await api.get(`/specbook/project/${selectedProject}/meta`, { params });
       }
 
       // 컴포넌트가 아직 마운트되어 있을 때만 상태 업데이트
       if (isMountedRef.current) {
-        // 캐시된 이미지 적용
-        const itemsWithCachedImages = response.data.map((item: SpecBookItem) => ({
-          ...item,
-          image_url: imageCache[item.id] || null
-        }));
-        setItems(itemsWithCachedImages);
+        // 서버에서 썸네일이 포함된 데이터 직접 사용
+        setItems(response.data);
         setLoading(false);
-
-        // 화면에 보이는 아이템들의 이미지를 비동기로 로드 (처음 20개만)
-        const visibleIds = response.data.slice(0, 20).map((item: SpecBookItem) => item.id);
-        loadImagesForItems(visibleIds);
       }
     } catch (error) {
       console.error('스펙북 아이템 로드 실패:', error);
@@ -929,13 +837,24 @@ const SpecBook = () => {
     setImageToCrop(null);
   };
 
-  // 이미지 클릭 - Sub 이미지 모달 열기
-  const handleImageClick = (item: SpecBookItem) => {
+  // 이미지 클릭 - Sub 이미지 모달 열기 (원본 이미지 로드)
+  const handleImageClick = async (item: SpecBookItem) => {
     setSelectedItemForImages(item);
     const initialImages = item.sub_images || [];
     setSubImages(initialImages);
     initialSubImagesRef.current = initialImages;
     setIsSubImageModalOpen(true);
+
+    // 원본 이미지 로드 (썸네일인 경우)
+    try {
+      const response = await api.get(`/specbook/item/${item.id}/image`);
+      if (response.data.image_url && isMountedRef.current) {
+        // 선택된 아이템의 원본 이미지 업데이트
+        setSelectedItemForImages(prev => prev ? { ...prev, image_url: response.data.image_url } : null);
+      }
+    } catch (error) {
+      console.error('원본 이미지 로드 실패:', error);
+    }
   };
 
   // Sub 이미지 추가 (이미지 및 PDF 지원)
@@ -1797,18 +1716,14 @@ const SpecBook = () => {
               {/* 좌측: 스펙 라이브러리 (드래그 소스) - 데스크톱에서만 표시, 안팀 제외 */}
               {!isAnTeamUser && (
                 <div className="specbook-library hidden md:flex md:w-1/2 flex-col overflow-hidden pb-4 md:pr-3">
-                <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4" onScroll={handleGridScroll}>
+                <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
                 {(
                   <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {allLibraryItems
                       .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
-                      .map(item => {
-                        const cachedImage = imageCache[item.id];
-                        const displayImage = cachedImage !== undefined ? cachedImage : item.image_url;
-                        return (
+                      .map(item => (
                       <div
                         key={item.id}
-                        data-item-id={item.id}
                         draggable
                         onDragStart={(e) => {
                           setIsDraggingItem(true);
@@ -1840,16 +1755,14 @@ const SpecBook = () => {
                             setDragStartPos(null);
                           }}
                         >
-                          {displayImage ? (
+                          {item.image_url ? (
                             <img
-                              src={displayImage}
+                              src={item.image_url}
                               alt={item.name}
                               className="w-full h-full object-contain pointer-events-none"
                               loading="lazy"
                               draggable={false}
                             />
-                          ) : loadingImagesRef.current.has(item.id) ? (
-                            <div className="w-full h-full animate-pulse bg-gray-200"></div>
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs pointer-events-none">
                               이미지 없음
@@ -1882,8 +1795,7 @@ const SpecBook = () => {
                           </div>
                         </div>
                       </div>
-                    );
-                      })}
+                      ))}
                   </div>
                 )}
               </div>
@@ -1919,9 +1831,7 @@ const SpecBook = () => {
                 </select>
               </div>
                 <div
-                  ref={gridContainerRef}
                   className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4"
-                  onScroll={handleGridScroll}
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.dataTransfer.dropEffect = 'copy';
@@ -1982,7 +1892,6 @@ const SpecBook = () => {
                               onEdit={handleEdit}
                               onDelete={handleDelete}
                               onImageClick={handleImageClick}
-                              isImageLoading={!item.image_url && loadingImagesRef.current.has(item.id)}
                             />
                           ))}
                       </div>
