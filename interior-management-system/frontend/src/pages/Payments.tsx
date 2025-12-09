@@ -1798,12 +1798,18 @@ const Payments = () => {
     window.dispatchEvent(new CustomEvent('paymentCompleted'));
 
     // 백그라운드에서 API 호출
-    updatePaymentInAPI(paymentId, { status: 'completed' }).catch((error) => {
-      console.error('송금완료 처리 실패:', error);
-      // 실패 시 롤백
-      updatePayment(paymentId, { status: 'pending' });
-      toast.error('송금완료 처리 실패 - 다시 시도해주세요');
-    });
+    updatePaymentInAPI(paymentId, { status: 'completed' })
+      .then(() => {
+        // 다른 기기에 실시간 동기화 알림
+        const socket = socketService.getSocket();
+        socket.emit('payment:refresh');
+      })
+      .catch((error) => {
+        console.error('송금완료 처리 실패:', error);
+        // 실패 시 롤백
+        updatePayment(paymentId, { status: 'pending' });
+        toast.error('송금완료 처리 실패 - 다시 시도해주세요');
+      });
   };
 
   // 파일 선택 처리
