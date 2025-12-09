@@ -391,7 +391,6 @@ const SpecBook = () => {
     return saved ? Number(saved) : null;
   });
   const [loading, setLoading] = useState(false);
-  const [libraryLoading, setLibraryLoading] = useState(true); // 라이브러리 초기 로딩 상태
   const [editingItem, setEditingItem] = useState<SpecBookItem | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -539,17 +538,12 @@ const SpecBook = () => {
 
   const loadAllLibraryItems = async () => {
     try {
-      setLibraryLoading(true);
       const response = await api.get('/specbook/library');
       if (isMountedRef.current) {
         setAllLibraryItems(response.data);
       }
     } catch (error) {
       console.error('전체 라이브러리 아이템 로드 실패:', error);
-    } finally {
-      if (isMountedRef.current) {
-        setLibraryLoading(false);
-      }
     }
   };
 
@@ -1705,15 +1699,7 @@ const SpecBook = () => {
               {!isAnTeamUser && (
                 <div className="specbook-library hidden md:flex md:w-1/2 flex-col overflow-hidden pb-4 md:pr-3">
                 <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4">
-                {libraryLoading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-gray-500">로딩 중...</div>
-                  </div>
-                ) : allLibraryItems.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                    라이브러리 아이템이 없습니다
-                  </div>
-                ) : (
+                {(
                   <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {allLibraryItems
                       .filter(item => selectedCategory === '전체' || item.category === selectedCategory)
