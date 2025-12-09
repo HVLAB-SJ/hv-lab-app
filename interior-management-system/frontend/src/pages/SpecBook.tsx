@@ -201,7 +201,7 @@ const SortableSpecBookItem = ({
   onEdit: (item: SpecBookItem) => void;
   onDelete: (id: number) => void;
   onImageClick: (item: SpecBookItem) => void;
-  loadedImages: Map<number, { image_url: string | null; sub_images: string[] }>;
+  loadedImages: Map<number, 'loading' | { image_url: string | null; sub_images: string[] }>;
   onLoadImage: (id: number) => void;
 }) => {
   const {
@@ -215,8 +215,9 @@ const SortableSpecBookItem = ({
 
   const cardRef = useRef<HTMLDivElement>(null);
   const imageData = loadedImages.get(item.id);
-  const isLoading = imageData === undefined;
-  const actualImageUrl = imageData?.image_url || null;
+  const isLoading = imageData === undefined || imageData === 'loading';
+  const actualImageUrl = imageData && imageData !== 'loading' ? imageData.image_url : null;
+  const actualSubImages = imageData && imageData !== 'loading' ? imageData.sub_images : [];
 
   // IntersectionObserver로 화면에 보일 때 이미지 로드
   useEffect(() => {
@@ -268,7 +269,7 @@ const SortableSpecBookItem = ({
             onClick={(e) => {
               e.stopPropagation();
               // imageData를 포함한 아이템 전달
-              onImageClick({ ...item, image_url: actualImageUrl, sub_images: imageData?.sub_images || [] });
+              onImageClick({ ...item, image_url: actualImageUrl, sub_images: actualSubImages });
             }}
             onPointerDown={(e) => e.stopPropagation()}
           />
@@ -470,18 +471,20 @@ const SpecBook = () => {
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
 
-  // 이미지 lazy loading 캐시
-  const [loadedImages, setLoadedImages] = useState<Map<number, { image_url: string | null; sub_images: string[] }>>(new Map());
+  // 이미지 lazy loading 캐시: 'loading' | { image_url, sub_images }
+  const [loadedImages, setLoadedImages] = useState<Map<number, 'loading' | { image_url: string | null; sub_images: string[] }>>(new Map());
+  const loadingRef = useRef<Set<number>>(new Set());
 
   // 개별 아이템 이미지 로드 함수
   const loadItemImage = useCallback(async (itemId: number) => {
     // 이미 로딩 중이거나 로드된 경우 스킵
-    if (loadedImages.has(itemId)) return;
+    if (loadingRef.current.has(itemId)) return;
+    loadingRef.current.add(itemId);
 
-    // 로딩 중임을 표시 (임시로 빈 값 설정)
+    // 로딩 중 상태 표시
     setLoadedImages(prev => {
       const newMap = new Map(prev);
-      newMap.set(itemId, { image_url: null, sub_images: [] });
+      newMap.set(itemId, 'loading');
       return newMap;
     });
 
@@ -497,8 +500,14 @@ const SpecBook = () => {
       });
     } catch (error) {
       console.error(`이미지 로드 실패 (id: ${itemId}):`, error);
+      // 실패해도 로딩 완료 처리
+      setLoadedImages(prev => {
+        const newMap = new Map(prev);
+        newMap.set(itemId, { image_url: null, sub_images: [] });
+        return newMap;
+      });
     }
-  }, [loadedImages]);
+  }, []);
 
   // DnD 센서 설정
   const sensors = useSensors(
@@ -548,6 +557,7 @@ const SpecBook = () => {
   // 뷰나 프로젝트 변경 시 이미지 캐시 초기화
   useEffect(() => {
     setLoadedImages(new Map());
+    loadingRef.current = new Set();
   }, [view, selectedProject]);
 
   // 프로젝트가 선택될 때 전체 프로젝트 아이템 로드
