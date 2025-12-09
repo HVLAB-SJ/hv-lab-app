@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import type { ApiError } from '../types/forms';
+import { useSpecbookStore } from '../store/specbookStore';
 
 interface User {
   id: string;
@@ -29,6 +30,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // 스펙북 사전 로딩 함수
+  const preloadSpecbook = useSpecbookStore(state => state.preloadAll);
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -45,6 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await api.get('/auth/me');
       if (response.data.success) {
         setUser(response.data.user);
+        // 인증 성공 시 스펙북 데이터 백그라운드에서 사전 로딩
+        preloadSpecbook();
       }
     } catch {
       localStorage.removeItem('token');
@@ -62,6 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
+
+      // 로그인 성공 시 스펙북 데이터 백그라운드에서 사전 로딩
+      preloadSpecbook();
 
       toast.success(`${user.name}님, 환영합니다!`);
       navigate('/');

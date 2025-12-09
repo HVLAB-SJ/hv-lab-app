@@ -5,6 +5,7 @@ import api from '../services/api';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useAuth } from '../contexts/AuthContext';
 import ImageCropper from '../components/ImageCropper';
+import { useSpecbookStore } from '../store/specbookStore';
 import {
   DndContext,
   closestCenter,
@@ -375,6 +376,22 @@ const SpecBook = () => {
   const { user } = useAuth();
   const filteredProjects = useFilteredProjects();
   const isAnTeamUser = user?.name === '안팀';
+
+  // 스펙북 Store에서 캐시된 데이터 사용
+  const {
+    libraryItems: cachedLibraryItems,
+    libraryLoaded,
+    categories: cachedCategories,
+    categoriesLoaded,
+    getLibraryItems,
+    loadProjectItems,
+    preloadLibrary,
+    invalidateLibrary,
+    invalidateProject,
+    addItemToCache,
+    updateItemInCache,
+    removeItemFromCache
+  } = useSpecbookStore();
   const [view, setView] = useState<'library' | 'project'>(() => {
     // 안팀 사용자이거나 저장된 프로젝트가 있으면 'project' 뷰로 시작
     if (isAnTeamUser) return 'project';
@@ -471,7 +488,7 @@ const SpecBook = () => {
   useEffect(() => {
     loadCategories();
     loadAllLibraryItems(); // 전체 라이브러리 아이템 로드
-  }, []);
+  }, [categoriesLoaded, cachedCategories, libraryLoaded, cachedLibraryItems]);
 
   // filteredProjects가 변경될 때 프로젝트 다시 로드
   useEffect(() => {
@@ -480,7 +497,7 @@ const SpecBook = () => {
 
   useEffect(() => {
     loadItems();
-  }, [view, selectedCategory, selectedProject, selectedGrades]);
+  }, [view, selectedCategory, selectedProject, selectedGrades, libraryLoaded, cachedLibraryItems]);
 
   // 프로젝트가 선택될 때 전체 프로젝트 아이템 로드
   useEffect(() => {
@@ -497,6 +514,12 @@ const SpecBook = () => {
   }, [selectedProject]);
 
   const loadCategories = async () => {
+    // 캐시된 카테고리가 있으면 사용
+    if (categoriesLoaded && cachedCategories.length > 0) {
+      setCategories(cachedCategories);
+      return;
+    }
+
     try {
       const response = await api.get('/specbook/categories');
       setCategories(response.data);
@@ -538,6 +561,14 @@ const SpecBook = () => {
   };
 
   const loadAllLibraryItems = async () => {
+    // 캐시된 라이브러리 데이터가 있으면 사용
+    if (libraryLoaded && cachedLibraryItems.length > 0) {
+      if (isMountedRef.current) {
+        setAllLibraryItems(cachedLibraryItems);
+      }
+      return;
+    }
+
     try {
       // 메타데이터만 로드 (이미지 제외) - 빠른 로딩
       const response = await api.get('/specbook/library/meta');
@@ -562,41 +593,68 @@ const SpecBook = () => {
 
   const loadItems = async () => {
     try {
-      // 데이터가 없을 때만 로딩 표시 (이미 데이터가 있으면 백그라운드에서 업데이트)
-      if (items.length === 0) {
-        setLoading(true);
-      }
-      const params: any = {};
-      if (selectedCategory !== '전체') {
-        params.category = selectedCategory;
-      }
-      if (selectedGrades.length > 0) {
-        params.grades = selectedGrades.join(',');
-      }
-
-      let response;
       if (view === 'library') {
-        // 썸네일 포함 메타데이터 로드
-        response = await api.get('/specbook/library/meta', { params });
+        // 라이브러리 뷰: 캐시된 데이터 우선 사용
+        if (libraryLoaded && cachedLibraryItems.length > 0) {
+          // 캐시에서 필터링하여 즉시 표시 (로딩 없음!)
+          const filteredItems = getLibraryItems(
+            selectedCategory !== '전체' ? selectedCategory : undefined,
+            selectedGrades.length > 0 ? selectedGrades : undefined
+          );
+          if (isMountedRef.current) {
+            setItems(filteredItems);
+            setLoading(false);
+          }
+          return;
+        }
+
+        // 캐시가 없으면 API에서 로드
+        if (items.length === 0) {
+          setLoading(true);
+        }
+
+        const params: Record<string, string> = {};
+        if (selectedCategory !== '전체') {
+          params.category = selectedCategory;
+        }
+        if (selectedGrades.length > 0) {
+          params.grades = selectedGrades.join(',');
+        }
+
+        const response = await api.get('/specbook/library/meta', { params });
+        if (isMountedRef.current) {
+          setItems(response.data);
+          setLoading(false);
+        }
       } else {
+        // 프로젝트 뷰
         if (!selectedProject) {
           setItems([]);
           setLoading(false);
           return;
         }
-        // 썸네일 포함 메타데이터 로드
-        response = await api.get(`/specbook/project/${selectedProject}/meta`, { params });
-      }
 
-      // 컴포넌트가 아직 마운트되어 있을 때만 상태 업데이트
-      if (isMountedRef.current) {
-        // 서버에서 썸네일이 포함된 데이터 직접 사용
-        setItems(response.data);
-        setLoading(false);
+        // 데이터가 없을 때만 로딩 표시
+        if (items.length === 0) {
+          setLoading(true);
+        }
+
+        const params: Record<string, string> = {};
+        if (selectedCategory !== '전체') {
+          params.category = selectedCategory;
+        }
+        if (selectedGrades.length > 0) {
+          params.grades = selectedGrades.join(',');
+        }
+
+        const response = await api.get(`/specbook/project/${selectedProject}/meta`, { params });
+        if (isMountedRef.current) {
+          setItems(response.data);
+          setLoading(false);
+        }
       }
     } catch (error) {
       console.error('스펙북 아이템 로드 실패:', error);
-      // 컴포넌트가 아직 마운트되어 있을 때만 에러 토스트 표시
       if (isMountedRef.current) {
         toast.error('스펙북 아이템을 불러오는데 실패했습니다');
       }
