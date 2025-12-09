@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Pencil, Trash2, Upload, Settings, X, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -193,16 +193,12 @@ const SortableSpecBookItem = ({
   item,
   onEdit,
   onDelete,
-  onImageClick,
-  loadedImages,
-  onLoadImage
+  onImageClick
 }: {
   item: SpecBookItem;
   onEdit: (item: SpecBookItem) => void;
   onDelete: (id: number) => void;
   onImageClick: (item: SpecBookItem) => void;
-  loadedImages: Map<number, 'loading' | { image_url: string | null; sub_images: string[] }>;
-  onLoadImage: (id: number) => void;
 }) => {
   const {
     attributes,
@@ -213,30 +209,6 @@ const SortableSpecBookItem = ({
     isDragging,
   } = useSortable({ id: item.id });
 
-  const cardRef = useRef<HTMLDivElement>(null);
-  const imageData = loadedImages.get(item.id);
-  const isLoading = imageData === undefined || imageData === 'loading';
-  const actualImageUrl = imageData && imageData !== 'loading' ? imageData.image_url : null;
-  const actualSubImages = imageData && imageData !== 'loading' ? imageData.sub_images : [];
-
-  // IntersectionObserver로 화면에 보일 때 이미지 로드
-  useEffect(() => {
-    if (!cardRef.current || imageData !== undefined) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          onLoadImage(item.id);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '100px' } // 100px 전에 미리 로드
-    );
-
-    observer.observe(cardRef.current);
-    return () => observer.disconnect();
-  }, [item.id, imageData, onLoadImage]);
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -245,10 +217,7 @@ const SortableSpecBookItem = ({
 
   return (
     <div
-      ref={(node) => {
-        setNodeRef(node);
-        (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-      }}
+      ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
@@ -257,19 +226,14 @@ const SortableSpecBookItem = ({
 
       {/* 상단: 정사각형 이미지 */}
       <div className="w-full aspect-square bg-gray-100 flex-shrink-0 relative">
-        {isLoading ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-          </div>
-        ) : actualImageUrl ? (
+        {item.image_url ? (
           <img
-            src={actualImageUrl}
+            src={item.image_url}
             alt={item.name}
             className="w-full h-full object-contain block cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
-              // imageData를 포함한 아이템 전달
-              onImageClick({ ...item, image_url: actualImageUrl, sub_images: actualSubImages });
+              onImageClick(item);
             }}
             onPointerDown={(e) => e.stopPropagation()}
           />
@@ -471,43 +435,6 @@ const SpecBook = () => {
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
 
-  // 이미지 lazy loading 캐시: 'loading' | { image_url, sub_images }
-  const [loadedImages, setLoadedImages] = useState<Map<number, 'loading' | { image_url: string | null; sub_images: string[] }>>(new Map());
-  const loadingRef = useRef<Set<number>>(new Set());
-
-  // 개별 아이템 이미지 로드 함수
-  const loadItemImage = useCallback(async (itemId: number) => {
-    // 이미 로딩 중이거나 로드된 경우 스킵
-    if (loadingRef.current.has(itemId)) return;
-    loadingRef.current.add(itemId);
-
-    // 로딩 중 상태 표시
-    setLoadedImages(prev => {
-      const newMap = new Map(prev);
-      newMap.set(itemId, 'loading');
-      return newMap;
-    });
-
-    try {
-      const response = await api.get(`/specbook/item/${itemId}/image`);
-      setLoadedImages(prev => {
-        const newMap = new Map(prev);
-        newMap.set(itemId, {
-          image_url: response.data.image_url,
-          sub_images: response.data.sub_images || []
-        });
-        return newMap;
-      });
-    } catch (error) {
-      console.error(`이미지 로드 실패 (id: ${itemId}):`, error);
-      // 실패해도 로딩 완료 처리
-      setLoadedImages(prev => {
-        const newMap = new Map(prev);
-        newMap.set(itemId, { image_url: null, sub_images: [] });
-        return newMap;
-      });
-    }
-  }, []);
 
   // DnD 센서 설정
   const sensors = useSensors(
@@ -553,12 +480,6 @@ const SpecBook = () => {
   useEffect(() => {
     loadItems();
   }, [view, selectedCategory, selectedProject, selectedGrades]);
-
-  // 뷰나 프로젝트 변경 시 이미지 캐시 초기화
-  useEffect(() => {
-    setLoadedImages(new Map());
-    loadingRef.current = new Set();
-  }, [view, selectedProject]);
 
   // 프로젝트가 선택될 때 전체 프로젝트 아이템 로드
   useEffect(() => {
@@ -1958,8 +1879,6 @@ const SpecBook = () => {
                               onEdit={handleEdit}
                               onDelete={handleDelete}
                               onImageClick={handleImageClick}
-                              loadedImages={loadedImages}
-                              onLoadImage={loadItemImage}
                             />
                           ))}
                       </div>

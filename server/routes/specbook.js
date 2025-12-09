@@ -193,8 +193,7 @@ router.put('/categories', authenticateToken, async (req, res) => {
 router.get('/library', authenticateToken, (req, res) => {
   const { category, grades } = req.query;
 
-  // 성능 최적화: 목록 조회 시 이미지 데이터 제외 (image_url, sub_images는 별도 API로)
-  let query = 'SELECT id, name, category, brand, price, description, project_id, is_library, display_order, grade, created_at, updated_at FROM specbook_items WHERE is_library = 1';
+  let query = 'SELECT * FROM specbook_items WHERE is_library = 1';
   let params = [];
 
   if (category && category !== '전체') {
@@ -223,12 +222,19 @@ router.get('/library', authenticateToken, (req, res) => {
       return res.status(500).json({ error: '스펙북 라이브러리 조회 실패' });
     }
 
-    // 이미지 데이터는 별도 API로 조회하므로 빈 값 설정
-    const parsedRows = rows.map(row => ({
-      ...row,
-      image_url: null, // 별도 API로 로드
-      sub_images: []   // 별도 API로 로드
-    }));
+    // sub_images JSON 파싱
+    const parsedRows = rows.map(row => {
+      if (row.sub_images) {
+        try {
+          row.sub_images = JSON.parse(row.sub_images);
+        } catch (e) {
+          row.sub_images = [];
+        }
+      } else {
+        row.sub_images = [];
+      }
+      return row;
+    });
 
     res.json(parsedRows);
   });
@@ -239,8 +245,7 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
   const { projectId } = req.params;
   const { category, grades } = req.query;
 
-  // 성능 최적화: 목록 조회 시 이미지 데이터 제외 (image_url, sub_images는 별도 API로)
-  let query = 'SELECT id, name, category, brand, price, description, project_id, is_library, display_order, grade, created_at, updated_at FROM specbook_items WHERE project_id = ?';
+  let query = 'SELECT * FROM specbook_items WHERE project_id = ?';
   let params = [projectId];
 
   if (category && category !== '전체') {
@@ -269,12 +274,19 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
       return res.status(500).json({ error: '프로젝트 스펙 조회 실패' });
     }
 
-    // 이미지 데이터는 별도 API로 조회하므로 빈 값 설정
-    const parsedRows = rows.map(row => ({
-      ...row,
-      image_url: null, // 별도 API로 로드
-      sub_images: []   // 별도 API로 로드
-    }));
+    // sub_images JSON 파싱
+    const parsedRows = rows.map(row => {
+      if (row.sub_images) {
+        try {
+          row.sub_images = JSON.parse(row.sub_images);
+        } catch (e) {
+          row.sub_images = [];
+        }
+      } else {
+        row.sub_images = [];
+      }
+      return row;
+    });
 
     res.json(parsedRows);
   });
