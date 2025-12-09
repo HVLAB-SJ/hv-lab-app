@@ -1789,7 +1789,8 @@ const Payments = () => {
       localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
     }
 
-    // 낙관적 업데이트: 즉시 UI 반영
+    // 낙관적 업데이트: 즉시 UI 반영 (로컬 상태 업데이트)
+    updatePayment(paymentId, { status: 'completed' });
     setShowDetailModal(false);
     toast.success('송금완료 처리되었습니다');
 
@@ -1799,7 +1800,9 @@ const Payments = () => {
     // 백그라운드에서 API 호출
     updatePaymentInAPI(paymentId, { status: 'completed' }).catch((error) => {
       console.error('송금완료 처리 실패:', error);
-      toast.error('송금완료 처리 실패 - 새로고침 해주세요');
+      // 실패 시 롤백
+      updatePayment(paymentId, { status: 'pending' });
+      toast.error('송금완료 처리 실패 - 다시 시도해주세요');
     });
   };
 
