@@ -189,6 +189,79 @@ router.put('/categories', authenticateToken, async (req, res) => {
   }
 });
 
+// 스펙북 라이브러리 조회 (이미지 없이 메타데이터만 - 빠른 로딩용)
+router.get('/library/meta', authenticateToken, (req, res) => {
+  const { category, grades } = req.query;
+
+  // 이미지 데이터 제외하고 메타데이터만 선택
+  let query = 'SELECT id, name, category, brand, price, description, project_id, is_library, display_order, grade, created_at, updated_at FROM specbook_items WHERE is_library = 1';
+  let params = [];
+
+  if (category && category !== '전체') {
+    query += ' AND category = ?';
+    params.push(category);
+  }
+
+  if (grades) {
+    const gradeList = grades.split(',').filter(g => g);
+    if (gradeList.length > 0) {
+      const gradeConditions = gradeList.map(() => `(grade LIKE ? OR grade LIKE ? OR grade LIKE ? OR grade = ?)`).join(' OR ');
+      query += ` AND (${gradeConditions})`;
+      gradeList.forEach(grade => {
+        params.push(`${grade},%`, `%,${grade},%`, `%,${grade}`, grade);
+      });
+    }
+  }
+
+  query += ' ORDER BY category ASC, display_order ASC, created_at DESC';
+
+  db.all(query, params, (err, rows) => {
+    if (err) {
+      console.error('스펙북 라이브러리 메타 조회 실패:', err);
+      return res.status(500).json({ error: '스펙북 라이브러리 조회 실패' });
+    }
+    // image_url은 null로 설정하고 sub_images는 빈 배열
+    const result = rows.map(row => ({
+      ...row,
+      image_url: null,
+      sub_images: []
+    }));
+    res.json(result);
+  });
+});
+
+// 여러 아이템의 이미지 일괄 조회 (배치 로딩용)
+router.post('/library/images', authenticateToken, (req, res) => {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: '아이템 ID 배열이 필요합니다.' });
+  }
+
+  // 최대 50개씩만 처리
+  const limitedIds = ids.slice(0, 50);
+  const placeholders = limitedIds.map(() => '?').join(',');
+
+  db.all(
+    `SELECT id, image_url FROM specbook_items WHERE id IN (${placeholders})`,
+    limitedIds,
+    (err, rows) => {
+      if (err) {
+        console.error('이미지 일괄 조회 실패:', err);
+        return res.status(500).json({ error: '이미지 조회 실패' });
+      }
+
+      // id를 키로 하는 객체로 변환
+      const images = {};
+      rows.forEach(row => {
+        images[row.id] = row.image_url;
+      });
+
+      res.json(images);
+    }
+  );
+});
+
 // 스펙북 라이브러리 조회
 router.get('/library', authenticateToken, (req, res) => {
   const { category, grades } = req.query;
@@ -237,6 +310,48 @@ router.get('/library', authenticateToken, (req, res) => {
     });
 
     res.json(parsedRows);
+  });
+});
+
+// 프로젝트별 스펙 조회 (메타데이터만 - 빠른 로딩용)
+router.get('/project/:projectId/meta', authenticateToken, (req, res) => {
+  const { projectId } = req.params;
+  const { category, grades } = req.query;
+
+  let query = 'SELECT id, name, category, brand, price, description, project_id, is_library, display_order, grade, created_at, updated_at FROM specbook_items WHERE project_id = ?';
+  let params = [projectId];
+
+  if (category && category !== '전체') {
+    query += ' AND category = ?';
+    params.push(category);
+  }
+
+  if (grades) {
+    const gradeList = grades.split(',').filter(g => g);
+    if (gradeList.length > 0) {
+      const gradeConditions = gradeList.map(() => `(grade LIKE ? OR grade LIKE ? OR grade LIKE ? OR grade = ?)`).join(' OR ');
+      query += ` AND (${gradeConditions})`;
+      gradeList.forEach(grade => {
+        params.push(`${grade},%`, `%,${grade},%`, `%,${grade}`, grade);
+      });
+    }
+  }
+
+  query += ' ORDER BY category ASC, display_order ASC, created_at DESC';
+
+  db.all(query, params, (err, rows) => {
+    if (err) {
+      console.error('프로젝트 스펙 메타 조회 실패:', err);
+      return res.status(500).json({ error: '프로젝트 스펙 조회 실패' });
+    }
+
+    const result = rows.map(row => ({
+      ...row,
+      image_url: null,
+      sub_images: []
+    }));
+
+    res.json(result);
   });
 });
 
