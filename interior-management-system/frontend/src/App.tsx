@@ -1,30 +1,39 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { io } from 'socket.io-client';
 import { registerSW } from 'virtual:pwa-register';
 import toast from 'react-hot-toast';
 import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import Projects from './pages/Projects';
-import Schedule from './pages/Schedule';
-import Drawings from './pages/Drawings';
-import SiteLog from './pages/SiteLog';
-import AfterService from './pages/AfterService';
-import AdditionalWork from './pages/AdditionalWork';
-import ConstructionPayment from './pages/ConstructionPayment';
-import Contractors from './pages/Contractors';
-import WorkRequest from './pages/WorkRequest';
-import FinishCheck from './pages/FinishCheck';
-import SpecBook from './pages/SpecBook';
-import EstimatePreview from './pages/EstimatePreview';
-import ExecutionHistory from './pages/ExecutionHistory';
-import Payments from './pages/Payments';
-import QuoteInquiry from './pages/QuoteInquiry';
-import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import { triggerUrgentNotification, requestNotificationPermission } from './utils/notificationSound';
+
+// 페이지 컴포넌트 레이지 로딩 (코드 스플리팅)
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Projects = lazy(() => import('./pages/Projects'));
+const Schedule = lazy(() => import('./pages/Schedule'));
+const Drawings = lazy(() => import('./pages/Drawings'));
+const SiteLog = lazy(() => import('./pages/SiteLog'));
+const AfterService = lazy(() => import('./pages/AfterService'));
+const AdditionalWork = lazy(() => import('./pages/AdditionalWork'));
+const ConstructionPayment = lazy(() => import('./pages/ConstructionPayment'));
+const Contractors = lazy(() => import('./pages/Contractors'));
+const WorkRequest = lazy(() => import('./pages/WorkRequest'));
+const FinishCheck = lazy(() => import('./pages/FinishCheck'));
+const SpecBook = lazy(() => import('./pages/SpecBook'));
+const EstimatePreview = lazy(() => import('./pages/EstimatePreview'));
+const ExecutionHistory = lazy(() => import('./pages/ExecutionHistory'));
+const Payments = lazy(() => import('./pages/Payments'));
+const QuoteInquiry = lazy(() => import('./pages/QuoteInquiry'));
+const Login = lazy(() => import('./pages/Login'));
+
+// 로딩 컴포넌트
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen bg-gray-50">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -148,28 +157,30 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="projects" element={<Projects />} />
-              <Route path="schedule" element={<Schedule />} />
-              <Route path="drawings" element={<Drawings />} />
-              <Route path="site-log" element={<SiteLog />} />
-              <Route path="after-service" element={<AfterService />} />
-              <Route path="additional-work" element={<AdditionalWork />} />
-              <Route path="construction-payment" element={<ConstructionPayment />} />
-              <Route path="contractors" element={<Contractors />} />
-              <Route path="work-request" element={<WorkRequest />} />
-              <Route path="finish-check" element={<FinishCheck />} />
-              <Route path="specbook" element={<SpecBook />} />
-              <Route path="estimate-preview" element={<EstimatePreview />} />
-              <Route path="execution-history" element={<ExecutionHistory />} />
-              <Route path="payments" element={<Payments />} />
-              <Route path="quote-inquiry" element={<QuoteInquiry />} />
-            </Route>
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="projects" element={<Projects />} />
+                <Route path="schedule" element={<Schedule />} />
+                <Route path="drawings" element={<Drawings />} />
+                <Route path="site-log" element={<SiteLog />} />
+                <Route path="after-service" element={<AfterService />} />
+                <Route path="additional-work" element={<AdditionalWork />} />
+                <Route path="construction-payment" element={<ConstructionPayment />} />
+                <Route path="contractors" element={<Contractors />} />
+                <Route path="work-request" element={<WorkRequest />} />
+                <Route path="finish-check" element={<FinishCheck />} />
+                <Route path="specbook" element={<SpecBook />} />
+                <Route path="estimate-preview" element={<EstimatePreview />} />
+                <Route path="execution-history" element={<ExecutionHistory />} />
+                <Route path="payments" element={<Payments />} />
+                <Route path="quote-inquiry" element={<QuoteInquiry />} />
+              </Route>
+            </Routes>
+          </Suspense>
           <Toaster
             position="top-right"
             toastOptions={{
