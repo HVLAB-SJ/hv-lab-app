@@ -9,6 +9,7 @@ import workRequestService from '../services/workRequestService';
 import paymentService from '../services/paymentService';
 import asRequestService from '../services/asRequestService';
 import api from '../services/api';
+import socketService from '../services/socket';
 
 interface NavigationItem {
   name: string;
@@ -151,6 +152,30 @@ const Layout = () => {
 
     window.addEventListener('paymentCompleted', handlePaymentCompleted);
     return () => window.removeEventListener('paymentCompleted', handlePaymentCompleted);
+  }, []);
+
+  // Socket.IO 실시간 동기화 - 결제 상태 변경 시 배지 업데이트
+  useEffect(() => {
+    const socket = socketService.getSocket();
+    if (!socket) return;
+
+    const handlePaymentRefresh = async () => {
+      // 결제요청 pending 카운트 다시 로드
+      try {
+        const payments = await paymentService.getAllPayments();
+        setPendingPaymentCount(
+          payments.filter(payment => payment.status === 'pending').length
+        );
+      } catch (error) {
+        console.error('Failed to refresh payment count:', error);
+      }
+    };
+
+    socket.on('payment:refresh', handlePaymentRefresh);
+
+    return () => {
+      socket.off('payment:refresh', handlePaymentRefresh);
+    };
   }, []);
 
   // Load all badge counts in a single effect (optimized)
