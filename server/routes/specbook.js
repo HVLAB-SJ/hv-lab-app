@@ -193,7 +193,8 @@ router.put('/categories', authenticateToken, async (req, res) => {
 router.get('/library', authenticateToken, (req, res) => {
   const { category, grades } = req.query;
 
-  let query = 'SELECT * FROM specbook_items WHERE is_library = 1';
+  // 성능 최적화: 목록 조회 시 이미지 데이터 제외 (image_url, sub_images는 별도 API로)
+  let query = 'SELECT id, name, category, brand, price, description, project_id, is_library, display_order, grade, created_at, updated_at FROM specbook_items WHERE is_library = 1';
   let params = [];
 
   if (category && category !== '전체') {
@@ -222,19 +223,12 @@ router.get('/library', authenticateToken, (req, res) => {
       return res.status(500).json({ error: '스펙북 라이브러리 조회 실패' });
     }
 
-    // sub_images JSON 파싱
-    const parsedRows = rows.map(row => {
-      if (row.sub_images) {
-        try {
-          row.sub_images = JSON.parse(row.sub_images);
-        } catch (e) {
-          row.sub_images = [];
-        }
-      } else {
-        row.sub_images = [];
-      }
-      return row;
-    });
+    // 이미지 데이터는 별도 API로 조회하므로 빈 값 설정
+    const parsedRows = rows.map(row => ({
+      ...row,
+      image_url: null, // 별도 API로 로드
+      sub_images: []   // 별도 API로 로드
+    }));
 
     res.json(parsedRows);
   });
@@ -245,7 +239,8 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
   const { projectId } = req.params;
   const { category, grades } = req.query;
 
-  let query = 'SELECT * FROM specbook_items WHERE project_id = ?';
+  // 성능 최적화: 목록 조회 시 이미지 데이터 제외 (image_url, sub_images는 별도 API로)
+  let query = 'SELECT id, name, category, brand, price, description, project_id, is_library, display_order, grade, created_at, updated_at FROM specbook_items WHERE project_id = ?';
   let params = [projectId];
 
   if (category && category !== '전체') {
@@ -274,19 +269,12 @@ router.get('/project/:projectId', authenticateToken, (req, res) => {
       return res.status(500).json({ error: '프로젝트 스펙 조회 실패' });
     }
 
-    // sub_images JSON 파싱
-    const parsedRows = rows.map(row => {
-      if (row.sub_images) {
-        try {
-          row.sub_images = JSON.parse(row.sub_images);
-        } catch (e) {
-          row.sub_images = [];
-        }
-      } else {
-        row.sub_images = [];
-      }
-      return row;
-    });
+    // 이미지 데이터는 별도 API로 조회하므로 빈 값 설정
+    const parsedRows = rows.map(row => ({
+      ...row,
+      image_url: null, // 별도 API로 로드
+      sub_images: []   // 별도 API로 로드
+    }));
 
     res.json(parsedRows);
   });
@@ -305,6 +293,37 @@ router.get('/projects', authenticateToken, (req, res) => {
       res.json(rows);
     }
   );
+});
+
+// 개별 아이템 이미지 조회 (lazy loading용)
+router.get('/item/:id/image', authenticateToken, (req, res) => {
+  const { id } = req.params;
+
+  db.get('SELECT image_url, sub_images FROM specbook_items WHERE id = ?', [id], (err, row) => {
+    if (err) {
+      console.error('이미지 조회 실패:', err);
+      return res.status(500).json({ error: '이미지 조회 실패' });
+    }
+
+    if (!row) {
+      return res.status(404).json({ error: '아이템을 찾을 수 없습니다.' });
+    }
+
+    // sub_images JSON 파싱
+    let subImages = [];
+    if (row.sub_images) {
+      try {
+        subImages = JSON.parse(row.sub_images);
+      } catch (e) {
+        subImages = [];
+      }
+    }
+
+    res.json({
+      image_url: row.image_url,
+      sub_images: subImages
+    });
+  });
 });
 
 // Base64 이미지로 스펙북 아이템 생성
