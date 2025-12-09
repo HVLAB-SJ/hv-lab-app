@@ -440,6 +440,8 @@ const SpecBook = () => {
   const [selectedItemForImages, setSelectedItemForImages] = useState<SpecBookItem | null>(null);
   const [subImages, setSubImages] = useState<string[]>([]);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [viewingImageIndex, setViewingImageIndex] = useState<number>(0); // 현재 보고 있는 이미지 인덱스
+  const [allViewableImages, setAllViewableImages] = useState<string[]>([]); // 뷰어에서 볼 수 있는 모든 이미지
   const [isDraggingSubImage, setIsDraggingSubImage] = useState(false);
   const [isSavingSubImages, setIsSavingSubImages] = useState(false);
   const [imageZoom, setImageZoom] = useState(1);
@@ -1069,6 +1071,22 @@ const SpecBook = () => {
   // Sub 이미지/파일 클릭 핸들러
   const handleSubImageFileClick = (actualData: string, fileName: string, isImage: boolean, isPDF: boolean) => {
     if (isImage) {
+      // 모든 이미지 목록 구성 (메인 이미지 + 서브 이미지 중 이미지만)
+      const imageList: string[] = [];
+      if (selectedItemForImages?.image_url) {
+        imageList.push(selectedItemForImages.image_url);
+      }
+      subImages.forEach(fileData => {
+        const hasFileName = fileData.includes('|') && !fileData.startsWith('data:image');
+        const data = hasFileName ? fileData.split('|')[1] : fileData;
+        if (data.startsWith('data:image')) {
+          imageList.push(data);
+        }
+      });
+
+      setAllViewableImages(imageList);
+      const index = imageList.indexOf(actualData);
+      setViewingImageIndex(index >= 0 ? index : 0);
       setViewingImage(actualData);
     } else if (isPDF) {
       // PDF는 새 탭에서 열기
@@ -1091,6 +1109,50 @@ const SpecBook = () => {
       link.click();
     }
   };
+
+  // 이전 이미지로 이동
+  const goToPrevImage = () => {
+    if (allViewableImages.length <= 1) return;
+    const newIndex = viewingImageIndex > 0 ? viewingImageIndex - 1 : allViewableImages.length - 1;
+    setViewingImageIndex(newIndex);
+    setViewingImage(allViewableImages[newIndex]);
+    setImageZoom(1);
+    setImagePosition({ x: 0, y: 0 });
+  };
+
+  // 다음 이미지로 이동
+  const goToNextImage = () => {
+    if (allViewableImages.length <= 1) return;
+    const newIndex = viewingImageIndex < allViewableImages.length - 1 ? viewingImageIndex + 1 : 0;
+    setViewingImageIndex(newIndex);
+    setViewingImage(allViewableImages[newIndex]);
+    setImageZoom(1);
+    setImagePosition({ x: 0, y: 0 });
+  };
+
+  // 키보드 이벤트 핸들러 (이미지 뷰어용)
+  useEffect(() => {
+    if (!viewingImage) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPrevImage();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNextImage();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setViewingImage(null);
+        setImageZoom(1);
+        setImagePosition({ x: 0, y: 0 });
+        setAllViewableImages([]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewingImage, viewingImageIndex, allViewableImages]);
 
   // Sub 이미지 모달 닫기
   const handleCloseSubImageModal = async () => {
@@ -2097,7 +2159,20 @@ const SpecBook = () => {
                   <div className="relative group">
                     <div
                       className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-blue-500 cursor-pointer hover:border-blue-600 transition-colors"
-                      onClick={() => setViewingImage(selectedItemForImages.image_url!)}
+                      onClick={() => {
+                        // 모든 이미지 목록 구성
+                        const imageList: string[] = [selectedItemForImages.image_url!];
+                        subImages.forEach(fileData => {
+                          const hasFileName = fileData.includes('|') && !fileData.startsWith('data:image');
+                          const data = hasFileName ? fileData.split('|')[1] : fileData;
+                          if (data.startsWith('data:image')) {
+                            imageList.push(data);
+                          }
+                        });
+                        setAllViewableImages(imageList);
+                        setViewingImageIndex(0);
+                        setViewingImage(selectedItemForImages.image_url!);
+                      }}
                     >
                       <img
                         src={selectedItemForImages.image_url}
@@ -2240,10 +2315,57 @@ const SpecBook = () => {
             </button>
           </div>
 
-          {/* 줌 레벨 표시 */}
-          <div className="absolute top-4 left-4 bg-white bg-opacity-10 text-white px-3 py-2 rounded-lg text-sm">
-            {Math.round(imageZoom * 100)}%
+          {/* 줌 레벨 및 이미지 인덱스 표시 */}
+          <div className="absolute top-4 left-4 flex items-center gap-3">
+            <div className="bg-white bg-opacity-10 text-white px-3 py-2 rounded-lg text-sm">
+              {Math.round(imageZoom * 100)}%
+            </div>
+            {allViewableImages.length > 1 && (
+              <div className="bg-white bg-opacity-10 text-white px-3 py-2 rounded-lg text-sm">
+                {viewingImageIndex + 1} / {allViewableImages.length}
+              </div>
+            )}
           </div>
+
+          {/* 이전/다음 버튼 */}
+          {allViewableImages.length > 1 && (
+            <>
+              {/* 이전 버튼 */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToPrevImage();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white bg-opacity-10 hover:bg-opacity-30 rounded-full transition-colors z-10"
+                title="이전 이미지 (←)"
+              >
+                <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              {/* 다음 버튼 */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToNextImage();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white bg-opacity-10 hover:bg-opacity-30 rounded-full transition-colors z-10"
+                title="다음 이미지 (→)"
+              >
+                <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+
+          {/* 하단 키보드 단축키 안내 */}
+          {allViewableImages.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white bg-opacity-10 text-white px-4 py-2 rounded-lg text-sm">
+              ← → 키보드로 이동 | ESC 닫기
+            </div>
+          )}
 
           {/* 이미지 */}
           <div
