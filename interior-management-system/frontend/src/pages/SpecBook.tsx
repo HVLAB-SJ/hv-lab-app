@@ -149,17 +149,28 @@ const SortableSubImage = ({
 
   return (
     <div ref={setNodeRef} style={style} className="relative group">
+      {/* 드래그 핸들 - 좌측 상단 */}
       <div
         {...attributes}
         {...listeners}
-        className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-400 transition-colors cursor-grab active:cursor-grabbing touch-none"
+        className="absolute top-2 left-2 p-1.5 bg-gray-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing z-10 touch-none"
+        title="드래그하여 순서 변경"
+      >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+        </svg>
+      </div>
+
+      {/* 클릭 가능한 이미지/파일 영역 */}
+      <div
+        className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-400 transition-colors cursor-pointer"
         onClick={() => onFileClick(actualData, fileName, isImage, isPDF)}
       >
         {isImage ? (
           <img
             src={actualData}
             alt={`상세 이미지 ${index + 1}`}
-            className="w-full h-full object-contain pointer-events-none"
+            className="w-full h-full object-contain"
           />
         ) : (
           <div className={`w-full h-full flex flex-col items-center justify-center ${fileIcon.color}`}>
@@ -176,12 +187,14 @@ const SortableSubImage = ({
           </div>
         )}
       </div>
+
+      {/* 삭제 버튼 - 우측 상단 */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           onDelete(index);
         }}
-        className="absolute top-2 right-2 p-1.5 bg-gray-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-800"
+        className="absolute top-2 right-2 p-1.5 bg-gray-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-800 z-10"
       >
         <Trash2 className="h-4 w-4" />
       </button>
