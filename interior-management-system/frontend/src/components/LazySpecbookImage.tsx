@@ -28,6 +28,7 @@ const LazySpecbookImage = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [loadCompleted, setLoadCompleted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Intersection Observer로 뷰포트 진입 감지
@@ -63,6 +64,7 @@ const LazySpecbookImage = ({
       if (imageCache.has(itemId)) {
         const cached = imageCache.get(itemId)!;
         setImageUrl(cached.image_url);
+        setLoadCompleted(true);
         if (onImageLoad) {
           onImageLoad(cached.image_url || '', cached.sub_images);
         }
@@ -74,11 +76,13 @@ const LazySpecbookImage = ({
         try {
           const result = await loadingRequests.get(itemId)!;
           setImageUrl(result.image_url);
+          setLoadCompleted(true);
           if (onImageLoad) {
             onImageLoad(result.image_url || '', result.sub_images);
           }
         } catch {
           setHasError(true);
+          setLoadCompleted(true);
         }
         return;
       }
@@ -102,12 +106,14 @@ const LazySpecbookImage = ({
       try {
         const result = await requestPromise;
         setImageUrl(result.image_url);
+        setLoadCompleted(true);
         if (onImageLoad) {
           onImageLoad(result.image_url || '', result.sub_images);
         }
       } catch (error) {
         console.error('이미지 로드 실패:', itemId, error);
         setHasError(true);
+        setLoadCompleted(true);
       } finally {
         setIsLoading(false);
         loadingRequests.delete(itemId);
@@ -115,7 +121,11 @@ const LazySpecbookImage = ({
     };
 
     loadImage();
-  }, [isInView, itemId, imageUrl, isLoading, hasError, onImageLoad]);
+  }, [isInView, itemId, imageUrl, isLoading, hasError, loadCompleted, onImageLoad]);
+
+  // 뷰포트에 들어왔지만 아직 로드 안된 상태 = 로딩 준비 중
+  const showLoading = !imageUrl && !hasError && (isLoading || (isInView && !loadCompleted));
+  const showNoImage = !imageUrl && !hasError && !isLoading && loadCompleted;
 
   return (
     <div ref={containerRef} className="w-full h-full">
@@ -128,17 +138,17 @@ const LazySpecbookImage = ({
           onClick={onClick}
           onPointerDown={onPointerDown}
         />
-      ) : isLoading ? (
-        <div className="w-full h-full flex items-center justify-center bg-gray-100">
-          <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-        </div>
       ) : hasError ? (
         <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs bg-gray-100">
           로드 실패
         </div>
-      ) : (
+      ) : showNoImage ? (
         <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs bg-gray-100">
           이미지 없음
+        </div>
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+          <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
         </div>
       )}
     </div>
