@@ -658,19 +658,36 @@ const ExecutionHistory = () => {
     e.stopPropagation();
     setActionMenuId(null);
 
-    // 3.3% 세금공제 여부 확인: 총액이 자재비+인건비보다 작으면 세금공제 적용된 것
-    const originalMaterial = record.materialCost || 0;
-    const originalLabor = record.laborCost || 0;
+    // payment 타입인 경우 원본 payment 데이터에서 정보 가져오기
+    const isPaymentType = record.type === 'payment';
+    const originalPayment = isPaymentType ? payments.find(p => String(p.id) === String(record.id)) : null;
+
+    console.log('[handleEditClick] Record type:', record.type, 'isPaymentType:', isPaymentType);
+    console.log('[handleEditClick] Original payment:', originalPayment);
+
+    // 부가세 포함 여부 확인 (payment 타입인 경우 원본 데이터에서 확인)
+    const wasVatIncluded = isPaymentType && originalPayment?.includesVAT === true;
+
+    // 원본 금액 가져오기 (payment 타입이고 부가세 포함인 경우 원본 payment에서 가져옴)
+    let displayMaterialCost = record.materialCost || 0;
+    let displayLaborCost = record.laborCost || 0;
+
+    if (isPaymentType && originalPayment) {
+      // payment 원본 데이터의 금액 사용 (부가세 포함된 원래 입력값)
+      displayMaterialCost = originalPayment.materialAmount || 0;
+      displayLaborCost = originalPayment.laborAmount || 0;
+    }
+
+    // 3.3% 세금공제 여부 확인 (실행내역 타입인 경우만)
     const originalTotal = record.totalAmount || 0;
-    const sumOfCosts = originalMaterial + originalLabor;
-
-    // 세금공제가 적용되었는지 확인 (총액이 합계의 96.7% 정도인 경우)
+    const sumOfCosts = displayMaterialCost + displayLaborCost;
     const expectedWithTax = Math.round(sumOfCosts * 0.967);
-    const wasTaxDeducted = sumOfCosts > 0 && originalTotal < sumOfCosts && Math.abs(originalTotal - expectedWithTax) < 100;
+    const wasTaxDeducted = !isPaymentType && sumOfCosts > 0 && originalTotal < sumOfCosts && Math.abs(originalTotal - expectedWithTax) < 100;
 
-    console.log('[handleEditClick] Tax deduction check:', {
-      originalMaterial,
-      originalLabor,
+    console.log('[handleEditClick] VAT/Tax check:', {
+      wasVatIncluded,
+      displayMaterialCost,
+      displayLaborCost,
       originalTotal,
       sumOfCosts,
       expectedWithTax,
@@ -684,12 +701,14 @@ const ExecutionHistory = () => {
       date: format(new Date(record.date), 'yyyy-MM-dd'),
       process: record.process || '',
       itemName: record.itemName,
-      materialCost: originalMaterial,  // 원래 값 그대로 표시
-      laborCost: originalLabor,        // 원래 값 그대로 표시
+      materialCost: displayMaterialCost,  // 원본 금액 표시
+      laborCost: displayLaborCost,        // 원본 금액 표시
       images: record.images || [],
       quickText: '',
       quickImages: []
     }));
+    // 부가세 포함 여부 설정
+    setIncludeVat(wasVatIncluded);
     // 세금공제가 적용되어 있었으면 체크박스 선택
     setIncludeTaxDeduction(wasTaxDeducted);
     setSelectedRecord(record.id);
