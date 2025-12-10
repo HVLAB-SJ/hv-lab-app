@@ -750,7 +750,9 @@ const ExecutionHistory = () => {
       const updatedImages = [...existingImages, ...formData.quickImages];
 
       // 타입에 따라 다른 API 호출
+      console.log('[handleEditSave] editingRecord type:', (editingRecord as any).type, 'id:', editingRecord.id);
       if ((editingRecord as any).type === 'payment') {
+        console.log('[handleEditSave] Processing as PAYMENT');
         // 결제요청 수정 - 기존 payment 데이터 찾기
         const existingPayment = payments.find(p => p.id === editingRecord.id);
         if (!existingPayment) {
