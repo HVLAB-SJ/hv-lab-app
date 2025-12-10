@@ -3295,6 +3295,8 @@ const Schedule = () => {
                     description: newEvent.description,
                     time: newEvent.time
                   });
+                  // 추가 후 일정 다시 로드
+                  await loadSchedulesFromAPI();
                 }
                 setShowModal(false);
               } catch (error) {

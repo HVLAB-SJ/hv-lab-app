@@ -365,8 +365,9 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
       console.log('🔴 onSave completed successfully');
     } catch (error) {
       console.error('🔴 onSave failed:', error);
-      setIsSaving(false);
       throw error;
+    } finally {
+      setIsSaving(false);
     }
   };
 
