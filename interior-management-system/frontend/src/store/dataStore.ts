@@ -1199,16 +1199,19 @@ export const useDataStore = create<DataStore>()(
   },
 
   updateExecutionRecordInAPI: async (id: string, record: Partial<ExecutionRecord>) => {
+    console.log('[updateExecutionRecordInAPI] Called with id:', id, 'record:', record);
     try {
       // 날짜 변환 - Invalid Date 방지
       let dateStr: string | undefined;
       if (record.date) {
         const d = record.date instanceof Date ? record.date : new Date(record.date);
+        console.log('[updateExecutionRecordInAPI] Date conversion:', { original: record.date, converted: d, isValid: !isNaN(d.getTime()) });
         if (!isNaN(d.getTime())) {
           dateStr = d.toISOString().split('T')[0];
         }
       }
 
+      console.log('[updateExecutionRecordInAPI] Calling API with dateStr:', dateStr);
       await executionRecordService.updateRecord(id, {
         project_name: record.project,
         author: record.author,

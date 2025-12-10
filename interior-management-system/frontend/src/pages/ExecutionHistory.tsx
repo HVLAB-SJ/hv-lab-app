@@ -717,7 +717,11 @@ const ExecutionHistory = () => {
 
   // 수정 저장
   const handleEditSave = async () => {
-    if (!editingRecord) return;
+    console.log('[handleEditSave] Called, editingRecord:', editingRecord);
+    if (!editingRecord) {
+      console.log('[handleEditSave] No editingRecord, returning');
+      return;
+    }
 
     try {
       const materialCost = Number(formData.materialCost) || 0;
