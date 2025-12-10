@@ -596,19 +596,12 @@ const ExecutionHistory = () => {
       totalAmount = materialCost + laborCost;
     }
 
-    // 3.3% 세금공제 적용
+    // 3.3% 세금공제 적용 (총액만 공제, 자재비/인건비는 원래 값 유지)
     if (includeTaxDeduction) {
       const baseAmount = materialCost + laborCost;
       const taxDeductionAmount = Math.round(baseAmount * 0.033);
       totalAmount = baseAmount - taxDeductionAmount;
-
-      // 자재비와 인건비 비율에 따라 세금공제 분배
-      if (baseAmount > 0) {
-        const materialRatio = materialCost / baseAmount;
-        const laborRatio = laborCost / baseAmount;
-        materialCost = Math.round((baseAmount - taxDeductionAmount) * materialRatio);
-        laborCost = Math.round((baseAmount - taxDeductionAmount) * laborRatio);
-      }
+      // materialCost, laborCost는 원래 값 유지 (수정 시 역산 가능하도록)
     }
 
     const newRecord: ExecutionRecord = {
@@ -665,7 +658,7 @@ const ExecutionHistory = () => {
     e.stopPropagation();
     setActionMenuId(null);
 
-    // 3.3% 세금공제 여부 확인: 총액이 자재비+인건비의 96.7%인지 체크
+    // 3.3% 세금공제 여부 확인: 총액이 자재비+인건비보다 작으면 세금공제 적용된 것
     const originalMaterial = record.materialCost || 0;
     const originalLabor = record.laborCost || 0;
     const originalTotal = record.totalAmount || 0;
@@ -673,18 +666,16 @@ const ExecutionHistory = () => {
 
     // 세금공제가 적용되었는지 확인 (총액이 합계의 96.7% 정도인 경우)
     const expectedWithTax = Math.round(sumOfCosts * 0.967);
-    const wasTaxDeducted = sumOfCosts > 0 && Math.abs(originalTotal - expectedWithTax) < 10;
+    const wasTaxDeducted = sumOfCosts > 0 && originalTotal < sumOfCosts && Math.abs(originalTotal - expectedWithTax) < 100;
 
-    let displayMaterial = originalMaterial;
-    let displayLabor = originalLabor;
-
-    if (wasTaxDeducted && sumOfCosts > 0) {
-      // 세금공제가 적용된 경우, 원래 금액으로 역산 (÷ 0.967)
-      const ratio = originalMaterial / sumOfCosts;
-      const originalSum = Math.round(sumOfCosts / 0.967);
-      displayMaterial = Math.round(originalSum * ratio);
-      displayLabor = originalSum - displayMaterial;
-    }
+    console.log('[handleEditClick] Tax deduction check:', {
+      originalMaterial,
+      originalLabor,
+      originalTotal,
+      sumOfCosts,
+      expectedWithTax,
+      wasTaxDeducted
+    });
 
     setEditingRecord(record);
     setFormData(prev => ({
@@ -693,8 +684,8 @@ const ExecutionHistory = () => {
       date: format(new Date(record.date), 'yyyy-MM-dd'),
       process: record.process || '',
       itemName: record.itemName,
-      materialCost: displayMaterial,
-      laborCost: displayLabor,
+      materialCost: originalMaterial,  // 원래 값 그대로 표시
+      laborCost: originalLabor,        // 원래 값 그대로 표시
       images: record.images || [],
       quickText: '',
       quickImages: []
@@ -729,23 +720,16 @@ const ExecutionHistory = () => {
     if (!editingRecord) return;
 
     try {
-      let materialCost = Number(formData.materialCost) || 0;
-      let laborCost = Number(formData.laborCost) || 0;
+      const materialCost = Number(formData.materialCost) || 0;
+      const laborCost = Number(formData.laborCost) || 0;
       let totalAmount = materialCost + laborCost;
 
-      // 3.3% 세금공제 적용
+      // 3.3% 세금공제 적용 (총액만 공제, 자재비/인건비는 원래 값 유지)
       if (includeTaxDeduction) {
         const baseAmount = materialCost + laborCost;
         const taxDeductionAmount = Math.round(baseAmount * 0.033);
         totalAmount = baseAmount - taxDeductionAmount;
-
-        // 자재비와 인건비도 비율에 맞게 조정
-        if (baseAmount > 0) {
-          const materialRatio = materialCost / baseAmount;
-          const laborRatio = laborCost / baseAmount;
-          materialCost = Math.round((baseAmount - taxDeductionAmount) * materialRatio);
-          laborCost = Math.round((baseAmount - taxDeductionAmount) * laborRatio);
-        }
+        // materialCost, laborCost는 원래 값 유지 (수정 시 역산 가능하도록)
       }
 
       // 청구내역 붙여넣기 내용을 메모에 추가
