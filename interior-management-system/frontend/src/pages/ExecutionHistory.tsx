@@ -994,6 +994,7 @@ const ExecutionHistory = () => {
           {projects.filter(p => p.status !== 'completed').map(project => (
             <option key={project.id} value={project.name}>{project.name}</option>
           ))}
+          <option value="기타">기타</option>
         </select>
       </div>
 
@@ -1060,6 +1061,7 @@ const ExecutionHistory = () => {
                 {projects.filter(p => p.status !== 'completed').map(project => (
                   <option key={project.id} value={project.name}>{project.name}</option>
                 ))}
+                <option value="기타">기타</option>
               </select>
             </div>
 

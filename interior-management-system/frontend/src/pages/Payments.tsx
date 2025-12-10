@@ -1469,9 +1469,12 @@ const Payments = () => {
         setEditingPaymentId(null);
       } else {
         // 새 결제요청 추가
+        // 프로젝트가 선택되지 않았으면 "기타"로 설정
+        const projectName = formData.project || '기타';
+
         const newPayment: PaymentRequest = {
           id: `payment_${Date.now()}`,
-          project: formData.project,
+          project: projectName,
           requestDate: new Date(formData.date),
           requestedBy: user?.name || '알 수 없음',
           purpose: formData.itemName,
@@ -1516,7 +1519,7 @@ const Payments = () => {
               bankName: formData.bankName,
               accountNumber: formData.accountNumber,
               amount: totalAmount,
-              projectName: formData.project,
+              projectName: projectName,
               itemName: formData.itemName,
               process: formData.process,
               paymentId: newPaymentId  // 송금완료 링크용
