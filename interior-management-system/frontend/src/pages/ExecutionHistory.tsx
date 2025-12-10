@@ -1722,9 +1722,9 @@ const ExecutionHistory = () => {
           <div
             className="flex-1 overflow-y-auto p-4 relative"
             onClick={(e) => {
-              // 이미지나 삭제 버튼 클릭이 아닌 경우에만 파일 선택 다이얼로그 열기
+              // 이미지나 삭제 버튼, 입력 필드 클릭이 아닌 경우에만 파일 선택 다이얼로그 열기
               const target = e.target as HTMLElement;
-              if (!target.closest('img') && !target.closest('button') && selectedRecord) {
+              if (!target.closest('img') && !target.closest('button') && !target.closest('textarea') && !target.closest('input') && !target.closest('label') && selectedRecord) {
                 const images = (() => {
                   const record = executionRecords.find(r => r.id === selectedRecord);
                   const fullRecord = allRecords.find(r => r.id === selectedRecord);
