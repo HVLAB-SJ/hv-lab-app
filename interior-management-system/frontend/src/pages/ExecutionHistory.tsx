@@ -718,11 +718,14 @@ const ExecutionHistory = () => {
     console.log('[handleEditClick] VAT/Tax check:', {
       wasVatIncluded,
       wasTaxDeducted,
+      includesVat: (record as any).includesVat,
       includesTaxDeduction: (record as any).includesTaxDeduction,
       displayMaterialCost,
       displayLaborCost,
       originalMaterialCost: record.materialCost,
-      originalLaborCost: record.laborCost
+      originalLaborCost: record.laborCost,
+      totalAmount: record.totalAmount,
+      vatAmount: record.vatAmount
     });
 
     setEditingRecord(record);
