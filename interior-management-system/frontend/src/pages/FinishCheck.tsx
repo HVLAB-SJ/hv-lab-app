@@ -8,7 +8,7 @@ import { useFilteredProjects } from '../hooks/useFilteredProjects';
 interface FinishCheckItemImage {
   id: number;
   item_id: number;
-  image_data: string;
+  image_data?: string;  // 초기 로딩 시 없을 수 있음
   filename: string | null;
   created_at: string;
 }
@@ -68,6 +68,7 @@ const FinishCheck = () => {
   });
   const [showAddSpaceModal, setShowAddSpaceModal] = useState(false);
   const [isAddingSpace, setIsAddingSpace] = useState(false); // 중복 실행 방지
+  const [loadingImageIds, setLoadingImageIds] = useState<Set<number>>(new Set()); // 이미지 데이터 로딩 중인 ID들
 
   // showOnlyIncomplete 상태 저장
   useEffect(() => {
@@ -180,6 +181,49 @@ const FinishCheck = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 이미지 데이터 로드 (필요할 때만)
+  const loadImageData = async (imageId: number): Promise<string | null> => {
+    if (loadingImageIds.has(imageId)) return null;
+
+    try {
+      setLoadingImageIds(prev => new Set(prev).add(imageId));
+      const response = await api.get(`/finish-check/images/${imageId}`);
+      const imageData = response.data.image_data;
+
+      // spaces 상태 업데이트하여 이미지 데이터 캐시
+      setSpaces(prevSpaces => prevSpaces.map(space => ({
+        ...space,
+        items: space.items.map(item => ({
+          ...item,
+          images: item.images.map(img =>
+            img.id === imageId ? { ...img, image_data: imageData } : img
+          )
+        }))
+      })));
+
+      return imageData;
+    } catch (error) {
+      console.error('이미지 데이터 로드 실패:', error);
+      return null;
+    } finally {
+      setLoadingImageIds(prev => {
+        const next = new Set(prev);
+        next.delete(imageId);
+        return next;
+      });
+    }
+  };
+
+  // 아이템의 모든 이미지 데이터 로드
+  const loadAllImagesForItem = async (itemId: number) => {
+    const space = spaces.find(s => s.items.some(i => i.id === itemId));
+    const item = space?.items.find(i => i.id === itemId);
+    if (!item) return;
+
+    const imagesToLoad = item.images.filter(img => !img.image_data);
+    await Promise.all(imagesToLoad.map(img => loadImageData(img.id)));
   };
 
   const handleAddSpace = async () => {
@@ -847,7 +891,14 @@ const FinishCheck = () => {
 
                               <span
                                 className={`flex-1 text-sm text-gray-900 ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
-                                onClick={() => !isMobile && setSelectedItemForImages(item.id)}
+                                onClick={async () => {
+                                  if (!isMobile) {
+                                    setSelectedItemForImages(item.id);
+                                    if (item.images && item.images.length > 0) {
+                                      await loadAllImagesForItem(item.id);
+                                    }
+                                  }
+                                }}
                                 style={{ cursor: !isMobile ? 'pointer' : 'default' }}
                               >
                                 {item.content}
@@ -859,10 +910,14 @@ const FinishCheck = () => {
                               </span>
                               <div className="flex items-center gap-1">
                                 <button
-                                  onClick={() => {
+                                  onClick={async () => {
                                     setSelectedItemForImages(item.id);
                                     if (isMobile) {
                                       setShowMobileImageModal(true);
+                                    }
+                                    // 이미지 데이터 로드
+                                    if (item.images && item.images.length > 0) {
+                                      await loadAllImagesForItem(item.id);
                                     }
                                   }}
                                   className={`p-1 transition-colors ${
@@ -910,7 +965,14 @@ const FinishCheck = () => {
 
                               <span
                                 className={`flex-1 text-sm text-gray-500 line-through ${!isMobile && selectedItemForImages === item.id ? 'font-semibold' : ''}`}
-                                onClick={() => !isMobile && setSelectedItemForImages(item.id)}
+                                onClick={async () => {
+                                  if (!isMobile) {
+                                    setSelectedItemForImages(item.id);
+                                    if (item.images && item.images.length > 0) {
+                                      await loadAllImagesForItem(item.id);
+                                    }
+                                  }
+                                }}
                                 style={{ cursor: !isMobile ? 'pointer' : 'default' }}
                               >
                                 {item.content}
@@ -922,10 +984,14 @@ const FinishCheck = () => {
                               </span>
                               <div className="flex items-center gap-1">
                                 <button
-                                  onClick={() => {
+                                  onClick={async () => {
                                     setSelectedItemForImages(item.id);
                                     if (isMobile) {
                                       setShowMobileImageModal(true);
+                                    }
+                                    // 이미지 데이터 로드
+                                    if (item.images && item.images.length > 0) {
+                                      await loadAllImagesForItem(item.id);
                                     }
                                   }}
                                   className={`p-1 transition-colors ${
@@ -1004,11 +1070,17 @@ const FinishCheck = () => {
               <div className="grid grid-cols-2 gap-3">
                 {selectedItem.images.map((image) => (
                   <div key={image.id} className="relative group">
-                    <img
-                      src={image.image_data}
-                      alt={image.filename || '이미지'}
-                      className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                    />
+                    {image.image_data ? (
+                      <img
+                        src={image.image_data}
+                        alt={image.filename || '이미지'}
+                        className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-full h-32 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                        <span className="text-gray-400 text-sm">로딩 중...</span>
+                      </div>
+                    )}
                     <button
                       onClick={() => handleImageDelete(selectedItemForImages, image.id)}
                       className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
@@ -1067,11 +1139,17 @@ const FinishCheck = () => {
                 <div className="grid grid-cols-2 gap-3">
                   {selectedItem.images.map((image) => (
                     <div key={image.id} className="relative">
-                      <img
-                        src={image.image_data}
-                        alt={image.filename || '이미지'}
-                        className="w-full h-40 object-cover rounded-lg border border-gray-200"
-                      />
+                      {image.image_data ? (
+                        <img
+                          src={image.image_data}
+                          alt={image.filename || '이미지'}
+                          className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-full h-40 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                          <span className="text-gray-400 text-sm">로딩 중...</span>
+                        </div>
+                      )}
                       <button
                         onClick={() => handleImageDelete(selectedItemForImages, image.id)}
                         className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600"

@@ -51,8 +51,9 @@ router.get('/spaces', authenticateToken, (req, res) => {
         return res.json(spacesWithItems);
       }
 
+      // 초기 로딩 시 이미지 데이터(image_data)는 제외하고 메타데이터만 가져옴
       const imagesQuery = `
-        SELECT * FROM finish_check_item_images
+        SELECT id, item_id, filename, created_at FROM finish_check_item_images
         WHERE item_id IN (${itemIds.map(() => '?').join(',')})
         ORDER BY created_at ASC
       `;
@@ -362,6 +363,28 @@ router.get('/items/:id/images', authenticateToken, (req, res) => {
       }
 
       res.json(images);
+    }
+  );
+});
+
+// 단일 이미지 데이터 조회 (필요할 때만 로드)
+router.get('/images/:id', authenticateToken, (req, res) => {
+  const imageId = req.params.id;
+
+  db.get(
+    'SELECT * FROM finish_check_item_images WHERE id = ?',
+    [imageId],
+    (err, image) => {
+      if (err) {
+        console.error('이미지 조회 실패:', err);
+        return res.status(500).json({ error: '이미지 조회에 실패했습니다.' });
+      }
+
+      if (!image) {
+        return res.status(404).json({ error: '이미지를 찾을 수 없습니다.' });
+      }
+
+      res.json(image);
     }
   );
 });
