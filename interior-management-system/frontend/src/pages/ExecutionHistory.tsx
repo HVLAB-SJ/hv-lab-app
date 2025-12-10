@@ -743,9 +743,26 @@ const ExecutionHistory = () => {
     }
 
     try {
-      const materialCost = Number(formData.materialCost) || 0;
-      const laborCost = Number(formData.laborCost) || 0;
+      let materialCost = Number(formData.materialCost) || 0;
+      let laborCost = Number(formData.laborCost) || 0;
+      let vatAmount = 0;
       let totalAmount = materialCost + laborCost;
+
+      // 부가세 포함인 경우: 입력된 금액이 부가세 포함 총액
+      if (includeVat) {
+        const totalInput = materialCost + laborCost;
+        const actualAmount = Math.round(totalInput / 1.1);
+        vatAmount = totalInput - actualAmount;
+
+        // 자재비와 인건비 비율에 따라 재분배
+        if (totalInput > 0) {
+          const materialRatio = materialCost / totalInput;
+          const laborRatio = laborCost / totalInput;
+          materialCost = Math.round(actualAmount * materialRatio);
+          laborCost = Math.round(actualAmount * laborRatio);
+        }
+        totalAmount = totalInput;
+      }
 
       // 3.3% 세금공제 적용 (총액만 공제, 자재비/인건비는 원래 값 유지)
       if (includeTaxDeduction) {
@@ -789,19 +806,23 @@ const ExecutionHistory = () => {
           itemName: formData.itemName,
           materialAmount: materialCost,
           laborAmount: laborCost,
+          vatAmount: vatAmount,
           amount: totalAmount,
+          includesVAT: includeVat,
           requestDate: formData.date
         });
-        console.log('[handleEditSave] updatePaymentInAPI completed, now loading payments...');
-        await loadPaymentsFromAPI();
-        console.log('[handleEditSave] loadPaymentsFromAPI completed for payment type');
+        console.log('[handleEditSave] updatePaymentInAPI completed');
+        // 백그라운드에서 데이터 다시 로드 (UI 차단 없이)
+        loadPaymentsFromAPI();
       } else {
         // 실행내역 수정 - 기존 레코드의 데이터 유지하면서 수정된 필드만 업데이트
         console.log('[handleEditSave] Updating execution record:', {
           id: editingRecord.id,
           materialCost,
           laborCost,
+          vatAmount,
           totalAmount,
+          includeVat,
           includeTaxDeduction,
           date: formData.date
         });
@@ -812,18 +833,24 @@ const ExecutionHistory = () => {
           itemName: formData.itemName,
           materialCost,
           laborCost,
+          vatAmount,
           totalAmount,
           date: new Date(formData.date),
           notes: updatedNotes,
           images: updatedImages,
           paymentId: editingRecord.paymentId
         });
-        await loadExecutionRecordsFromAPI();
+        // 백그라운드에서 데이터 다시 로드 (UI 차단 없이)
+        loadExecutionRecordsFromAPI();
       }
 
+      // 즉시 UI 업데이트 (데이터 로드 완료를 기다리지 않음)
       console.log('[handleEditSave] SUCCESS! Showing toast and resetting state...');
       toast.success('수정되었습니다');
       setEditingRecord(null);
+      setSelectedRecord(null);
+      setIncludeVat(false); // 부가세 체크 초기화
+      setIncludeTaxDeduction(false); // 세금공제 체크 초기화
       // 폼 초기화
       setFormData(prev => ({
         ...prev,
