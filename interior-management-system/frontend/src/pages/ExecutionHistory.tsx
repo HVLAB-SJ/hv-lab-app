@@ -596,6 +596,21 @@ const ExecutionHistory = () => {
       totalAmount = materialCost + laborCost;
     }
 
+    // 3.3% 세금공제 적용
+    if (includeTaxDeduction) {
+      const baseAmount = materialCost + laborCost;
+      const taxDeductionAmount = Math.round(baseAmount * 0.033);
+      totalAmount = baseAmount - taxDeductionAmount;
+
+      // 자재비와 인건비 비율에 따라 세금공제 분배
+      if (baseAmount > 0) {
+        const materialRatio = materialCost / baseAmount;
+        const laborRatio = laborCost / baseAmount;
+        materialCost = Math.round((baseAmount - taxDeductionAmount) * materialRatio);
+        laborCost = Math.round((baseAmount - taxDeductionAmount) * laborRatio);
+      }
+    }
+
     const newRecord: ExecutionRecord = {
       id: `exec_${Date.now()}`,
       project: formData.project,
