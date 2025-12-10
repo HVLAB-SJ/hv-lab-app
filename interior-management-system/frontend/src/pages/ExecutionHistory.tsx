@@ -837,8 +837,8 @@ const ExecutionHistory = () => {
           requestDate: formData.date
         });
         console.log('[handleEditSave] updatePaymentInAPI completed');
-        // 백그라운드에서 데이터 다시 로드 (UI 차단 없이)
-        loadPaymentsFromAPI();
+        // 데이터 다시 로드 완료 후 UI 업데이트
+        await loadPaymentsFromAPI();
       } else {
         // 실행내역 수정 - 기존 레코드의 데이터 유지하면서 수정된 필드만 업데이트
         console.log('[handleEditSave] Updating execution record:', {
@@ -866,11 +866,10 @@ const ExecutionHistory = () => {
           paymentId: editingRecord.paymentId,
           includesTaxDeduction: includeTaxDeduction
         });
-        // 백그라운드에서 데이터 다시 로드 (UI 차단 없이)
-        loadExecutionRecordsFromAPI();
+        // 데이터 다시 로드 완료 후 UI 업데이트
+        await loadExecutionRecordsFromAPI();
       }
 
-      // 즉시 UI 업데이트 (데이터 로드 완료를 기다리지 않음)
       console.log('[handleEditSave] SUCCESS! Showing toast and resetting state...');
       toast.success('수정되었습니다');
       setEditingRecord(null);
