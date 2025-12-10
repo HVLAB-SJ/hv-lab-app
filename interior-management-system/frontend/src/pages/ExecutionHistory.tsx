@@ -154,6 +154,11 @@ const ExecutionHistory = () => {
     // 공사완료되지 않은 프로젝트만 필터링
     const activeProjects = projects.filter(p => p.status !== 'completed');
 
+    // "기타"는 항상 유효한 프로젝트로 인정
+    if (lastSelected === '기타') {
+      return '기타';
+    }
+
     if (lastSelected && activeProjects.some(p => p.name === lastSelected)) {
       return lastSelected;
     }
