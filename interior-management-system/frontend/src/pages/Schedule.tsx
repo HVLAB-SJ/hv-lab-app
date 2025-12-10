@@ -3281,22 +3281,29 @@ const Schedule = () => {
                     await loadSchedulesFromAPI();
                   }
                 } else {
-                  // 추가
+                  // 추가 - 낙관적 업데이트 (즉시 UI 반영)
                   console.log('📤 Adding schedule with projectId:', newEvent.projectId, 'projectName:', newEvent.projectName);
-                  await addScheduleToAPI({
+                  const newSchedule = {
                     id: Date.now().toString(),
                     title: newEvent.title,
                     start: newEvent.start,
                     end: newEvent.end,
-                    type: 'other',
-                    project: newEvent.projectId || newEvent.projectName,  // projectId 우선 사용
+                    type: 'other' as const,
+                    project: newEvent.projectId || newEvent.projectName || '',
                     location: '',
                     attendees: newEvent.assignedTo || [],
-                    description: newEvent.description,
-                    time: newEvent.time
+                    description: newEvent.description || '',
+                    time: newEvent.time || '-'
+                  };
+
+                  // 즉시 로컬 상태에 추가 (UI 즉시 반영)
+                  addSchedule(newSchedule);
+
+                  // 백그라운드에서 서버에 저장
+                  addScheduleToAPI(newSchedule).catch(error => {
+                    console.error('Failed to save schedule to server:', error);
+                    toast.error('서버 저장 실패. 새로고침해주세요.');
                   });
-                  // 추가 후 일정 다시 로드
-                  await loadSchedulesFromAPI();
                 }
                 setShowModal(false);
               } catch (error) {
