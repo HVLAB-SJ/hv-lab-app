@@ -13,7 +13,17 @@ module.exports = function addIncludesVatColumn(db) {
 
       if (hasColumn) {
         console.log('includes_vat 컬럼이 이미 존재합니다.');
-        resolve();
+        // 기존 데이터 중 vat_amount > 0이면서 includes_vat = 0인 경우 업데이트
+        db.run(`
+          UPDATE execution_records SET includes_vat = 1 WHERE vat_amount > 0 AND includes_vat = 0
+        `, function(updateErr) {
+          if (updateErr) {
+            console.error('기존 데이터 includes_vat 업데이트 실패:', updateErr);
+          } else if (this.changes > 0) {
+            console.log(`기존 데이터 ${this.changes}개의 includes_vat 업데이트 완료`);
+          }
+          resolve();
+        });
         return;
       }
 
@@ -25,7 +35,17 @@ module.exports = function addIncludesVatColumn(db) {
           reject(err);
         } else {
           console.log('includes_vat 컬럼 추가 완료');
-          resolve();
+          // 기존 데이터 중 vat_amount > 0인 경우 includes_vat = 1로 업데이트
+          db.run(`
+            UPDATE execution_records SET includes_vat = 1 WHERE vat_amount > 0
+          `, function(updateErr) {
+            if (updateErr) {
+              console.error('기존 데이터 includes_vat 업데이트 실패:', updateErr);
+            } else {
+              console.log('기존 데이터 includes_vat 업데이트 완료 (vat_amount > 0인 레코드)');
+            }
+            resolve();
+          });
         }
       });
     });
