@@ -664,11 +664,19 @@ const ExecutionHistory = () => {
 
     console.log('[handleEditClick] Record type:', record.type, 'isPaymentType:', isPaymentType);
     console.log('[handleEditClick] Original payment:', originalPayment);
+    console.log('[handleEditClick] Record vatAmount:', record.vatAmount);
 
-    // 부가세 포함 여부 확인 (payment 타입인 경우 원본 데이터에서 확인)
-    const wasVatIncluded = isPaymentType && originalPayment?.includesVAT === true;
+    // 부가세 포함 여부 확인
+    // 1. payment 타입: originalPayment.includesVAT 확인
+    // 2. 실행내역 타입: vatAmount > 0 이면 부가세 포함
+    let wasVatIncluded = false;
+    if (isPaymentType && originalPayment) {
+      wasVatIncluded = originalPayment.includesVAT === true;
+    } else if (!isPaymentType && (record.vatAmount || 0) > 0) {
+      wasVatIncluded = true;
+    }
 
-    // 원본 금액 가져오기 (payment 타입이고 부가세 포함인 경우 원본 payment에서 가져옴)
+    // 원본 금액 가져오기 (부가세 포함된 원래 입력값으로 역산)
     let displayMaterialCost = record.materialCost || 0;
     let displayLaborCost = record.laborCost || 0;
 
@@ -676,13 +684,27 @@ const ExecutionHistory = () => {
       // payment 원본 데이터의 금액 사용 (부가세 포함된 원래 입력값)
       displayMaterialCost = originalPayment.materialAmount || 0;
       displayLaborCost = originalPayment.laborAmount || 0;
+    } else if (!isPaymentType && wasVatIncluded) {
+      // 실행내역이고 부가세가 포함되어 있었던 경우: 원본 금액 역산
+      // 저장된 금액은 부가세 제외 금액이므로, 부가세 포함 금액으로 복원
+      // totalAmount = 부가세 포함 총액, materialCost + laborCost = 부가세 제외 공급가액
+      const totalWithVat = record.totalAmount || 0;
+      const supplyAmount = (record.materialCost || 0) + (record.laborCost || 0);
+
+      if (supplyAmount > 0) {
+        // 원본 비율에 따라 부가세 포함 금액으로 역산
+        const materialRatio = (record.materialCost || 0) / supplyAmount;
+        const laborRatio = (record.laborCost || 0) / supplyAmount;
+        displayMaterialCost = Math.round(totalWithVat * materialRatio);
+        displayLaborCost = Math.round(totalWithVat * laborRatio);
+      }
     }
 
     // 3.3% 세금공제 여부 확인 (실행내역 타입인 경우만)
     const originalTotal = record.totalAmount || 0;
-    const sumOfCosts = displayMaterialCost + displayLaborCost;
+    const sumOfCosts = (record.materialCost || 0) + (record.laborCost || 0);
     const expectedWithTax = Math.round(sumOfCosts * 0.967);
-    const wasTaxDeducted = !isPaymentType && sumOfCosts > 0 && originalTotal < sumOfCosts && Math.abs(originalTotal - expectedWithTax) < 100;
+    const wasTaxDeducted = !isPaymentType && !wasVatIncluded && sumOfCosts > 0 && originalTotal < sumOfCosts && Math.abs(originalTotal - expectedWithTax) < 100;
 
     console.log('[handleEditClick] VAT/Tax check:', {
       wasVatIncluded,
