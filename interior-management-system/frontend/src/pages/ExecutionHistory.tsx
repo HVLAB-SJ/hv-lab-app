@@ -190,16 +190,21 @@ const ExecutionHistory = () => {
   const [splitMaterialCost, setSplitMaterialCost] = useState<number | ''>('');
   const [splitLaborCost, setSplitLaborCost] = useState<number | ''>('');
 
-  // 초기 데이터 로드 및 프로젝트 설정
+  // 초기 데이터 로드 (마운트 시 1회만 실행)
   useEffect(() => {
-    loadPaymentsFromAPI().catch(error => {
-      console.error('Failed to load payments:', error);
-    });
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          loadPaymentsFromAPI(),
+          loadExecutionRecordsFromAPI()
+        ]);
+        console.log('[ExecutionHistory] 데이터 로드 완료');
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      }
+    };
 
-    // 실행내역 API에서 로드
-    loadExecutionRecordsFromAPI().catch(error => {
-      console.error('Failed to load execution records:', error);
-    });
+    loadData();
 
     // 모바일 여부 확인
     const checkMobile = () => {
@@ -209,7 +214,11 @@ const ExecutionHistory = () => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
-    // 프로젝트가 로드되면 초기 프로젝트 설정
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []); // 마운트 시 1회만 실행
+
+  // 프로젝트가 로드되면 초기 프로젝트 설정 (별도 useEffect로 분리)
+  useEffect(() => {
     if (projects.length > 0 && !formData.project) {
       const initialProject = getInitialProject();
       if (initialProject) {
@@ -217,9 +226,7 @@ const ExecutionHistory = () => {
         localStorage.setItem('lastSelectedProject', initialProject);
       }
     }
-
-    return () => window.removeEventListener('resize', checkMobile);
-  }, [loadPaymentsFromAPI, loadExecutionRecordsFromAPI, projects]);
+  }, [projects]); // projects가 변경될 때만 실행
 
   // IndexedDB에서 이미지 로드 (마운트 시 1회)
   useEffect(() => {
