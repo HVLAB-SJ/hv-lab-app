@@ -680,34 +680,38 @@ const ExecutionHistory = () => {
     let displayMaterialCost = record.materialCost || 0;
     let displayLaborCost = record.laborCost || 0;
 
-    if (isPaymentType && originalPayment) {
-      // payment 원본 데이터의 금액 사용 (부가세 포함된 원래 입력값)
-      displayMaterialCost = originalPayment.materialAmount || 0;
-      displayLaborCost = originalPayment.laborAmount || 0;
-    } else if (!isPaymentType && wasVatIncluded) {
-      // 실행내역이고 부가세가 포함되어 있었던 경우: 원본 금액 역산
-      // 저장된 금액은 부가세 제외 금액이므로, 부가세 포함 금액으로 복원
-      // totalAmount = 부가세 포함 총액, materialCost + laborCost = 부가세 제외 공급가액
-      const totalWithVat = record.totalAmount || 0;
-      const supplyAmount = (record.materialCost || 0) + (record.laborCost || 0);
-
-      if (supplyAmount > 0) {
-        // 원본 비율에 따라 부가세 포함 금액으로 역산
-        const materialRatio = (record.materialCost || 0) / supplyAmount;
-        const laborRatio = (record.laborCost || 0) / supplyAmount;
-        displayMaterialCost = Math.round(totalWithVat * materialRatio);
-        displayLaborCost = Math.round(totalWithVat * laborRatio);
-      }
-    }
-
     // 3.3% 세금공제 여부 확인
     // 실행내역 타입: DB에 저장된 includesTaxDeduction 필드 사용
     const wasTaxDeducted = !isPaymentType && (record as any).includesTaxDeduction === true;
 
-    // 세금공제가 적용된 경우 원본 금액 역산 (공제된 금액 / 0.967 = 원본 금액)
-    if (!isPaymentType && wasTaxDeducted) {
-      displayMaterialCost = Math.round((record.materialCost || 0) / 0.967);
-      displayLaborCost = Math.round((record.laborCost || 0) / 0.967);
+    if (isPaymentType && originalPayment) {
+      // payment 원본 데이터의 금액 사용 (부가세 포함된 원래 입력값)
+      displayMaterialCost = originalPayment.materialAmount || 0;
+      displayLaborCost = originalPayment.laborAmount || 0;
+    } else if (!isPaymentType) {
+      // 실행내역 타입: 세금공제와 부가세 역산 처리
+
+      // 1단계: 세금공제가 적용된 경우 먼저 역산 (공제된 금액 / 0.967 = 공제 전 금액)
+      if (wasTaxDeducted) {
+        displayMaterialCost = Math.round((record.materialCost || 0) / 0.967);
+        displayLaborCost = Math.round((record.laborCost || 0) / 0.967);
+      }
+
+      // 2단계: 부가세가 포함되어 있었던 경우 원본 금액으로 역산
+      // 저장된 금액은 부가세 제외 공급가액이므로, 부가세 포함 금액으로 복원
+      if (wasVatIncluded) {
+        // totalAmount = 부가세 포함 총액
+        const totalWithVat = record.totalAmount || 0;
+        const supplyAmount = displayMaterialCost + displayLaborCost;
+
+        if (supplyAmount > 0) {
+          // 원본 비율에 따라 부가세 포함 금액으로 역산
+          const materialRatio = displayMaterialCost / supplyAmount;
+          const laborRatio = displayLaborCost / supplyAmount;
+          displayMaterialCost = Math.round(totalWithVat * materialRatio);
+          displayLaborCost = Math.round(totalWithVat * laborRatio);
+        }
+      }
     }
 
     console.log('[handleEditClick] VAT/Tax check:', {
