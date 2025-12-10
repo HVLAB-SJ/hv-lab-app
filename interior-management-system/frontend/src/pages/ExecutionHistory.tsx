@@ -706,9 +706,24 @@ const ExecutionHistory = () => {
     if (!editingRecord) return;
 
     try {
-      const materialCost = Number(formData.materialCost) || 0;
-      const laborCost = Number(formData.laborCost) || 0;
-      const totalAmount = materialCost + laborCost;
+      let materialCost = Number(formData.materialCost) || 0;
+      let laborCost = Number(formData.laborCost) || 0;
+      let totalAmount = materialCost + laborCost;
+
+      // 3.3% 세금공제 적용
+      if (includeTaxDeduction) {
+        const baseAmount = materialCost + laborCost;
+        const taxDeductionAmount = Math.round(baseAmount * 0.033);
+        totalAmount = baseAmount - taxDeductionAmount;
+
+        // 자재비와 인건비도 비율에 맞게 조정
+        if (baseAmount > 0) {
+          const materialRatio = materialCost / baseAmount;
+          const laborRatio = laborCost / baseAmount;
+          materialCost = Math.round((baseAmount - taxDeductionAmount) * materialRatio);
+          laborCost = Math.round((baseAmount - taxDeductionAmount) * laborRatio);
+        }
+      }
 
       // 청구내역 붙여넣기 내용을 메모에 추가
       let updatedNotes = editingRecord.notes || '';
