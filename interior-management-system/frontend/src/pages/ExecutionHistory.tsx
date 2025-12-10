@@ -750,13 +750,17 @@ const ExecutionHistory = () => {
       const updatedImages = [...existingImages, ...formData.quickImages];
 
       // 타입에 따라 다른 API 호출
-      console.log('[handleEditSave] editingRecord type:', (editingRecord as any).type, 'id:', editingRecord.id);
+      console.log('[handleEditSave] editingRecord type:', (editingRecord as any).type, 'id:', editingRecord.id, 'typeof id:', typeof editingRecord.id);
       if ((editingRecord as any).type === 'payment') {
         console.log('[handleEditSave] Processing as PAYMENT');
-        // 결제요청 수정 - 기존 payment 데이터 찾기
-        const existingPayment = payments.find(p => p.id === editingRecord.id);
+        console.log('[handleEditSave] payments array IDs:', payments.map(p => ({ id: p.id, typeofId: typeof p.id })));
+        // 결제요청 수정 - 기존 payment 데이터 찾기 (문자열/숫자 타입 차이 처리)
+        const existingPayment = payments.find(p => String(p.id) === String(editingRecord.id));
+        console.log('[handleEditSave] Found existingPayment:', existingPayment);
         if (!existingPayment) {
-          throw new Error('결제요청을 찾을 수 없습니다');
+          console.error('[handleEditSave] Payment not found! id:', editingRecord.id, 'payments count:', payments.length, 'all payment ids:', payments.map(p => p.id));
+          toast.error('결제요청을 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+          return;
         }
 
         await updatePaymentInAPI(editingRecord.id, {
