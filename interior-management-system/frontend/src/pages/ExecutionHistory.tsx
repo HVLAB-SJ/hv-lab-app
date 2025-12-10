@@ -139,6 +139,7 @@ const ExecutionHistory = () => {
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
   // 항목명 추천
   const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
+  const [isItemNameFocused, setIsItemNameFocused] = useState(false); // 항목명 input 포커스 상태
   // 결제요청 레코드의 이미지를 저장하는 별도의 상태 (IndexedDB 사용으로 용량 제한 없음)
   const [paymentRecordImages, setPaymentRecordImages] = useState<Record<string, string[]>>({});
   const [imagesLoaded, setImagesLoaded] = useState(false);
@@ -278,9 +279,9 @@ const ExecutionHistory = () => {
     localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
   }, [executionMemos]);
 
-  // 항목명 입력 시 기존 실행내역에서 추천
+  // 항목명 입력 시 기존 실행내역에서 추천 (포커스 상태일 때만)
   useEffect(() => {
-    if (formData.itemName && formData.itemName.trim().length >= 1) {
+    if (isItemNameFocused && formData.itemName && formData.itemName.trim().length >= 1) {
       const searchText = formData.itemName.trim().toLowerCase();
 
       // 모든 실행내역에서 항목명 추출 (최신순)
@@ -296,7 +297,7 @@ const ExecutionHistory = () => {
     } else {
       setItemNameSuggestions([]);
     }
-  }, [formData.itemName, executionRecords]);
+  }, [formData.itemName, executionRecords, isItemNameFocused]);
 
   // 클립보드 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
@@ -1229,10 +1230,15 @@ const ExecutionHistory = () => {
                 type="text"
                 value={formData.itemName}
                 onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
+                onFocus={() => setIsItemNameFocused(true)}
+                onBlur={() => {
+                  // 약간의 딜레이를 줘서 추천 항목 클릭이 가능하도록
+                  setTimeout(() => setIsItemNameFocused(false), 200);
+                }}
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
-              {/* 항목명 추천 목록 */}
-              {itemNameSuggestions.length > 0 && (
+              {/* 항목명 추천 목록 (포커스 상태일 때만 표시) */}
+              {isItemNameFocused && itemNameSuggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {itemNameSuggestions.map((itemName, index) => (
                     <button
@@ -1241,6 +1247,7 @@ const ExecutionHistory = () => {
                       onClick={() => {
                         setFormData({ ...formData, itemName });
                         setItemNameSuggestions([]);
+                        setIsItemNameFocused(false);
                       }}
                       className="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm"
                     >
