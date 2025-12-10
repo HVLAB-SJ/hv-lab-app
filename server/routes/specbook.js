@@ -189,12 +189,12 @@ router.put('/categories', authenticateToken, async (req, res) => {
   }
 });
 
-// 스펙북 라이브러리 조회 (메타데이터만 - 이미지 제외로 빠른 로딩)
+// 스펙북 라이브러리 조회 (전체 데이터 포함)
 router.get('/library/meta', authenticateToken, (req, res) => {
   const { category, grades } = req.query;
 
-  // image_url, sub_images 제외하고 조회 (빠른 로딩)
-  let query = `SELECT id, name, category, brand, price, description, project_id, is_library, display_order, grade, created_at, updated_at FROM specbook_items WHERE is_library = 1`;
+  // 모든 데이터 포함해서 조회
+  let query = 'SELECT * FROM specbook_items WHERE is_library = 1';
   let params = [];
 
   if (category && category !== '전체') {
@@ -221,12 +221,19 @@ router.get('/library/meta', authenticateToken, (req, res) => {
       return res.status(500).json({ error: '스펙북 라이브러리 조회 실패' });
     }
 
-    // image_url과 sub_images를 null로 설정 (프론트엔드에서 개별 로드)
-    const result = rows.map(row => ({
-      ...row,
-      image_url: null,
-      sub_images: []
-    }));
+    // sub_images JSON 파싱
+    const result = rows.map(row => {
+      if (row.sub_images) {
+        try {
+          row.sub_images = JSON.parse(row.sub_images);
+        } catch (e) {
+          row.sub_images = [];
+        }
+      } else {
+        row.sub_images = [];
+      }
+      return row;
+    });
 
     res.json(result);
   });
@@ -315,13 +322,12 @@ router.get('/library', authenticateToken, (req, res) => {
   });
 });
 
-// 프로젝트별 스펙 조회 (메타데이터만 - 이미지 제외로 빠른 로딩)
+// 프로젝트별 스펙 조회 (전체 데이터 포함)
 router.get('/project/:projectId/meta', authenticateToken, (req, res) => {
   const { projectId } = req.params;
   const { category, grades } = req.query;
 
-  // image_url, sub_images 제외하고 조회 (빠른 로딩)
-  let query = `SELECT id, name, category, brand, price, description, project_id, is_library, display_order, grade, created_at, updated_at FROM specbook_items WHERE project_id = ?`;
+  let query = 'SELECT * FROM specbook_items WHERE project_id = ?';
   let params = [projectId];
 
   if (category && category !== '전체') {
@@ -348,18 +354,25 @@ router.get('/project/:projectId/meta', authenticateToken, (req, res) => {
       return res.status(500).json({ error: '프로젝트 스펙 조회 실패' });
     }
 
-    // image_url과 sub_images를 null로 설정 (프론트엔드에서 개별 로드)
-    const result = rows.map(row => ({
-      ...row,
-      image_url: null,
-      sub_images: []
-    }));
+    // sub_images JSON 파싱
+    const result = rows.map(row => {
+      if (row.sub_images) {
+        try {
+          row.sub_images = JSON.parse(row.sub_images);
+        } catch (e) {
+          row.sub_images = [];
+        }
+      } else {
+        row.sub_images = [];
+      }
+      return row;
+    });
 
     res.json(result);
   });
 });
 
-// 프로젝트별 스펙 조회 (전체 데이터 포함)
+// 프로젝트별 스펙 조회
 router.get('/project/:projectId', authenticateToken, (req, res) => {
   const { projectId } = req.params;
   const { category, grades } = req.query;

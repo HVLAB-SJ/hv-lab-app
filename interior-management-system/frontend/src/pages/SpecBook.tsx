@@ -6,7 +6,6 @@ import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useAuth } from '../contexts/AuthContext';
 import ImageCropper from '../components/ImageCropper';
 import { useSpecbookStore } from '../store/specbookStore';
-import LazySpecbookImage, { updateImageCache, removeImageCache } from '../components/LazySpecbookImage';
 import {
   DndContext,
   closestCenter,
@@ -208,14 +207,12 @@ const SortableSpecBookItem = ({
   item,
   onEdit,
   onDelete,
-  onImageClick,
-  onImageLoad
+  onImageClick
 }: {
   item: SpecBookItem;
   onEdit: (item: SpecBookItem) => void;
   onDelete: (id: number) => void;
   onImageClick: (item: SpecBookItem) => void;
-  onImageLoad?: (itemId: number, imageUrl: string, subImages: string[]) => void;
 }) => {
   const {
     attributes,
@@ -232,13 +229,6 @@ const SortableSpecBookItem = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // 이미지 로드 완료 시 부모에게 알림
-  const handleImageLoad = useCallback((imageUrl: string, subImages: string[]) => {
-    if (onImageLoad) {
-      onImageLoad(item.id, imageUrl, subImages);
-    }
-  }, [item.id, onImageLoad]);
-
   return (
     <div
       ref={setNodeRef}
@@ -248,16 +238,25 @@ const SortableSpecBookItem = ({
       className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden flex flex-col group relative cursor-move"
     >
 
-      {/* 상단: 정사각형 이미지 (썸네일) - Lazy Loading */}
+      {/* 상단: 정사각형 이미지 (썸네일) */}
       <div className="w-full aspect-square bg-gray-100 flex-shrink-0 relative">
-        <LazySpecbookImage
-          itemId={item.id}
-          alt={item.name}
-          className="w-full h-full object-contain block cursor-pointer"
-          onClick={() => onImageClick(item)}
-          onPointerDown={(e) => e.stopPropagation()}
-          onImageLoad={handleImageLoad}
-        />
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className="w-full h-full object-contain block cursor-pointer"
+            loading="lazy"
+            onClick={(e) => {
+              e.stopPropagation();
+              onImageClick(item);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+            이미지 없음
+          </div>
+        )}
 
         {/* 수정/삭제 버튼 - 호버 시 이미지 우측 상단에 표시 */}
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -919,33 +918,6 @@ const SpecBook = () => {
     initialSubImagesRef.current = initialImages;
     setIsSubImageModalOpen(true);
   };
-
-  // 이미지 로드 완료 시 items 상태 업데이트 (Lazy Loading용)
-  const handleItemImageLoad = useCallback((itemId: number, imageUrl: string, subImages: string[]) => {
-    setItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId
-          ? { ...item, image_url: imageUrl, sub_images: subImages }
-          : item
-      )
-    );
-    // allLibraryItems도 업데이트
-    setAllLibraryItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId
-          ? { ...item, image_url: imageUrl, sub_images: subImages }
-          : item
-      )
-    );
-    // allProjectItems도 업데이트
-    setAllProjectItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId
-          ? { ...item, image_url: imageUrl, sub_images: subImages }
-          : item
-      )
-    );
-  }, []);
 
   // Sub 이미지 추가 (이미지 및 PDF 지원)
   const handleAddSubImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2042,7 +2014,6 @@ const SpecBook = () => {
                               onEdit={handleEdit}
                               onDelete={handleDelete}
                               onImageClick={handleImageClick}
-                              onImageLoad={handleItemImageLoad}
                             />
                           ))}
                       </div>
