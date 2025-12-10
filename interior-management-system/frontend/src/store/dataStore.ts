@@ -156,6 +156,7 @@ export interface ExecutionRecord {
   notes?: string;
   paymentId?: string; // 연결된 결제요청 ID
   includesTaxDeduction?: boolean; // 3.3% 세금공제 여부
+  includesVat?: boolean; // 부가세포함 여부
   createdAt: Date;
   updatedAt: Date;
 }
@@ -1147,6 +1148,7 @@ export const useDataStore = create<DataStore>()(
         images: r.images || [],
         paymentId: r.payment_id ? String(r.payment_id) : undefined,
         includesTaxDeduction: r.includes_tax_deduction === 1,
+        includesVat: r.includes_vat === 1,
         createdAt: new Date(r.created_at),
         updatedAt: new Date(r.updated_at)
       }));
@@ -1159,7 +1161,7 @@ export const useDataStore = create<DataStore>()(
 
   addExecutionRecordToAPI: async (record: ExecutionRecord) => {
     try {
-      console.log('[addExecutionRecordToAPI] Adding:', record.itemName, 'includesTaxDeduction:', record.includesTaxDeduction);
+      console.log('[addExecutionRecordToAPI] Adding:', record.itemName, 'includesTaxDeduction:', record.includesTaxDeduction, 'includesVat:', record.includesVat);
       const apiRecord = await executionRecordService.createRecord({
         project_name: record.project,
         author: record.author,
@@ -1172,7 +1174,8 @@ export const useDataStore = create<DataStore>()(
         total_amount: record.totalAmount,
         notes: record.notes,
         payment_id: record.paymentId,
-        includes_tax_deduction: record.includesTaxDeduction
+        includes_tax_deduction: record.includesTaxDeduction,
+        includes_vat: record.includesVat
       });
 
       const newRecord: ExecutionRecord = {
@@ -1214,7 +1217,7 @@ export const useDataStore = create<DataStore>()(
         }
       }
 
-      console.log('[updateExecutionRecordInAPI] Calling API with dateStr:', dateStr, 'includesTaxDeduction:', record.includesTaxDeduction);
+      console.log('[updateExecutionRecordInAPI] Calling API with dateStr:', dateStr, 'includesTaxDeduction:', record.includesTaxDeduction, 'includesVat:', record.includesVat);
       await executionRecordService.updateRecord(id, {
         project_name: record.project,
         author: record.author,
@@ -1228,7 +1231,8 @@ export const useDataStore = create<DataStore>()(
         notes: record.notes,
         payment_id: record.paymentId,
         images: record.images,
-        includes_tax_deduction: record.includesTaxDeduction
+        includes_tax_deduction: record.includesTaxDeduction,
+        includes_vat: record.includesVat
       });
 
       set((state) => ({

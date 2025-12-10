@@ -39,6 +39,7 @@ const addExecutionRecordsTable = require('./server/migrations/add-execution-reco
 const addExecutionRecordImages = require('./server/migrations/add-execution-record-images');
 const createProcessesTable = require('./server/migrations/create-processes-table');
 const addTaxDeductionColumn = require('./server/migrations/add-tax-deduction-column');
+const addIncludesVatColumn = require('./server/migrations/add-includes-vat-column');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
@@ -65,6 +66,10 @@ createProcessesTable().catch(console.error);
 setTimeout(() => {
   addTaxDeductionColumn(require('./server/config/database').db).catch(console.error);
 }, 1000);
+// 실행내역에 부가세포함 여부 컬럼 추가
+setTimeout(() => {
+  addIncludesVatColumn(require('./server/config/database').db).catch(console.error);
+}, 1500);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";

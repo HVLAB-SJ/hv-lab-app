@@ -617,6 +617,7 @@ const ExecutionHistory = () => {
       images: formData.images,
       notes: '',
       includesTaxDeduction: includeTaxDeduction, // 3.3% 세금공제 여부 저장
+      includesVat: includeVat, // 부가세포함 여부 저장
       createdAt: now,
       updatedAt: now
     };
@@ -668,11 +669,11 @@ const ExecutionHistory = () => {
 
     // 부가세 포함 여부 확인
     // 1. payment 타입: originalPayment.includesVAT 확인
-    // 2. 실행내역 타입: vatAmount > 0 이면 부가세 포함
+    // 2. 실행내역 타입: DB에 저장된 includesVat 필드 사용
     let wasVatIncluded = false;
     if (isPaymentType && originalPayment) {
       wasVatIncluded = originalPayment.includesVAT === true;
-    } else if (!isPaymentType && (record.vatAmount || 0) > 0) {
+    } else if (!isPaymentType && (record as any).includesVat === true) {
       wasVatIncluded = true;
     }
 
@@ -868,7 +869,8 @@ const ExecutionHistory = () => {
           notes: updatedNotes,
           images: updatedImages,
           paymentId: editingRecord.paymentId,
-          includesTaxDeduction: includeTaxDeduction
+          includesTaxDeduction: includeTaxDeduction,
+          includesVat: includeVat
         });
         // 데이터 다시 로드 완료 후 UI 업데이트
         await loadExecutionRecordsFromAPI();

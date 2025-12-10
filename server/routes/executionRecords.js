@@ -68,10 +68,11 @@ router.post('/', authenticateToken, (req, res) => {
     notes,
     images,
     payment_id,
-    includes_tax_deduction
+    includes_tax_deduction,
+    includes_vat
   } = req.body;
 
-  console.log('[POST /execution-records] Creating:', { project_name, item_name, total_amount, includes_tax_deduction });
+  console.log('[POST /execution-records] Creating:', { project_name, item_name, total_amount, includes_tax_deduction, includes_vat });
 
   // 프로젝트 ID 조회
   db.get('SELECT id FROM projects WHERE name = ?', [project_name], (err, project) => {
@@ -87,8 +88,8 @@ router.post('/', authenticateToken, (req, res) => {
       INSERT INTO execution_records (
         project_id, project_name, author, date, process, item_name,
         material_cost, labor_cost, vat_amount, total_amount, notes, images, payment_id,
-        includes_tax_deduction, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        includes_tax_deduction, includes_vat, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.run(query, [
@@ -106,6 +107,7 @@ router.post('/', authenticateToken, (req, res) => {
       imagesJson,
       payment_id || null,
       includes_tax_deduction ? 1 : 0,
+      includes_vat ? 1 : 0,
       now,
       now
     ], function(err) {
@@ -154,10 +156,11 @@ router.put('/:id', authenticateToken, (req, res) => {
     notes,
     images,
     payment_id,
-    includes_tax_deduction
+    includes_tax_deduction,
+    includes_vat
   } = req.body;
 
-  console.log('[PUT /execution-records/:id] Updating:', id, 'images count:', images?.length || 0);
+  console.log('[PUT /execution-records/:id] Updating:', id, 'images count:', images?.length || 0, 'includes_vat:', includes_vat);
 
   // 먼저 기존 레코드 조회 (부분 업데이트 지원을 위해)
   db.get('SELECT * FROM execution_records WHERE id = ?', [id], (err, existingRecord) => {
@@ -196,6 +199,7 @@ router.put('/:id', authenticateToken, (req, res) => {
       const updatedImages = images !== undefined ? JSON.stringify(images) : existingRecord.images;
       const updatedPaymentId = payment_id !== undefined ? (payment_id || null) : existingRecord.payment_id;
       const updatedIncludesTaxDeduction = includes_tax_deduction !== undefined ? (includes_tax_deduction ? 1 : 0) : existingRecord.includes_tax_deduction;
+      const updatedIncludesVat = includes_vat !== undefined ? (includes_vat ? 1 : 0) : existingRecord.includes_vat;
 
       const query = `
         UPDATE execution_records SET
@@ -213,6 +217,7 @@ router.put('/:id', authenticateToken, (req, res) => {
           images = ?,
           payment_id = ?,
           includes_tax_deduction = ?,
+          includes_vat = ?,
           updated_at = ?
         WHERE id = ?
       `;
@@ -232,6 +237,7 @@ router.put('/:id', authenticateToken, (req, res) => {
         updatedImages,
         updatedPaymentId,
         updatedIncludesTaxDeduction,
+        updatedIncludesVat,
         now,
         id
       ], function(err) {

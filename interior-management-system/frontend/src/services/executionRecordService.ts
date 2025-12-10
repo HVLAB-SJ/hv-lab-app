@@ -16,6 +16,7 @@ export interface ExecutionRecordResponse {
   images: string[];
   payment_id: number | null;
   includes_tax_deduction: number; // 0 or 1
+  includes_vat: number; // 0 or 1
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +35,7 @@ export interface ExecutionRecordData {
   images?: string[];
   payment_id?: string;
   includes_tax_deduction?: boolean;
+  includes_vat?: boolean;
 }
 
 const executionRecordService = {
