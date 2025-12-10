@@ -38,6 +38,7 @@ const addPaymentImagesColumn = require('./server/migrations/add-payment-images-c
 const addExecutionRecordsTable = require('./server/migrations/add-execution-records-table');
 const addExecutionRecordImages = require('./server/migrations/add-execution-record-images');
 const createProcessesTable = require('./server/migrations/create-processes-table');
+const addTaxDeductionColumn = require('./server/migrations/add-tax-deduction-column');
 addOriginalMaterialAmount().catch(console.error);
 createQuoteInquiriesTable().catch(console.error);
 updateSchedulesProjectNullable().catch(console.error);
@@ -60,6 +61,10 @@ setTimeout(() => {
 }, 500);
 // 공정 테이블 생성
 createProcessesTable().catch(console.error);
+// 실행내역에 세금공제 여부 컬럼 추가
+setTimeout(() => {
+  addTaxDeductionColumn(require('./server/config/database').db).catch(console.error);
+}, 1000);
 
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";

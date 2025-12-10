@@ -155,6 +155,7 @@ export interface ExecutionRecord {
   images?: string[];
   notes?: string;
   paymentId?: string; // 연결된 결제요청 ID
+  includesTaxDeduction?: boolean; // 3.3% 세금공제 여부
   createdAt: Date;
   updatedAt: Date;
 }
@@ -1145,6 +1146,7 @@ export const useDataStore = create<DataStore>()(
         notes: r.notes || undefined,
         images: r.images || [],
         paymentId: r.payment_id ? String(r.payment_id) : undefined,
+        includesTaxDeduction: r.includes_tax_deduction === 1,
         createdAt: new Date(r.created_at),
         updatedAt: new Date(r.updated_at)
       }));
@@ -1157,7 +1159,7 @@ export const useDataStore = create<DataStore>()(
 
   addExecutionRecordToAPI: async (record: ExecutionRecord) => {
     try {
-      console.log('[addExecutionRecordToAPI] Adding:', record.itemName);
+      console.log('[addExecutionRecordToAPI] Adding:', record.itemName, 'includesTaxDeduction:', record.includesTaxDeduction);
       const apiRecord = await executionRecordService.createRecord({
         project_name: record.project,
         author: record.author,
@@ -1169,7 +1171,8 @@ export const useDataStore = create<DataStore>()(
         vat_amount: record.vatAmount,
         total_amount: record.totalAmount,
         notes: record.notes,
-        payment_id: record.paymentId
+        payment_id: record.paymentId,
+        includes_tax_deduction: record.includesTaxDeduction
       });
 
       const newRecord: ExecutionRecord = {
@@ -1211,7 +1214,7 @@ export const useDataStore = create<DataStore>()(
         }
       }
 
-      console.log('[updateExecutionRecordInAPI] Calling API with dateStr:', dateStr);
+      console.log('[updateExecutionRecordInAPI] Calling API with dateStr:', dateStr, 'includesTaxDeduction:', record.includesTaxDeduction);
       await executionRecordService.updateRecord(id, {
         project_name: record.project,
         author: record.author,
@@ -1224,7 +1227,8 @@ export const useDataStore = create<DataStore>()(
         total_amount: record.totalAmount,
         notes: record.notes,
         payment_id: record.paymentId,
-        images: record.images
+        images: record.images,
+        includes_tax_deduction: record.includesTaxDeduction
       });
 
       set((state) => ({

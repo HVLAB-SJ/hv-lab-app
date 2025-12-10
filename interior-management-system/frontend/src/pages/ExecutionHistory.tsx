@@ -616,6 +616,7 @@ const ExecutionHistory = () => {
       totalAmount,
       images: formData.images,
       notes: '',
+      includesTaxDeduction: includeTaxDeduction, // 3.3% 세금공제 여부 저장
       createdAt: now,
       updatedAt: now
     };
@@ -699,20 +700,24 @@ const ExecutionHistory = () => {
       }
     }
 
-    // 3.3% 세금공제 여부 확인 (실행내역 타입인 경우만)
-    const originalTotal = record.totalAmount || 0;
-    const sumOfCosts = (record.materialCost || 0) + (record.laborCost || 0);
-    const expectedWithTax = Math.round(sumOfCosts * 0.967);
-    const wasTaxDeducted = !isPaymentType && !wasVatIncluded && sumOfCosts > 0 && originalTotal < sumOfCosts && Math.abs(originalTotal - expectedWithTax) < 100;
+    // 3.3% 세금공제 여부 확인
+    // 실행내역 타입: DB에 저장된 includesTaxDeduction 필드 사용
+    const wasTaxDeducted = !isPaymentType && (record as any).includesTaxDeduction === true;
+
+    // 세금공제가 적용된 경우 원본 금액 역산 (공제된 금액 / 0.967 = 원본 금액)
+    if (!isPaymentType && wasTaxDeducted) {
+      displayMaterialCost = Math.round((record.materialCost || 0) / 0.967);
+      displayLaborCost = Math.round((record.laborCost || 0) / 0.967);
+    }
 
     console.log('[handleEditClick] VAT/Tax check:', {
       wasVatIncluded,
+      wasTaxDeducted,
+      includesTaxDeduction: (record as any).includesTaxDeduction,
       displayMaterialCost,
       displayLaborCost,
-      originalTotal,
-      sumOfCosts,
-      expectedWithTax,
-      wasTaxDeducted
+      originalMaterialCost: record.materialCost,
+      originalLaborCost: record.laborCost
     });
 
     setEditingRecord(record);
@@ -858,7 +863,8 @@ const ExecutionHistory = () => {
           date: new Date(formData.date),
           notes: updatedNotes,
           images: updatedImages,
-          paymentId: editingRecord.paymentId
+          paymentId: editingRecord.paymentId,
+          includesTaxDeduction: includeTaxDeduction
         });
         // 백그라운드에서 데이터 다시 로드 (UI 차단 없이)
         loadExecutionRecordsFromAPI();

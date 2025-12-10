@@ -67,10 +67,11 @@ router.post('/', authenticateToken, (req, res) => {
     total_amount,
     notes,
     images,
-    payment_id
+    payment_id,
+    includes_tax_deduction
   } = req.body;
 
-  console.log('[POST /execution-records] Creating:', { project_name, item_name, total_amount });
+  console.log('[POST /execution-records] Creating:', { project_name, item_name, total_amount, includes_tax_deduction });
 
   // 프로젝트 ID 조회
   db.get('SELECT id FROM projects WHERE name = ?', [project_name], (err, project) => {
@@ -86,8 +87,8 @@ router.post('/', authenticateToken, (req, res) => {
       INSERT INTO execution_records (
         project_id, project_name, author, date, process, item_name,
         material_cost, labor_cost, vat_amount, total_amount, notes, images, payment_id,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        includes_tax_deduction, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.run(query, [
@@ -104,6 +105,7 @@ router.post('/', authenticateToken, (req, res) => {
       notes || null,
       imagesJson,
       payment_id || null,
+      includes_tax_deduction ? 1 : 0,
       now,
       now
     ], function(err) {
@@ -151,7 +153,8 @@ router.put('/:id', authenticateToken, (req, res) => {
     total_amount,
     notes,
     images,
-    payment_id
+    payment_id,
+    includes_tax_deduction
   } = req.body;
 
   console.log('[PUT /execution-records/:id] Updating:', id, 'images count:', images?.length || 0);
@@ -192,6 +195,7 @@ router.put('/:id', authenticateToken, (req, res) => {
       const updatedNotes = notes !== undefined ? (notes || null) : existingRecord.notes;
       const updatedImages = images !== undefined ? JSON.stringify(images) : existingRecord.images;
       const updatedPaymentId = payment_id !== undefined ? (payment_id || null) : existingRecord.payment_id;
+      const updatedIncludesTaxDeduction = includes_tax_deduction !== undefined ? (includes_tax_deduction ? 1 : 0) : existingRecord.includes_tax_deduction;
 
       const query = `
         UPDATE execution_records SET
@@ -208,6 +212,7 @@ router.put('/:id', authenticateToken, (req, res) => {
           notes = ?,
           images = ?,
           payment_id = ?,
+          includes_tax_deduction = ?,
           updated_at = ?
         WHERE id = ?
       `;
@@ -226,6 +231,7 @@ router.put('/:id', authenticateToken, (req, res) => {
         updatedNotes,
         updatedImages,
         updatedPaymentId,
+        updatedIncludesTaxDeduction,
         now,
         id
       ], function(err) {
