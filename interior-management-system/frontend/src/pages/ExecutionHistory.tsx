@@ -763,6 +763,7 @@ const ExecutionHistory = () => {
           return;
         }
 
+        console.log('[handleEditSave] Calling updatePaymentInAPI...');
         await updatePaymentInAPI(editingRecord.id, {
           ...existingPayment,
           process: formData.process,
@@ -772,7 +773,9 @@ const ExecutionHistory = () => {
           amount: totalAmount,
           requestDate: formData.date
         });
+        console.log('[handleEditSave] updatePaymentInAPI completed, now loading payments...');
         await loadPaymentsFromAPI();
+        console.log('[handleEditSave] loadPaymentsFromAPI completed for payment type');
       } else {
         // 실행내역 수정 - 기존 레코드의 데이터 유지하면서 수정된 필드만 업데이트
         console.log('[handleEditSave] Updating execution record:', {
@@ -799,6 +802,7 @@ const ExecutionHistory = () => {
         await loadExecutionRecordsFromAPI();
       }
 
+      console.log('[handleEditSave] SUCCESS! Showing toast and resetting state...');
       toast.success('수정되었습니다');
       setEditingRecord(null);
       // 폼 초기화
