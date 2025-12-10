@@ -462,10 +462,21 @@ const ExecutionHistory = () => {
       type: 'manual' as const
     }));
 
-  // 모든 레코드 합치기
-  const allRecords = [...paymentRecords, ...manualRecords].sort((a, b) =>
+  // 모든 레코드 합치기 (중복 ID 제거)
+  const allRecordsRaw = [...paymentRecords, ...manualRecords].sort((a, b) =>
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
+
+  // 중복 ID 제거 - 같은 ID가 여러 번 나타나면 첫 번째만 유지
+  const seenIds = new Set<string>();
+  const allRecords = allRecordsRaw.filter(record => {
+    if (seenIds.has(record.id)) {
+      console.warn('[ExecutionHistory] 중복 ID 발견:', record.id, record.itemName);
+      return false;
+    }
+    seenIds.add(record.id);
+    return true;
+  });
 
   // 필터링 - 폼에서 선택한 프로젝트로 필터링
   const filteredRecords = allRecords.filter(record => {
