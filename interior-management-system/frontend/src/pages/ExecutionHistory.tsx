@@ -596,12 +596,11 @@ const ExecutionHistory = () => {
       totalAmount = materialCost + laborCost;
     }
 
-    // 3.3% 세금공제 적용 (총액만 공제, 자재비/인건비는 원래 값 유지)
+    // 3.3% 세금공제 적용 (자재비/인건비 각각에 3.3% 공제)
     if (includeTaxDeduction) {
-      const baseAmount = materialCost + laborCost;
-      const taxDeductionAmount = Math.round(baseAmount * 0.033);
-      totalAmount = baseAmount - taxDeductionAmount;
-      // materialCost, laborCost는 원래 값 유지 (수정 시 역산 가능하도록)
+      materialCost = Math.round(materialCost * 0.967);
+      laborCost = Math.round(laborCost * 0.967);
+      totalAmount = materialCost + laborCost;
     }
 
     const newRecord: ExecutionRecord = {
@@ -786,12 +785,11 @@ const ExecutionHistory = () => {
         totalAmount = totalInput;
       }
 
-      // 3.3% 세금공제 적용 (총액만 공제, 자재비/인건비는 원래 값 유지)
+      // 3.3% 세금공제 적용 (자재비/인건비 각각에 3.3% 공제)
       if (includeTaxDeduction) {
-        const baseAmount = materialCost + laborCost;
-        const taxDeductionAmount = Math.round(baseAmount * 0.033);
-        totalAmount = baseAmount - taxDeductionAmount;
-        // materialCost, laborCost는 원래 값 유지 (수정 시 역산 가능하도록)
+        materialCost = Math.round(materialCost * 0.967);
+        laborCost = Math.round(laborCost * 0.967);
+        totalAmount = materialCost + laborCost;
       }
 
       // 청구내역 붙여넣기 내용을 메모에 추가
