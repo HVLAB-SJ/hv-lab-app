@@ -758,6 +758,14 @@ const ExecutionHistory = () => {
         await loadPaymentsFromAPI();
       } else {
         // 실행내역 수정 - 기존 레코드의 데이터 유지하면서 수정된 필드만 업데이트
+        console.log('[handleEditSave] Updating execution record:', {
+          id: editingRecord.id,
+          materialCost,
+          laborCost,
+          totalAmount,
+          includeTaxDeduction,
+          date: formData.date
+        });
         await updateExecutionRecordInAPI(editingRecord.id, {
           project: formData.project || editingRecord.project,
           author: editingRecord.author,
@@ -788,9 +796,10 @@ const ExecutionHistory = () => {
         quickText: '',
         quickImages: []
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('수정 실패:', error);
-      toast.error('수정에 실패했습니다');
+      const errorMessage = error?.response?.data?.message || error?.message || '수정에 실패했습니다';
+      toast.error(errorMessage);
     }
   };
 

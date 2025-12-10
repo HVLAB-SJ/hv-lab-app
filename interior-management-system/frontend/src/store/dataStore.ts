@@ -1200,10 +1200,19 @@ export const useDataStore = create<DataStore>()(
 
   updateExecutionRecordInAPI: async (id: string, record: Partial<ExecutionRecord>) => {
     try {
+      // 날짜 변환 - Invalid Date 방지
+      let dateStr: string | undefined;
+      if (record.date) {
+        const d = record.date instanceof Date ? record.date : new Date(record.date);
+        if (!isNaN(d.getTime())) {
+          dateStr = d.toISOString().split('T')[0];
+        }
+      }
+
       await executionRecordService.updateRecord(id, {
         project_name: record.project,
         author: record.author,
-        date: record.date?.toISOString().split('T')[0],
+        date: dateStr,
         process: record.process,
         item_name: record.itemName,
         material_cost: record.materialCost,
