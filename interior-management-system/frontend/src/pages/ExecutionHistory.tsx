@@ -665,6 +665,27 @@ const ExecutionHistory = () => {
     e.stopPropagation();
     setActionMenuId(null);
 
+    // 3.3% 세금공제 여부 확인: 총액이 자재비+인건비의 96.7%인지 체크
+    const originalMaterial = record.materialCost || 0;
+    const originalLabor = record.laborCost || 0;
+    const originalTotal = record.totalAmount || 0;
+    const sumOfCosts = originalMaterial + originalLabor;
+
+    // 세금공제가 적용되었는지 확인 (총액이 합계의 96.7% 정도인 경우)
+    const expectedWithTax = Math.round(sumOfCosts * 0.967);
+    const wasTaxDeducted = sumOfCosts > 0 && Math.abs(originalTotal - expectedWithTax) < 10;
+
+    let displayMaterial = originalMaterial;
+    let displayLabor = originalLabor;
+
+    if (wasTaxDeducted && sumOfCosts > 0) {
+      // 세금공제가 적용된 경우, 원래 금액으로 역산 (÷ 0.967)
+      const ratio = originalMaterial / sumOfCosts;
+      const originalSum = Math.round(sumOfCosts / 0.967);
+      displayMaterial = Math.round(originalSum * ratio);
+      displayLabor = originalSum - displayMaterial;
+    }
+
     setEditingRecord(record);
     setFormData(prev => ({
       ...prev,
@@ -672,12 +693,14 @@ const ExecutionHistory = () => {
       date: format(new Date(record.date), 'yyyy-MM-dd'),
       process: record.process || '',
       itemName: record.itemName,
-      materialCost: record.materialCost || 0,
-      laborCost: record.laborCost || 0,
+      materialCost: displayMaterial,
+      laborCost: displayLabor,
       images: record.images || [],
       quickText: '',
       quickImages: []
     }));
+    // 세금공제가 적용되어 있었으면 체크박스 선택
+    setIncludeTaxDeduction(wasTaxDeducted);
     setSelectedRecord(record.id);
     // 모바일에서는 입력 폼으로 이동
     if (isMobileDevice) {
