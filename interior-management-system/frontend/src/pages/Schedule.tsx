@@ -1660,8 +1660,10 @@ const Schedule = () => {
 
   // 사이드바에서 공정을 드래그하여 날짜에 드롭했을 때 핸들러
   const handleProcessDrop = useCallback((processName: string, dropDate: Date) => {
+    console.log('[handleProcessDrop] Called:', { processName, dropDate, filterProject, isProcessing: isProcessingDropRef.current });
     // 이미 처리 중이면 중복 실행 방지
     if (isProcessingDropRef.current) {
+      console.log('[handleProcessDrop] Already processing, skipping');
       return;
     }
 
@@ -1706,6 +1708,7 @@ const Schedule = () => {
 
   // 외부에서 드래그해서 캘린더에 드롭할 때 핸들러
   const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
+    console.log('[onDropFromOutside] Called:', { draggedProcess, filterProject, isProcessing: isProcessingDropRef.current, start });
     if (draggedProcess && filterProject !== 'all' && !isProcessingDropRef.current) {
       // 드롭 직후 플래그 설정 (인라인 모드 방지)
       justDroppedProcessRef.current = true;
@@ -2818,11 +2821,15 @@ const Schedule = () => {
                         key={process}
                         draggable
                         onDragStart={(e) => {
+                          console.log('[Process Drag] Started:', process);
                           setDraggedProcess(process);
                           e.dataTransfer.setData('text/plain', process);
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
-                        onDragEnd={() => setDraggedProcess(null)}
+                        onDragEnd={() => {
+                          console.log('[Process Drag] Ended');
+                          setDraggedProcess(null);
+                        }}
                         className={`px-3 py-1 text-xs rounded cursor-grab active:cursor-grabbing transition-colors text-center font-medium whitespace-nowrap ${
                           draggedProcess === process
                             ? 'bg-blue-100 text-blue-800'
