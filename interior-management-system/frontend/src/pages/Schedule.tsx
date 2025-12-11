@@ -1663,10 +1663,11 @@ const Schedule = () => {
   }, []);
 
   // 사이드바에서 공정을 드래그하여 날짜에 드롭했을 때 핸들러
-  const handleProcessDrop = useCallback((processName: string, dropDate: Date) => {
-    console.log('[handleProcessDrop] Called:', { processName, dropDate, filterProject, isProcessing: isProcessingDropRef.current });
-    // 이미 처리 중이면 중복 실행 방지
-    if (isProcessingDropRef.current) {
+  // isTapMode: 탭 모드에서는 처리 중 플래그 무시 (연속 클릭 허용)
+  const handleProcessDrop = useCallback((processName: string, dropDate: Date, isTapMode = false) => {
+    console.log('[handleProcessDrop] Called:', { processName, dropDate, filterProject, isProcessing: isProcessingDropRef.current, isTapMode });
+    // 드래그 모드에서만 중복 실행 방지 (탭 모드는 연속 클릭 허용)
+    if (!isTapMode && isProcessingDropRef.current) {
       console.log('[handleProcessDrop] Already processing, skipping');
       return;
     }
@@ -1676,7 +1677,9 @@ const Schedule = () => {
       return;
     }
 
-    isProcessingDropRef.current = true;
+    if (!isTapMode) {
+      isProcessingDropRef.current = true;
+    }
 
     // 낙관적 업데이트: 임시 ID로 즉시 UI에 추가
     const tempId = 'temp_' + Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -1703,10 +1706,12 @@ const Schedule = () => {
       // 실패 시 임시 항목 제거
       deleteSchedule(tempId);
     }).finally(() => {
-      // 약간의 딜레이 후 플래그 해제 (연속 드롭 방지)
-      setTimeout(() => {
-        isProcessingDropRef.current = false;
-      }, 300);
+      // 드래그 모드에서만 플래그 해제
+      if (!isTapMode) {
+        setTimeout(() => {
+          isProcessingDropRef.current = false;
+        }, 300);
+      }
     });
   }, [filterProject, addScheduleToAPI, addSchedule, deleteSchedule, user]);
 
@@ -2114,9 +2119,9 @@ const Schedule = () => {
       return;
     }
 
-    // 선택된 공정이 있으면 바로 일정 추가 (탭 모드)
+    // 선택된 공정이 있으면 바로 일정 추가 (탭 모드 - 연속 클릭 허용)
     if (selectedProcess) {
-      handleProcessDrop(selectedProcess, slotInfo.start);
+      handleProcessDrop(selectedProcess, slotInfo.start, true);
       return;
     }
 
