@@ -670,6 +670,9 @@ const ExecutionHistory = () => {
     // 부가세 포함 여부 확인
     // 1. payment 타입: originalPayment.includesVAT 확인
     // 2. 실행내역 타입: DB에 저장된 includesVat 필드 사용
+    console.log('[handleEditClick] record.includesVat:', (record as any).includesVat, 'type:', typeof (record as any).includesVat);
+    console.log('[handleEditClick] Full record:', JSON.stringify(record, null, 2));
+
     let wasVatIncluded = false;
     if (isPaymentType && originalPayment) {
       wasVatIncluded = originalPayment.includesVAT === true;
