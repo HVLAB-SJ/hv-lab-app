@@ -1821,27 +1821,38 @@ const Schedule = () => {
 
   // 인라인 일정 삭제 (확인 없이 바로 삭제, Ctrl+Z로 복원 가능)
   const handleInlineDelete = useCallback(async (event: ScheduleEvent) => {
-    try {
-      // 삭제 전에 스택에 저장 (되돌리기용)
-      setDeletedScheduleStack(prev => [...prev, event]);
+    // 삭제 전에 스택에 저장 (되돌리기용)
+    setDeletedScheduleStack(prev => [...prev, event]);
 
-      // 병합된 일정인 경우 모든 이벤트 삭제
-      const eventIds = event.mergedEventIds || [event.id];
-      for (const eventId of eventIds) {
-        await deleteScheduleFromAPI(eventId);
-      }
-      loadSchedulesFromAPI();
+    // 병합된 일정인 경우 모든 이벤트 ID 추출
+    const eventIds = event.mergedEventIds || [event.id];
+
+    // 낙관적 업데이트: 먼저 UI에서 즉시 제거
+    eventIds.forEach(id => deleteSchedule(id));
+
+    try {
+      // 백그라운드에서 API 호출
+      await Promise.all(eventIds.map(id => deleteScheduleFromAPI(id)));
+
+      // 성공 메시지만 표시 (서버 동기화는 지연)
       toast.success('삭제됨 (Ctrl+Z로 복원)', { duration: 2000 });
+
+      // 서버 데이터 동기화는 1초 후에 조용히 수행
+      setTimeout(() => {
+        loadSchedulesFromAPI();
+      }, 1000);
     } catch (error) {
       console.error('일정 삭제 실패:', error);
       toast.error('일정 삭제에 실패했습니다');
-      // 실패 시 스택에서 제거
+
+      // 실패 시 스택에서 제거하고 즉시 데이터 복원
       setDeletedScheduleStack(prev => prev.slice(0, -1));
+      loadSchedulesFromAPI();
     }
 
     setInlineEditEvent(null);
     setInlineEditTitle('');
-  }, [deleteScheduleFromAPI, loadSchedulesFromAPI]);
+  }, [deleteSchedule, deleteScheduleFromAPI, loadSchedulesFromAPI]);
 
   // 필터링된 이벤트를 먼저 정의 (useEffect보다 먼저 와야 함)
   // 이미 groupEventsByProjectAndDate에서 사용자 일정의 시간을 조정했으므로 여기서는 필터링만
