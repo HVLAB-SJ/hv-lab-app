@@ -1706,21 +1706,14 @@ const Schedule = () => {
     // 즉시 로컬에 추가
     addSchedule(newSchedule);
 
-    // 백그라운드에서 API 호출
-    addScheduleToAPI(newSchedule).then(() => {
-      // API 성공 시 서버 데이터와 조용히 동기화 (지연 실행)
-      setTimeout(() => {
-        loadSchedulesFromAPI();
-      }, 1000);
-    }).catch(error => {
+    // 백그라운드에서 API 호출 - loadSchedulesFromAPI 호출 완전히 제거
+    addScheduleToAPI(newSchedule).catch(error => {
       console.error('일정 추가 실패:', error);
       toast.error('일정 추가에 실패했습니다');
-      // 실패 시 임시 항목 제거
+      // 실패 시 임시 항목만 제거
       deleteSchedule(tempId);
-      // 서버 데이터로 즉시 복원
-      loadSchedulesFromAPI();
     });
-  }, [filterProject, addScheduleToAPI, addSchedule, deleteSchedule, loadSchedulesFromAPI, user]);
+  }, [filterProject, addScheduleToAPI, addSchedule, deleteSchedule, user]);
 
   // 외부에서 드래그해서 캘린더에 드롭할 때 핸들러
   const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
