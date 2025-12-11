@@ -689,9 +689,20 @@ const ExecutionHistory = () => {
     const wasTaxDeducted = !isPaymentType && (record as any).includesTaxDeduction === true;
 
     if (isPaymentType && originalPayment) {
-      // payment 원본 데이터의 금액 사용 (부가세 포함된 원래 입력값)
+      // payment 원본 데이터의 금액 사용
       displayMaterialCost = originalPayment.materialAmount || 0;
       displayLaborCost = originalPayment.laborAmount || 0;
+
+      // 부가세 포함인 경우: 저장된 금액은 공급가액이므로 부가세 포함 금액으로 역산
+      if (wasVatIncluded) {
+        const totalWithVat = originalPayment.amount || 0;
+        const supplyAmount = displayMaterialCost + displayLaborCost;
+        if (supplyAmount > 0) {
+          const materialRatio = displayMaterialCost / supplyAmount;
+          displayMaterialCost = Math.round(totalWithVat * materialRatio);
+          displayLaborCost = Math.round(totalWithVat * (1 - materialRatio));
+        }
+      }
     } else if (!isPaymentType) {
       // 실행내역 타입: 세금공제와 부가세 역산 처리
 
