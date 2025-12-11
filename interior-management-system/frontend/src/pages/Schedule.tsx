@@ -1482,7 +1482,21 @@ const Schedule = () => {
 
     let lastHighlightedCell: HTMLElement | null = null;
 
+    const handleDragEnter = (e: DragEvent) => {
+      // 캘린더 영역에 들어올 때 즉시 드롭 허용
+      e.preventDefault();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+    };
+
     const handleDragOver = (e: DragEvent) => {
+      // 드롭을 허용하기 위해 preventDefault 호출 (중요!)
+      e.preventDefault();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+
       // 가장 가까운 날짜 셀 찾기
       const target = e.target as HTMLElement;
       const dayBg = target.closest('.rbc-day-bg') as HTMLElement;
@@ -1506,18 +1520,23 @@ const Schedule = () => {
       }
     };
 
-    const handleDrop = () => {
+    const handleDrop = (e: DragEvent) => {
+      // 기본 동작 방지
+      e.preventDefault();
+
       if (lastHighlightedCell) {
         lastHighlightedCell.style.backgroundColor = '';
         lastHighlightedCell = null;
       }
     };
 
+    document.addEventListener('dragenter', handleDragEnter);
     document.addEventListener('dragover', handleDragOver);
     document.addEventListener('dragend', handleDragEnd);
     document.addEventListener('drop', handleDrop);
 
     return () => {
+      document.removeEventListener('dragenter', handleDragEnter);
       document.removeEventListener('dragover', handleDragOver);
       document.removeEventListener('dragend', handleDragEnd);
       document.removeEventListener('drop', handleDrop);
