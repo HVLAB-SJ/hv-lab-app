@@ -591,7 +591,7 @@ const EstimatePreview: React.FC = () => {
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">등급 <span className="text-red-500">*</span></label>
                     <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {['알뜰', '기본', '고급', '하이엔드'].map(item => (
+                      {['알뜰', '기본', '고급'].map(item => (
                         <label key={item} className="flex items-center text-sm whitespace-nowrap cursor-pointer">
                           <input
                             type="checkbox"
@@ -650,7 +650,7 @@ const EstimatePreview: React.FC = () => {
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">화장실 개수</label>
                     <div className="flex gap-x-4">
-                      {['0', '1', '2', '3', '4'].map(item => (
+                      {['0', '1', '2', '3'].map(item => (
                         <label key={item} className="flex items-center text-sm cursor-pointer">
                           <input
                             type="checkbox"
@@ -666,7 +666,7 @@ const EstimatePreview: React.FC = () => {
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">층고</label>
                     <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {['2400이하', '2400~2600', '2600이상'].map(item => (
+                      {['2400 이하', '2400 이상'].map(item => (
                         <label key={item} className="flex items-center text-sm whitespace-nowrap cursor-pointer">
                           <input
                             type="checkbox"
@@ -755,16 +755,6 @@ const EstimatePreview: React.FC = () => {
                         className="mr-1.5 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
                       />
                       <span className="text-gray-700">홈파기 공사</span>
-                    </label>
-                    <label className="flex items-center text-sm whitespace-nowrap cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="includeBangtong"
-                        checked={form.includeBangtong}
-                        onChange={handleInputChange}
-                        className="mr-1.5 rounded border-gray-300 text-gray-600 focus:ring-gray-400"
-                      />
-                      <span className="text-gray-700">방통 공사</span>
                     </label>
                     <div className="flex items-center gap-2">
                       <label className="flex items-center text-sm whitespace-nowrap cursor-pointer">
@@ -899,7 +889,7 @@ const EstimatePreview: React.FC = () => {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">조명</label>
                   <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                    {['마그네틱조명', '라인조명', '매입조명(일반)', '매입조명(고급)', '매입조명(하이엔드)'].map(item => (
+                    {['마그네틱조명', '라인조명', '매입조명(일반)', '매입조명(고급)'].map(item => (
                       <label key={item} className="flex items-center text-sm whitespace-nowrap cursor-pointer">
                         <input
                           type="checkbox"
@@ -1365,8 +1355,7 @@ const EstimatePreview: React.FC = () => {
                         'inline-flex px-2 py-1 text-xs font-medium rounded border',
                         estimate.grade === '알뜰' && 'bg-gray-50 text-gray-700 border-gray-300',
                         estimate.grade === '기본' && 'bg-gray-100 text-gray-800 border-gray-400',
-                        estimate.grade === '고급' && 'bg-gray-200 text-gray-900 border-gray-500',
-                        estimate.grade === '하이엔드' && 'bg-gray-800 text-white border-gray-800'
+                        estimate.grade === '고급' && 'bg-gray-200 text-gray-900 border-gray-500'
                       )}>
                         {estimate.grade}
                       </span>
@@ -1595,7 +1584,7 @@ const EstimatePreview: React.FC = () => {
               <div>
                 <h3 className="text-md font-semibold text-gray-700 mb-4">조명 (개당)</h3>
                 <div className="space-y-3">
-                  {['마그네틱조명', '라인조명', '매입조명(일반)', '매입조명(고급)', '매입조명(하이엔드)'].map(item => (
+                  {['마그네틱조명', '라인조명', '매입조명(일반)', '매입조명(고급)'].map(item => (
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">{item}</label>
                       <div className="flex items-center gap-2">
@@ -1834,7 +1823,6 @@ const EstimatePreview: React.FC = () => {
                   { label: '방 확장 (개당)', key: 'room' },
                   { label: '샤시 공사 (평당)', key: 'sash' },
                   { label: '홈파기 공사 (평당)', key: 'grooving' },
-                  { label: '방통 공사 (평당)', key: 'bangtong' },
                   { label: '에어컨 (2 in 1) - 1대', key: 'aircon2in1' },
                   { label: '에어컨 (시스템) - 1대', key: 'airconSystem' }
                 ].map(item => (
