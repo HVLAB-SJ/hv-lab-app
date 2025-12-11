@@ -78,37 +78,37 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
    * See https://goo.gl/S9QRab
    */
   workbox.precacheAndRoute([{
-    "url": "assets/AdditionalWork-Dma3OuJk.js",
+    "url": "assets/AdditionalWork-BAEr2tZb.js",
     "revision": null
   }, {
-    "url": "assets/additionalWorkService-CWSNs8RR.js",
+    "url": "assets/additionalWorkService-CNI42qXc.js",
     "revision": null
   }, {
-    "url": "assets/AfterService-C4tLDuE7.js",
+    "url": "assets/AfterService-BGJqWB5z.js",
     "revision": null
   }, {
-    "url": "assets/ConstructionPayment-Cm6N1hY6.js",
+    "url": "assets/ConstructionPayment-DTyBpKpk.js",
     "revision": null
   }, {
-    "url": "assets/Contractors-BTGTQJ4B.js",
+    "url": "assets/Contractors-BCCpsZG7.js",
     "revision": null
   }, {
-    "url": "assets/Dashboard-CmWfKhLj.js",
+    "url": "assets/Dashboard-quY6U3Ys.js",
     "revision": null
   }, {
-    "url": "assets/dataStore-CD81LjSn.js",
+    "url": "assets/dataStore-CIsMNTNS.js",
     "revision": null
   }, {
-    "url": "assets/Drawings-B6jeJ2uH.js",
+    "url": "assets/Drawings-BXBeoA_N.js",
     "revision": null
   }, {
-    "url": "assets/EstimatePreview-CSpwNve3.js",
+    "url": "assets/EstimatePreview-D6k42HsJ.js",
     "revision": null
   }, {
-    "url": "assets/ExecutionHistory-DMuIaoKy.js",
+    "url": "assets/ExecutionHistory-CsmOVXpZ.js",
     "revision": null
   }, {
-    "url": "assets/FinishCheck-BIE3JhIp.js",
+    "url": "assets/FinishCheck-IpEs12Wz.js",
     "revision": null
   }, {
     "url": "assets/formatters-15aXprTM.js",
@@ -117,46 +117,46 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "url": "assets/imageStorage-DjLpiDnu.js",
     "revision": null
   }, {
-    "url": "assets/index-BY2rBLrN.js",
-    "revision": null
-  }, {
     "url": "assets/index-C4A1yTtn.css",
     "revision": null
   }, {
     "url": "assets/index-CSlX1tQB.js",
     "revision": null
   }, {
+    "url": "assets/index-D3TPfd_I.js",
+    "revision": null
+  }, {
     "url": "assets/index.esm-CwHht2tV.js",
     "revision": null
   }, {
-    "url": "assets/Login-Df7zX0qj.js",
+    "url": "assets/Login-D2M1qaRe.js",
     "revision": null
   }, {
-    "url": "assets/Payments-DmvylqJB.js",
+    "url": "assets/Payments-D0C05Q4g.js",
     "revision": null
   }, {
-    "url": "assets/Projects-B0Vd9ZO9.js",
+    "url": "assets/Projects-CxdF-Vq4.js",
     "revision": null
   }, {
-    "url": "assets/QuoteInquiry-e15gIiVm.js",
+    "url": "assets/QuoteInquiry-DBIgzaMD.js",
     "revision": null
   }, {
     "url": "assets/Schedule-CJomsMGr.css",
     "revision": null
   }, {
-    "url": "assets/Schedule-ZH08IVOU.js",
+    "url": "assets/Schedule-iM__IeqH.js",
     "revision": null
   }, {
-    "url": "assets/ScheduleModal-CPQv1h5j.js",
+    "url": "assets/ScheduleModal-CLujEfXF.js",
     "revision": null
   }, {
-    "url": "assets/SiteLog-CECzONlv.js",
+    "url": "assets/SiteLog-uk3p_RD-.js",
     "revision": null
   }, {
-    "url": "assets/Specbook-mjYT76qB.js",
+    "url": "assets/Specbook-Dd2TADSa.js",
     "revision": null
   }, {
-    "url": "assets/useFilteredProjects-BIw2HV3p.js",
+    "url": "assets/useFilteredProjects-Xk39oT5B.js",
     "revision": null
   }, {
     "url": "assets/vendor-calendar-DTyCd1d2.js",
@@ -177,7 +177,7 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "url": "assets/workbox-window.prod.es5-B9K5rw8f.js",
     "revision": null
   }, {
-    "url": "assets/WorkRequest-BGLP31WS.js",
+    "url": "assets/WorkRequest-R4egiXNB.js",
     "revision": null
   }, {
     "url": "favicon.png",
@@ -193,7 +193,7 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "revision": "13c8dc084d8e721d3dbb3d62d72ae126"
   }, {
     "url": "index.html",
-    "revision": "e32b3c88e2110b1ac651a9181ef70ab6"
+    "revision": "36eb3081a7c999e2e973666d9ba8ace3"
   }, {
     "url": "vite.svg",
     "revision": "8e3a10e157f75ada21ab742c022d5430"

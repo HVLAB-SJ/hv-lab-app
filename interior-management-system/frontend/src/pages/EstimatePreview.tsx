@@ -612,7 +612,7 @@ const EstimatePreview: React.FC = () => {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">바닥재</label>
                   <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                    {['장판', '데코타일', '강마루', '원목마루', '600각 타일', '800-900각 타일', '1200각 타일'].map(item => (
+                    {['장판', '데코타일', '강마루', '원목마루', '타일'].map(item => (
                       <label key={item} className="flex items-center text-sm whitespace-nowrap cursor-pointer">
                         <input
                           type="checkbox"
@@ -818,7 +818,7 @@ const EstimatePreview: React.FC = () => {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">하드웨어 등급</label>
                   <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                    {['전체 BLUM(블룸)', '경첩(일반)+서랍(일반)', '경첩 BLUM(블룸)+서랍(일반)'].map(item => (
+                    {['전체 BLUM(블룸)', '경첩 BLUM(블룸)+서랍(일반)', '경첩(일반)+서랍(일반)'].map(item => (
                       <label key={item} className="flex items-center text-sm whitespace-nowrap cursor-pointer">
                         <input
                           type="checkbox"
@@ -1494,7 +1494,7 @@ const EstimatePreview: React.FC = () => {
                       </div>
                     </div>
                   ))}
-                  {['전체 BLUM(블룸)', '경첩(일반)+서랍(일반)', '경첩 BLUM(블룸)+서랍(일반)'].map(item => (
+                  {['전체 BLUM(블룸)', '경첩 BLUM(블룸)+서랍(일반)', '경첩(일반)+서랍(일반)'].map(item => (
                     <div key={item} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-700">{item}</label>
                       <div className="flex items-center gap-2">
