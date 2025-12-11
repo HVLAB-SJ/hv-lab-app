@@ -1703,15 +1703,12 @@ const Schedule = () => {
   const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
     // state가 null이어도 ref에 값이 있을 수 있음 (onDragEnd가 먼저 호출된 경우)
     const processToUse = draggedProcess || draggedProcessRef.current;
-    console.log('[onDropFromOutside] Called:', { draggedProcess, draggedProcessRef: draggedProcessRef.current, processToUse, filterProject, start });
 
     if (!processToUse) {
-      console.log('[onDropFromOutside] No process to drop, skipping');
       return;
     }
 
     if (filterProject === 'all') {
-      console.log('[onDropFromOutside] All projects selected, skipping');
       return;
     }
 
@@ -1720,21 +1717,24 @@ const Schedule = () => {
 
     // 드롭 직후 플래그 설정 (인라인 모드 방지)
     justDroppedProcessRef.current = true;
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       justDroppedProcessRef.current = false;
-    }, 500);
+    });
 
     // 인라인 추가/편집 모드 즉시 클리어
     setInlineAddDate(null);
     setInlineEditEvent(null);
     setInlineEditTitle('');
 
-    // 상태와 ref 모두 즉시 클리어 (다음 드래그 준비)
-    setDraggedProcess(null);
-    draggedProcessRef.current = null;
-
     // 일정 추가 실행
     handleProcessDrop(processToUse, start);
+
+    // 상태와 ref를 빠르게 클리어 (다음 드래그 준비)
+    requestAnimationFrame(() => {
+      setDraggedProcess(null);
+      draggedProcessRef.current = null;
+      dropCompletedRef.current = false;
+    });
   }, [draggedProcess, filterProject, handleProcessDrop]);
 
   // 드래그 가능한 외부 아이템 접근자 (dragFromOutsideItem)
@@ -2857,7 +2857,6 @@ const Schedule = () => {
                           }
                         }}
                         onDragStart={(e) => {
-                          console.log('[Process Drag] Started:', process);
                           // 드롭 완료 플래그 초기화 (새 드래그 시작)
                           dropCompletedRef.current = false;
                           setSelectedProcess(null); // 드래그 시작하면 선택 모드 해제
@@ -2867,15 +2866,11 @@ const Schedule = () => {
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
                         onDragEnd={() => {
-                          console.log('[Process Drag] Ended, dropCompleted:', dropCompletedRef.current, 'draggedProcessRef:', draggedProcessRef.current);
                           // 드롭이 성공적으로 완료된 경우 이미 클리어됨 - 아무것도 하지 않음
                           if (dropCompletedRef.current) {
-                            console.log('[Process Drag] Drop already completed, skipping cleanup');
-                            dropCompletedRef.current = false;
                             return;
                           }
-                          // 드롭 실패 시 (캘린더 밖에 드롭 등) 상태 클리어
-                          console.log('[Process Drag] Drop failed, cleaning up');
+                          // 드롭 실패 시 (캘린더 밖에 드롭 등) 즉시 상태 클리어
                           setDraggedProcess(null);
                           draggedProcessRef.current = null;
                         }}
