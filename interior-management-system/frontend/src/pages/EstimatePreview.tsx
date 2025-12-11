@@ -112,7 +112,8 @@ const EstimatePreview: React.FC = () => {
     includeBangtong: false,
     includeAircon: false,
     airconCount: 1,
-    airconType: []
+    airconType: [],
+    ceilingDemolition: [] // 천장 철거 옵션
   });
 
   const [result, setResult] = useState<EstimateResult | null>(null);
@@ -294,7 +295,8 @@ const EstimatePreview: React.FC = () => {
         bathroomTile: JSON.stringify(form.bathroomTile),
         bathroomGrout: JSON.stringify(form.bathroomGrout),
         moldingPublic: JSON.stringify(form.moldingPublic),
-        moldingRoom: JSON.stringify(form.moldingRoom)
+        moldingRoom: JSON.stringify(form.moldingRoom),
+        ceilingDemolition: JSON.stringify(form.ceilingDemolition)
       };
 
       const response = await api.post('/estimate-preview/create', formData);
@@ -340,7 +342,8 @@ const EstimatePreview: React.FC = () => {
         bathroomTile: JSON.stringify(form.bathroomTile),
         bathroomGrout: JSON.stringify(form.bathroomGrout),
         moldingPublic: JSON.stringify(form.moldingPublic),
-        moldingRoom: JSON.stringify(form.moldingRoom)
+        moldingRoom: JSON.stringify(form.moldingRoom),
+        ceilingDemolition: JSON.stringify(form.ceilingDemolition)
       };
 
       const response = await api.post('/estimate-preview/calculate', formData);
@@ -730,6 +733,40 @@ const EstimatePreview: React.FC = () => {
                         </select>
                       )}
                     </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">천장 철거</label>
+                  <div className="flex gap-x-4">
+                    {['전체 철거', '부분 철거'].map(item => (
+                      <label key={item} className="flex items-center text-sm whitespace-nowrap cursor-pointer">
+                        <input
+                          type="radio"
+                          name="ceilingDemolition"
+                          value={item}
+                          checked={form.ceilingDemolition.includes(item)}
+                          onChange={() => {
+                            setForm(prev => ({ ...prev, ceilingDemolition: [item] }));
+                          }}
+                          className="mr-1.5 border-gray-300 text-gray-600 focus:ring-gray-400"
+                        />
+                        <span className="text-gray-700">{item}</span>
+                      </label>
+                    ))}
+                    <label className="flex items-center text-sm whitespace-nowrap cursor-pointer">
+                      <input
+                        type="radio"
+                        name="ceilingDemolition"
+                        value="없음"
+                        checked={form.ceilingDemolition.length === 0}
+                        onChange={() => {
+                          setForm(prev => ({ ...prev, ceilingDemolition: [] }));
+                        }}
+                        className="mr-1.5 border-gray-300 text-gray-600 focus:ring-gray-400"
+                      />
+                      <span className="text-gray-700">없음</span>
+                    </label>
                   </div>
                 </div>
 
@@ -1823,6 +1860,8 @@ const EstimatePreview: React.FC = () => {
                   { label: '방 확장 (개당)', key: 'room' },
                   { label: '샤시 공사 (평당)', key: 'sash' },
                   { label: '홈파기 공사 (평당)', key: 'grooving' },
+                  { label: '천장 철거 - 전체 (평당)', key: 'ceilingDemolitionFull' },
+                  { label: '천장 철거 - 부분 (평당)', key: 'ceilingDemolitionPartial' },
                   { label: '에어컨 (2 in 1) - 1대', key: 'aircon2in1' },
                   { label: '에어컨 (시스템) - 1대', key: 'airconSystem' }
                 ].map(item => (
