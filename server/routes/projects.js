@@ -191,7 +191,7 @@ router.post('/', authenticateToken, (req, res) => {
 // 프로젝트 수정
 // Note: Removed isManager middleware to allow all authenticated users to update projects
 // Workers can update manager, status, and other non-critical fields
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
 
   console.log('[PUT /api/projects/:id] Received body:', JSON.stringify(req.body, null, 2));
