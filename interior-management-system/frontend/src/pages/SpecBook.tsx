@@ -617,8 +617,20 @@ const SpecBook = () => {
             selectedGrades.length > 0 ? selectedGrades : undefined
           );
           if (isMountedRef.current) {
-            setItems(filteredItems);
+            // 점진적 렌더링: 첫 20개를 즉시 표시
+            const chunkSize = 20;
+            const firstChunk = filteredItems.slice(0, chunkSize);
+            setItems(firstChunk);
             setLoading(false);
+
+            // 나머지 아이템을 비동기로 로드
+            if (filteredItems.length > chunkSize) {
+              requestAnimationFrame(() => {
+                if (isMountedRef.current) {
+                  setItems(filteredItems);
+                }
+              });
+            }
           }
           return;
         }
@@ -638,8 +650,21 @@ const SpecBook = () => {
 
         const response = await api.get('/specbook/library/meta', { params });
         if (isMountedRef.current) {
-          setItems(response.data);
+          const allItems = response.data;
+          // 점진적 렌더링 적용
+          const chunkSize = 20;
+          const firstChunk = allItems.slice(0, chunkSize);
+          setItems(firstChunk);
           setLoading(false);
+
+          // 나머지 아이템을 비동기로 로드
+          if (allItems.length > chunkSize) {
+            requestAnimationFrame(() => {
+              if (isMountedRef.current) {
+                setItems(allItems);
+              }
+            });
+          }
         }
       } else {
         // 프로젝트 뷰
@@ -664,8 +689,21 @@ const SpecBook = () => {
 
         const response = await api.get(`/specbook/project/${selectedProject}/meta`, { params });
         if (isMountedRef.current) {
-          setItems(response.data);
+          const allItems = response.data;
+          // 점진적 렌더링: 첫 20개를 즉시 표시
+          const chunkSize = 20;
+          const firstChunk = allItems.slice(0, chunkSize);
+          setItems(firstChunk);
           setLoading(false);
+
+          // 나머지 아이템을 비동기로 로드
+          if (allItems.length > chunkSize) {
+            requestAnimationFrame(() => {
+              if (isMountedRef.current) {
+                setItems(allItems);
+              }
+            });
+          }
         }
       }
     } catch (error) {
@@ -1680,6 +1718,7 @@ const SpecBook = () => {
                         src={item.image_url}
                         alt={item.name}
                         className="w-full h-full object-contain pointer-events-none"
+                        loading="lazy"
                         draggable={false}
                       />
                     ) : (
