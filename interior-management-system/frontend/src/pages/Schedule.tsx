@@ -1701,11 +1701,17 @@ const Schedule = () => {
     // 즉시 로컬에 추가
     addSchedule(newSchedule);
 
-    // 백그라운드에서 API 호출 - loadSchedulesFromAPI 호출 완전히 제거
-    addScheduleToAPI(newSchedule).catch(error => {
+    // 백그라운드에서 API 호출
+    addScheduleToAPI(newSchedule).then(response => {
+      // 서버에서 받은 실제 ID로 교체
+      if (response && response.id && response.id !== tempId) {
+        deleteSchedule(tempId); // 임시 ID 제거
+        addSchedule({ ...newSchedule, id: response.id }); // 실제 ID로 추가
+      }
+    }).catch(error => {
       console.error('일정 추가 실패:', error);
       toast.error('일정 추가에 실패했습니다');
-      // 실패 시 임시 항목만 제거
+      // 실패 시 임시 항목 제거
       deleteSchedule(tempId);
     });
   }, [filterProject, addScheduleToAPI, addSchedule, deleteSchedule, user]);
@@ -1761,26 +1767,37 @@ const Schedule = () => {
       return;
     }
 
+    const tempId = 'temp_' + Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    const newSchedule = {
+      id: tempId,
+      title: title.trim(),
+      start: inlineAddDate,
+      end: inlineAddDate,
+      type: 'construction' as const,
+      project: filterProject,
+      location: '',
+      attendees: user?.name ? [user.name] : [],
+      description: ''
+    };
+
+    // 즉시 로컬에 추가
+    addSchedule(newSchedule);
+    setInlineAddDate(null);
+
     try {
-      await addScheduleToAPI({
-        id: Date.now().toString(),
-        title: title.trim(),
-        start: inlineAddDate,
-        end: inlineAddDate,
-        type: 'construction',
-        project: filterProject,
-        location: '',
-        attendees: user?.name ? [user.name] : [],
-        description: ''
-      });
-      loadSchedulesFromAPI();
+      const response = await addScheduleToAPI(newSchedule);
+      // 서버에서 받은 실제 ID로 교체
+      if (response && response.id && response.id !== tempId) {
+        deleteSchedule(tempId); // 임시 ID 제거
+        addSchedule({ ...newSchedule, id: response.id }); // 실제 ID로 추가
+      }
     } catch (error) {
       console.error('일정 추가 실패:', error);
       toast.error('일정 추가에 실패했습니다');
+      // 실패 시 임시 항목 제거
+      deleteSchedule(tempId);
     }
-
-    setInlineAddDate(null);
-  }, [inlineAddDate, filterProject, addScheduleToAPI, loadSchedulesFromAPI, user]);
+  }, [inlineAddDate, filterProject, addScheduleToAPI, addSchedule, deleteSchedule, user]);
 
   // 인라인 추가 취소
   const handleInlineAddCancel = useCallback(() => {
