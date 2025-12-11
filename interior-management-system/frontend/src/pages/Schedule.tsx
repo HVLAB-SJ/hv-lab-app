@@ -10,6 +10,7 @@ import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { formatTimeKorean } from '../utils/formatters';
+import { PROCESS_LIST } from '../constants';
 
 // 드래그앤드롭 캘린더 컴포넌트
 const DragAndDropCalendar = withDragAndDrop(Calendar);
@@ -23,13 +24,7 @@ interface ProcessItem {
 }
 
 // 기본 공정 목록 (API 로딩 실패 시 fallback)
-const DEFAULT_PROCESS_LIST = [
-  '현장점검', '가설', '철거', '방수', '단열', '설비', '전기배선', '인터넷선',
-  '에어컨배관', '전열교환기', '소방', '창호', '현관문교체', '목공', '조명타공',
-  '금속', '타일', '도장', '마루', '필름', '도배', '중문', '가구', '상판',
-  '욕실집기', '조명', '이노솔', '유리', '실리콘', '도어락', '커튼/블라인드',
-  '청소', '마감', '준공검사', '가전입고', '스타일링', '촬영', '이사', '기타'
-];
+const DEFAULT_PROCESS_LIST = PROCESS_LIST;
 
 // Moment 한국어 로케일 설정
 moment.updateLocale('ko', {

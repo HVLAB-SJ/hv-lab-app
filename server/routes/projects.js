@@ -3,6 +3,7 @@ const router = express.Router();
 const { db } = require('../config/database');
 const { authenticateToken, isManager } = require('../middleware/auth');
 const { sanitizeDatesArray, sanitizeDates } = require('../utils/dateUtils');
+const bcrypt = require('bcryptjs');
 
 // Helper function to parse JSON fields from database
 const parseProjectJSON = (project) => {
@@ -252,14 +253,21 @@ router.put('/:id', authenticateToken, (req, res) => {
     values.push(JSON.stringify(req.body.customerRequests));
     processedFields.add('customer_requests');
   }
+  // 비밀번호 암호화 처리
   if (req.body.entrancePassword !== undefined) {
     updates.push('entrance_password = ?');
-    values.push(req.body.entrancePassword);
+    // 빈 문자열이면 그대로 저장, 아니면 암호화
+    const hashedPassword = req.body.entrancePassword ?
+      await bcrypt.hash(req.body.entrancePassword, 10) : '';
+    values.push(hashedPassword);
     processedFields.add('entrance_password');
   }
   if (req.body.sitePassword !== undefined) {
     updates.push('site_password = ?');
-    values.push(req.body.sitePassword);
+    // 빈 문자열이면 그대로 저장, 아니면 암호화
+    const hashedPassword = req.body.sitePassword ?
+      await bcrypt.hash(req.body.sitePassword, 10) : '';
+    values.push(hashedPassword);
     processedFields.add('site_password');
   }
 
@@ -374,6 +382,69 @@ router.get('/:id/stats', authenticateToken, (req, res) => {
         return res.status(500).json({ error: '통계 조회 실패' });
       }
       res.json(stats);
+    }
+  );
+});
+
+// 비밀번호 검증 API
+router.post('/:id/verify-password', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { type, password } = req.body;
+
+  if (!type || !password) {
+    return res.status(400).json({ error: '비밀번호 타입과 비밀번호를 입력해주세요' });
+  }
+
+  const field = type === 'entrance' ? 'entrance_password' : 'site_password';
+
+  db.get(
+    `SELECT ${field} as hashedPassword FROM projects WHERE id = ?`,
+    [id],
+    async (err, row) => {
+      if (err) {
+        console.error('[POST /api/projects/:id/verify-password] Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (!row) {
+        return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다' });
+      }
+
+      // 비밀번호가 설정되지 않은 경우
+      if (!row.hashedPassword) {
+        return res.json({ valid: false, message: '비밀번호가 설정되지 않았습니다' });
+      }
+
+      try {
+        // bcrypt로 암호화된 비밀번호인지 확인 ($ 시작하면 bcrypt 해시)
+        if (row.hashedPassword.startsWith('$')) {
+          // bcrypt로 검증
+          const isValid = await bcrypt.compare(password, row.hashedPassword);
+          return res.json({ valid: isValid });
+        } else {
+          // 평문 비밀번호 (기존 데이터) - 직접 비교
+          const isValid = password === row.hashedPassword;
+
+          // 평문 비밀번호가 맞으면 암호화하여 업데이트
+          if (isValid && row.hashedPassword) {
+            const hashedPassword = await bcrypt.hash(row.hashedPassword, 10);
+            db.run(
+              `UPDATE projects SET ${field} = ? WHERE id = ?`,
+              [hashedPassword, id],
+              (updateErr) => {
+                if (updateErr) {
+                  console.error('비밀번호 마이그레이션 실패:', updateErr);
+                }
+              }
+            );
+          }
+
+          return res.json({ valid: isValid });
+        }
+      } catch (error) {
+        console.error('비밀번호 검증 오류:', error);
+        return res.status(500).json({ error: '비밀번호 검증 실패' });
+      }
     }
   );
 });

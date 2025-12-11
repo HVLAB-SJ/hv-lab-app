@@ -9,89 +9,9 @@ import { ko } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import paymentService from '../services/paymentService';
 import { getAllImages, saveImages, migrateFromLocalStorage } from '../utils/imageStorage';
-
-// 이미지 압축 함수 (용량 줄이기)
-const compressImage = (base64: string, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
-
-      // 최대 너비를 넘으면 비율에 맞게 축소
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-
-      const ctx = canvas.getContext('2d');
-      ctx?.drawImage(img, 0, 0, width, height);
-
-      // JPEG로 압축 (용량 절약)
-      const compressed = canvas.toDataURL('image/jpeg', quality);
-      resolve(compressed);
-    };
-    img.onerror = () => resolve(base64); // 실패 시 원본 반환
-    img.src = base64;
-  });
-};
-
-// localStorage 안전하게 저장하는 함수
-const safeLocalStorageSet = (key: string, value: string): boolean => {
-  try {
-    localStorage.setItem(key, value);
-    return true;
-  } catch (e) {
-    console.error('localStorage 저장 실패:', e);
-    // 용량 초과 시 오래된 데이터 정리 시도
-    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-      try {
-        // paymentRecordImages가 너무 크면 일부 삭제
-        const stored = localStorage.getItem('paymentRecordImages');
-        if (stored) {
-          const data = JSON.parse(stored);
-          const keys = Object.keys(data);
-          if (keys.length > 5) {
-            // 오래된 5개 항목 삭제
-            const toRemove = keys.slice(0, keys.length - 5);
-            toRemove.forEach(k => delete data[k]);
-            localStorage.setItem('paymentRecordImages', JSON.stringify(data));
-            // 다시 시도
-            localStorage.setItem(key, value);
-            return true;
-          }
-        }
-      } catch {
-        // 정리도 실패하면 포기
-      }
-    }
-    return false;
-  }
-};
-
-// 공정 목록
-const PROCESS_LIST = [
-  '가설',
-  '철거',
-  '설비/미장',
-  '전기',
-  '목공',
-  '조명',
-  '가구',
-  '마루',
-  '타일',
-  '욕실',
-  '필름',
-  '도배',
-  '도장',
-  '창호',
-  '에어컨',
-  '기타'
-];
+import { compressImage } from '../utils/imageUtils';
+import { safeLocalStorageSet } from '../utils/storageUtils';
+import { PAYMENT_PROCESS_LIST } from '../constants';
 
 const ExecutionHistory = () => {
   const {
@@ -512,7 +432,7 @@ const ExecutionHistory = () => {
 
     // 공정 추출
     let detectedProcess = '';
-    for (const process of PROCESS_LIST) {
+    for (const process of PAYMENT_PROCESS_LIST) {
       if (text.includes(process)) {
         detectedProcess = process;
         break;
@@ -2278,7 +2198,7 @@ const ExecutionHistory = () => {
               <div className="p-3 overflow-y-auto max-h-[calc(80vh-100px)]">
                 {/* 공정 목록 그리드 */}
                 <div className="grid grid-cols-2 gap-2 mb-2">
-                  {PROCESS_LIST.map((process) => (
+                  {PAYMENT_PROCESS_LIST.map((process) => (
                     <button
                       key={process}
                       onClick={() => {
@@ -2333,7 +2253,7 @@ const ExecutionHistory = () => {
               <div className="p-2">
                 {/* 공정 목록 그리드 - 4열로 확대하여 모든 공정이 보이도록 */}
                 <div className="grid grid-cols-4 gap-1.5 mb-2">
-                  {PROCESS_LIST.map((process) => (
+                  {PAYMENT_PROCESS_LIST.map((process) => (
                     <button
                       key={process}
                       onClick={() => {
@@ -2439,7 +2359,7 @@ const ExecutionHistory = () => {
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">선택</option>
-                  {PROCESS_LIST.map((p) => (
+                  {PAYMENT_PROCESS_LIST.map((p) => (
                     <option key={p} value={p}>{p}</option>
                   ))}
                 </select>
