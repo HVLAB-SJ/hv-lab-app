@@ -1795,6 +1795,10 @@ const Payments = () => {
     // 낙관적 업데이트: 즉시 UI 반영 (로컬 상태 업데이트)
     updatePayment(paymentId, { status: 'completed' });
     setShowDetailModal(false);
+
+    // 송금완료 탭으로 즉시 전환
+    setStatusFilter('completed');
+
     toast.success('송금완료 처리되었습니다');
 
     // 배지 카운트 즉시 업데이트 이벤트 발생
@@ -1809,8 +1813,9 @@ const Payments = () => {
       })
       .catch((error) => {
         console.error('송금완료 처리 실패:', error);
-        // 실패 시 롤백
+        // 실패 시 롤백 - 상태와 탭 모두 복구
         updatePayment(paymentId, { status: 'pending' });
+        setStatusFilter('pending');
         toast.error('송금완료 처리 실패 - 다시 시도해주세요');
       });
   };
