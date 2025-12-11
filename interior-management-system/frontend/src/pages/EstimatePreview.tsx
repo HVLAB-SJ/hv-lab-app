@@ -865,7 +865,7 @@ const EstimatePreview: React.FC = () => {
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">스위치/콘센트 (공용부)</label>
                     <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오', '르그랑 아펠라'].map(item => (
+                      {['융스위치', '르그랑 아펠라'].map(item => (
                         <label key={item} className="flex items-center text-sm whitespace-nowrap cursor-pointer">
                           <input
                             type="checkbox"
@@ -881,7 +881,7 @@ const EstimatePreview: React.FC = () => {
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">스위치/콘센트 (방)</label>
                     <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {['융스위치(메탈)', '융스위치(일반)', '르그랑 아테오', '르그랑 아펠라'].map(item => (
+                      {['융스위치', '르그랑 아펠라'].map(item => (
                         <label key={item} className="flex items-center text-sm whitespace-nowrap cursor-pointer">
                           <input
                             type="checkbox"
