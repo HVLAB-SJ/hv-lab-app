@@ -1191,9 +1191,12 @@ export const useDataStore = create<DataStore>()(
         totalAmount: apiRecord.total_amount || 0,
         notes: apiRecord.notes || undefined,
         paymentId: apiRecord.payment_id ? String(apiRecord.payment_id) : undefined,
+        includesTaxDeduction: apiRecord.includes_tax_deduction === 1,
+        includesVat: apiRecord.includes_vat === 1,
         createdAt: new Date(apiRecord.created_at),
         updatedAt: new Date(apiRecord.updated_at)
       };
+      console.log('[addExecutionRecordToAPI] newRecord includesVat:', newRecord.includesVat, 'from API:', apiRecord.includes_vat);
 
       set((state) => ({ executionRecords: [newRecord, ...state.executionRecords] }));
       console.log('[addExecutionRecordToAPI] Added with ID:', newRecord.id);
