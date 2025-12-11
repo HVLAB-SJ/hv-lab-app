@@ -1441,8 +1441,6 @@ const Schedule = () => {
   const draggedProcessRef = React.useRef<string | null>(null);
   // 클릭으로 선택된 공정 (탭 모드)
   const [selectedProcess, setSelectedProcess] = useState<string | null>(null);
-  // 드래그 드롭 처리 중 플래그 (중복 방지)
-  const isProcessingDropRef = React.useRef(false);
   // 공정 드롭 직후 플래그 (인라인 모드 방지)
   const justDroppedProcessRef = React.useRef(false);
   // Ctrl 키 상태 추적 (드래그 시 복사용)
@@ -1665,20 +1663,11 @@ const Schedule = () => {
   // 사이드바에서 공정을 드래그하여 날짜에 드롭했을 때 핸들러
   // isTapMode: 탭 모드에서는 처리 중 플래그 무시 (연속 클릭 허용)
   const handleProcessDrop = useCallback((processName: string, dropDate: Date, isTapMode = false) => {
-    console.log('[handleProcessDrop] Called:', { processName, dropDate, filterProject, isProcessing: isProcessingDropRef.current, isTapMode });
-    // 드래그 모드에서만 중복 실행 방지 (탭 모드는 연속 클릭 허용)
-    if (!isTapMode && isProcessingDropRef.current) {
-      console.log('[handleProcessDrop] Already processing, skipping');
-      return;
-    }
+    console.log('[handleProcessDrop] Called:', { processName, dropDate, filterProject, isTapMode });
 
     if (filterProject === 'all') {
       toast.error('프로젝트를 먼저 선택해주세요');
       return;
-    }
-
-    if (!isTapMode) {
-      isProcessingDropRef.current = true;
     }
 
     // 낙관적 업데이트: 임시 ID로 즉시 UI에 추가
@@ -1705,13 +1694,6 @@ const Schedule = () => {
       toast.error('일정 추가에 실패했습니다');
       // 실패 시 임시 항목 제거
       deleteSchedule(tempId);
-    }).finally(() => {
-      // 드래그 모드에서만 플래그 해제
-      if (!isTapMode) {
-        setTimeout(() => {
-          isProcessingDropRef.current = false;
-        }, 300);
-      }
     });
   }, [filterProject, addScheduleToAPI, addSchedule, deleteSchedule, user]);
 
@@ -1719,24 +1701,35 @@ const Schedule = () => {
   const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
     // state가 null이어도 ref에 값이 있을 수 있음 (onDragEnd가 먼저 호출된 경우)
     const processToUse = draggedProcess || draggedProcessRef.current;
-    console.log('[onDropFromOutside] Called:', { draggedProcess, draggedProcessRef: draggedProcessRef.current, processToUse, filterProject, isProcessing: isProcessingDropRef.current, start });
-    if (processToUse && filterProject !== 'all' && !isProcessingDropRef.current) {
-      // 드롭 직후 플래그 설정 (인라인 모드 방지)
-      justDroppedProcessRef.current = true;
-      setTimeout(() => {
-        justDroppedProcessRef.current = false;
-      }, 500);
+    console.log('[onDropFromOutside] Called:', { draggedProcess, draggedProcessRef: draggedProcessRef.current, processToUse, filterProject, start });
 
-      // 인라인 추가/편집 모드 즉시 클리어
-      setInlineAddDate(null);
-      setInlineEditEvent(null);
-      setInlineEditTitle('');
-
-      // 상태와 ref 모두 클리어
-      setDraggedProcess(null);
-      draggedProcessRef.current = null;
-      handleProcessDrop(processToUse, start);
+    if (!processToUse) {
+      console.log('[onDropFromOutside] No process to drop, skipping');
+      return;
     }
+
+    if (filterProject === 'all') {
+      console.log('[onDropFromOutside] All projects selected, skipping');
+      return;
+    }
+
+    // 드롭 직후 플래그 설정 (인라인 모드 방지)
+    justDroppedProcessRef.current = true;
+    setTimeout(() => {
+      justDroppedProcessRef.current = false;
+    }, 500);
+
+    // 인라인 추가/편집 모드 즉시 클리어
+    setInlineAddDate(null);
+    setInlineEditEvent(null);
+    setInlineEditTitle('');
+
+    // 상태와 ref 모두 클리어 (드롭 처리 후)
+    setDraggedProcess(null);
+    draggedProcessRef.current = null;
+
+    // 일정 추가 실행
+    handleProcessDrop(processToUse, start);
   }, [draggedProcess, filterProject, handleProcessDrop]);
 
   // 드래그 가능한 외부 아이템 접근자 (dragFromOutsideItem)
@@ -2868,11 +2861,12 @@ const Schedule = () => {
                         }}
                         onDragEnd={() => {
                           console.log('[Process Drag] Ended, draggedProcessRef:', draggedProcessRef.current);
-                          // 약간의 딜레이 후 클리어 (onDropFromOutside가 먼저 처리되도록)
+                          // 충분한 딜레이 후 클리어 (onDropFromOutside가 먼저 처리되도록)
+                          // 드롭 성공 시 onDropFromOutside에서 먼저 클리어됨
                           setTimeout(() => {
                             setDraggedProcess(null);
                             draggedProcessRef.current = null;
-                          }, 100);
+                          }, 500);
                         }}
                         className={`px-3 py-1 text-xs rounded cursor-pointer transition-colors text-center font-medium whitespace-nowrap ${
                           selectedProcess === process
