@@ -8,6 +8,7 @@ import { useNotificationStore } from '../store/notificationStore';
 import workRequestService from '../services/workRequestService';
 import paymentService from '../services/paymentService';
 import asRequestService from '../services/asRequestService';
+import projectService from '../services/projectService';
 import api from '../services/api';
 import socketService from '../services/socket';
 
@@ -157,14 +158,24 @@ const Layout = () => {
   // Socket.IO 실시간 동기화 - 결제 상태 변경 시 배지 업데이트
   useEffect(() => {
     const socket = socketService.getSocket();
-    if (!socket) return;
+    if (!socket || !user) return;
 
     const handlePaymentRefresh = async () => {
       // 결제요청 pending 카운트 다시 로드
       try {
-        const payments = await paymentService.getAllPayments();
+        const [payments, projects] = await Promise.all([
+          paymentService.getAllPayments(),
+          projectService.getAllProjects()
+        ]);
+
+        // 안팀 사용자는 담당 프로젝트의 결제요청만 카운트
+        let filteredPayments = payments;
+        if (user.name === '안팀') {
+          const projectNames = projects.map(p => p.name);
+          filteredPayments = payments.filter(p => projectNames.includes(p.project));
+        }
         setPendingPaymentCount(
-          payments.filter(payment => payment.status === 'pending').length
+          filteredPayments.filter(payment => payment.status === 'pending').length
         );
       } catch (error) {
         console.error('Failed to refresh payment count:', error);
@@ -176,7 +187,7 @@ const Layout = () => {
     return () => {
       socket.off('payment:refresh', handlePaymentRefresh);
     };
-  }, []);
+  }, [user]);
 
   // Load all badge counts in a single effect (optimized)
   useEffect(() => {
@@ -184,17 +195,25 @@ const Layout = () => {
 
     const loadAllBadgeCounts = async () => {
       try {
-        const [workRequests, payments, asRequests] = await Promise.all([
+        const [workRequests, payments, asRequests, projects] = await Promise.all([
           workRequestService.getAllWorkRequests(),
           paymentService.getAllPayments(),
-          asRequestService.getAllASRequests()
+          asRequestService.getAllASRequests(),
+          projectService.getAllProjects()
         ]);
 
         setPendingWorkRequestCount(
           workRequests.filter(req => req.assignedTo === user.name && req.status === 'pending').length
         );
+
+        // 안팀 사용자는 담당 프로젝트의 결제요청만 카운트
+        let filteredPayments = payments;
+        if (user.name === '안팀') {
+          const projectNames = projects.map(p => p.name);
+          filteredPayments = payments.filter(p => projectNames.includes(p.project));
+        }
         setPendingPaymentCount(
-          payments.filter(payment => payment.status === 'pending').length
+          filteredPayments.filter(payment => payment.status === 'pending').length
         );
         setInProgressASCount(
           asRequests.filter(req => req.status === 'in-progress').length
