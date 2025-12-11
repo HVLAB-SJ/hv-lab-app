@@ -1437,6 +1437,8 @@ const Schedule = () => {
 
   // 드래그 중인 공정 (사이드바에서 드래그)
   const [draggedProcess, setDraggedProcess] = useState<string | null>(null);
+  // 드래그된 공정을 ref로도 저장 (onDragEnd보다 onDropFromOutside가 늦게 호출될 때 대비)
+  const draggedProcessRef = React.useRef<string | null>(null);
   // 드래그 드롭 처리 중 플래그 (중복 방지)
   const isProcessingDropRef = React.useRef(false);
   // 공정 드롭 직후 플래그 (인라인 모드 방지)
@@ -1708,8 +1710,10 @@ const Schedule = () => {
 
   // 외부에서 드래그해서 캘린더에 드롭할 때 핸들러
   const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
-    console.log('[onDropFromOutside] Called:', { draggedProcess, filterProject, isProcessing: isProcessingDropRef.current, start });
-    if (draggedProcess && filterProject !== 'all' && !isProcessingDropRef.current) {
+    // state가 null이어도 ref에 값이 있을 수 있음 (onDragEnd가 먼저 호출된 경우)
+    const processToUse = draggedProcess || draggedProcessRef.current;
+    console.log('[onDropFromOutside] Called:', { draggedProcess, draggedProcessRef: draggedProcessRef.current, processToUse, filterProject, isProcessing: isProcessingDropRef.current, start });
+    if (processToUse && filterProject !== 'all' && !isProcessingDropRef.current) {
       // 드롭 직후 플래그 설정 (인라인 모드 방지)
       justDroppedProcessRef.current = true;
       setTimeout(() => {
@@ -1721,15 +1725,17 @@ const Schedule = () => {
       setInlineEditEvent(null);
       setInlineEditTitle('');
 
-      const processToAdd = draggedProcess;
-      setDraggedProcess(null); // 먼저 상태 클리어
-      handleProcessDrop(processToAdd, start);
+      // 상태와 ref 모두 클리어
+      setDraggedProcess(null);
+      draggedProcessRef.current = null;
+      handleProcessDrop(processToUse, start);
     }
   }, [draggedProcess, filterProject, handleProcessDrop]);
 
   // 드래그 가능한 외부 아이템 접근자 (dragFromOutsideItem)
   const dragFromOutsideItem = useCallback(() => {
-    return draggedProcess ? { title: draggedProcess } : null;
+    const processToUse = draggedProcess || draggedProcessRef.current;
+    return processToUse ? { title: processToUse } : null;
   }, [draggedProcess]);
 
   // 인라인 일정 추가 저장 (title을 파라미터로 받음)
@@ -2823,12 +2829,17 @@ const Schedule = () => {
                         onDragStart={(e) => {
                           console.log('[Process Drag] Started:', process);
                           setDraggedProcess(process);
+                          draggedProcessRef.current = process;
                           e.dataTransfer.setData('text/plain', process);
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
                         onDragEnd={() => {
-                          console.log('[Process Drag] Ended');
-                          setDraggedProcess(null);
+                          console.log('[Process Drag] Ended, draggedProcessRef:', draggedProcessRef.current);
+                          // 약간의 딜레이 후 클리어 (onDropFromOutside가 먼저 처리되도록)
+                          setTimeout(() => {
+                            setDraggedProcess(null);
+                            draggedProcessRef.current = null;
+                          }, 100);
                         }}
                         className={`px-3 py-1 text-xs rounded cursor-grab active:cursor-grabbing transition-colors text-center font-medium whitespace-nowrap ${
                           draggedProcess === process
