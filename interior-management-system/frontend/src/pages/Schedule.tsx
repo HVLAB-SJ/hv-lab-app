@@ -1678,7 +1678,7 @@ const Schedule = () => {
 
   // 사이드바에서 공정을 드래그하여 날짜에 드롭했을 때 핸들러
   // isTapMode: 탭 모드에서는 처리 중 플래그 무시 (연속 클릭 허용)
-  const handleProcessDrop = useCallback((processName: string, dropDate: Date, isTapMode = false) => {
+  const handleProcessDrop = useCallback(async (processName: string, dropDate: Date, isTapMode = false) => {
     console.log('[handleProcessDrop] Called:', { processName, dropDate, filterProject, isTapMode });
 
     if (filterProject === 'all') {
@@ -1701,19 +1701,17 @@ const Schedule = () => {
     // 즉시 로컬에 추가
     addSchedule(newSchedule);
 
-    // 백그라운드에서 API 호출
-    addScheduleToAPI(newSchedule).then(response => {
-      // 서버에서 받은 실제 ID로 교체
-      if (response && response.id && response.id !== tempId) {
-        deleteSchedule(tempId); // 임시 ID 제거
-        addSchedule({ ...newSchedule, id: response.id }); // 실제 ID로 추가
-      }
-    }).catch(error => {
+    try {
+      // API 호출 (addScheduleToAPI는 내부적으로 store에 추가함)
+      await addScheduleToAPI(newSchedule);
+      // API 호출이 성공하면 임시 항목 제거 (서버에서 받은 항목으로 대체됨)
+      deleteSchedule(tempId);
+    } catch (error) {
       console.error('일정 추가 실패:', error);
       toast.error('일정 추가에 실패했습니다');
       // 실패 시 임시 항목 제거
       deleteSchedule(tempId);
-    });
+    }
   }, [filterProject, addScheduleToAPI, addSchedule, deleteSchedule, user]);
 
   // 외부에서 드래그해서 캘린더에 드롭할 때 핸들러
@@ -1785,12 +1783,10 @@ const Schedule = () => {
     setInlineAddDate(null);
 
     try {
-      const response = await addScheduleToAPI(newSchedule);
-      // 서버에서 받은 실제 ID로 교체
-      if (response && response.id && response.id !== tempId) {
-        deleteSchedule(tempId); // 임시 ID 제거
-        addSchedule({ ...newSchedule, id: response.id }); // 실제 ID로 추가
-      }
+      // API 호출 (addScheduleToAPI는 내부적으로 store에 추가함)
+      await addScheduleToAPI(newSchedule);
+      // API 호출이 성공하면 임시 항목 제거 (서버에서 받은 항목으로 대체됨)
+      deleteSchedule(tempId);
     } catch (error) {
       console.error('일정 추가 실패:', error);
       toast.error('일정 추가에 실패했습니다');
