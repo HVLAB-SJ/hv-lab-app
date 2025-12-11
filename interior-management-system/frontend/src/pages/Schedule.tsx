@@ -1439,6 +1439,8 @@ const Schedule = () => {
   const [draggedProcess, setDraggedProcess] = useState<string | null>(null);
   // 드래그된 공정을 ref로도 저장 (onDragEnd보다 onDropFromOutside가 늦게 호출될 때 대비)
   const draggedProcessRef = React.useRef<string | null>(null);
+  // 클릭으로 선택된 공정 (탭 모드)
+  const [selectedProcess, setSelectedProcess] = useState<string | null>(null);
   // 드래그 드롭 처리 중 플래그 (중복 방지)
   const isProcessingDropRef = React.useRef(false);
   // 공정 드롭 직후 플래그 (인라인 모드 방지)
@@ -2112,6 +2114,12 @@ const Schedule = () => {
       return;
     }
 
+    // 선택된 공정이 있으면 바로 일정 추가 (탭 모드)
+    if (selectedProcess) {
+      handleProcessDrop(selectedProcess, slotInfo.start);
+      return;
+    }
+
     // 개별 프로젝트 선택 시 인라인 추가 모드
     // 인라인 편집 모드 닫기
     setInlineEditEvent(null);
@@ -2363,7 +2371,10 @@ const Schedule = () => {
               <select
                 className="px-3 md:px-4 py-1.5 md:py-2 bg-white text-gray-700 rounded-lg text-xs md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-300 border border-gray-300 print-hide"
                 value={filterProject}
-                onChange={(e) => setFilterProject(e.target.value)}
+                onChange={(e) => {
+                  setFilterProject(e.target.value);
+                  setSelectedProcess(null); // 프로젝트 변경 시 선택 모드 해제
+                }}
                 style={{
                   appearance: 'none',
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
@@ -2821,13 +2832,30 @@ const Schedule = () => {
                     </svg>
                     공정 관리
                   </button>
+                  {/* 선택 모드 안내 */}
+                  {selectedProcess && (
+                    <div className="mb-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded text-center">
+                      <span className="font-medium">{selectedProcess}</span> 선택됨
+                      <br />
+                      <span className="text-blue-600">날짜를 탭하세요</span>
+                    </div>
+                  )}
                   <div className="flex flex-col gap-0.5">
                     {PROCESS_LIST.map((process) => (
                       <div
                         key={process}
                         draggable
+                        onClick={() => {
+                          // 같은 공정 클릭 시 선택 해제, 다른 공정 클릭 시 선택
+                          if (selectedProcess === process) {
+                            setSelectedProcess(null);
+                          } else {
+                            setSelectedProcess(process);
+                          }
+                        }}
                         onDragStart={(e) => {
                           console.log('[Process Drag] Started:', process);
+                          setSelectedProcess(null); // 드래그 시작하면 선택 모드 해제
                           setDraggedProcess(process);
                           draggedProcessRef.current = process;
                           e.dataTransfer.setData('text/plain', process);
@@ -2841,8 +2869,10 @@ const Schedule = () => {
                             draggedProcessRef.current = null;
                           }, 100);
                         }}
-                        className={`px-3 py-1 text-xs rounded cursor-grab active:cursor-grabbing transition-colors text-center font-medium whitespace-nowrap ${
-                          draggedProcess === process
+                        className={`px-3 py-1 text-xs rounded cursor-pointer transition-colors text-center font-medium whitespace-nowrap ${
+                          selectedProcess === process
+                            ? 'bg-blue-500 text-white ring-2 ring-blue-300'
+                            : draggedProcess === process
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                         }`}
