@@ -3153,13 +3153,12 @@ const Schedule = () => {
                     {PROCESS_LIST.map((processName) => (
                       <button
                         key={processName}
-                        onClick={() => {
+                        onClick={async () => {
                           // 선택된 날짜에 해당 공정으로 일정 추가
                           const targetDate = selectedDate || new Date();
                           if (filterProject !== 'all') {
-                            const tempId = 'temp_' + Date.now().toString() + Math.random().toString(36).substr(2, 9);
                             const newSchedule: Schedule = {
-                              id: tempId,
+                              id: '',
                               title: processName,
                               start: targetDate,
                               end: targetDate,
@@ -3168,18 +3167,14 @@ const Schedule = () => {
                               type: 'construction'
                             };
 
-                            // 즉시 로컬에 추가 (낙관적 업데이트)
-                            addSchedule(newSchedule);
-
-                            // 백그라운드에서 API 호출 후 임시 항목 제거 (API가 자동으로 새 항목 추가)
-                            addScheduleToAPI(newSchedule).then(() => {
-                              // API 성공 시 임시 항목 제거 (API가 새 ID로 추가함)
-                              deleteSchedule(tempId);
-                            }).catch(error => {
+                            try {
+                              // API 호출 후 데이터 로드 (낙관적 업데이트 제거)
+                              await addScheduleToAPI(newSchedule);
+                              loadSchedulesFromAPI();
+                            } catch (error) {
                               console.error('일정 추가 실패:', error);
-                              // 실패 시 임시 항목 제거
-                              deleteSchedule(tempId);
-                            });
+                              toast.error('일정 추가에 실패했습니다');
+                            }
                           }
                         }}
                         className="px-2.5 py-1.5 text-xs rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors font-medium"
