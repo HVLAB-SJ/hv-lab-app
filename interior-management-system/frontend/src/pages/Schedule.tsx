@@ -2995,28 +2995,9 @@ const Schedule = () => {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  {/* 삭제 모드 버튼 - 개별 프로젝트 선택 시에만 표시 */}
-                  {isMobileView && filterProject !== 'all' && (
-                    <button
-                      onClick={() => {
-                        setIsDeleteMode(!isDeleteMode);
-                        setDeleteConfirmEvent(null);
-                      }}
-                      className={`p-1.5 rounded-full transition-colors ${
-                        isDeleteMode
-                          ? 'bg-red-100 text-red-600'
-                          : 'hover:bg-gray-200 text-gray-500'
-                      }`}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
                   <button
                     onClick={() => {
                       setSelectedDate(null);
-                      setIsDeleteMode(false);
                       setDeleteConfirmEvent(null);
                     }}
                     className="p-1 hover:bg-gray-200 rounded-full transition-colors"
@@ -3419,6 +3400,55 @@ const Schedule = () => {
             }}
           >
             {draggingEvent.originalTitle || draggingEvent.title}
+          </div>
+        )}
+
+        {/* 모바일 삭제 확인 팝업 */}
+        {deleteConfirmEvent && (
+          <div
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
+            onClick={() => setDeleteConfirmEvent(null)}
+          >
+            <div
+              className="bg-white rounded-xl shadow-2xl w-[280px] overflow-hidden mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-4 text-center">
+                <div className="w-12 h-12 mx-auto mb-3 bg-red-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <p className="text-base font-semibold text-gray-900 mb-1">일정을 삭제할까요?</p>
+                <p className="text-sm text-gray-500 truncate">{deleteConfirmEvent.title}</p>
+              </div>
+              <div className="flex border-t border-gray-100">
+                <button
+                  onClick={() => setDeleteConfirmEvent(null)}
+                  className="flex-1 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      // 병합된 일정인 경우 모든 이벤트 삭제
+                      const eventIds = deleteConfirmEvent.mergedEventIds || [deleteConfirmEvent.id];
+                      await Promise.all(eventIds.map(id => deleteScheduleFromAPI(id)));
+                      toast.success('삭제되었습니다');
+                      loadSchedulesFromAPI();
+                    } catch (error) {
+                      console.error('일정 삭제 실패:', error);
+                      toast.error('삭제에 실패했습니다');
+                    }
+                    setDeleteConfirmEvent(null);
+                  }}
+                  className="flex-1 py-3 text-sm font-medium text-red-600 hover:bg-red-50 active:bg-red-100 border-l border-gray-100 transition-colors"
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
