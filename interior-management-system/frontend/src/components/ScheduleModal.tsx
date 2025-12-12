@@ -248,13 +248,14 @@ const ScheduleModal = ({ event, slotInfo, defaultProjectName, onClose, onSave, o
     });
   };
 
-  // HV LAB 토글 함수 (단일 담당자로 처리)
+  // HV LAB 토글 함수 (단일 담당자로 처리, 안팀 제외)
   const toggleHVLab = () => {
     const hvLabMember = 'HV LAB';
     if (selectedMembers.includes(hvLabMember)) {
       setSelectedMembers(prev => prev.filter(m => m !== hvLabMember));
     } else {
-      setSelectedMembers(prev => [...prev, hvLabMember]);
+      // HV LAB 추가 시 안팀은 제외
+      setSelectedMembers(prev => [...prev.filter(m => m !== '안팀'), hvLabMember]);
     }
   };
 
