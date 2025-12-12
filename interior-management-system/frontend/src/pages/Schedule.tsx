@@ -3430,7 +3430,7 @@ const Schedule = () => {
                       // 병합된 일정인 경우 모든 이벤트 삭제
                       const eventIds = deleteConfirmEvent.mergedEventIds || [deleteConfirmEvent.id];
                       await Promise.all(eventIds.map(id => deleteScheduleFromAPI(id)));
-                      toast.success('삭제되었습니다');
+                      // 삭제 알림 제거
                       loadSchedulesFromAPI();
                     } catch (error) {
                       console.error('일정 삭제 실패:', error);
