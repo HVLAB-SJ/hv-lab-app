@@ -2995,24 +2995,6 @@ const Schedule = () => {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  {/* 삭제 모드 버튼 - 개별 프로젝트 선택 시에만 표시 */}
-                  {isMobileView && filterProject !== 'all' && (
-                    <button
-                      onClick={() => {
-                        setIsDeleteMode(!isDeleteMode);
-                        setDeleteConfirmEvent(null);
-                      }}
-                      className={`p-1.5 rounded-full transition-colors ${
-                        isDeleteMode
-                          ? 'bg-red-100 text-red-600'
-                          : 'hover:bg-gray-200 text-gray-500'
-                      }`}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
                   <button
                     onClick={() => {
                       setSelectedDate(null);
@@ -3092,12 +3074,6 @@ const Schedule = () => {
                             // 삭제 확인 중이면 클릭 무시
                             if (isDeleteConfirm) return;
 
-                            // 삭제 모드일 때
-                            if (isDeleteMode && canDelete) {
-                              setDeleteConfirmEvent(event);
-                              return;
-                            }
-
                             // 원본 제목을 사용하여 이벤트 선택
                             const eventWithOriginalTitle = {
                               ...event,
@@ -3108,13 +3084,11 @@ const Schedule = () => {
                           className={`p-3 cursor-pointer ${
                             isDeleteConfirm
                               ? 'bg-red-50'
-                              : isDeleteMode && canDelete
-                              ? 'bg-red-50/50'
                               : shouldHighlight
                               ? 'bg-yellow-50'
                               : ''
                           }`}
-                          style={isUnassignedNoProject && !isDeleteConfirm && !isDeleteMode ? { backgroundColor: '#f3f0f5' } : undefined}
+                          style={isUnassignedNoProject && !isDeleteConfirm ? { backgroundColor: '#f3f0f5' } : undefined}
                         >
                         {isDeleteConfirm ? (
                           // 삭제 확인 UI
@@ -3150,14 +3124,6 @@ const Schedule = () => {
                           </div>
                         ) : (
                         <div className="flex items-start gap-2">
-                          {/* 삭제 모드일 때 삭제 아이콘 표시 */}
-                          {isDeleteMode && canDelete && (
-                            <div className="flex-shrink-0 text-red-400">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </div>
-                          )}
                           <div
                             className="w-1 h-full rounded-full flex-shrink-0"
                             style={{
@@ -3191,10 +3157,18 @@ const Schedule = () => {
                               </p>
                             )}
                           </div>
-                          {!isDeleteMode && (
-                            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                          {canDelete && filterProject !== 'all' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirmEvent(event);
+                              }}
+                              className="p-1 flex-shrink-0 text-gray-300 hover:text-red-400 active:text-red-500 transition-colors"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
                           )}
                         </div>
                         )}
