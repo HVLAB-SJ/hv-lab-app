@@ -3079,9 +3079,6 @@ const Schedule = () => {
                       // 프로젝트가 없고 사용자에게 할당되지 않은 경우
                       const isUnassignedNoProject = !event.color && !shouldHighlight;
 
-                      // 삭제 확인 중인 이벤트인지 확인
-                      const isDeleteConfirm = deleteConfirmEvent?.id === event.id;
-
                       // 삭제 가능한 일정인지 (AS 방문, 수금 일정 제외)
                       const canDelete = !event.isASVisit && !event.isExpectedPayment;
 
@@ -3089,15 +3086,6 @@ const Schedule = () => {
                         <div
                           key={event.id}
                           onClick={() => {
-                            // 삭제 확인 중이면 클릭 무시
-                            if (isDeleteConfirm) return;
-
-                            // 삭제 모드일 때
-                            if (isDeleteMode && canDelete) {
-                              setDeleteConfirmEvent(event);
-                              return;
-                            }
-
                             // 원본 제목을 사용하여 이벤트 선택
                             const eventWithOriginalTitle = {
                               ...event,
@@ -3106,58 +3094,13 @@ const Schedule = () => {
                             onSelectEvent(eventWithOriginalTitle);
                           }}
                           className={`p-3 cursor-pointer ${
-                            isDeleteConfirm
-                              ? 'bg-red-50'
-                              : isDeleteMode && canDelete
-                              ? 'bg-red-50/50'
-                              : shouldHighlight
+                            shouldHighlight
                               ? 'bg-yellow-50'
                               : ''
                           }`}
-                          style={isUnassignedNoProject && !isDeleteConfirm && !isDeleteMode ? { backgroundColor: '#f3f0f5' } : undefined}
+                          style={isUnassignedNoProject ? { backgroundColor: '#f3f0f5' } : undefined}
                         >
-                        {isDeleteConfirm ? (
-                          // 삭제 확인 UI
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm text-red-600 font-medium truncate flex-1">삭제?</p>
-                            <div className="flex gap-2 flex-shrink-0">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteConfirmEvent(null);
-                                }}
-                                className="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg active:bg-gray-200"
-                              >
-                                취소
-                              </button>
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    await deleteScheduleFromAPI(event.id);
-                                    toast.success('삭제됨');
-                                  } catch (error) {
-                                    console.error('일정 삭제 실패:', error);
-                                    toast.error('삭제 실패');
-                                  }
-                                  setDeleteConfirmEvent(null);
-                                }}
-                                className="px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-lg active:bg-red-600"
-                              >
-                                확인
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
                         <div className="flex items-start gap-2">
-                          {/* 삭제 모드일 때 삭제 아이콘 표시 */}
-                          {isDeleteMode && canDelete && (
-                            <div className="flex-shrink-0 text-red-400">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </div>
-                          )}
                           <div
                             className="w-1 h-full rounded-full flex-shrink-0"
                             style={{
@@ -3191,13 +3134,25 @@ const Schedule = () => {
                               </p>
                             )}
                           </div>
-                          {!isDeleteMode && (
+                          {/* 삭제 가능한 일정은 휴지통 아이콘, 그 외는 화살표 */}
+                          {canDelete ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirmEvent(event);
+                              }}
+                              className="p-0.5 text-gray-400 hover:text-red-500 flex-shrink-0 active:text-red-600"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          ) : (
                             <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                           )}
                         </div>
-                        )}
                       </div>
                       );
                             })}
