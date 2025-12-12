@@ -1550,6 +1550,10 @@ const Schedule = () => {
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<ScheduleEvent | null>(null);
 
+  // 모바일 직접 입력 상태
+  const [mobileDirectInput, setMobileDirectInput] = useState(false);
+  const [mobileDirectInputText, setMobileDirectInputText] = useState('');
+
   // 드래그 프리뷰 상태
   const [draggingEvent, setDraggingEvent] = useState<ScheduleEvent | null>(null);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -3012,8 +3016,94 @@ const Schedule = () => {
               {/* 일정 목록 - 날짜별로 그룹핑 */}
               <div>
                 {selectedDateEvents.length === 0 ? (
-                  <div className="p-4 text-center">
-                    <p className="text-sm text-gray-500">일정이 없습니다</p>
+                  <div className="p-4">
+                    {/* 개별 프로젝트 선택 시 직접 입력 기능 */}
+                    {filterProject !== 'all' ? (
+                      mobileDirectInput ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={mobileDirectInputText}
+                            onChange={(e) => setMobileDirectInputText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && mobileDirectInputText.trim()) {
+                                const targetDate = selectedDate || new Date();
+                                const newSchedule = {
+                                  id: '',
+                                  title: mobileDirectInputText.trim(),
+                                  start: targetDate,
+                                  end: targetDate,
+                                  project: filterProject,
+                                  attendees: user?.name ? [user.name] : [],
+                                  type: 'construction' as const
+                                };
+                                addScheduleToAPI(newSchedule).then(() => {
+                                  loadSchedulesFromAPI();
+                                  setMobileDirectInput(false);
+                                  setMobileDirectInputText('');
+                                }).catch(error => {
+                                  console.error('일정 추가 실패:', error);
+                                  toast.error('일정 추가에 실패했습니다');
+                                });
+                              } else if (e.key === 'Escape') {
+                                setMobileDirectInput(false);
+                                setMobileDirectInputText('');
+                              }
+                            }}
+                            placeholder="일정 제목 입력"
+                            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => {
+                              if (mobileDirectInputText.trim()) {
+                                const targetDate = selectedDate || new Date();
+                                const newSchedule = {
+                                  id: '',
+                                  title: mobileDirectInputText.trim(),
+                                  start: targetDate,
+                                  end: targetDate,
+                                  project: filterProject,
+                                  attendees: user?.name ? [user.name] : [],
+                                  type: 'construction' as const
+                                };
+                                addScheduleToAPI(newSchedule).then(() => {
+                                  loadSchedulesFromAPI();
+                                  setMobileDirectInput(false);
+                                  setMobileDirectInputText('');
+                                }).catch(error => {
+                                  console.error('일정 추가 실패:', error);
+                                  toast.error('일정 추가에 실패했습니다');
+                                });
+                              }
+                            }}
+                            className="px-3 py-2 text-sm font-medium text-white bg-gray-700 rounded-lg hover:bg-gray-800 active:bg-gray-900"
+                          >
+                            추가
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMobileDirectInput(false);
+                              setMobileDirectInputText('');
+                            }}
+                            className="p-2 text-gray-400 hover:text-gray-600"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setMobileDirectInput(true)}
+                          className="w-full text-center text-sm text-gray-500 hover:text-gray-700 py-2"
+                        >
+                          + 직접 입력 일정 추가
+                        </button>
+                      )
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center">일정이 없습니다</p>
+                    )}
                   </div>
                 ) : (
                   <div>
