@@ -399,12 +399,15 @@ const ExecutionHistory = () => {
   });
 
   // 필터링 - 폼에서 선택한 프로젝트로 필터링
+  // 안팀 사용자인 경우 담당 프로젝트만 표시
   const filteredRecords = allRecords.filter(record => {
+    // 안팀 사용자인 경우 담당 프로젝트 필터링 적용
+    const isAllowedProject = user?.name !== '안팀' || filteredProjectNames.includes(record.project);
     const matchesProject = formData.project === '' || record.project === formData.project;
     const matchesSearch = searchTerm === '' ||
       record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.process?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesProject && matchesSearch;
+    return isAllowedProject && matchesProject && matchesSearch;
   });
 
   // 프로젝트별 총계 계산
