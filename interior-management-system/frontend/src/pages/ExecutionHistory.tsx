@@ -41,7 +41,8 @@ const ExecutionHistory = () => {
   const [showProcessSummary, setShowProcessSummary] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImage, setModalImage] = useState<string>('');
-  const [mobileView, setMobileView] = useState<'form' | 'list' | 'image'>('form');
+  const [mobileView, setMobileView] = useState<'form' | 'list' | 'image'>('list');
+  const [showMobileForm, setShowMobileForm] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [showProcessPicker, setShowProcessPicker] = useState(false);
   const processButtonRef = useRef<HTMLButtonElement>(null);
@@ -218,6 +219,21 @@ const ExecutionHistory = () => {
       setItemNameSuggestions([]);
     }
   }, [formData.itemName, executionRecords, isItemNameFocused]);
+
+  // 모바일 + 버튼 클릭 이벤트 리스너
+  useEffect(() => {
+    const handleHeaderAddClick = () => {
+      setShowMobileForm(prev => !prev);
+    };
+
+    window.addEventListener('headerAddButtonClick', handleHeaderAddClick);
+    return () => window.removeEventListener('headerAddButtonClick', handleHeaderAddClick);
+  }, []);
+
+  // showMobileForm 상태 변경 시 Layout에 알림
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('mobileFormStateChange', { detail: { isOpen: showMobileForm } }));
+  }, [showMobileForm]);
 
   // 클립보드 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
@@ -565,9 +581,10 @@ const ExecutionHistory = () => {
       setIncludeVat(false); // 부가세 체크 초기화
       setIncludeTaxDeduction(false); // 세금공제 체크 초기화
 
-      // 모바일에서는 리스트 뷰로 전환하고 새 레코드 선택
+      // 모바일에서는 폼을 닫고 리스트 뷰로 전환, 새 레코드 선택
       if (isMobileDevice) {
         setSelectedRecord(savedRecord.id);
+        setShowMobileForm(false);
         setMobileView('list');
       }
     } catch (error) {
@@ -1096,16 +1113,6 @@ const ExecutionHistory = () => {
         <div className="flex items-center justify-between">
           <nav className="flex space-x-4">
             <button
-              onClick={() => setMobileView('form')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                mobileView === 'form'
-                  ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-500'
-              }`}
-            >
-              입력
-            </button>
-            <button
               onClick={() => setMobileView('list')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 mobileView === 'list'
@@ -1132,13 +1139,13 @@ const ExecutionHistory = () => {
       {/* 메인 컨텐츠 - 3열 레이아웃 (고정 높이로 독립 스크롤) */}
       <div className="execution-container grid grid-cols-1 md:grid-cols-6 ipad:grid-cols-6 ipad-lg:grid-cols-6 ipad-xl:grid-cols-12 ipad-2xl:grid-cols-12 gap-3 md:gap-4 md:h-[calc(100vh-120px)]">
 
-        {/* 입력 폼 (2열) */}
+        {/* 입력 폼 (2열) - 모바일에서는 showMobileForm이 true일 때만 표시 */}
         <div className={`execution-form md:col-span-2 ipad:col-span-2 ipad-lg:col-span-2 ipad-xl:col-span-2 ipad-2xl:col-span-2 bg-white rounded-lg border p-3 md:p-4 overflow-y-auto ${
-          mobileView !== 'form' ? 'hidden md:block' : ''
+          showMobileForm ? '' : 'hidden md:block'
         }`}>
           <div className="execution-form-inner space-y-4 w-full">
-            {/* 프로젝트 - 태블릿/데스크톱에서만 표시 */}
-            <div className="exec-project hidden md:block">
+            {/* 프로젝트 선택 */}
+            <div className="exec-project">
               <select
                 value={formData.project}
                 onChange={(e) => {
@@ -1154,7 +1161,7 @@ const ExecutionHistory = () => {
                 {projects.filter(p => p.status !== 'completed').map(project => (
                   <option key={project.id} value={project.name}>{project.name}</option>
                 ))}
-                <option value="기타">기타</option>
+                {user?.name !== '안팀' && <option value="기타">기타</option>}
               </select>
             </div>
 
