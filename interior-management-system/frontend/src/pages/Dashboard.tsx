@@ -54,8 +54,8 @@ const Dashboard = () => {
       // 직접 담당자로 지정된 경우
       if (schedule.attendees.includes(member)) return true;
 
-      // HV LAB 일정은 모든 팀원에게 표시
-      if (schedule.attendees.includes('HV LAB')) return true;
+      // HV LAB 일정은 모든 팀원에게 표시 (안팀 제외)
+      if (schedule.attendees.includes('HV LAB') && member !== '안팀') return true;
 
       // 현장팀 일정은 재천, 민기에게 표시
       if (schedule.attendees.includes('현장팀') && ['재천', '민기'].includes(member)) {
