@@ -46,6 +46,10 @@ async function getCroppedImg(
   canvas.width = pixelCrop.width;
   canvas.height = pixelCrop.height;
 
+  // PNG 투명 배경을 위해 흰색 배경 먼저 채우기
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
   // 임시 캔버스에서 회전된 이미지 생성
   const tempCanvas = document.createElement('canvas');
   const tempCtx = tempCanvas.getContext('2d');
@@ -55,6 +59,10 @@ async function getCroppedImg(
 
   tempCanvas.width = rotatedWidth;
   tempCanvas.height = rotatedHeight;
+
+  // 임시 캔버스도 흰색 배경
+  tempCtx.fillStyle = '#FFFFFF';
+  tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
   // 중심으로 이동, 회전, 다시 중심으로 이동
   tempCtx.translate(rotatedWidth / 2, rotatedHeight / 2);
@@ -152,7 +160,7 @@ const ImageCropper = ({
           onCropComplete={onCropAreaComplete}
           cropShape="rect"
           showGrid={true}
-          minZoom={0.3}
+          minZoom={0.5}
           maxZoom={3}
           style={{
             containerStyle: {
@@ -179,7 +187,7 @@ const ImageCropper = ({
             <span className="text-white text-sm">-</span>
             <input
               type="range"
-              min={0.3}
+              min={0.5}
               max={3}
               step={0.05}
               value={zoom}
