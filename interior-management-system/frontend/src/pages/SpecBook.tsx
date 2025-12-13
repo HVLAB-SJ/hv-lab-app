@@ -404,8 +404,14 @@ const SpecBook = () => {
     removeItemFromCache
   } = useSpecbookStore();
   const [view, setView] = useState<'library' | 'project'>(() => {
-    // 안팀 사용자이거나 저장된 프로젝트가 있으면 'project' 뷰로 시작
+    // 안팀 사용자는 항상 'project' 뷰로 시작
     if (isAnTeamUser) return 'project';
+    // 저장된 뷰 상태가 있으면 사용
+    const savedView = localStorage.getItem('specBook_lastView');
+    if (savedView === 'library' || savedView === 'project') {
+      return savedView;
+    }
+    // 기본값: 저장된 프로젝트가 있으면 'project', 없으면 'library'
     const savedProject = localStorage.getItem('specBook_lastProject');
     return savedProject ? 'project' : 'library';
   });
@@ -525,6 +531,11 @@ const SpecBook = () => {
       localStorage.setItem('specBook_lastProject', String(selectedProject));
     }
   }, [selectedProject]);
+
+  // 선택한 뷰 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('specBook_lastView', view);
+  }, [view]);
 
   const loadCategories = async () => {
     // 캐시된 카테고리가 있으면 사용
