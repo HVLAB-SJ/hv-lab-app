@@ -271,6 +271,35 @@ router.post('/library/images', authenticateToken, (req, res) => {
   );
 });
 
+// 단일 스펙북 아이템 조회
+router.get('/item/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+
+  db.get('SELECT * FROM specbook_items WHERE id = ?', [id], (err, row) => {
+    if (err) {
+      console.error('스펙북 아이템 조회 실패:', err);
+      return res.status(500).json({ error: '스펙북 아이템 조회 실패' });
+    }
+
+    if (!row) {
+      return res.status(404).json({ error: '아이템을 찾을 수 없습니다' });
+    }
+
+    // sub_images JSON 파싱
+    if (row.sub_images) {
+      try {
+        row.sub_images = JSON.parse(row.sub_images);
+      } catch (e) {
+        row.sub_images = [];
+      }
+    } else {
+      row.sub_images = [];
+    }
+
+    res.json(row);
+  });
+});
+
 // 스펙북 라이브러리 조회
 router.get('/library', authenticateToken, (req, res) => {
   const { category, grades } = req.query;

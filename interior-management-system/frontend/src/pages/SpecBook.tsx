@@ -949,30 +949,41 @@ const SpecBook = () => {
       }
     }
 
+    // 서버에서 최신 아이템 데이터 가져오기
+    let freshItem = item;
+    try {
+      const response = await api.get(`/specbook/item/${item.id}`);
+      if (response.data) {
+        freshItem = response.data;
+      }
+    } catch (error) {
+      console.error('아이템 조회 실패, 로컬 데이터 사용:', error);
+    }
+
     // 새 아이템 설정
-    let initialImages = item.sub_images || [];
+    let initialImages = freshItem.sub_images || [];
 
     // 프로젝트 아이템이고 sub_images가 비어있으면, 라이브러리에서 같은 이름의 아이템 찾아서 sub_images 가져오기
-    if (!item.is_library && initialImages.length === 0) {
+    if (!freshItem.is_library && initialImages.length === 0) {
       const libraryItem = allLibraryItems.find(
-        li => li.name === item.name && li.category === item.category
+        li => li.name === freshItem.name && li.category === freshItem.category
       );
       if (libraryItem && libraryItem.sub_images && libraryItem.sub_images.length > 0) {
         initialImages = libraryItem.sub_images;
         // 프로젝트 아이템에도 sub_images 저장 (다음에는 직접 불러오도록)
         try {
-          await api.put(`/specbook/${item.id}/sub-images`, {
+          await api.put(`/specbook/${freshItem.id}/sub-images`, {
             sub_images: initialImages
           });
           // 로컬 아이템 업데이트
-          item.sub_images = initialImages;
+          freshItem.sub_images = initialImages;
         } catch (error) {
           console.error('프로젝트 아이템에 sub_images 동기화 실패:', error);
         }
       }
     }
 
-    setSelectedItemForImages(item);
+    setSelectedItemForImages(freshItem);
     setSubImages([...initialImages]); // 새 배열로 복사
     initialSubImagesRef.current = [...initialImages]; // 새 배열로 복사
     setIsSubImageModalOpen(true);
