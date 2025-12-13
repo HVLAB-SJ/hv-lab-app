@@ -62,7 +62,10 @@ const Payments = () => {
   const processButtonRef = useRef<HTMLButtonElement>(null);
   const [statusFilter, setStatusFilter] = useState<'pending' | 'completed'>('pending');
   const [projectFilter, setProjectFilter] = useState<string>('all');
-  const [showMyRequestsOnly, setShowMyRequestsOnly] = useState(false);
+  const [showMyRequestsOnly, setShowMyRequestsOnly] = useState(() => {
+    const saved = localStorage.getItem('payments_showMyRequestsOnly');
+    return saved === 'true';
+  });
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailPayment, setDetailPayment] = useState<PaymentRequest | null>(null);
   const [showCashReceiptModal, setShowCashReceiptModal] = useState(false);
@@ -2476,7 +2479,10 @@ const Payments = () => {
                     <input
                       type="checkbox"
                       checked={showMyRequestsOnly}
-                      onChange={(e) => setShowMyRequestsOnly(e.target.checked)}
+                      onChange={(e) => {
+                        setShowMyRequestsOnly(e.target.checked);
+                        localStorage.setItem('payments_showMyRequestsOnly', String(e.target.checked));
+                      }}
                       className="w-3.5 h-3.5 rounded border-gray-300 text-gray-600 focus:ring-gray-500"
                     />
                     내 요청만
