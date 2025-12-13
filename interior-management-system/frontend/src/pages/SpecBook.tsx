@@ -824,53 +824,20 @@ const SpecBook = () => {
         await api.put(`/specbook/base64/${editingItem.id}`, submitData);
         toast.success('스펙북 아이템이 수정되었습니다');
       } else {
-        // 새 아이템 추가
-        if (view === 'project' && selectedProject) {
-          // 프로젝트 뷰에서 추가: 라이브러리와 프로젝트 모두에 추가
-          // 1. 먼저 라이브러리에 추가
-          const libraryData = {
-            name: formData.name,
-            category: formData.category,
-            brand: formData.brand,
-            price: formData.price,
-            grade: gradeString,
-            description: '',
-            imageData: formData.imageData,
-            projectId: null,
-            isLibrary: true
-          };
-          await api.post('/specbook/base64', libraryData);
-
-          // 2. 프로젝트에도 추가
-          const projectData = {
-            name: formData.name,
-            category: formData.category,
-            brand: formData.brand,
-            price: formData.price,
-            grade: gradeString,
-            description: '',
-            imageData: formData.imageData,
-            projectId: selectedProject,
-            isLibrary: false
-          };
-          await api.post('/specbook/base64', projectData);
-          toast.success('스펙북 아이템이 라이브러리와 프로젝트에 추가되었습니다');
-        } else {
-          // 라이브러리 뷰에서 추가: 라이브러리에만 추가
-          const submitData = {
-            name: formData.name,
-            category: formData.category,
-            brand: formData.brand,
-            price: formData.price,
-            grade: gradeString,
-            description: '',
-            imageData: formData.imageData,
-            projectId: null,
-            isLibrary: true
-          };
-          await api.post('/specbook/base64', submitData);
-          toast.success('스펙북 아이템이 추가되었습니다');
-        }
+        // 새 아이템 추가: 항상 라이브러리에만 추가
+        const submitData = {
+          name: formData.name,
+          category: formData.category,
+          brand: formData.brand,
+          price: formData.price,
+          grade: gradeString,
+          description: '',
+          imageData: formData.imageData,
+          projectId: null,
+          isLibrary: true
+        };
+        await api.post('/specbook/base64', submitData);
+        toast.success('스펙북 아이템이 추가되었습니다');
       }
 
       setEditingItem(null);
