@@ -1066,7 +1066,31 @@ const SpecBook = () => {
     }
   }, [isSubImageModalOpen]);
 
-  // Sub 이미지 자동 저장 (debounce 적용)
+  // Sub 이미지 즉시 저장 함수
+  const saveSubImagesImmediately = useCallback(async (itemId: number, images: string[]) => {
+    setIsSavingSubImages(true);
+    try {
+      await api.put(`/specbook/${itemId}/sub-images`, {
+        sub_images: images
+      });
+      // 성공 시 초기값 업데이트
+      initialSubImagesRef.current = [...images];
+      toast.success('저장되었습니다');
+      invalidateLibrary();
+      loadItems(true);
+      loadAllLibraryItems(true);
+      if (view === 'project' && selectedProject) {
+        loadAllProjectItems();
+      }
+    } catch (error) {
+      console.error('Sub 이미지 저장 실패:', error);
+      toast.error('상세 이미지 저장에 실패했습니다');
+    } finally {
+      setIsSavingSubImages(false);
+    }
+  }, [view, selectedProject, loadItems, loadAllLibraryItems, loadAllProjectItems, invalidateLibrary]);
+
+  // Sub 이미지 자동 저장 (debounce 적용 - 즉시 저장을 위해 200ms로 단축)
   useEffect(() => {
     if (!selectedItemForImages || !isSubImageModalOpen) return;
 
@@ -1083,43 +1107,21 @@ const SpecBook = () => {
       clearTimeout(subImagesSaveTimeoutRef.current);
     }
 
-    // 1초 후 저장
+    // 200ms 후 저장 (즉시 저장에 가깝게)
     subImagesSaveTimeoutRef.current = setTimeout(async () => {
       // 저장 전에 현재 선택된 아이템이 같은지 확인
       if (selectedItemForImages?.id !== itemIdToSave) {
-        console.log('아이템이 변경되어 저장 취소:', itemIdToSave);
         return;
       }
-
-      setIsSavingSubImages(true);
-      try {
-        await api.put(`/specbook/${itemIdToSave}/sub-images`, {
-          sub_images: subImagesToSave
-        });
-        // 성공 시 초기값 업데이트 (현재 아이템이 같은 경우만)
-        if (selectedItemForImages?.id === itemIdToSave) {
-          initialSubImagesRef.current = [...subImagesToSave];
-        }
-        loadItems(true);
-        if (view === 'library') {
-          loadAllLibraryItems(true);
-        } else if (view === 'project' && selectedProject) {
-          loadAllProjectItems();
-        }
-      } catch (error) {
-        console.error('Sub 이미지 자동 저장 실패:', error);
-        toast.error('상세 이미지 저장에 실패했습니다');
-      } finally {
-        setIsSavingSubImages(false);
-      }
-    }, 1000);
+      await saveSubImagesImmediately(itemIdToSave, subImagesToSave);
+    }, 200);
 
     return () => {
       if (subImagesSaveTimeoutRef.current) {
         clearTimeout(subImagesSaveTimeoutRef.current);
       }
     };
-  }, [subImages, selectedItemForImages?.id, isSubImageModalOpen]);
+  }, [subImages, selectedItemForImages?.id, isSubImageModalOpen, saveSubImagesImmediately]);
 
   // Sub 이미지 삭제
   const handleDeleteSubImage = (index: number) => {
@@ -1227,44 +1229,19 @@ const SpecBook = () => {
 
   // Sub 이미지 모달 닫기
   const handleCloseSubImageModal = async () => {
-    // 저장 중이면 타이머 취소
+    // 진행 중인 타이머가 있으면 즉시 저장 실행
     if (subImagesSaveTimeoutRef.current) {
       clearTimeout(subImagesSaveTimeoutRef.current);
       subImagesSaveTimeoutRef.current = null;
-    }
 
-    // 파일 읽기가 진행 중일 수 있으므로 약간 대기
-    await new Promise(resolve => setTimeout(resolve, 100));
+      // 변경사항이 있으면 즉시 저장
+      const itemIdToSave = selectedItemForImages?.id;
+      const subImagesToSave = [...subImages];
+      const initialImages = [...(initialSubImagesRef.current || [])];
+      const hasChanged = JSON.stringify(subImagesToSave) !== JSON.stringify(initialImages);
 
-    // 저장할 아이템 ID와 이미지를 미리 캡처
-    const itemIdToSave = selectedItemForImages?.id;
-    const subImagesToSave = [...subImages];
-    const initialImages = [...(initialSubImagesRef.current || [])];
-
-    console.log('모달 닫기 - 저장 시도:', { itemIdToSave, subImagesCount: subImagesToSave.length, initialCount: initialImages.length });
-
-    // 변경사항이 있으면 즉시 저장
-    const hasChanged = JSON.stringify(subImagesToSave) !== JSON.stringify(initialImages);
-    if (hasChanged && itemIdToSave) {
-      setIsSavingSubImages(true);
-      try {
-        console.log('Sub 이미지 저장 API 호출:', itemIdToSave);
-        await api.put(`/specbook/${itemIdToSave}/sub-images`, {
-          sub_images: subImagesToSave
-        });
-        console.log('Sub 이미지 저장 성공');
-        toast.success('저장되었습니다');
-        // 아이템 목록 업데이트
-        invalidateLibrary();
-        await preloadLibrary();
-        loadItems(true);
-        loadAllLibraryItems(true);
-        if (view === 'project' && selectedProject) {
-          loadAllProjectItems();
-        }
-      } catch (error) {
-        console.error('Sub 이미지 저장 실패:', error);
-        toast.error('파일 저장에 실패했습니다');
+      if (hasChanged && itemIdToSave) {
+        await saveSubImagesImmediately(itemIdToSave, subImagesToSave);
       }
     }
 
