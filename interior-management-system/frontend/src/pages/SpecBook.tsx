@@ -956,11 +956,33 @@ const SpecBook = () => {
   };
 
   // 이미지 클릭 - Sub 이미지 모달 열기
-  const handleImageClick = (item: SpecBookItem) => {
-    setSelectedItemForImages(item);
+  const handleImageClick = async (item: SpecBookItem) => {
+    // 이미 다른 아이템이 열려있으면 먼저 저장하고 닫기
+    if (selectedItemForImages && selectedItemForImages.id !== item.id) {
+      // 기존 타이머 취소
+      if (subImagesSaveTimeoutRef.current) {
+        clearTimeout(subImagesSaveTimeoutRef.current);
+        subImagesSaveTimeoutRef.current = null;
+      }
+
+      // 기존 아이템에 변경사항이 있으면 저장
+      const hasChanged = JSON.stringify(subImages) !== JSON.stringify(initialSubImagesRef.current);
+      if (hasChanged) {
+        try {
+          await api.put(`/specbook/${selectedItemForImages.id}/sub-images`, {
+            sub_images: subImages
+          });
+        } catch (error) {
+          console.error('기존 아이템 Sub 이미지 저장 실패:', error);
+        }
+      }
+    }
+
+    // 새 아이템 설정
     const initialImages = item.sub_images || [];
-    setSubImages(initialImages);
-    initialSubImagesRef.current = initialImages;
+    setSelectedItemForImages(item);
+    setSubImages([...initialImages]); // 새 배열로 복사
+    initialSubImagesRef.current = [...initialImages]; // 새 배열로 복사
     setIsSubImageModalOpen(true);
   };
 
@@ -1060,6 +1082,10 @@ const SpecBook = () => {
     const hasChanged = JSON.stringify(subImages) !== JSON.stringify(initialSubImagesRef.current);
     if (!hasChanged) return;
 
+    // 저장 시점의 값을 캡처 (클로저 문제 방지)
+    const itemIdToSave = selectedItemForImages.id;
+    const subImagesToSave = [...subImages];
+
     // 이전 타이머 취소
     if (subImagesSaveTimeoutRef.current) {
       clearTimeout(subImagesSaveTimeoutRef.current);
@@ -1067,16 +1093,24 @@ const SpecBook = () => {
 
     // 1초 후 저장
     subImagesSaveTimeoutRef.current = setTimeout(async () => {
+      // 저장 전에 현재 선택된 아이템이 같은지 확인
+      if (selectedItemForImages?.id !== itemIdToSave) {
+        console.log('아이템이 변경되어 저장 취소:', itemIdToSave);
+        return;
+      }
+
       setIsSavingSubImages(true);
       try {
-        await api.put(`/specbook/${selectedItemForImages.id}/sub-images`, {
-          sub_images: subImages
+        await api.put(`/specbook/${itemIdToSave}/sub-images`, {
+          sub_images: subImagesToSave
         });
-        // 성공 시 초기값 업데이트 및 아이템 목록 업데이트
-        initialSubImagesRef.current = subImages;
-        loadItems();
+        // 성공 시 초기값 업데이트 (현재 아이템이 같은 경우만)
+        if (selectedItemForImages?.id === itemIdToSave) {
+          initialSubImagesRef.current = [...subImagesToSave];
+        }
+        loadItems(true);
         if (view === 'library') {
-          loadAllLibraryItems();
+          loadAllLibraryItems(true);
         } else if (view === 'project' && selectedProject) {
           loadAllProjectItems();
         }
@@ -1093,7 +1127,7 @@ const SpecBook = () => {
         clearTimeout(subImagesSaveTimeoutRef.current);
       }
     };
-  }, [subImages, selectedItemForImages, isSubImageModalOpen]);
+  }, [subImages, selectedItemForImages?.id, isSubImageModalOpen]);
 
   // Sub 이미지 삭제
   const handleDeleteSubImage = (index: number) => {
@@ -1204,20 +1238,26 @@ const SpecBook = () => {
     // 저장 중이면 타이머 취소
     if (subImagesSaveTimeoutRef.current) {
       clearTimeout(subImagesSaveTimeoutRef.current);
+      subImagesSaveTimeoutRef.current = null;
     }
 
+    // 저장할 아이템 ID와 이미지를 미리 캡처
+    const itemIdToSave = selectedItemForImages?.id;
+    const subImagesToSave = [...subImages];
+    const initialImages = [...(initialSubImagesRef.current || [])];
+
     // 변경사항이 있으면 즉시 저장
-    const hasChanged = JSON.stringify(subImages) !== JSON.stringify(initialSubImagesRef.current);
-    if (hasChanged && selectedItemForImages) {
+    const hasChanged = JSON.stringify(subImagesToSave) !== JSON.stringify(initialImages);
+    if (hasChanged && itemIdToSave) {
       setIsSavingSubImages(true);
       try {
-        await api.put(`/specbook/${selectedItemForImages.id}/sub-images`, {
-          sub_images: subImages
+        await api.put(`/specbook/${itemIdToSave}/sub-images`, {
+          sub_images: subImagesToSave
         });
         // 아이템 목록 업데이트
-        loadItems();
+        loadItems(true);
         if (view === 'library') {
-          loadAllLibraryItems();
+          loadAllLibraryItems(true);
         } else if (view === 'project' && selectedProject) {
           loadAllProjectItems();
         }
@@ -1227,9 +1267,11 @@ const SpecBook = () => {
       }
     }
 
+    // 상태 초기화
     setIsSubImageModalOpen(false);
     setSelectedItemForImages(null);
     setSubImages([]);
+    initialSubImagesRef.current = [];
     setIsSavingSubImages(false);
   };
 
