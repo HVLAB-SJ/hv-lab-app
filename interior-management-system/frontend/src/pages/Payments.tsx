@@ -2470,18 +2470,17 @@ const Payments = () => {
                     {allRecords.filter(r => r.status === 'completed').length}
                   </span>
                 </button>
-                {/* 내 요청만 보기 버튼 (송금완료 탭에서만) */}
+                {/* 내 요청만 보기 체크박스 (송금완료 탭에서만) */}
                 {statusFilter === 'completed' && (
-                  <button
-                    onClick={() => setShowMyRequestsOnly(!showMyRequestsOnly)}
-                    className={`ml-2 px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                      showMyRequestsOnly
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
+                  <label className="ml-3 flex items-center gap-1.5 cursor-pointer text-xs text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={showMyRequestsOnly}
+                      onChange={(e) => setShowMyRequestsOnly(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-gray-300 text-gray-600 focus:ring-gray-500"
+                    />
                     내 요청만
-                  </button>
+                  </label>
                 )}
               </nav>
             </div>
