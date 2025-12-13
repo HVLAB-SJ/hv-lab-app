@@ -343,8 +343,15 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
       let bankName = '';
       let accountNum = contractor.accountNumber.trim();
 
-      // 은행명이 포함되어 있는지 확인
+      // 은행명이 포함되어 있는지 확인 (공백 포함/미포함 둘 다 처리)
       for (const bank of bankNames) {
+        // 은행명 + 공백 패턴
+        if (accountNum.startsWith(bank + ' ')) {
+          bankName = bank;
+          accountNum = accountNum.substring(bank.length + 1).trim();
+          break;
+        }
+        // 은행명 바로 뒤에 숫자가 오는 패턴
         if (accountNum.startsWith(bank)) {
           bankName = bank;
           accountNum = accountNum.substring(bank.length).trim();
