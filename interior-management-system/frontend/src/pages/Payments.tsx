@@ -2475,10 +2475,10 @@ const Payments = () => {
           <div className="flex-1 overflow-auto p-4">
             {filteredRecords.length > 0 ? (
               <div className="space-y-4">
-                {/* 송금완료 탭에서 프로젝트별 그룹화 */}
-                {statusFilter === 'completed' ? (
+                {/* 송금완료 탭에서 프로젝트별 그룹화 (전체 프로젝트일 때만) */}
+                {statusFilter === 'completed' && !formData.project ? (
                   (() => {
-                    // 프로젝트별로 그룹화
+                    // 프로젝트별로 그룹화 (전체 프로젝트 선택 시)
                     const groupedByProject = filteredRecords.reduce((acc, record) => {
                       const project = record.project || '미분류';
                       if (!acc[project]) {
