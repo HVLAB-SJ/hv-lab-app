@@ -809,7 +809,7 @@ const SpecBook = () => {
       const gradeString = formData.grades.join(',');
 
       if (editingItem) {
-        // 수정 모드: 기존 로직 유지
+        // 수정 모드: 원래 아이템의 is_library와 project_id 유지
         const submitData = {
           name: formData.name,
           category: formData.category,
@@ -818,8 +818,8 @@ const SpecBook = () => {
           grade: gradeString,
           description: '',
           imageData: formData.imageData,
-          projectId: view === 'project' ? selectedProject : null,
-          isLibrary: view === 'library'
+          projectId: editingItem.project_id,  // 원래 값 유지
+          isLibrary: editingItem.is_library === 1  // 원래 값 유지
         };
         await api.put(`/specbook/base64/${editingItem.id}`, submitData);
         toast.success('스펙북 아이템이 수정되었습니다');
