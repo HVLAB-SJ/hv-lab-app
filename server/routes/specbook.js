@@ -696,8 +696,8 @@ router.put('/:id', authenticateToken, isManager, upload.single('image'), (req, r
   });
 });
 
-// 스펙북 아이템 삭제
-router.delete('/:id', authenticateToken, isManager, (req, res) => {
+// 스펙북 아이템 삭제 (모든 인증된 사용자 가능)
+router.delete('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
   // 아이템 삭제 (base64 데이터는 DB에서만 삭제하면 됨)
