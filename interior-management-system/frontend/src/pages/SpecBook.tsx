@@ -1266,24 +1266,33 @@ const SpecBook = () => {
       subImagesSaveTimeoutRef.current = null;
     }
 
+    // 파일 읽기가 진행 중일 수 있으므로 약간 대기
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     // 저장할 아이템 ID와 이미지를 미리 캡처
     const itemIdToSave = selectedItemForImages?.id;
     const subImagesToSave = [...subImages];
     const initialImages = [...(initialSubImagesRef.current || [])];
+
+    console.log('모달 닫기 - 저장 시도:', { itemIdToSave, subImagesCount: subImagesToSave.length, initialCount: initialImages.length });
 
     // 변경사항이 있으면 즉시 저장
     const hasChanged = JSON.stringify(subImagesToSave) !== JSON.stringify(initialImages);
     if (hasChanged && itemIdToSave) {
       setIsSavingSubImages(true);
       try {
+        console.log('Sub 이미지 저장 API 호출:', itemIdToSave);
         await api.put(`/specbook/${itemIdToSave}/sub-images`, {
           sub_images: subImagesToSave
         });
+        console.log('Sub 이미지 저장 성공');
+        toast.success('저장되었습니다');
         // 아이템 목록 업데이트
+        invalidateLibrary();
+        await preloadLibrary();
         loadItems(true);
-        if (view === 'library') {
-          loadAllLibraryItems(true);
-        } else if (view === 'project' && selectedProject) {
+        loadAllLibraryItems(true);
+        if (view === 'project' && selectedProject) {
           loadAllProjectItems();
         }
       } catch (error) {
