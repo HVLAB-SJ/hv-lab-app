@@ -472,7 +472,7 @@ router.get('/item/:id/image', authenticateToken, (req, res) => {
 
 // Base64 이미지로 스펙북 아이템 생성
 router.post('/base64', authenticateToken, isManager, (req, res) => {
-  const { name, category, brand, price, description, imageData, image_url, projectId, isLibrary, grade } = req.body;
+  const { name, category, brand, price, description, imageData, image_url, projectId, isLibrary, grade, sub_images } = req.body;
 
   if (!name || !category) {
     return res.status(400).json({ error: '이름과 카테고리는 필수입니다.' });
@@ -493,11 +493,12 @@ router.post('/base64', authenticateToken, isManager, (req, res) => {
   const is_library = isLibrary ? 1 : 0;
   const project_id = projectId || null;
   const item_grade = grade || '기본'; // 기본값 설정
+  const sub_images_json = sub_images && Array.isArray(sub_images) ? JSON.stringify(sub_images) : null;
 
   db.run(
-    `INSERT INTO specbook_items (name, category, brand, price, description, image_url, project_id, is_library, grade)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name, category, brand || '', price || '', description || '', imageUrl, project_id, is_library, item_grade],
+    `INSERT INTO specbook_items (name, category, brand, price, description, image_url, project_id, is_library, grade, sub_images)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [name, category, brand || '', price || '', description || '', imageUrl, project_id, is_library, item_grade, sub_images_json],
     function(err) {
       if (err) {
         console.error('스펙북 아이템 생성 실패:', err);
