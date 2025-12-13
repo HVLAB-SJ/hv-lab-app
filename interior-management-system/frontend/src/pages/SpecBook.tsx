@@ -964,29 +964,48 @@ const SpecBook = () => {
       }
     }
 
-    // 먼저 로컬 데이터로 팝업 즉시 열기
-    let initialImages = item.sub_images || [];
-
-    // 프로젝트 아이템이고 sub_images가 비어있으면, 라이브러리에서 같은 이름의 아이템 찾아서 sub_images 가져오기
-    if (!item.is_library && initialImages.length === 0) {
-      const libraryItem = allLibraryItems.find(
-        li => li.name === item.name && li.category === item.category
-      );
-      if (libraryItem && libraryItem.sub_images && libraryItem.sub_images.length > 0) {
-        initialImages = libraryItem.sub_images;
-        // 프로젝트 아이템에도 sub_images 저장 (백그라운드)
-        api.put(`/specbook/${item.id}/sub-images`, {
-          sub_images: initialImages
-        }).catch(error => {
-          console.error('프로젝트 아이템에 sub_images 동기화 실패:', error);
-        });
-      }
-    }
-
+    // 팝업 즉시 열기 (sub_images는 빈 배열로 시작)
     setSelectedItemForImages(item);
-    setSubImages([...initialImages]); // 새 배열로 복사
-    initialSubImagesRef.current = [...initialImages]; // 새 배열로 복사
+    setSubImages([]);
+    initialSubImagesRef.current = [];
     setIsSubImageModalOpen(true);
+
+    // 서버에서 sub_images 가져오기 (백그라운드)
+    api.get(`/specbook/item/${item.id}`).then(response => {
+      const freshItem = response.data;
+      let initialImages = freshItem.sub_images || [];
+
+      // 프로젝트 아이템이고 sub_images가 비어있으면, 라이브러리에서 같은 이름의 아이템 찾아서 sub_images 가져오기
+      if (!freshItem.is_library && initialImages.length === 0) {
+        const libraryItem = allLibraryItems.find(
+          li => li.name === freshItem.name && li.category === freshItem.category
+        );
+        if (libraryItem) {
+          // 라이브러리 아이템의 sub_images도 서버에서 가져오기
+          api.get(`/specbook/item/${libraryItem.id}`).then(libResponse => {
+            const libImages = libResponse.data.sub_images || [];
+            if (libImages.length > 0) {
+              setSubImages([...libImages]);
+              initialSubImagesRef.current = [...libImages];
+              // 프로젝트 아이템에도 sub_images 저장 (백그라운드)
+              api.put(`/specbook/${item.id}/sub-images`, {
+                sub_images: libImages
+              }).catch(error => {
+                console.error('프로젝트 아이템에 sub_images 동기화 실패:', error);
+              });
+            }
+          }).catch(error => {
+            console.error('라이브러리 아이템 sub_images 조회 실패:', error);
+          });
+          return;
+        }
+      }
+
+      setSubImages([...initialImages]);
+      initialSubImagesRef.current = [...initialImages];
+    }).catch(error => {
+      console.error('아이템 sub_images 조회 실패:', error);
+    });
   };
 
   // Sub 이미지 추가 (이미지 및 PDF 지원)

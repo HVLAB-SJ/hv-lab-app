@@ -189,12 +189,12 @@ router.put('/categories', authenticateToken, async (req, res) => {
   }
 });
 
-// 스펙북 라이브러리 조회 (전체 데이터 포함)
+// 스펙북 라이브러리 조회 (메타데이터 + 이미지 - 빠른 로딩 위해 sub_images 제외)
 router.get('/library/meta', authenticateToken, (req, res) => {
   const { category, grades } = req.query;
 
-  // 모든 데이터 포함해서 조회
-  let query = 'SELECT * FROM specbook_items WHERE is_library = 1';
+  // sub_images 제외하고 조회 (용량이 큰 sub_images는 개별 클릭 시에만 로드)
+  let query = 'SELECT id, name, category, brand, price, description, image_url, project_id, is_library, grade, display_order, created_at, updated_at FROM specbook_items WHERE is_library = 1';
   let params = [];
 
   if (category && category !== '전체') {
@@ -221,17 +221,9 @@ router.get('/library/meta', authenticateToken, (req, res) => {
       return res.status(500).json({ error: '스펙북 라이브러리 조회 실패' });
     }
 
-    // sub_images JSON 파싱
+    // sub_images는 빈 배열로 설정 (개별 조회 시 로드)
     const result = rows.map(row => {
-      if (row.sub_images) {
-        try {
-          row.sub_images = JSON.parse(row.sub_images);
-        } catch (e) {
-          row.sub_images = [];
-        }
-      } else {
-        row.sub_images = [];
-      }
+      row.sub_images = [];
       return row;
     });
 
@@ -351,12 +343,13 @@ router.get('/library', authenticateToken, (req, res) => {
   });
 });
 
-// 프로젝트별 스펙 조회 (전체 데이터 포함)
+// 프로젝트별 스펙 조회 (메타데이터 + 이미지 - 빠른 로딩 위해 sub_images 제외)
 router.get('/project/:projectId/meta', authenticateToken, (req, res) => {
   const { projectId } = req.params;
   const { category, grades } = req.query;
 
-  let query = 'SELECT * FROM specbook_items WHERE project_id = ?';
+  // sub_images 제외하고 조회
+  let query = 'SELECT id, name, category, brand, price, description, image_url, project_id, is_library, grade, display_order, created_at, updated_at FROM specbook_items WHERE project_id = ?';
   let params = [projectId];
 
   if (category && category !== '전체') {
@@ -383,17 +376,9 @@ router.get('/project/:projectId/meta', authenticateToken, (req, res) => {
       return res.status(500).json({ error: '프로젝트 스펙 조회 실패' });
     }
 
-    // sub_images JSON 파싱
+    // sub_images는 빈 배열로 설정 (개별 조회 시 로드)
     const result = rows.map(row => {
-      if (row.sub_images) {
-        try {
-          row.sub_images = JSON.parse(row.sub_images);
-        } catch (e) {
-          row.sub_images = [];
-        }
-      } else {
-        row.sub_images = [];
-      }
+      row.sub_images = [];
       return row;
     });
 
