@@ -162,6 +162,7 @@ const ImageCropper = ({
           showGrid={true}
           minZoom={0.5}
           maxZoom={3}
+          zoomSpeed={0.05}
           style={{
             containerStyle: {
               backgroundColor: '#000'
