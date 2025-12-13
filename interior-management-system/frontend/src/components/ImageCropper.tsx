@@ -46,38 +46,41 @@ async function getCroppedImg(
   canvas.width = pixelCrop.width;
   canvas.height = pixelCrop.height;
 
-  // PNG 투명 배경을 위해 흰색 배경 먼저 채우기
+  // 흰색 배경 먼저 채우기 (크롭 영역이 이미지 외부일 때 보임)
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 임시 캔버스에서 회전된 이미지 생성
+  // 임시 캔버스에서 회전된 이미지 생성 (큰 여백 추가)
   const tempCanvas = document.createElement('canvas');
   const tempCtx = tempCanvas.getContext('2d');
   if (!tempCtx) {
     throw new Error('No 2d context');
   }
 
-  tempCanvas.width = rotatedWidth;
-  tempCanvas.height = rotatedHeight;
+  // 임시 캔버스 크기를 크롭 영역보다 크게 설정 (이미지가 크롭 영역 외부에 있을 수 있으므로)
+  const padding = Math.max(pixelCrop.width, pixelCrop.height) * 2;
+  tempCanvas.width = rotatedWidth + padding * 2;
+  tempCanvas.height = rotatedHeight + padding * 2;
 
   // 임시 캔버스도 흰색 배경
   tempCtx.fillStyle = '#FFFFFF';
   tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
   // 중심으로 이동, 회전, 다시 중심으로 이동
-  tempCtx.translate(rotatedWidth / 2, rotatedHeight / 2);
+  tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
   tempCtx.rotate(radians);
   tempCtx.translate(-image.width / 2, -image.height / 2);
   tempCtx.drawImage(image, 0, 0);
 
   // 회전된 이미지에서 크롭 영역 추출
-  const offsetX = (rotatedWidth - image.width) / 2;
-  const offsetY = (rotatedHeight - image.height) / 2;
+  // pixelCrop.x와 pixelCrop.y는 음수일 수 있음 (이미지 외부 영역)
+  const centerOffsetX = (tempCanvas.width - rotatedWidth) / 2;
+  const centerOffsetY = (tempCanvas.height - rotatedHeight) / 2;
 
   ctx.drawImage(
     tempCanvas,
-    pixelCrop.x + offsetX,
-    pixelCrop.y + offsetY,
+    pixelCrop.x + centerOffsetX,
+    pixelCrop.y + centerOffsetY,
     pixelCrop.width,
     pixelCrop.height,
     0,
@@ -163,9 +166,13 @@ const ImageCropper = ({
           minZoom={0.5}
           maxZoom={3}
           zoomSpeed={0.05}
+          restrictPosition={false}
           style={{
             containerStyle: {
               backgroundColor: '#000'
+            },
+            mediaStyle: {
+              backgroundColor: '#FFFFFF'
             }
           }}
         />
