@@ -62,6 +62,7 @@ const Payments = () => {
   const processButtonRef = useRef<HTMLButtonElement>(null);
   const [statusFilter, setStatusFilter] = useState<'pending' | 'completed'>('pending');
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [showMyRequestsOnly, setShowMyRequestsOnly] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailPayment, setDetailPayment] = useState<PaymentRequest | null>(null);
   const [showCashReceiptModal, setShowCashReceiptModal] = useState(false);
@@ -1250,7 +1251,9 @@ const Payments = () => {
     const matchesStatus = record.status === statusFilter;
     // 대기중(pending)은 항상 전체 프로젝트 표시, 송금완료(completed)는 폼에서 선택한 프로젝트만 표시
     const matchesProject = statusFilter === 'pending' || !formData.project || record.project === formData.project;
-    return matchesSearch && matchesStatus && matchesProject;
+    // 내 요청만 보기 (송금완료 탭에서만 적용)
+    const matchesMyRequests = !showMyRequestsOnly || statusFilter !== 'completed' || record.requestedBy === user?.name;
+    return matchesSearch && matchesStatus && matchesProject && matchesMyRequests;
   });
 
   // 협력업체 선택 핸들러
@@ -2467,6 +2470,19 @@ const Payments = () => {
                     {allRecords.filter(r => r.status === 'completed').length}
                   </span>
                 </button>
+                {/* 내 요청만 보기 버튼 (송금완료 탭에서만) */}
+                {statusFilter === 'completed' && (
+                  <button
+                    onClick={() => setShowMyRequestsOnly(!showMyRequestsOnly)}
+                    className={`ml-2 px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                      showMyRequestsOnly
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    내 요청만
+                  </button>
+                )}
               </nav>
             </div>
           </div>
