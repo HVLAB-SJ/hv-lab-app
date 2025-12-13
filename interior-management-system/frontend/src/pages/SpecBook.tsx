@@ -429,7 +429,10 @@ const SpecBook = () => {
   const [allLibraryItems, setAllLibraryItems] = useState<SpecBookItem[]>([]); // 전체 라이브러리 아이템 (수량 계산용)
   const [allProjectItems, setAllProjectItems] = useState<SpecBookItem[]>([]); // 전체 프로젝트 아이템 (수량 계산용)
   const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    const saved = localStorage.getItem('specBook_lastCategory');
+    return saved || '전체';
+  });
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<number | null>(() => {
     const saved = localStorage.getItem('specBook_lastProject');
@@ -546,6 +549,11 @@ const SpecBook = () => {
   useEffect(() => {
     localStorage.setItem('specBook_lastView', view);
   }, [view]);
+
+  // 선택한 카테고리 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('specBook_lastCategory', selectedCategory);
+  }, [selectedCategory]);
 
   const loadCategories = async () => {
     // 캐시된 카테고리가 있으면 사용
