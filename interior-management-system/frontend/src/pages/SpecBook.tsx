@@ -1734,7 +1734,7 @@ const SpecBook = () => {
                       </div>
                     )}
                   </div>
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto">
+                  <div className="absolute top-2 right-2 flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity pointer-events-auto">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1902,10 +1902,10 @@ const SpecBook = () => {
                           setIsDraggingItem(false);
                           setDragStartPos(null);
                         }}
-                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing flex flex-col"
+                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing flex flex-col group relative"
                       >
                         <div
-                          className="w-full aspect-square bg-gray-100"
+                          className="w-full aspect-square bg-gray-100 relative"
                           onMouseDown={(e) => {
                             setDragStartPos({ x: e.clientX, y: e.clientY });
                           }}
@@ -1936,6 +1936,30 @@ const SpecBook = () => {
                               이미지 없음
                             </div>
                           )}
+                        </div>
+                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(item);
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            className="p-1.5 bg-white text-gray-700 hover:bg-gray-100 rounded-md shadow-md transition-colors cursor-pointer"
+                            title="수정"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(item.id);
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            className="p-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-md shadow-md transition-colors cursor-pointer"
+                            title="삭제"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                         <div className="p-2 pt-1.5 flex flex-col flex-1">
                           <div className="flex items-start justify-between mb-1">
