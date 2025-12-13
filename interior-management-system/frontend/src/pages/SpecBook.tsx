@@ -562,23 +562,13 @@ const SpecBook = () => {
       console.log('프로젝트 목록 로드됨:', mappedProjects.length, '개', mappedProjects);
       setProjects(mappedProjects);
 
-      // localStorage에서 저장된 프로젝트 확인
-      const savedProjectId = localStorage.getItem('specBook_lastProject');
-      if (savedProjectId && mappedProjects.length > 0) {
-        const savedId = Number(savedProjectId);
-        const projectExists = mappedProjects.find(p => p.id === savedId);
-        if (projectExists) {
-          setSelectedProject(savedId);
-          setView('project');
-          return;
-        }
-      }
-
       // 안팀 사용자인 경우 첫 번째 프로젝트 자동 선택
       if (isAnTeamUser && mappedProjects.length > 0 && !selectedProject) {
         setSelectedProject(mappedProjects[0].id);
         setView('project');
       }
+      // 주의: 여기서 view를 변경하지 않음 - view는 초기화 시 localStorage에서 이미 설정됨
+      // selectedProject도 초기화 시 localStorage에서 이미 설정됨
     } catch (error) {
       console.error('프로젝트 로드 실패:', error);
     }
