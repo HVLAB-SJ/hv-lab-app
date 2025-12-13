@@ -591,7 +591,7 @@ const SpecBook = () => {
         setAllLibraryItems(response.data);
         // 캐시 갱신
         if (forceRefresh) {
-          invalidateLibraryCache();
+          invalidateLibrary();
         }
       }
     } catch (error) {
@@ -877,13 +877,17 @@ const SpecBook = () => {
       setFormData({ name: '', category: selectedCategory !== '전체' ? selectedCategory : '', brand: '', price: '', grades: ['기본'], imageData: null });
 
       // 캐시 무효화 후 강제 새로고침
-      invalidateLibraryCache();
+      invalidateLibrary();
+
+      // 라이브러리 먼저 다시 로드 (await로 완료 대기)
+      await preloadLibrary();
+
+      // 그 다음 아이템 목록 로드
       loadItems(true);
-      // 전체 아이템 목록 업데이트
-      if (view === 'library' || (view === 'project' && !editingItem)) {
-        loadAllLibraryItems(true);
-      }
+      loadAllLibraryItems(true);
+
       if (view === 'project' && selectedProject) {
+        invalidateProject(selectedProject);
         loadAllProjectItems();
       }
     } catch (error: any) {
