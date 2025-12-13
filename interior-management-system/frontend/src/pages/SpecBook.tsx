@@ -1692,7 +1692,7 @@ const SpecBook = () => {
                 </button>
               )}
               <select
-                value={selectedProject || ''}
+                value={view === 'library' ? '' : (selectedProject || '')}
                 onChange={(e) => {
                   if (e.target.value) {
                     setView('project');
@@ -1838,7 +1838,7 @@ const SpecBook = () => {
               {/* 프로젝트 선택 드롭다운 - 세로모드에서 드롭 영역 위에 표시 */}
               <div className="specbook-drop-project-select hidden mb-2">
                 <select
-                  value={selectedProject || ''}
+                  value={view === 'library' ? '' : (selectedProject || '')}
                   onChange={(e) => {
                     if (e.target.value) {
                       setView('project');
@@ -1900,7 +1900,7 @@ const SpecBook = () => {
                   </button>
                 )}
                 <select
-                  value={selectedProject || ''}
+                  value={view === 'library' ? '' : (selectedProject || '')}
                   onChange={(e) => {
                     if (e.target.value) {
                       setView('project');
