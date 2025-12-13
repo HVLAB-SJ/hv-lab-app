@@ -152,6 +152,8 @@ const ImageCropper = ({
           onCropComplete={onCropAreaComplete}
           cropShape="rect"
           showGrid={true}
+          minZoom={0.3}
+          maxZoom={3}
           style={{
             containerStyle: {
               backgroundColor: '#000'
@@ -177,15 +179,16 @@ const ImageCropper = ({
             <span className="text-white text-sm">-</span>
             <input
               type="range"
-              min={1}
+              min={0.3}
               max={3}
-              step={0.1}
+              step={0.05}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
               className="w-full h-2 bg-white/30 rounded-lg appearance-none cursor-pointer accent-white"
             />
             <span className="text-white text-sm">+</span>
           </div>
+          <span className="text-white text-xs min-w-[40px] text-center">{Math.round(zoom * 100)}%</span>
         </div>
       </div>
     </div>
