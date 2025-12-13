@@ -1076,7 +1076,7 @@ const SpecBook = () => {
   }, [isSubImageModalOpen]);
 
   // Sub 이미지 즉시 저장 함수
-  const saveSubImagesImmediately = useCallback(async (itemId: number, images: string[]) => {
+  const saveSubImagesImmediately = useCallback(async (itemId: number, images: string[], showToast: boolean = false) => {
     setIsSavingSubImages(true);
     try {
       await api.put(`/specbook/${itemId}/sub-images`, {
@@ -1084,7 +1084,9 @@ const SpecBook = () => {
       });
       // 성공 시 초기값 업데이트
       initialSubImagesRef.current = [...images];
-      toast.success('저장되었습니다');
+      if (showToast) {
+        toast.success('저장되었습니다');
+      }
       invalidateLibrary();
       loadItems(true);
       loadAllLibraryItems(true);
@@ -1243,14 +1245,14 @@ const SpecBook = () => {
       clearTimeout(subImagesSaveTimeoutRef.current);
       subImagesSaveTimeoutRef.current = null;
 
-      // 변경사항이 있으면 즉시 저장
+      // 변경사항이 있으면 즉시 저장 (모달 닫을 때만 토스트 표시)
       const itemIdToSave = selectedItemForImages?.id;
       const subImagesToSave = [...subImages];
       const initialImages = [...(initialSubImagesRef.current || [])];
       const hasChanged = JSON.stringify(subImagesToSave) !== JSON.stringify(initialImages);
 
       if (hasChanged && itemIdToSave) {
-        await saveSubImagesImmediately(itemIdToSave, subImagesToSave);
+        await saveSubImagesImmediately(itemIdToSave, subImagesToSave, true);
       }
     }
 
