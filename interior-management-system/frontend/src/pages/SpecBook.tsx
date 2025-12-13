@@ -983,7 +983,28 @@ const SpecBook = () => {
     }
 
     // 새 아이템 설정
-    const initialImages = item.sub_images || [];
+    let initialImages = item.sub_images || [];
+
+    // 프로젝트 아이템이고 sub_images가 비어있으면, 라이브러리에서 같은 이름의 아이템 찾아서 sub_images 가져오기
+    if (!item.is_library && initialImages.length === 0) {
+      const libraryItem = allLibraryItems.find(
+        li => li.name === item.name && li.category === item.category
+      );
+      if (libraryItem && libraryItem.sub_images && libraryItem.sub_images.length > 0) {
+        initialImages = libraryItem.sub_images;
+        // 프로젝트 아이템에도 sub_images 저장 (다음에는 직접 불러오도록)
+        try {
+          await api.put(`/specbook/${item.id}/sub-images`, {
+            sub_images: initialImages
+          });
+          // 로컬 아이템 업데이트
+          item.sub_images = initialImages;
+        } catch (error) {
+          console.error('프로젝트 아이템에 sub_images 동기화 실패:', error);
+        }
+      }
+    }
+
     setSelectedItemForImages(item);
     setSubImages([...initialImages]); // 새 배열로 복사
     initialSubImagesRef.current = [...initialImages]; // 새 배열로 복사
