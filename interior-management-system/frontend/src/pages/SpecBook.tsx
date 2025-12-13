@@ -575,9 +575,9 @@ const SpecBook = () => {
     }
   };
 
-  const loadAllLibraryItems = async () => {
-    // 캐시된 라이브러리 데이터가 있으면 사용
-    if (libraryLoaded && cachedLibraryItems.length > 0) {
+  const loadAllLibraryItems = async (forceRefresh = false) => {
+    // 캐시된 라이브러리 데이터가 있으면 사용 (강제 새로고침이 아닌 경우)
+    if (!forceRefresh && libraryLoaded && cachedLibraryItems.length > 0) {
       if (isMountedRef.current) {
         setAllLibraryItems(cachedLibraryItems);
       }
@@ -589,6 +589,10 @@ const SpecBook = () => {
       const response = await api.get('/specbook/library/meta');
       if (isMountedRef.current) {
         setAllLibraryItems(response.data);
+        // 캐시 갱신
+        if (forceRefresh) {
+          invalidateLibraryCache();
+        }
       }
     } catch (error) {
       console.error('전체 라이브러리 아이템 로드 실패:', error);
@@ -606,11 +610,11 @@ const SpecBook = () => {
     }
   };
 
-  const loadItems = async () => {
+  const loadItems = async (forceRefresh = false) => {
     try {
       if (view === 'library') {
-        // 라이브러리 뷰: 캐시된 데이터 우선 사용
-        if (libraryLoaded && cachedLibraryItems.length > 0) {
+        // 라이브러리 뷰: 캐시된 데이터 우선 사용 (강제 새로고침이 아닌 경우)
+        if (!forceRefresh && libraryLoaded && cachedLibraryItems.length > 0) {
           // 캐시에서 필터링하여 즉시 표시 (로딩 없음!)
           const filteredItems = getLibraryItems(
             selectedCategory !== '전체' ? selectedCategory : undefined,
@@ -871,10 +875,13 @@ const SpecBook = () => {
 
       setEditingItem(null);
       setFormData({ name: '', category: selectedCategory !== '전체' ? selectedCategory : '', brand: '', price: '', grades: ['기본'], imageData: null });
-      loadItems();
+
+      // 캐시 무효화 후 강제 새로고침
+      invalidateLibraryCache();
+      loadItems(true);
       // 전체 아이템 목록 업데이트
       if (view === 'library' || (view === 'project' && !editingItem)) {
-        loadAllLibraryItems();
+        loadAllLibraryItems(true);
       }
       if (view === 'project' && selectedProject) {
         loadAllProjectItems();
