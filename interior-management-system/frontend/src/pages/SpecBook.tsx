@@ -153,12 +153,11 @@ const SortableSubImage = ({
       style={style}
       className="relative group"
       {...attributes}
-      {...listeners}
     >
-      {/* 드래그 가능한 이미지/파일 영역 */}
+      {/* 클릭 가능한 이미지/파일 영역 */}
       <div
         className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors ${
-          isDragging ? 'border-blue-500 cursor-grabbing' : 'border-gray-200 hover:border-gray-400 cursor-grab'
+          isDragging ? 'border-blue-500' : 'border-gray-200 hover:border-blue-400 cursor-pointer'
         }`}
         onClick={() => !isDragging && onFileClick(actualData, fileName, isImage, isPDF)}
       >
@@ -183,6 +182,17 @@ const SortableSubImage = ({
             )}
           </div>
         )}
+      </div>
+
+      {/* 드래그 핸들 - 좌측 상단 */}
+      <div
+        {...listeners}
+        className="absolute top-2 left-2 p-1.5 bg-gray-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-800 z-10 cursor-grab active:cursor-grabbing"
+        title="드래그하여 순서 변경"
+      >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+        </svg>
       </div>
 
       {/* 삭제 버튼 - 우측 상단 */}
