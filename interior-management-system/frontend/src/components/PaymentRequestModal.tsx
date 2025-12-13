@@ -854,55 +854,48 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   은행명 *
                 </label>
-                <select
+                <input
                   {...register('bankName', { required: '은행을 선택하세요' })}
+                  type="text"
+                  list="bankList"
                   className="input w-full"
                   id="bankName"
-                >
-                  <option value="">선택하세요</option>
-                  <optgroup label="시중은행">
-                    <option value="KB국민은행">KB국민은행</option>
-                    <option value="신한은행">신한은행</option>
-                    <option value="우리은행">우리은행</option>
-                    <option value="하나은행">하나은행</option>
-                    <option value="NH농협은행">NH농협은행</option>
-                    <option value="IBK기업은행">IBK기업은행</option>
-                    <option value="KEB하나은행">KEB하나은행</option>
-                    <option value="SC제일은행">SC제일은행</option>
-                    <option value="한국씨티은행">한국씨티은행</option>
-                  </optgroup>
-                  <optgroup label="지방은행">
-                    <option value="부산은행">부산은행</option>
-                    <option value="대구은행">대구은행</option>
-                    <option value="경남은행">경남은행</option>
-                    <option value="광주은행">광주은행</option>
-                    <option value="전북은행">전북은행</option>
-                    <option value="제주은행">제주은행</option>
-                  </optgroup>
-                  <optgroup label="특수은행">
-                    <option value="산업은행">산업은행</option>
-                    <option value="수협은행">수협은행</option>
-                    <option value="우체국">우체국</option>
-                    <option value="새마을금고">새마을금고</option>
-                    <option value="신협">신협</option>
-                    <option value="저축은행">저축은행</option>
-                  </optgroup>
-                  <optgroup label="인터넷은행">
-                    <option value="카카오뱅크">카카오뱅크</option>
-                    <option value="케이뱅크">케이뱅크</option>
-                    <option value="토스뱅크">토스뱅크</option>
-                  </optgroup>
-                  <optgroup label="증권사">
-                    <option value="NH투자증권">NH투자증권</option>
-                    <option value="미래에셋증권">미래에셋증권</option>
-                    <option value="한국투자증권">한국투자증권</option>
-                    <option value="키움증권">키움증권</option>
-                    <option value="삼성증권">삼성증권</option>
-                    <option value="KB증권">KB증권</option>
-                    <option value="신한투자증권">신한투자증권</option>
-                    <option value="하이투자증권">하이투자증권</option>
-                  </optgroup>
-                </select>
+                  placeholder="은행 선택 또는 직접 입력"
+                />
+                <datalist id="bankList">
+                  <option value="KB국민은행" />
+                  <option value="신한은행" />
+                  <option value="우리은행" />
+                  <option value="하나은행" />
+                  <option value="NH농협은행" />
+                  <option value="IBK기업은행" />
+                  <option value="KEB하나은행" />
+                  <option value="SC제일은행" />
+                  <option value="한국씨티은행" />
+                  <option value="부산은행" />
+                  <option value="대구은행" />
+                  <option value="경남은행" />
+                  <option value="광주은행" />
+                  <option value="전북은행" />
+                  <option value="제주은행" />
+                  <option value="산업은행" />
+                  <option value="수협은행" />
+                  <option value="우체국" />
+                  <option value="새마을금고" />
+                  <option value="신협" />
+                  <option value="저축은행" />
+                  <option value="카카오뱅크" />
+                  <option value="케이뱅크" />
+                  <option value="토스뱅크" />
+                  <option value="NH투자증권" />
+                  <option value="미래에셋증권" />
+                  <option value="한국투자증권" />
+                  <option value="키움증권" />
+                  <option value="삼성증권" />
+                  <option value="KB증권" />
+                  <option value="신한투자증권" />
+                  <option value="하이투자증권" />
+                </datalist>
               </div>
 
               <div>
