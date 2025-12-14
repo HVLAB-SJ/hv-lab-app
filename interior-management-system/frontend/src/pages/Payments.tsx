@@ -1201,25 +1201,11 @@ const Payments = () => {
           updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
         }
 
-        // 이전 송금완료 내역에서 같은 계좌번호로 공정 찾기 (공정이 아직 설정되지 않은 경우)
-        if (!updatedFormData.process && analysis.bankInfo.accountNumber) {
-          const cleanAccountNumber = analysis.bankInfo.accountNumber.replace(/[-\s]/g, '');
-          // 완료된 결제 내역에서 같은 계좌번호 찾기
-          const matchingPayment = payments.find((payment: any) => {
-            const paymentAccountNumber = payment.account_number?.replace(/[-\s]/g, '');
-            return paymentAccountNumber === cleanAccountNumber && payment.status === 'completed';
-          });
-
-          if (matchingPayment && matchingPayment.vendor_name) {
-            updatedFormData.process = matchingPayment.vendor_name;
-            console.log('이전 결제 내역에서 공정 찾음:', matchingPayment.vendor_name);
-          }
-        }
       } else if (analysis.bankInfo.accountHolder) {
         updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
       }
 
-      // 공정(업체) 설정
+      // 공정(업체) 설정 - 텍스트에서 직접 추출된 공정
       if (analysis.vendor) {
         updatedFormData.process = analysis.vendor;
       }
@@ -1233,6 +1219,30 @@ const Payments = () => {
             updatedFormData.process = process;
             break; // 첫 번째 매칭되는 공정만 사용
           }
+        }
+      }
+
+      // 이전 송금완료 내역에서 같은 계좌번호로 공정 찾기 (공정이 아직 설정되지 않은 경우)
+      if (!updatedFormData.process && analysis.bankInfo.accountNumber) {
+        const cleanAccountNumber = analysis.bankInfo.accountNumber.replace(/[-\s]/g, '');
+        console.log('이전 결제 내역 검색 - 계좌번호:', cleanAccountNumber);
+        console.log('전체 payments 수:', payments.length);
+
+        // 완료된 결제 내역에서 같은 계좌번호 찾기
+        const matchingPayment = payments.find((payment: any) => {
+          const paymentAccountNumber = payment.account_number?.replace(/[-\s]/g, '');
+          const isMatch = paymentAccountNumber === cleanAccountNumber && payment.status === 'completed';
+          if (paymentAccountNumber === cleanAccountNumber) {
+            console.log('계좌번호 일치:', payment.account_number, '상태:', payment.status, '공정:', payment.vendor_name);
+          }
+          return isMatch;
+        });
+
+        if (matchingPayment && matchingPayment.vendor_name) {
+          updatedFormData.process = matchingPayment.vendor_name;
+          console.log('이전 결제 내역에서 공정 찾음:', matchingPayment.vendor_name);
+        } else {
+          console.log('이전 결제 내역에서 공정 찾지 못함');
         }
       }
 
