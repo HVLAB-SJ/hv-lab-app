@@ -943,6 +943,34 @@ const Payments = () => {
       result.vendor = '가설';
     }
 
+    // 항목명이 은행명이거나 의미없는 텍스트면 제거
+    if (result.itemName) {
+      const invalidItemNames = [
+        '은행', '뱅크', '금고', '신협', '증권', '투자', '저축', '우체국',
+        '국민', '신한', '우리', '하나', '농협', '기업', '제일', '씨티',
+        '카카오', '케이', '토스', '부산', '대구', '경남', '광주', '전북',
+        '제주', '산업', '수협', '새마을', '하나은행', '국민은행', '신한은행',
+        '우리은행', '농협은행', '기업은행', 'KB국민은행', 'NH농협은행',
+        'IBK기업은행', 'SC제일은행', '카카오뱅크', '토스뱅크', '케이뱅크'
+      ];
+
+      // 항목명이 은행 관련 단어로만 이루어져 있는지 확인
+      const itemNameLower = result.itemName.toLowerCase();
+      const isOnlyBankRelated = invalidItemNames.some(bank =>
+        itemNameLower === bank.toLowerCase() ||
+        itemNameLower.startsWith(bank.toLowerCase() + ' ') ||
+        itemNameLower.replace(/\s+/g, '').match(/^[\d\-\s]+$/) // 숫자와 하이픈만 있는 경우 (계좌번호)
+      );
+
+      // 항목명이 숫자로만 시작하거나 계좌번호 형식이면 제거
+      const startsWithNumber = /^[\d\-\s]/.test(result.itemName);
+      const isAccountNumberLike = /^\d{2,}[\s\-]?\d+/.test(result.itemName.replace(/[가-힣]/g, '').trim());
+
+      if (isOnlyBankRelated || startsWithNumber || isAccountNumberLike) {
+        result.itemName = undefined;
+      }
+    }
+
     return result;
   };
 
