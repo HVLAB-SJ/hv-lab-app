@@ -730,13 +730,16 @@ const Payments = () => {
           const afterAccountText = line.substring(accountNumberIndex + accountNumberText.length);
           // 공백으로 분리하여 각 단어 검사
           const afterWords = afterAccountText.trim().split(/\s+/);
-          for (const word of afterWords) {
+          for (const rawWord of afterWords) {
             // 대괄호 안의 텍스트는 건너뛰기
-            if (word.startsWith('[') || word.endsWith(']')) continue;
+            if (rawWord.startsWith('[') || rawWord.endsWith(']')) continue;
+
+            // 조사 제거 (예: "김명기로" -> "김명기")
+            const word = removeNameSuffix(rawWord);
 
             // 한국 사람 이름인지 확인
             if (isKoreanName(word)) {
-              result.bankInfo.accountHolder = word; // 계좌번호 뒤 이름을 최우선 예금주로 설정
+              result.bankInfo.accountHolder = word; // 계좌번호 뒤 이름을 최우선 예금주로 설정 (조사 제거됨)
               break;
             }
           }
@@ -746,9 +749,12 @@ const Payments = () => {
             const nextLine = lines[index + 1];
             // 다음 줄의 모든 단어를 검사
             const words = nextLine.split(/\s+/);
-            for (const word of words) {
+            for (const rawWord of words) {
               // 대괄호 안의 텍스트는 건너뛰기
-              if (word.startsWith('[') || word.endsWith(']')) continue;
+              if (rawWord.startsWith('[') || rawWord.endsWith(']')) continue;
+
+              // 조사 제거
+              const word = removeNameSuffix(rawWord);
 
               // 한국 사람 이름인지 확인
               if (isKoreanName(word)) {
@@ -759,9 +765,9 @@ const Payments = () => {
 
             // 그래도 못 찾았으면 기존 방식 시도
             if (!result.bankInfo.accountHolder) {
-              const nextLineNameMatch = nextLine.match(/^([가-힣]{2,5})/);
+              const nextLineNameMatch = nextLine.match(/^([가-힣]{2,6})/);
               if (nextLineNameMatch) {
-                const potentialName = nextLineNameMatch[1].trim();
+                const potentialName = removeNameSuffix(nextLineNameMatch[1].trim());
                 if (isKoreanName(potentialName)) {
                   result.bankInfo.accountHolder = potentialName;
                 }
