@@ -1238,7 +1238,14 @@ const Payments = () => {
 
       // 일치하는 협력업체가 있으면 정보 자동 채우기
       if (matchingContractor) {
-        updatedFormData.accountHolder = matchingContractor.name || analysis.bankInfo.accountHolder;
+        // 계좌번호로 매칭된 경우, 저장된 예금주를 우선 사용 (부분 이름 입력 시에도 전체 이름으로 업데이트)
+        // 예: "승일" 입력 + 계좌번호 일치 → "김승일"로 예금주 설정
+        if (matchedByAccountNumber && matchingContractor.name) {
+          updatedFormData.accountHolder = matchingContractor.name;
+          console.log('협력업체 계좌번호 매칭으로 예금주 업데이트:', accountHolder, '→', matchingContractor.name);
+        } else {
+          updatedFormData.accountHolder = matchingContractor.name || analysis.bankInfo.accountHolder;
+        }
         updatedFormData.bankName = matchingContractor.bankName || analysis.bankInfo.bankName;
 
         // 계좌번호로 매칭되었거나, 예금주로 찾았지만 계좌가 부분 일치할 때만 협력업체 계좌 사용
@@ -1326,7 +1333,14 @@ const Payments = () => {
             status: matchingPayment.status
           });
 
-          updatedFormData.accountHolder = matchingPayment.account_holder || analysis.bankInfo.accountHolder;
+          // 계좌번호로 매칭된 경우, 저장된 예금주를 우선 사용 (부분 이름 입력 시에도 전체 이름으로 업데이트)
+          // 예: "승일" 입력 + 계좌번호 일치 → "김승일"로 예금주 설정
+          if (paymentMatchedByAccountNumber && matchingPayment.account_holder) {
+            updatedFormData.accountHolder = matchingPayment.account_holder;
+            console.log('계좌번호 매칭으로 예금주 업데이트:', accountHolder, '→', matchingPayment.account_holder);
+          } else {
+            updatedFormData.accountHolder = matchingPayment.account_holder || analysis.bankInfo.accountHolder;
+          }
           updatedFormData.bankName = matchingPayment.bank_name || analysis.bankInfo.bankName;
 
           // 계좌번호로 매칭되었거나, 예금주로 찾았지만 계좌가 부분 일치할 때만 송금내역 계좌 사용
