@@ -1299,8 +1299,9 @@ const Schedule = () => {
     const grouped = new Map<string, ScheduleEvent[]>();
 
     events.forEach(event => {
-      // AS 방문과 수금 일정은 그룹화하지 않음
-      if (event.isASVisit || event.isExpectedPayment) {
+      // AS 방문, 수금 일정, 시간이 설정된 일정은 그룹화하지 않음
+      const hasTime = event.time && event.time !== '-' && event.time.trim() !== '';
+      if (event.isASVisit || event.isExpectedPayment || hasTime) {
         const key = `single_${event.id}`;
         grouped.set(key, [event]);
       } else {
@@ -1325,16 +1326,10 @@ const Schedule = () => {
         // 단일 이벤트는 그대로 추가
         finalEvents.push(groupEvents[0]);
       } else {
-        // 여러 이벤트를 하나로 병합
+        // 여러 이벤트를 하나로 병합 (시간이 설정된 일정은 이미 제외됨)
         const firstEvent = groupEvents[0];
         const titles = groupEvents.map(e => e.originalTitle || e.title);
         const uniqueTitles = [...new Set(titles)]; // 중복 제거
-
-        // 시간 정보가 있는 이벤트들의 시간 수집
-        const times = groupEvents
-          .filter(e => e.time && e.time !== '-')
-          .map(e => e.time);
-        const timeText = times.length > 0 ? ` - ${times.join(', ')}` : '';
 
         // 모든 공정명을 표시 (프로젝트명 제거)
         const processNames = groupEvents.map(event => {
@@ -1352,7 +1347,7 @@ const Schedule = () => {
         const mergedEvent: ScheduleEvent = {
           ...firstEvent,
           id: groupEvents[0].id, // 첫 번째 이벤트의 ID 사용
-          title: `${uniqueProcessNames.join(', ')}${timeText}`,
+          title: uniqueProcessNames.join(', '), // 시간이 없는 일정들만 병합되므로 시간 텍스트 불필요
           originalTitle: uniqueTitles.join(', '),
           description: groupEvents.map(e => e.description || e.originalTitle || e.title).join('\n'),
           assignedTo: [...new Set(groupEvents.flatMap(e => e.assignedTo))], // 중복 제거된 담당자
