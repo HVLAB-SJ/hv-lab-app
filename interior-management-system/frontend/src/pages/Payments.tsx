@@ -948,9 +948,12 @@ const Payments = () => {
             // 계좌번호가 없는 줄이면 기존 예금주가 없을 때만 설정
             else if (!result.bankInfo.accountHolder) {
               // 계좌번호나 은행명 근처에 있는 이름을 예금주로 추정
-              const hasNearbyBankInfo = (index > 0 && (lines[index - 1].match(/\d{10,}/) || lines[index - 1].match(/은행|뱅크/))) ||
-                (index < lines.length - 1 && (lines[index + 1].match(/\d{10,}/) || lines[index + 1].match(/은행|뱅크/))) ||
-                line.match(/은행|뱅크/);
+              const bankPattern = /은행|뱅크|우체국|금고|신협/;
+              const accountPattern = /\d{6,}/; // 6자리 이상 숫자 (계좌번호)
+              const hasNearbyBankInfo =
+                (index > 0 && (accountPattern.test(lines[index - 1]) || bankPattern.test(lines[index - 1]))) ||
+                (index < lines.length - 1 && (accountPattern.test(lines[index + 1]) || bankPattern.test(lines[index + 1]))) ||
+                bankPattern.test(line);
 
               if (hasNearbyBankInfo) {
                 result.bankInfo.accountHolder = name;
