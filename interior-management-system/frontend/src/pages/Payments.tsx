@@ -1034,7 +1034,12 @@ const Payments = () => {
       const startsWithNumber = /^[\d\-\s]/.test(result.itemName);
       const isAccountNumberLike = /^\d{2,}[\s\-]?\d+/.test(result.itemName.replace(/[가-힣]/g, '').trim());
 
-      if (isOnlyBankRelated || startsWithNumber || isAccountNumberLike) {
+      // 항목명이 예금주와 같거나 예금주를 포함하면 제거
+      const isAccountHolder = result.bankInfo.accountHolder &&
+        (result.itemName === result.bankInfo.accountHolder ||
+         result.itemName.includes(result.bankInfo.accountHolder));
+
+      if (isOnlyBankRelated || startsWithNumber || isAccountNumberLike || isAccountHolder) {
         result.itemName = undefined;
       }
     }
