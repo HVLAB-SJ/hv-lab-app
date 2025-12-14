@@ -1060,6 +1060,14 @@ const Payments = () => {
         'IBK기업은행', 'SC제일은행', '카카오뱅크', '토스뱅크', '케이뱅크'
       ];
 
+      // 항목명으로 의미없는 일반 용어들
+      const invalidCommonWords = [
+        '금액', '예금주', '계좌', '입금', '출금', '이체', '송금', '잔액',
+        '합계', '총액', '부가세', '공급가', '세금', '수수료', '원금',
+        '상품명', '품명', '단가', '수량', '비고', '메모', '날짜', '일자',
+        '계좌번호', '입금은행', '입금금액'
+      ];
+
       // 항목명이 은행 관련 단어로만 이루어져 있는지 확인
       const itemNameLower = result.itemName.toLowerCase();
       const isOnlyBankRelated = invalidItemNames.some(bank =>
@@ -1067,6 +1075,12 @@ const Payments = () => {
         itemNameLower.startsWith(bank.toLowerCase() + ' ') ||
         itemNameLower.replace(/\s+/g, '').match(/^[\d\-\s]+$/) // 숫자와 하이픈만 있는 경우 (계좌번호)
       );
+
+      // 항목명이 일반 용어인지 확인
+      const isCommonWord = invalidCommonWords.some(word => {
+        const cleanItemName = result.itemName!.replace(/[\d,\.원]/g, '').trim();
+        return cleanItemName === word || cleanItemName.startsWith(word);
+      });
 
       // 항목명이 숫자로만 시작하거나 계좌번호 형식이면 제거
       const startsWithNumber = /^[\d\-\s]/.test(result.itemName);
@@ -1077,7 +1091,11 @@ const Payments = () => {
         (result.itemName === result.bankInfo.accountHolder ||
          result.itemName.includes(result.bankInfo.accountHolder));
 
-      if (isOnlyBankRelated || startsWithNumber || isAccountNumberLike || isAccountHolder) {
+      // 항목명이 금액 정보와 중복되면 제거 (예: "금액2,018,500원")
+      const hasAmountInfo = result.amounts.total &&
+        result.itemName.includes(result.amounts.total.toLocaleString());
+
+      if (isOnlyBankRelated || isCommonWord || startsWithNumber || isAccountNumberLike || isAccountHolder || hasAmountInfo) {
         result.itemName = undefined;
       }
     }
