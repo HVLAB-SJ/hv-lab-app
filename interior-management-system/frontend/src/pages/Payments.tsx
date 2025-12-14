@@ -1172,37 +1172,148 @@ const Payments = () => {
       if (analysis.bankInfo.bankName) {
         updatedFormData.bankName = analysis.bankInfo.bankName;
       }
+      // 예금주 설정
+      if (analysis.bankInfo.accountHolder) {
+        updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
+      }
+
+      // 계좌번호 설정
       if (analysis.bankInfo.accountNumber) {
         updatedFormData.accountNumber = analysis.bankInfo.accountNumber;
+      }
 
-        // 추천 협력업체에서 같은 계좌번호 찾기
-        const matchingContractor = contractors.find((contractor: Contractor) => {
-          // 계좌번호 비교 (하이픈과 공백 제거하고 비교)
-          const cleanAccountNumber = analysis.bankInfo.accountNumber?.replace(/[-\s]/g, '');
-          const contractorAccountNumber = contractor.accountNumber?.replace(/[-\s]/g, '');
-          return contractorAccountNumber === cleanAccountNumber;
+      // 계좌번호 부분 일치 확인 함수 (동명이인 방지)
+      // 입력된 계좌번호가 저장된 계좌번호에 포함되거나, 저장된 계좌번호가 입력된 계좌에 포함될 때 true
+      const isPartialAccountMatch = (inputAccount: string, storedAccount: string): boolean => {
+        if (!inputAccount || !storedAccount) return false;
+        // 최소 6자리 이상 일치해야 부분 일치로 인정
+        const minMatchLength = 6;
+        if (inputAccount.length < minMatchLength || storedAccount.length < minMatchLength) {
+          return inputAccount === storedAccount;
+        }
+        return storedAccount.includes(inputAccount) || inputAccount.includes(storedAccount);
+      };
+
+      // 1. 협력업체에서 예금주 또는 계좌번호로 매칭 찾기
+      const cleanAccountNumber = analysis.bankInfo.accountNumber?.replace(/[-\s]/g, '') || '';
+      const accountHolder = analysis.bankInfo.accountHolder || '';
+      let matchedByAccountNumber = false; // 계좌번호로 매칭되었는지 여부
+
+      // 계좌번호로 협력업체 찾기 (완전 일치 또는 부분 일치)
+      let matchingContractor = contractors.find((contractor: Contractor) => {
+        const contractorAccountNumber = contractor.accountNumber?.replace(/[-\s]/g, '');
+        return contractorAccountNumber && contractorAccountNumber === cleanAccountNumber;
+      });
+
+      // 완전 일치 못 찾으면 부분 일치로 찾기
+      if (!matchingContractor && cleanAccountNumber) {
+        matchingContractor = contractors.find((contractor: Contractor) => {
+          const contractorAccountNumber = contractor.accountNumber?.replace(/[-\s]/g, '') || '';
+          return isPartialAccountMatch(cleanAccountNumber, contractorAccountNumber);
+        });
+      }
+
+      if (matchingContractor) {
+        matchedByAccountNumber = true;
+      }
+
+      // 계좌번호로 못 찾았으면 예금주로 협력업체 찾기
+      // 단, 예금주로 찾았을 때 계좌번호가 아예 다르면 계좌번호는 가져오지 않음 (동명이인 방지)
+      if (!matchingContractor && accountHolder) {
+        matchingContractor = contractors.find((contractor: Contractor) => {
+          return contractor.name === accountHolder;
+        });
+        if (matchingContractor) {
+          console.log('예금주로 협력업체 찾음:', matchingContractor.name);
+          // 계좌번호가 입력되었고, 협력업체 계좌와 부분 일치하지 않으면 계좌번호는 사용 안함
+          const contractorAccountNumber = matchingContractor.accountNumber?.replace(/[-\s]/g, '') || '';
+          if (cleanAccountNumber && !isPartialAccountMatch(cleanAccountNumber, contractorAccountNumber)) {
+            console.log('예금주는 같지만 계좌번호가 다름 (동명이인 가능성) - 계좌번호 유지');
+            matchedByAccountNumber = false; // 계좌번호는 입력값 그대로 사용
+          } else {
+            matchedByAccountNumber = true; // 계좌번호도 협력업체 것 사용
+          }
+        }
+      }
+
+      // 일치하는 협력업체가 있으면 정보 자동 채우기
+      if (matchingContractor) {
+        updatedFormData.accountHolder = matchingContractor.name || analysis.bankInfo.accountHolder;
+        updatedFormData.bankName = matchingContractor.bankName || analysis.bankInfo.bankName;
+
+        // 계좌번호로 매칭되었거나, 예금주로 찾았지만 계좌가 부분 일치할 때만 협력업체 계좌 사용
+        if (matchedByAccountNumber) {
+          updatedFormData.accountNumber = matchingContractor.accountNumber || analysis.bankInfo.accountNumber;
+        }
+        // 그렇지 않으면 입력된 계좌번호 그대로 사용 (위에서 이미 설정됨)
+
+        // 협력업체 선택 상태도 업데이트
+        setSelectedContractorId(matchingContractor.id || matchingContractor._id || null);
+
+        // 공정 정보도 있으면 설정
+        if (matchingContractor.process) {
+          updatedFormData.process = matchingContractor.process;
+        }
+      }
+
+      // 2. 이전 송금완료 내역에서 예금주 또는 계좌번호로 매칭 찾기
+      if (!matchingContractor) {
+        let paymentMatchedByAccountNumber = false;
+
+        // 계좌번호로 송금완료 내역 찾기 (완전 일치)
+        let matchingPayment = payments.find((payment: any) => {
+          const paymentAccountNumber = payment.account_number?.replace(/[-\s]/g, '');
+          return paymentAccountNumber && paymentAccountNumber === cleanAccountNumber && payment.status === 'completed';
         });
 
-        // 일치하는 협력업체가 있으면 정보 자동 채우기
-        if (matchingContractor) {
-          updatedFormData.accountHolder = matchingContractor.name || analysis.bankInfo.accountHolder;
-          updatedFormData.bankName = matchingContractor.bankName || analysis.bankInfo.bankName;
-          updatedFormData.accountNumber = matchingContractor.accountNumber || analysis.bankInfo.accountNumber;
-
-          // 협력업체 선택 상태도 업데이트
-          setSelectedContractorId(matchingContractor.id || matchingContractor._id || null);
-
-          // 공정 정보도 있으면 설정
-          if (matchingContractor.process) {
-            updatedFormData.process = matchingContractor.process;
-          }
-        } else if (analysis.bankInfo.accountHolder) {
-          // 일치하는 협력업체가 없으면 분석된 예금주만 설정
-          updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
+        // 완전 일치 못 찾으면 부분 일치로 찾기
+        if (!matchingPayment && cleanAccountNumber) {
+          matchingPayment = payments.find((payment: any) => {
+            const paymentAccountNumber = payment.account_number?.replace(/[-\s]/g, '') || '';
+            return isPartialAccountMatch(cleanAccountNumber, paymentAccountNumber) && payment.status === 'completed';
+          });
         }
 
-      } else if (analysis.bankInfo.accountHolder) {
-        updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
+        if (matchingPayment) {
+          paymentMatchedByAccountNumber = true;
+        }
+
+        // 계좌번호로 못 찾았으면 예금주로 송금완료 내역 찾기
+        // 단, 예금주로 찾았을 때 계좌번호가 아예 다르면 계좌번호는 가져오지 않음 (동명이인 방지)
+        if (!matchingPayment && accountHolder) {
+          matchingPayment = payments.find((payment: any) => {
+            return payment.account_holder === accountHolder && payment.status === 'completed';
+          });
+          if (matchingPayment) {
+            console.log('예금주로 이전 결제 내역 찾음:', matchingPayment.account_holder);
+            // 계좌번호가 입력되었고, 송금내역 계좌와 부분 일치하지 않으면 계좌번호는 사용 안함
+            const paymentAccountNumber = matchingPayment.account_number?.replace(/[-\s]/g, '') || '';
+            if (cleanAccountNumber && !isPartialAccountMatch(cleanAccountNumber, paymentAccountNumber)) {
+              console.log('예금주는 같지만 계좌번호가 다름 (동명이인 가능성) - 계좌번호 유지');
+              paymentMatchedByAccountNumber = false;
+            } else {
+              paymentMatchedByAccountNumber = true;
+            }
+          }
+        }
+
+        // 일치하는 송금완료 내역이 있으면 정보 자동 채우기
+        if (matchingPayment) {
+          updatedFormData.accountHolder = matchingPayment.account_holder || analysis.bankInfo.accountHolder;
+          updatedFormData.bankName = matchingPayment.bank_name || analysis.bankInfo.bankName;
+
+          // 계좌번호로 매칭되었거나, 예금주로 찾았지만 계좌가 부분 일치할 때만 송금내역 계좌 사용
+          if (paymentMatchedByAccountNumber) {
+            updatedFormData.accountNumber = matchingPayment.account_number || analysis.bankInfo.accountNumber;
+          }
+          // 그렇지 않으면 입력된 계좌번호 그대로 사용
+
+          // 공정 정보도 있으면 설정
+          if (matchingPayment.vendor_name && !updatedFormData.process) {
+            updatedFormData.process = matchingPayment.vendor_name;
+            console.log('이전 결제 내역에서 공정 찾음:', matchingPayment.vendor_name);
+          }
+        }
       }
 
       // 공정(업체) 설정 - 텍스트에서 직접 추출된 공정
@@ -1219,30 +1330,6 @@ const Payments = () => {
             updatedFormData.process = process;
             break; // 첫 번째 매칭되는 공정만 사용
           }
-        }
-      }
-
-      // 이전 송금완료 내역에서 같은 계좌번호로 공정 찾기 (공정이 아직 설정되지 않은 경우)
-      if (!updatedFormData.process && analysis.bankInfo.accountNumber) {
-        const cleanAccountNumber = analysis.bankInfo.accountNumber.replace(/[-\s]/g, '');
-        console.log('이전 결제 내역 검색 - 계좌번호:', cleanAccountNumber);
-        console.log('전체 payments 수:', payments.length);
-
-        // 완료된 결제 내역에서 같은 계좌번호 찾기
-        const matchingPayment = payments.find((payment: any) => {
-          const paymentAccountNumber = payment.account_number?.replace(/[-\s]/g, '');
-          const isMatch = paymentAccountNumber === cleanAccountNumber && payment.status === 'completed';
-          if (paymentAccountNumber === cleanAccountNumber) {
-            console.log('계좌번호 일치:', payment.account_number, '상태:', payment.status, '공정:', payment.vendor_name);
-          }
-          return isMatch;
-        });
-
-        if (matchingPayment && matchingPayment.vendor_name) {
-          updatedFormData.process = matchingPayment.vendor_name;
-          console.log('이전 결제 내역에서 공정 찾음:', matchingPayment.vendor_name);
-        } else {
-          console.log('이전 결제 내역에서 공정 찾지 못함');
         }
       }
 
