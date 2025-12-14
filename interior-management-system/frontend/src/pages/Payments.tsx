@@ -1015,7 +1015,10 @@ const Payments = () => {
         // 특수문자 제거하고 텍스트만 추출
         const cleanText = line.replace(/[\[\]{}()<>]/g, '').trim();
         if (cleanText && !cleanText.includes('무통장 입금')) {
-          result.itemName = cleanText.substring(0, 50);
+          // 사람 이름이면 항목명에서 제외
+          if (!isKoreanName(cleanText)) {
+            result.itemName = cleanText.substring(0, 50);
+          }
         }
       }
     });
@@ -1098,11 +1101,13 @@ const Payments = () => {
 
   // 빠른 입력 텍스트 파싱 (스마트 분석 사용)
   const handleQuickTextParse = () => {
-    const text = formData.quickText;
-    if (!text.trim()) return;
+    try {
+      const text = formData.quickText;
+      if (!text.trim()) return;
 
-    // 스마트 텍스트 분석
-    const analysis = smartTextAnalysis(text);
+      // 스마트 텍스트 분석
+      const analysis = smartTextAnalysis(text);
+      console.log('자동채우기 분석 결과:', analysis);
 
     // 폼 초기화 후 새로 채우기 (프로젝트, 날짜, quickText, quickImages 유지)
     const updatedFormData: any = {
@@ -1244,6 +1249,10 @@ const Payments = () => {
       });
     } else {
       toast.info('텍스트를 분석 중... 더 명확한 정보를 입력해주세요.');
+    }
+    } catch (error) {
+      console.error('자동채우기 에러:', error);
+      toast.error('자동채우기 중 오류가 발생했습니다.');
     }
   };
 
