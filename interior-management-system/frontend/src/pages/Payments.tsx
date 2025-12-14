@@ -669,6 +669,8 @@ const Payments = () => {
       // 0-2. 계산식 결과 우선 처리 (예: "29만x6품=1,740,000원", "3x5=150,000")
       // "=" 뒤에 나오는 금액이 최종 금액 - 이 값이 가장 우선순위가 높음
       const calcResultMatch = line.match(/=\s*([\d,]+)\s*원?/);
+      let manwonMatch: RegExpMatchArray | null = null; // 스코프를 위해 미리 선언
+
       if (calcResultMatch) {
         const amount = parseInt(calcResultMatch[1].replace(/,/g, ''));
         if (amount >= 1000) {
@@ -678,7 +680,7 @@ const Payments = () => {
       }
       // 계산식이 없을 때만 "만원" 또는 "만" 단위 처리 (예: 35만원, 35만, (35만))
       else {
-        const manwonMatch = line.match(/(\d+)\s*만\s*원?/);
+        manwonMatch = line.match(/(\d+)\s*만\s*원?/);
         if (manwonMatch) {
           const amount = parseInt(manwonMatch[1]) * 10000;
           // 자재비/인건비 키워드 확인
