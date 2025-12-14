@@ -820,14 +820,17 @@ const Payments = () => {
         '수협': '수협은행', '대구': '대구은행',
         '부산': '부산은행', '경남': '경남은행',
         '광주': '광주은행', '전북': '전북은행',
-        '제일': 'SC제일은행', 'SC': 'SC제일은행',
+        'SC제일은행': 'SC제일은행', 'SC제일': 'SC제일은행', '제일': 'SC제일은행', 'SC': 'SC제일은행',
         '씨티': '한국씨티은행', '우체국': '우체국',
         '새마을': '새마을금고', '신협': '신협'
       };
 
       // 알려진 은행 찾기 (특별 처리: 은행명 + 이름 패턴)
-      for (const [key, value] of Object.entries(knownBanks)) {
+      // 긴 키워드가 먼저 매칭되도록 정렬 (예: "SC제일은행"이 "제일"보다 먼저)
+      const sortedBankKeys = Object.keys(knownBanks).sort((a, b) => b.length - a.length);
+      for (const key of sortedBankKeys) {
         if (line.includes(key)) {
+          const value = knownBanks[key];
           result.bankInfo.bankName = value;
 
           // "은행키워드 이름" 패턴 체크 (예: "기업 조민호")
