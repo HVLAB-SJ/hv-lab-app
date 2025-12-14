@@ -1200,6 +1200,21 @@ const Payments = () => {
           // 일치하는 협력업체가 없으면 분석된 예금주만 설정
           updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
         }
+
+        // 이전 송금완료 내역에서 같은 계좌번호로 공정 찾기 (공정이 아직 설정되지 않은 경우)
+        if (!updatedFormData.process && analysis.bankInfo.accountNumber) {
+          const cleanAccountNumber = analysis.bankInfo.accountNumber.replace(/[-\s]/g, '');
+          // 완료된 결제 내역에서 같은 계좌번호 찾기
+          const matchingPayment = payments.find((payment: any) => {
+            const paymentAccountNumber = payment.account_number?.replace(/[-\s]/g, '');
+            return paymentAccountNumber === cleanAccountNumber && payment.status === 'completed';
+          });
+
+          if (matchingPayment && matchingPayment.vendor_name) {
+            updatedFormData.process = matchingPayment.vendor_name;
+            console.log('이전 결제 내역에서 공정 찾음:', matchingPayment.vendor_name);
+          }
+        }
       } else if (analysis.bankInfo.accountHolder) {
         updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
       }
