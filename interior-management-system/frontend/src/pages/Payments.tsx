@@ -1264,6 +1264,11 @@ const Payments = () => {
         console.log('입력 계좌번호:', cleanAccountNumber);
         console.log('입력 예금주:', accountHolder);
 
+        // 김승일 관련 결제 내역 디버깅
+        const kimPayments = payments.filter((p: any) => p.account_holder && p.account_holder.includes('김승일'));
+        console.log('김승일 결제 내역:', kimPayments.length, '건');
+        kimPayments.forEach((p: any) => console.log('  -', p.account_holder, p.account_number, p.vendor_name, p.status));
+
         // 계좌번호로 송금완료 내역 찾기 (완전 일치)
         let matchingPayment = payments.find((payment: any) => {
           const paymentAccountNumber = payment.account_number?.replace(/[-\s]/g, '');
