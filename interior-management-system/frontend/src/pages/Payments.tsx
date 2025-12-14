@@ -540,6 +540,18 @@ const Payments = () => {
       '육', '인', '맹', '제', '탁', '국', '어', '경', '봉', '사'
     ];
 
+    // 이름 뒤 조사 제거 함수 (예: "김명기로" -> "김명기")
+    const removeNameSuffix = (text: string): string => {
+      // 이름 뒤에 붙는 조사들
+      const suffixes = ['로', '에게', '앞으로', '님', '씨', '께', '한테', '보고'];
+      for (const suffix of suffixes) {
+        if (text.endsWith(suffix) && text.length > suffix.length + 1) {
+          return text.slice(0, -suffix.length);
+        }
+      }
+      return text;
+    };
+
     // 한국 사람 이름인지 확인하는 함수
     const isKoreanName = (text: string): boolean => {
       if (!text || text.length < 2 || text.length > 5) return false;
@@ -843,16 +855,20 @@ const Payments = () => {
 
       // 3. 한글 이름 추정 (2-5글자) - 괄호 이름이 없고, 슬래시로 처리 안된 경우만
       if (!bracketNameMatch && !result.bankInfo.accountHolder) {
-        const namePattern = /[가-힣]{2,5}/g;
+        // 이름 + 조사 패턴 (예: "김명기로", "홍길동에게")
+        const namePattern = /[가-힣]{2,6}/g;
         const names = line.match(namePattern);
         if (names) {
           // 같은 줄에 계좌번호가 있는지 확인
           const hasAccountInSameLine = line.match(/\d{10,}/) || line.match(/\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/);
 
-          names.forEach(name => {
+          names.forEach(rawName => {
+            // 조사 제거 (예: "김명기로" -> "김명기")
+            const name = removeNameSuffix(rawName);
+
             // 대괄호 안의 텍스트는 건너뛰기 (대괄호 자체는 제거되었을 수 있으므로 원본 확인)
             const originalLine = text.split('\n')[index];
-            if (originalLine && originalLine.includes(`[${name}]`)) {
+            if (originalLine && originalLine.includes(`[${rawName}]`)) {
               return; // 대괄호 안의 텍스트는 용도이므로 건너뛰기
             }
 
@@ -878,7 +894,7 @@ const Payments = () => {
 
             // 같은 줄에 계좌번호가 있으면 이 이름을 우선적으로 예금주로 설정 (괄호 이름이 없을 때만)
             if (hasAccountInSameLine && !bracketNameMatch) {
-              result.bankInfo.accountHolder = name; // 덮어쓰기 허용
+              result.bankInfo.accountHolder = name; // 덮어쓰기 허용 (조사 제거된 이름)
             }
             // 계좌번호가 없는 줄이면 기존 예금주가 없을 때만 설정
             else if (!result.bankInfo.accountHolder) {
