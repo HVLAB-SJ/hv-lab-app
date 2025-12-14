@@ -1264,10 +1264,14 @@ const Payments = () => {
         console.log('입력 계좌번호:', cleanAccountNumber);
         console.log('입력 예금주:', accountHolder);
 
-        // 김승일 관련 결제 내역 디버깅
-        const kimPayments = payments.filter((p: any) => p.account_holder && p.account_holder.includes('김승일'));
-        console.log('김승일 결제 내역:', kimPayments.length, '건');
-        kimPayments.forEach((p: any) => console.log('  -', p.account_holder, p.account_number, p.vendor_name, p.status));
+        // 김씨 관련 결제 내역 디버깅 (더 넓은 범위로 검색)
+        const kimPayments = payments.filter((p: any) => p.account_holder && p.account_holder.includes('김'));
+        console.log('김씨 결제 내역:', kimPayments.length, '건');
+        kimPayments.forEach((p: any) => console.log('  -', p.account_holder, '|', p.account_number, '|', p.vendor_name, '|', p.status));
+
+        // 전체 예금주 목록 출력 (처음 20개)
+        const allHolders = [...new Set(payments.map((p: any) => p.account_holder).filter(Boolean))];
+        console.log('전체 예금주 목록 (처음 20개):', allHolders.slice(0, 20));
 
         // 계좌번호로 송금완료 내역 찾기 (완전 일치)
         let matchingPayment = payments.find((payment: any) => {
