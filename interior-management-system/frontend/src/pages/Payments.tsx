@@ -577,6 +577,14 @@ const Payments = () => {
       ];
       if (processWords.includes(text)) return false;
 
+      // 일반 용어/필드명 제외
+      const commonWords = [
+        '금액', '예금주', '계좌', '입금', '출금', '이체', '송금', '잔액',
+        '합계', '총액', '부가세', '공급가', '세금', '수수료', '원금',
+        '상품명', '품명', '단가', '수량', '비고', '메모', '날짜', '일자'
+      ];
+      if (commonWords.includes(text)) return false;
+
       // 성씨로 시작하는지 확인 (2글자 이상일 때)
       if (text.length >= 2) {
         const firstChar = text.charAt(0);
