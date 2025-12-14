@@ -1260,11 +1260,19 @@ const Payments = () => {
       if (!matchingContractor) {
         let paymentMatchedByAccountNumber = false;
 
+        console.log('=== 송금완료 내역 검색 시작 ===');
+        console.log('입력 계좌번호:', cleanAccountNumber);
+        console.log('입력 예금주:', accountHolder);
+
         // 계좌번호로 송금완료 내역 찾기 (완전 일치)
         let matchingPayment = payments.find((payment: any) => {
           const paymentAccountNumber = payment.account_number?.replace(/[-\s]/g, '');
           return paymentAccountNumber && paymentAccountNumber === cleanAccountNumber && payment.status === 'completed';
         });
+
+        if (matchingPayment) {
+          console.log('계좌번호 완전 일치로 찾음:', matchingPayment.account_holder, matchingPayment.vendor_name);
+        }
 
         // 완전 일치 못 찾으면 부분 일치로 찾기
         if (!matchingPayment && cleanAccountNumber) {
@@ -1272,6 +1280,9 @@ const Payments = () => {
             const paymentAccountNumber = payment.account_number?.replace(/[-\s]/g, '') || '';
             return isPartialAccountMatch(cleanAccountNumber, paymentAccountNumber) && payment.status === 'completed';
           });
+          if (matchingPayment) {
+            console.log('계좌번호 부분 일치로 찾음:', matchingPayment.account_holder, matchingPayment.vendor_name);
+          }
         }
 
         if (matchingPayment) {
@@ -1285,7 +1296,7 @@ const Payments = () => {
             return payment.account_holder === accountHolder && payment.status === 'completed';
           });
           if (matchingPayment) {
-            console.log('예금주로 이전 결제 내역 찾음:', matchingPayment.account_holder);
+            console.log('예금주로 이전 결제 내역 찾음:', matchingPayment.account_holder, '공정:', matchingPayment.vendor_name);
             // 계좌번호가 입력되었고, 송금내역 계좌와 부분 일치하지 않으면 계좌번호는 사용 안함
             const paymentAccountNumber = matchingPayment.account_number?.replace(/[-\s]/g, '') || '';
             if (cleanAccountNumber && !isPartialAccountMatch(cleanAccountNumber, paymentAccountNumber)) {
@@ -1299,6 +1310,13 @@ const Payments = () => {
 
         // 일치하는 송금완료 내역이 있으면 정보 자동 채우기
         if (matchingPayment) {
+          console.log('매칭된 송금내역:', {
+            account_holder: matchingPayment.account_holder,
+            account_number: matchingPayment.account_number,
+            vendor_name: matchingPayment.vendor_name,
+            status: matchingPayment.status
+          });
+
           updatedFormData.accountHolder = matchingPayment.account_holder || analysis.bankInfo.accountHolder;
           updatedFormData.bankName = matchingPayment.bank_name || analysis.bankInfo.bankName;
 
@@ -1308,11 +1326,15 @@ const Payments = () => {
           }
           // 그렇지 않으면 입력된 계좌번호 그대로 사용
 
-          // 공정 정보도 있으면 설정
+          // 공정 정보도 있으면 설정 (동명이인이라도 공정은 가져옴 - 사용자가 확인)
           if (matchingPayment.vendor_name && !updatedFormData.process) {
             updatedFormData.process = matchingPayment.vendor_name;
-            console.log('이전 결제 내역에서 공정 찾음:', matchingPayment.vendor_name);
+            console.log('이전 결제 내역에서 공정 설정:', matchingPayment.vendor_name);
+          } else {
+            console.log('공정 설정 안됨 - vendor_name:', matchingPayment.vendor_name, 'updatedFormData.process:', updatedFormData.process);
           }
+        } else {
+          console.log('매칭된 송금내역 없음');
         }
       }
 
