@@ -1122,10 +1122,21 @@ const Payments = () => {
   };
 
   // 빠른 입력 텍스트 파싱 (스마트 분석 사용)
-  const handleQuickTextParse = () => {
+  const handleQuickTextParse = async () => {
     try {
       const text = formData.quickText;
       if (!text.trim()) return;
+
+      // payments 데이터가 비어있으면 먼저 로드
+      let currentPayments = payments;
+      if (payments.length === 0) {
+        console.log('payments 데이터가 비어있음, 로드 중...');
+        await loadPaymentsFromAPI();
+        // store에서 최신 데이터를 가져오기 위해 약간의 딜레이
+        await new Promise(resolve => setTimeout(resolve, 100));
+        currentPayments = useDataStore.getState().payments;
+        console.log('payments 로드 완료:', currentPayments.length, '건');
+      }
 
       // 스마트 텍스트 분석
       const analysis = smartTextAnalysis(text);
@@ -1279,22 +1290,23 @@ const Payments = () => {
         let paymentMatchedByAccountNumber = false;
 
         console.log('=== 송금완료 내역 검색 시작 ===');
+        console.log('검색 대상 payments 수:', currentPayments.length, '건');
         console.log('입력 계좌번호:', cleanAccountNumber);
         console.log('입력 예금주:', accountHolder);
 
         // 김씨 관련 결제 내역 디버깅 (더 넓은 범위로 검색)
-        const kimPayments = payments.filter((p: any) => p.account_holder && p.account_holder.includes('김'));
+        const kimPayments = currentPayments.filter((p: any) => p.account_holder && p.account_holder.includes('김'));
         console.log('김씨 결제 내역:', kimPayments.length, '건');
         kimPayments.forEach((p: any) => console.log('  -', p.account_holder, '|', p.account_number, '|', p.vendor_name, '|', p.status));
 
         // 전체 예금주 목록 출력 (처음 20개)
-        const allHolders = [...new Set(payments.map((p: any) => p.account_holder).filter(Boolean))];
+        const allHolders = [...new Set(currentPayments.map((p: any) => p.account_holder).filter(Boolean))];
         console.log('전체 예금주 목록 (처음 20개):', allHolders.slice(0, 20));
 
         // 계좌번호로 송금완료 내역 찾기 (완전 일치 - 숫자만 비교)
         console.log('입력 계좌번호 (숫자만):', cleanAccountNumber);
 
-        let matchingPayment = payments.find((payment: any) => {
+        let matchingPayment = currentPayments.find((payment: any) => {
           const paymentAccountNumber = extractAccountNumberOnly(payment.account_number || '');
           const isMatch = paymentAccountNumber && paymentAccountNumber === cleanAccountNumber && payment.status === 'completed';
           if (payment.account_holder?.includes('김승일')) {
@@ -1309,7 +1321,7 @@ const Payments = () => {
 
         // 완전 일치 못 찾으면 부분 일치로 찾기
         if (!matchingPayment && cleanAccountNumber) {
-          matchingPayment = payments.find((payment: any) => {
+          matchingPayment = currentPayments.find((payment: any) => {
             const paymentAccountNumber = extractAccountNumberOnly(payment.account_number || '');
             return isPartialAccountMatch(cleanAccountNumber, paymentAccountNumber) && payment.status === 'completed';
           });
@@ -1325,7 +1337,7 @@ const Payments = () => {
         // 계좌번호로 못 찾았으면 예금주로 송금완료 내역 찾기
         // 단, 예금주로 찾았을 때 계좌번호가 아예 다르면 계좌번호는 가져오지 않음 (동명이인 방지)
         if (!matchingPayment && accountHolder) {
-          matchingPayment = payments.find((payment: any) => {
+          matchingPayment = currentPayments.find((payment: any) => {
             return payment.account_holder === accountHolder && payment.status === 'completed';
           });
           if (matchingPayment) {
