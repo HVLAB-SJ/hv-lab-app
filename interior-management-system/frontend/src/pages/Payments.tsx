@@ -881,14 +881,16 @@ const Payments = () => {
         }
       }
 
-      // 3. 한글 이름 추정 (2-5글자) - 괄호 이름이 없고, 슬래시로 처리 안된 경우만
-      if (!bracketNameMatch && !result.bankInfo.accountHolder) {
+      // 3. 한글 이름 추정 (2-5글자) - 법인명이나 괄호 이름이 없을 때만
+      if (!result.bankInfo.accountHolder) {
         // 이름 + 조사 패턴 (예: "김명기로", "홍길동에게")
         const namePattern = /[가-힣]{2,6}/g;
         const names = line.match(namePattern);
         if (names) {
           // 같은 줄에 계좌번호가 있는지 확인
           const hasAccountInSameLine = line.match(/\d{10,}/) || line.match(/\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}[\s\-]+\d{3,4}/);
+          // 같은 줄에 은행명이 있는지 확인
+          const hasBankInSameLine = line.match(/은행|뱅크|금고|신협|우체국/);
 
           names.forEach(rawName => {
             // 조사 제거 (예: "김명기로" -> "김명기")
@@ -909,10 +911,27 @@ const Payments = () => {
             const workKeywords = ['철거', '폐기물', '목공', '타일', '도배', '전기', '설비', '청소',
                                   '미장', '도장', '방수', '샷시', '샤시', '유리', '필름', '조명',
                                   '가구', '싱크', '주방', '욕실', '화장실', '마루', '장판', '벽지',
-                                  '페인트', '도색', '배관', '누수', '하자', '보수', '시공', '공사'];
+                                  '페인트', '도색', '배관', '누수', '하자', '보수', '시공', '공사',
+                                  '몰딩', '시스템', '마이너스', '플러스', '자재', '부자재'];
 
             if (workKeywords.includes(name)) {
               return; // 작업명은 건너뛰기
+            }
+
+            // 긴 단어의 일부로 포함된 이름은 제외 (예: "마이너스시스템몰딩"에서 "템몰딩")
+            // 이름이 독립적인 단어인지 확인 (앞뒤에 한글이 붙어있으면 제외)
+            const nameIndex = line.indexOf(rawName);
+            if (nameIndex > 0) {
+              const charBefore = line[nameIndex - 1];
+              if (/[가-힣]/.test(charBefore)) {
+                return; // 앞에 한글이 붙어있으면 제외
+              }
+            }
+            if (nameIndex + rawName.length < line.length) {
+              const charAfter = line[nameIndex + rawName.length];
+              if (/[가-힣]/.test(charAfter)) {
+                return; // 뒤에 한글이 붙어있으면 제외
+              }
             }
 
             // 괄호로 명시된 이름이 있으면 건너뛰기
@@ -920,9 +939,9 @@ const Payments = () => {
               return; // 이미 처리됨
             }
 
-            // 같은 줄에 계좌번호가 있으면 이 이름을 우선적으로 예금주로 설정 (괄호 이름이 없을 때만)
-            if (hasAccountInSameLine && !bracketNameMatch) {
-              result.bankInfo.accountHolder = name; // 덮어쓰기 허용 (조사 제거된 이름)
+            // 같은 줄에 계좌번호나 은행명이 있으면 이 이름을 예금주로 설정
+            if ((hasAccountInSameLine || hasBankInSameLine) && !result.bankInfo.accountHolder) {
+              result.bankInfo.accountHolder = name;
             }
             // 계좌번호가 없는 줄이면 기존 예금주가 없을 때만 설정
             else if (!result.bankInfo.accountHolder) {
