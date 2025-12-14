@@ -853,12 +853,29 @@ const Payments = () => {
         }
       }
 
-      // 2-1. 괄호 안 이름 추출 (예: "레브(최승혁)") - 계좌번호 뒤 이름보다 우선순위 높음
+      // 2-1. 법인명 패턴 추출 (예: "(주)키마산업", "(유)회사명", "주식회사 OOO")
+      const companyPatterns = [
+        /\(주\)[가-힣a-zA-Z0-9]+/,  // (주)키마산업
+        /\(유\)[가-힣a-zA-Z0-9]+/,  // (유)회사명
+        /\(사\)[가-힣a-zA-Z0-9]+/,  // (사)단체명
+        /주식회사\s*[가-힣a-zA-Z0-9]+/,  // 주식회사 OOO
+        /유한회사\s*[가-힣a-zA-Z0-9]+/,  // 유한회사 OOO
+      ];
+
+      for (const pattern of companyPatterns) {
+        const companyMatch = line.match(pattern);
+        if (companyMatch && !result.bankInfo.accountHolder) {
+          result.bankInfo.accountHolder = companyMatch[0].trim();
+          break;
+        }
+      }
+
+      // 2-2. 괄호 안 이름 추출 (예: "레브(최승혁)") - 법인명이 없을 때만
       const bracketNameMatch = line.match(/\(([가-힣]{2,5})\)/);
-      if (bracketNameMatch) {
+      if (bracketNameMatch && !result.bankInfo.accountHolder) {
         const potentialName = bracketNameMatch[1];
-        // 한국 사람 이름인지 확인
-        if (isKoreanName(potentialName)) {
+        // 한국 사람 이름인지 확인 (법인 표시가 아닌 경우만)
+        if (isKoreanName(potentialName) && !['주', '유', '사'].includes(potentialName)) {
           // 괄호 안 이름은 계좌번호 뒤 이름보다 우선순위가 높음
           result.bankInfo.accountHolder = potentialName;
         }
