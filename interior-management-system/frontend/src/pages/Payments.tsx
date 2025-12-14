@@ -675,11 +675,12 @@ const Payments = () => {
       }
 
       // 0-2. 계산식 결과 우선 처리 (예: "29만x6품=1,740,000원", "3x5=150,000")
-      // "=" 뒤에 나오는 금액이 최종 금액
+      // "=" 뒤에 나오는 금액이 최종 금액 - 이 값이 가장 우선순위가 높음
       const calcResultMatch = line.match(/=\s*([\d,]+)\s*원?/);
       if (calcResultMatch) {
         const amount = parseInt(calcResultMatch[1].replace(/,/g, ''));
-        if (amount >= 1000 && !result.amounts.total) {
+        if (amount >= 1000) {
+          // 계산식 결과는 기존 total 값을 덮어씀 (최우선)
           result.amounts.total = amount;
         }
       }
