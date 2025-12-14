@@ -666,8 +666,8 @@ const Payments = () => {
         result.includeVat = true;
       }
 
-      // 0-2. "만원" 단위 우선 처리
-      const manwonMatch = line.match(/(\d+)\s*만\s*원/);
+      // 0-2. "만원" 또는 "만" 단위 우선 처리 (예: 35만원, 35만, (35만))
+      const manwonMatch = line.match(/(\d+)\s*만\s*원?/);
       if (manwonMatch) {
         const amount = parseInt(manwonMatch[1]) * 10000;
         // 자재비/인건비 키워드 확인
@@ -678,8 +678,8 @@ const Payments = () => {
         } else if (!result.amounts.total) {
           result.amounts.total = amount;
         }
-        // "만원" 처리된 라인은 이후 처리에서 제외하기 위해 표시
-        line = line.replace(/(\d+)\s*만\s*원/g, '');
+        // "만원" 또는 "만" 처리된 라인은 이후 처리에서 제외하기 위해 표시
+        line = line.replace(/(\d+)\s*만\s*원?/g, '');
       }
 
       // 1-1. 계좌번호 패턴 우선 체크 (더 유연한 패턴)
