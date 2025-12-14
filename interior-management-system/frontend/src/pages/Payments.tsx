@@ -831,10 +831,15 @@ const Payments = () => {
           result.bankInfo.bankName = value;
 
           // "은행키워드 이름" 패턴 체크 (예: "기업 조민호")
-          const bankNamePattern = new RegExp(`${key}\\s+([가-힣]{2,5})`);
+          // 단, 은행명이 붙어있으면 건너뛰기 (예: "토스뱅크" -> "뱅크"를 이름으로 인식하면 안됨)
+          const bankNamePattern = new RegExp(`${key}(?:은행|뱅크)?\\s+([가-힣]{2,5})`);
           const bankNameMatch = line.match(bankNamePattern);
           if (bankNameMatch) {
-            result.bankInfo.accountHolder = bankNameMatch[1];
+            const potentialName = removeNameSuffix(bankNameMatch[1]);
+            // 이름이 유효한 한국 사람 이름인지 확인
+            if (isKoreanName(potentialName)) {
+              result.bankInfo.accountHolder = potentialName;
+            }
           }
           break;
         }
