@@ -577,14 +577,6 @@ const Payments = () => {
       ];
       if (processWords.includes(text)) return false;
 
-      // 일반 용어/필드명 제외
-      const commonWords = [
-        '금액', '예금주', '계좌', '입금', '출금', '이체', '송금', '잔액',
-        '합계', '총액', '부가세', '공급가', '세금', '수수료', '원금',
-        '상품명', '품명', '단가', '수량', '비고', '메모', '날짜', '일자'
-      ];
-      if (commonWords.includes(text)) return false;
-
       // 성씨로 시작하는지 확인 (2글자 이상일 때)
       if (text.length >= 2) {
         const firstChar = text.charAt(0);
@@ -733,18 +725,8 @@ const Payments = () => {
         /\d{3}[\s\-]+\d{4}[\s\-]+\d{7}/, // 3-4-7 패턴
         /\d{4}[\s\-]+\d{4}[\s\-]+\d{5}/, // 4-4-5 패턴
         /\d{3,4}[\s\-]+\d{2,6}[\s\-]+\d{4,7}/, // 3개 그룹 유연한 패턴
-        /\d{4,6}[\s]+\d{5,7}/, // 공백으로 구분된 2개 그룹 (예: 91566 923744)
         /\d{10,}/ // 연속된 숫자
       ];
-
-      // 은행명 뒤에 바로 붙어있는 계좌번호 추출 (예: "국민은행91566 923744")
-      const bankAccountPattern = line.match(/(은행|뱅크|금고|신협|우체국)(\d{4,}[\s\-]?\d*)/);
-      if (bankAccountPattern && !result.bankInfo.accountNumber) {
-        const accountNum = bankAccountPattern[2].trim().replace(/\s+/g, '-');
-        if (accountNum.replace(/\-/g, '').length >= 8) { // 최소 8자리 이상
-          result.bankInfo.accountNumber = accountNum;
-        }
-      }
 
       let accountNumberText = ''; // 계좌번호로 인식된 텍스트 저장
       let accountNumberIndex = -1; // 계좌번호의 위치 저장
@@ -859,40 +841,23 @@ const Payments = () => {
       // 긴 키워드가 먼저 매칭되도록 정렬 (예: "SC제일은행"이 "제일"보다 먼저)
       const sortedBankKeys = Object.keys(knownBanks).sort((a, b) => b.length - a.length);
       for (const key of sortedBankKeys) {
-        // 키워드가 라인에 포함되어 있는지 확인
-        const keyIndex = line.indexOf(key);
-        if (keyIndex === -1) continue;
+        if (line.includes(key)) {
+          const value = knownBanks[key];
+          result.bankInfo.bankName = value;
 
-        // "산업" 같은 짧은 키워드가 회사명 일부로 잘못 매칭되는 것 방지
-        // 예: "(주)왕도산업"에서 "산업"이 은행으로 인식되면 안됨
-        // 은행 키워드 앞뒤에 한글이 붙어있으면 회사명일 가능성이 높음
-        if (key.length <= 2) {
-          // 앞에 한글이 있으면 건너뛰기 (예: "왕도산업"의 "산업")
-          if (keyIndex > 0 && /[가-힣]/.test(line[keyIndex - 1])) {
-            continue;
+          // "은행키워드 이름" 패턴 체크 (예: "기업 조민호")
+          // 단, 은행명이 붙어있으면 건너뛰기 (예: "토스뱅크" -> "뱅크"를 이름으로 인식하면 안됨)
+          const bankNamePattern = new RegExp(`${key}(?:은행|뱅크)?\\s+([가-힣]{2,5})`);
+          const bankNameMatch = line.match(bankNamePattern);
+          if (bankNameMatch) {
+            const potentialName = removeNameSuffix(bankNameMatch[1]);
+            // 이름이 유효한 한국 사람 이름인지 확인
+            if (isKoreanName(potentialName)) {
+              result.bankInfo.accountHolder = potentialName;
+            }
           }
-          // 뒤에 "은행"이나 "뱅크"가 아닌 한글이 있으면 건너뛰기
-          const afterKey = line.substring(keyIndex + key.length);
-          if (afterKey && /^[가-힣]/.test(afterKey) && !/^(은행|뱅크)/.test(afterKey)) {
-            continue;
-          }
+          break;
         }
-
-        const value = knownBanks[key];
-        result.bankInfo.bankName = value;
-
-        // "은행키워드 이름" 패턴 체크 (예: "기업 조민호")
-        // 단, 은행명이 붙어있으면 건너뛰기 (예: "토스뱅크" -> "뱅크"를 이름으로 인식하면 안됨)
-        const bankNamePattern = new RegExp(`${key}(?:은행|뱅크)?\\s+([가-힣]{2,5})`);
-        const bankNameMatch = line.match(bankNamePattern);
-        if (bankNameMatch) {
-          const potentialName = removeNameSuffix(bankNameMatch[1]);
-          // 이름이 유효한 한국 사람 이름인지 확인
-          if (isKoreanName(potentialName)) {
-            result.bankInfo.accountHolder = potentialName;
-          }
-        }
-        break;
       }
 
       // "XX은행" 패턴으로 새로운 은행 찾기
@@ -1072,14 +1037,6 @@ const Payments = () => {
         'IBK기업은행', 'SC제일은행', '카카오뱅크', '토스뱅크', '케이뱅크'
       ];
 
-      // 항목명으로 의미없는 일반 용어들
-      const invalidCommonWords = [
-        '금액', '예금주', '계좌', '입금', '출금', '이체', '송금', '잔액',
-        '합계', '총액', '부가세', '공급가', '세금', '수수료', '원금',
-        '상품명', '품명', '단가', '수량', '비고', '메모', '날짜', '일자',
-        '계좌번호', '입금은행', '입금금액'
-      ];
-
       // 항목명이 은행 관련 단어로만 이루어져 있는지 확인
       const itemNameLower = result.itemName.toLowerCase();
       const isOnlyBankRelated = invalidItemNames.some(bank =>
@@ -1087,12 +1044,6 @@ const Payments = () => {
         itemNameLower.startsWith(bank.toLowerCase() + ' ') ||
         itemNameLower.replace(/\s+/g, '').match(/^[\d\-\s]+$/) // 숫자와 하이픈만 있는 경우 (계좌번호)
       );
-
-      // 항목명이 일반 용어인지 확인
-      const isCommonWord = invalidCommonWords.some(word => {
-        const cleanItemName = result.itemName!.replace(/[\d,\.원]/g, '').trim();
-        return cleanItemName === word || cleanItemName.startsWith(word);
-      });
 
       // 항목명이 숫자로만 시작하거나 계좌번호 형식이면 제거
       const startsWithNumber = /^[\d\-\s]/.test(result.itemName);
@@ -1103,11 +1054,7 @@ const Payments = () => {
         (result.itemName === result.bankInfo.accountHolder ||
          result.itemName.includes(result.bankInfo.accountHolder));
 
-      // 항목명이 금액 정보와 중복되면 제거 (예: "금액2,018,500원")
-      const hasAmountInfo = result.amounts.total &&
-        result.itemName.includes(result.amounts.total.toLocaleString());
-
-      if (isOnlyBankRelated || isCommonWord || startsWithNumber || isAccountNumberLike || isAccountHolder || hasAmountInfo) {
+      if (isOnlyBankRelated || startsWithNumber || isAccountNumberLike || isAccountHolder) {
         result.itemName = undefined;
       }
     }
