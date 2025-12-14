@@ -1109,147 +1109,147 @@ const Payments = () => {
       const analysis = smartTextAnalysis(text);
       console.log('자동채우기 분석 결과:', analysis);
 
-    // 폼 초기화 후 새로 채우기 (프로젝트, 날짜, quickText, quickImages 유지)
-    const updatedFormData: any = {
-      project: formData.project,
-      date: formData.date,
-      quickText: formData.quickText,
-      quickImages: formData.quickImages || [], // quickImages 유지
-      process: '',
-      itemName: '',
-      amount: '',
-      accountHolder: '',
-      bankName: '',
-      accountNumber: '',
-      images: []
-    };
+      // 폼 초기화 후 새로 채우기 (프로젝트, 날짜, quickText, quickImages 유지)
+      const updatedFormData: any = {
+        project: formData.project,
+        date: formData.date,
+        quickText: formData.quickText,
+        quickImages: formData.quickImages || [], // quickImages 유지
+        process: '',
+        itemName: '',
+        amount: '',
+        accountHolder: '',
+        bankName: '',
+        accountNumber: '',
+        images: []
+      };
 
-    // 협력업체 선택 초기화
-    setSelectedContractorId(null);
+      // 협력업체 선택 초기화
+      setSelectedContractorId(null);
 
-    // 부가세 체크박스 초기화
-    setIncludeVat(false);
-    setIncludeTaxDeduction(false);
+      // 부가세 체크박스 초기화
+      setIncludeVat(false);
+      setIncludeTaxDeduction(false);
 
-    // 금액 설정 - 모든 금액을 합쳐서 공사비로 설정
-    let totalAmount = 0;
-    if (analysis.amounts.material) {
-      totalAmount += analysis.amounts.material;
-    }
-    if (analysis.amounts.labor) {
-      totalAmount += analysis.amounts.labor;
-    }
-    if (analysis.amounts.total && !analysis.amounts.material && !analysis.amounts.labor) {
-      totalAmount = analysis.amounts.total;
-    }
-    if (totalAmount > 0) {
-      updatedFormData.amount = totalAmount;
-    }
+      // 금액 설정 - 모든 금액을 합쳐서 공사비로 설정
+      let totalAmount = 0;
+      if (analysis.amounts.material) {
+        totalAmount += analysis.amounts.material;
+      }
+      if (analysis.amounts.labor) {
+        totalAmount += analysis.amounts.labor;
+      }
+      if (analysis.amounts.total && !analysis.amounts.material && !analysis.amounts.labor) {
+        totalAmount = analysis.amounts.total;
+      }
+      if (totalAmount > 0) {
+        updatedFormData.amount = totalAmount;
+      }
 
-    // 은행 정보 설정
-    if (analysis.bankInfo.bankName) {
-      updatedFormData.bankName = analysis.bankInfo.bankName;
-    }
-    if (analysis.bankInfo.accountNumber) {
-      updatedFormData.accountNumber = analysis.bankInfo.accountNumber;
+      // 은행 정보 설정
+      if (analysis.bankInfo.bankName) {
+        updatedFormData.bankName = analysis.bankInfo.bankName;
+      }
+      if (analysis.bankInfo.accountNumber) {
+        updatedFormData.accountNumber = analysis.bankInfo.accountNumber;
 
-      // 추천 협력업체에서 같은 계좌번호 찾기
-      const matchingContractor = contractors.find((contractor: Contractor) => {
-        // 계좌번호 비교 (하이픈과 공백 제거하고 비교)
-        const cleanAccountNumber = analysis.bankInfo.accountNumber?.replace(/[-\s]/g, '');
-        const contractorAccountNumber = contractor.accountNumber?.replace(/[-\s]/g, '');
-        return contractorAccountNumber === cleanAccountNumber;
-      });
+        // 추천 협력업체에서 같은 계좌번호 찾기
+        const matchingContractor = contractors.find((contractor: Contractor) => {
+          // 계좌번호 비교 (하이픈과 공백 제거하고 비교)
+          const cleanAccountNumber = analysis.bankInfo.accountNumber?.replace(/[-\s]/g, '');
+          const contractorAccountNumber = contractor.accountNumber?.replace(/[-\s]/g, '');
+          return contractorAccountNumber === cleanAccountNumber;
+        });
 
-      // 일치하는 협력업체가 있으면 정보 자동 채우기
-      if (matchingContractor) {
-        updatedFormData.accountHolder = matchingContractor.name || analysis.bankInfo.accountHolder;
-        updatedFormData.bankName = matchingContractor.bankName || analysis.bankInfo.bankName;
-        updatedFormData.accountNumber = matchingContractor.accountNumber || analysis.bankInfo.accountNumber;
+        // 일치하는 협력업체가 있으면 정보 자동 채우기
+        if (matchingContractor) {
+          updatedFormData.accountHolder = matchingContractor.name || analysis.bankInfo.accountHolder;
+          updatedFormData.bankName = matchingContractor.bankName || analysis.bankInfo.bankName;
+          updatedFormData.accountNumber = matchingContractor.accountNumber || analysis.bankInfo.accountNumber;
 
-        // 협력업체 선택 상태도 업데이트
-        setSelectedContractorId(matchingContractor.id || matchingContractor._id || null);
+          // 협력업체 선택 상태도 업데이트
+          setSelectedContractorId(matchingContractor.id || matchingContractor._id || null);
 
-        // 공정 정보도 있으면 설정
-        if (matchingContractor.process) {
-          updatedFormData.process = matchingContractor.process;
+          // 공정 정보도 있으면 설정
+          if (matchingContractor.process) {
+            updatedFormData.process = matchingContractor.process;
+          }
+        } else if (analysis.bankInfo.accountHolder) {
+          // 일치하는 협력업체가 없으면 분석된 예금주만 설정
+          updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
         }
       } else if (analysis.bankInfo.accountHolder) {
-        // 일치하는 협력업체가 없으면 분석된 예금주만 설정
         updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
       }
-    } else if (analysis.bankInfo.accountHolder) {
-      updatedFormData.accountHolder = analysis.bankInfo.accountHolder;
-    }
 
-    // 공정(업체) 설정
-    if (analysis.vendor) {
-      updatedFormData.process = analysis.vendor;
-    }
+      // 공정(업체) 설정
+      if (analysis.vendor) {
+        updatedFormData.process = analysis.vendor;
+      }
 
-    // 텍스트에서 PAYMENT_PROCESS_LIST에 있는 공정명 찾기 (공정이 아직 설정되지 않은 경우)
-    if (!updatedFormData.process) {
-      const textLower = text.toLowerCase();
-      for (const process of PAYMENT_PROCESS_LIST) {
-        // 공정명이 텍스트에 포함되어 있는지 확인
-        if (textLower.includes(process.toLowerCase())) {
-          updatedFormData.process = process;
-          break; // 첫 번째 매칭되는 공정만 사용
+      // 텍스트에서 PAYMENT_PROCESS_LIST에 있는 공정명 찾기 (공정이 아직 설정되지 않은 경우)
+      if (!updatedFormData.process) {
+        const textLower = text.toLowerCase();
+        for (const process of PAYMENT_PROCESS_LIST) {
+          // 공정명이 텍스트에 포함되어 있는지 확인
+          if (textLower.includes(process.toLowerCase())) {
+            updatedFormData.process = process;
+            break; // 첫 번째 매칭되는 공정만 사용
+          }
         }
       }
-    }
 
-    // 항목명 설정
-    if (analysis.itemName) {
-      updatedFormData.itemName = analysis.itemName;
-    }
-
-    setFormData(updatedFormData);
-
-    // 부가세 포함 체크박스 설정
-    if (analysis.includeVat) {
-      setIncludeVat(true);
-      setIncludeTaxDeduction(false); // 부가세 포함 시 세액공제 해제
-    }
-
-    // 파싱 결과 상세 메시지
-    let successDetails = [];
-    if (analysis.amounts.material || analysis.amounts.labor || analysis.amounts.total) {
-      const amountDetails = [];
-      if (analysis.amounts.material) amountDetails.push(`자재비: ${analysis.amounts.material.toLocaleString()}원`);
-      if (analysis.amounts.labor) amountDetails.push(`인건비: ${analysis.amounts.labor.toLocaleString()}원`);
-      if (analysis.amounts.total && !analysis.amounts.material && !analysis.amounts.labor) {
-        amountDetails.push(`금액: ${analysis.amounts.total.toLocaleString()}원`);
+      // 항목명 설정
+      if (analysis.itemName) {
+        updatedFormData.itemName = analysis.itemName;
       }
-      successDetails.push(amountDetails.join(', '));
-    }
 
-    if (analysis.bankInfo.bankName || analysis.bankInfo.accountHolder) {
-      const bankDetails = [];
-      if (analysis.bankInfo.bankName) bankDetails.push(analysis.bankInfo.bankName);
-      if (analysis.bankInfo.accountHolder) bankDetails.push(analysis.bankInfo.accountHolder);
-      if (analysis.bankInfo.accountNumber) bankDetails.push(analysis.bankInfo.accountNumber);
-      if (bankDetails.length > 0) {
-        successDetails.push(`계좌: ${bankDetails.join(' ')}`);
+      setFormData(updatedFormData);
+
+      // 부가세 포함 체크박스 설정
+      if (analysis.includeVat) {
+        setIncludeVat(true);
+        setIncludeTaxDeduction(false); // 부가세 포함 시 세액공제 해제
       }
-    }
 
-    if (analysis.vendor) {
-      successDetails.push(`공정: ${analysis.vendor}`);
-    }
+      // 파싱 결과 상세 메시지
+      const successDetails = [];
+      if (analysis.amounts.material || analysis.amounts.labor || analysis.amounts.total) {
+        const amountDetails = [];
+        if (analysis.amounts.material) amountDetails.push(`자재비: ${analysis.amounts.material.toLocaleString()}원`);
+        if (analysis.amounts.labor) amountDetails.push(`인건비: ${analysis.amounts.labor.toLocaleString()}원`);
+        if (analysis.amounts.total && !analysis.amounts.material && !analysis.amounts.labor) {
+          amountDetails.push(`금액: ${analysis.amounts.total.toLocaleString()}원`);
+        }
+        successDetails.push(amountDetails.join(', '));
+      }
 
-    if (analysis.includeVat) {
-      successDetails.push(`부가세 포함 설정됨`);
-    }
+      if (analysis.bankInfo.bankName || analysis.bankInfo.accountHolder) {
+        const bankDetails = [];
+        if (analysis.bankInfo.bankName) bankDetails.push(analysis.bankInfo.bankName);
+        if (analysis.bankInfo.accountHolder) bankDetails.push(analysis.bankInfo.accountHolder);
+        if (analysis.bankInfo.accountNumber) bankDetails.push(analysis.bankInfo.accountNumber);
+        if (bankDetails.length > 0) {
+          successDetails.push(`계좌: ${bankDetails.join(' ')}`);
+        }
+      }
 
-    if (successDetails.length > 0) {
-      toast.success(`자동 인식 완료!\n${successDetails.join('\n')}`, {
-        duration: 4000,
-        style: { whiteSpace: 'pre-line' }
-      });
-    } else {
-      toast.info('텍스트를 분석 중... 더 명확한 정보를 입력해주세요.');
-    }
+      if (analysis.vendor) {
+        successDetails.push(`공정: ${analysis.vendor}`);
+      }
+
+      if (analysis.includeVat) {
+        successDetails.push(`부가세 포함 설정됨`);
+      }
+
+      if (successDetails.length > 0) {
+        toast.success(`자동 인식 완료!\n${successDetails.join('\n')}`, {
+          duration: 4000,
+          style: { whiteSpace: 'pre-line' }
+        });
+      } else {
+        toast.info('텍스트를 분석 중... 더 명확한 정보를 입력해주세요.');
+      }
     } catch (error) {
       console.error('자동채우기 에러:', error);
       toast.error('자동채우기 중 오류가 발생했습니다.');
