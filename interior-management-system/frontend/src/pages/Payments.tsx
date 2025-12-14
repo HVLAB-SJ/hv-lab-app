@@ -758,7 +758,27 @@ const Payments = () => {
             }
           }
 
-          // 계좌번호 다음 줄에서 예금주 찾기 (같은 줄에서 못 찾았을 때)
+          // 계좌번호 이전 줄에서 예금주 찾기 (같은 줄에서 못 찾았을 때) - 우선순위 높음
+          if (!result.bankInfo.accountHolder && index > 0) {
+            const prevLine = lines[index - 1];
+            // 이전 줄의 모든 단어를 검사
+            const words = prevLine.split(/\s+/);
+            for (const rawWord of words) {
+              // 대괄호 안의 텍스트는 건너뛰기
+              if (rawWord.startsWith('[') || rawWord.endsWith(']')) continue;
+
+              // 조사 제거
+              const word = removeNameSuffix(rawWord);
+
+              // 한국 사람 이름인지 확인
+              if (isKoreanName(word)) {
+                result.bankInfo.accountHolder = word;
+                break; // 첫 번째 이름을 찾으면 중단
+              }
+            }
+          }
+
+          // 계좌번호 다음 줄에서 예금주 찾기 (이전 줄에서도 못 찾았을 때)
           if (!result.bankInfo.accountHolder && index + 1 < lines.length) {
             const nextLine = lines[index + 1];
             // 다음 줄의 모든 단어를 검사
