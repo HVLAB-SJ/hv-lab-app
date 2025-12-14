@@ -141,16 +141,25 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
     // 텍스트에서 한글 이름들을 모두 찾음
     const koreanNames: string[] = [];
 
+    // 은행 관련 키워드 목록 (제외할 단어들)
+    const bankKeywords = [
+      '은행', '금고', '우체국', '신협', '증권', '투자', '뱅크', '저축',
+      '국민', '신한', '우리', '하나', '농협', '기업', '제일', '씨티',
+      '카카오', '케이', '토스', '부산', '대구', '경남', '광주', '전북',
+      '제주', '산업', '수협', '새마을'
+    ];
+
     // 한글 2-4글자 이름 패턴 (은행명과 항목명 제외)
     const namePattern = /[가-힣]{2,4}/g;
     let nameMatch;
     while ((nameMatch = namePattern.exec(text)) !== null) {
       const name = nameMatch[0];
 
-      // 은행명이거나 은행 관련 단어면 제외
-      const isBankRelated = bankNames.some(bank => bank.includes(name)) ||
-        ['은행', '금고', '우체국', '신협', '증권', '투자'].some(word => name.includes(word)) ||
-        Object.keys(bankShortMap).includes(name);
+      // 은행명 전체와 일치하면 제외
+      const isBankName = bankNames.some(bank => bank === name || bank.includes(name) || name.includes(bank.replace(/은행|뱅크|증권/g, '')));
+
+      // 은행 관련 키워드를 포함하면 제외
+      const containsBankKeyword = bankKeywords.some(keyword => name.includes(keyword) || keyword === name);
 
       // 공정명이면 제외
       const isProcess = ['가설', '철거', '설비', '미장', '전기', '목공', '조경', '가구', '마루',
@@ -165,7 +174,9 @@ const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalPr
       const afterChar = text[nameIndex + name.length];
       const attachedToNumber = /\d/.test(beforeChar || '') || /\d/.test(afterChar || '');
 
-      if (!isBankRelated && !isProcess && !isInItemName && !attachedToNumber) {
+      console.log(`🔍 이름 후보 "${name}": 은행명=${isBankName}, 은행키워드=${containsBankKeyword}, 공정=${isProcess}, 항목명포함=${isInItemName}`);
+
+      if (!isBankName && !containsBankKeyword && !isProcess && !isInItemName && !attachedToNumber) {
         koreanNames.push(name);
       }
     }
