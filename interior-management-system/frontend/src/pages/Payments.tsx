@@ -674,20 +674,31 @@ const Payments = () => {
         result.includeVat = true;
       }
 
-      // 0-2. "만원" 또는 "만" 단위 우선 처리 (예: 35만원, 35만, (35만))
-      const manwonMatch = line.match(/(\d+)\s*만\s*원?/);
-      if (manwonMatch) {
-        const amount = parseInt(manwonMatch[1]) * 10000;
-        // 자재비/인건비 키워드 확인
-        if (line.includes('자재') || line.includes('재료')) {
-          result.amounts.material = amount;
-        } else if (line.includes('인건') || line.includes('노무')) {
-          result.amounts.labor = amount;
-        } else if (!result.amounts.total) {
+      // 0-2. 계산식 결과 우선 처리 (예: "29만x6품=1,740,000원", "3x5=150,000")
+      // "=" 뒤에 나오는 금액이 최종 금액
+      const calcResultMatch = line.match(/=\s*([\d,]+)\s*원?/);
+      if (calcResultMatch) {
+        const amount = parseInt(calcResultMatch[1].replace(/,/g, ''));
+        if (amount >= 1000 && !result.amounts.total) {
           result.amounts.total = amount;
         }
-        // "만원" 또는 "만" 처리된 라인은 이후 처리에서 제외하기 위해 표시
-        line = line.replace(/(\d+)\s*만\s*원?/g, '');
+      }
+      // 계산식이 없을 때만 "만원" 또는 "만" 단위 처리 (예: 35만원, 35만, (35만))
+      else {
+        const manwonMatch = line.match(/(\d+)\s*만\s*원?/);
+        if (manwonMatch) {
+          const amount = parseInt(manwonMatch[1]) * 10000;
+          // 자재비/인건비 키워드 확인
+          if (line.includes('자재') || line.includes('재료')) {
+            result.amounts.material = amount;
+          } else if (line.includes('인건') || line.includes('노무')) {
+            result.amounts.labor = amount;
+          } else if (!result.amounts.total) {
+            result.amounts.total = amount;
+          }
+          // "만원" 또는 "만" 처리된 라인은 이후 처리에서 제외하기 위해 표시
+          line = line.replace(/(\d+)\s*만\s*원?/g, '');
+        }
       }
 
       // 1-1. 계좌번호 패턴 우선 체크 (더 유연한 패턴)
