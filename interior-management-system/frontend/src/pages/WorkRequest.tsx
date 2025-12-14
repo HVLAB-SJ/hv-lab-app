@@ -236,10 +236,14 @@ const WorkRequest = () => {
     e.preventDefault();
     if (isSubmitting) return;
 
-    if (!formData.requestedBy || !formData.assignedTo || !formData.requestDate || !formData.dueDate) {
+    if (!formData.assignedTo || !formData.dueDate) {
       toast.error('필수 항목을 모두 입력하세요');
       return;
     }
+
+    // 요청자는 자동으로 로그인한 사용자로 설정, 요청일은 오늘 날짜
+    const requestedBy = user?.name || formData.requestedBy;
+    const requestDate = format(new Date(), 'yyyy-MM-dd');
 
     setIsSubmitting(true);
     try {
@@ -251,9 +255,9 @@ const WorkRequest = () => {
           project: formData.project,
           requestType: requestType,
           description: formData.description,
-          requestDate: new Date(formData.requestDate),
+          requestDate: new Date(requestDate),
           dueDate: new Date(formData.dueDate),
-          requestedBy: formData.requestedBy,
+          requestedBy: requestedBy,
           assignedTo: formData.assignedTo,
           status: editingRequest.status,
           priority: 'medium'
@@ -334,9 +338,9 @@ const WorkRequest = () => {
           project: formData.project,
           requestType: requestType,
           description: formData.description || '',
-          requestDate: new Date(formData.requestDate),
+          requestDate: new Date(requestDate),
           dueDate: new Date(formData.dueDate),
-          requestedBy: formData.requestedBy,
+          requestedBy: requestedBy,
           assignedTo: formData.assignedTo,
           status: 'pending',
           priority: 'medium'
@@ -715,20 +719,8 @@ const WorkRequest = () => {
               />
             </div>
 
-            {/* Dates */}
+            {/* Dates & People */}
             <div className="wr-dates grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  요청일 *
-                </label>
-                <input
-                  type="date"
-                  value={formData.requestDate}
-                  onChange={(e) => setFormData({ ...formData, requestDate: e.target.value })}
-                  required
-                  className="input w-full"
-                />
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   마감일 *
@@ -740,28 +732,6 @@ const WorkRequest = () => {
                   required
                   className="input w-full"
                 />
-              </div>
-            </div>
-
-            {/* People */}
-            <div className="wr-people grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  요청자 *
-                </label>
-                <select
-                  value={formData.requestedBy}
-                  onChange={(e) => setFormData({ ...formData, requestedBy: e.target.value })}
-                  required
-                  className="input w-full"
-                >
-                  <option value="">선택하세요</option>
-                  {TEAM_MEMBERS.map((member) => (
-                    <option key={member} value={member}>
-                      {member}
-                    </option>
-                  ))}
-                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1155,20 +1125,8 @@ const WorkRequest = () => {
                   />
                 </div>
 
-                {/* Dates */}
+                {/* Dates & People */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      요청일 *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.requestDate}
-                      onChange={(e) => setFormData({ ...formData, requestDate: e.target.value })}
-                      required
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white"
-                    />
-                  </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       마감일 *
@@ -1180,28 +1138,6 @@ const WorkRequest = () => {
                       required
                       className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white"
                     />
-                  </div>
-                </div>
-
-                {/* People */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      요청자 *
-                    </label>
-                    <select
-                      value={formData.requestedBy}
-                      onChange={(e) => setFormData({ ...formData, requestedBy: e.target.value })}
-                      required
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
-                    >
-                      <option value="">선택하세요</option>
-                      {TEAM_MEMBERS.map((member) => (
-                        <option key={member} value={member}>
-                          {member}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
