@@ -489,7 +489,7 @@ const Projects = () => {
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-semibold text-blue-700 flex items-center gap-1">
-                📝 미팅내용
+                미팅내용
                 {(project.meetingNotes?.length || 0) > 0 && (
                   <span className="text-blue-500">({project.meetingNotes?.length})</span>
                 )}
@@ -514,7 +514,7 @@ const Projects = () => {
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-semibold text-amber-700 flex items-center gap-1">
-                📋 고객요청
+                고객요청
                 {(project.customerRequests?.length || 0) > 0 && (
                   <span className="text-amber-500">({project.customerRequests?.length})</span>
                 )}
@@ -539,7 +539,7 @@ const Projects = () => {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                🔑 비밀번호
+                비밀번호
               </span>
               <span className="text-[10px] text-gray-400">클릭하여 수정</span>
             </div>
@@ -726,7 +726,7 @@ const Projects = () => {
                           className="flex items-center gap-2 p-2 bg-blue-50 hover:bg-blue-100 rounded cursor-pointer transition-colors"
                         >
                           <span className="text-xs font-medium text-blue-700 whitespace-nowrap flex items-center gap-1">
-                            📝 미팅
+                            미팅
                             {(project.meetingNotes?.length || 0) > 0 && (
                               <span className="text-blue-500">({project.meetingNotes?.length})</span>
                             )}
@@ -744,7 +744,7 @@ const Projects = () => {
                           className="flex items-center gap-2 p-2 bg-amber-50 hover:bg-amber-100 rounded cursor-pointer transition-colors"
                         >
                           <span className="text-xs font-medium text-amber-700 whitespace-nowrap flex items-center gap-1">
-                            📋 요청
+                            요청
                             {(project.customerRequests?.length || 0) > 0 && (
                               <span className="text-amber-500">({project.customerRequests?.length})</span>
                             )}
@@ -761,7 +761,7 @@ const Projects = () => {
                           onClick={() => handleOpenPassword(project)}
                           className="flex items-center gap-2 p-2 bg-gray-50 hover:bg-gray-100 rounded cursor-pointer transition-colors"
                         >
-                          <span className="text-xs font-medium text-gray-700 whitespace-nowrap">🔑 비밀번호</span>
+                          <span className="text-xs font-medium text-gray-700 whitespace-nowrap">비밀번호</span>
                           <span className="text-xs text-gray-600">
                             현관: <span className="font-medium">{project.entrancePassword || '-'}</span>
                             <span className="mx-2">|</span>
