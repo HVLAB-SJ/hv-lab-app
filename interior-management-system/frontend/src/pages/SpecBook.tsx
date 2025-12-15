@@ -67,6 +67,15 @@ const formatGradeRange = (gradeString: string | undefined): string => {
   return `${first}-${lastDisplay}`;
 };
 
+// 가격순 정렬 함수 (비싼 것부터)
+const sortByPriceDesc = (items: SpecBookItem[]): SpecBookItem[] => {
+  return [...items].sort((a, b) => {
+    const priceA = parseInt(a.price?.replace(/[^0-9]/g, '') || '0', 10);
+    const priceB = parseInt(b.price?.replace(/[^0-9]/g, '') || '0', 10);
+    return priceB - priceA;
+  });
+};
+
 // 등급에 따른 색상 반환 함수
 const getGradeColor = (gradeString: string | undefined): string => {
   if (!gradeString) return '';
@@ -671,7 +680,8 @@ const SpecBook = () => {
 
         const response = await api.get('/specbook/library/meta', { params });
         if (isMountedRef.current) {
-          const allItems = response.data;
+          // 라이브러리는 가격순 정렬 적용
+          const allItems = sortByPriceDesc(response.data);
           // 점진적 렌더링 적용
           const chunkSize = 20;
           const firstChunk = allItems.slice(0, chunkSize);
