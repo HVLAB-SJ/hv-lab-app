@@ -253,6 +253,11 @@ const Layout = () => {
 
   // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
   if (!user) {
+    // 현재 URL을 저장하여 로그인 후 리다이렉트
+    const currentUrl = window.location.pathname + window.location.search;
+    if (currentUrl && currentUrl !== '/login' && currentUrl !== '/') {
+      sessionStorage.setItem('redirectAfterLogin', currentUrl);
+    }
     return <Navigate to="/login" replace />;
   }
 

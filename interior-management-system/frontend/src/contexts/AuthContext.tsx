@@ -73,7 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       preloadSpecbook();
 
       toast.success(`${user.name}님, 환영합니다!`);
-      navigate('/');
+
+      // 저장된 리다이렉트 URL이 있으면 해당 URL로 이동
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectUrl);
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       const apiError = error as ApiError;
       toast.error(apiError.response?.data?.message || '로그인 실패');
