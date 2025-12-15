@@ -719,8 +719,9 @@ const Payments = () => {
         });
       }
 
-      // 다양한 계좌번호 패턴 (4-3-6, 3-6-5, 4-4-5, 6-2-6 등)
+      // 다양한 계좌번호 패턴 (4-3-6, 3-6-5, 4-4-5, 6-2-6, 6-8 등)
       const accountPatterns = [
+        /\d{6}[\s\-]+\d{8}/, // 6-8 패턴 (예: 605701-01341614)
         /\d{6}[\s\-]+\d{2}[\s\-]+\d{6}/, // 6-2-6 패턴 (예: 421013-52-133594)
         /\d{5,7}[\s\-]+\d{2}[\s\-]+\d{5,7}/, // 더 유연한 6-2-6 패턴
         /\d{2,4}[\s\-]+\d{2,4}[\s\-]+\d{2,4}[\s\-]+\d{2,4}/, // 4개 그룹 패턴 (3-4-4-2 등 지원)
@@ -728,6 +729,7 @@ const Payments = () => {
         /\d{3}[\s\-]+\d{4}[\s\-]+\d{7}/, // 3-4-7 패턴
         /\d{4}[\s\-]+\d{4}[\s\-]+\d{5}/, // 4-4-5 패턴
         /\d{3,4}[\s\-]+\d{2,6}[\s\-]+\d{4,7}/, // 3개 그룹 유연한 패턴
+        /\d{5,6}[\s\-]+\d{6,8}/, // 2개 그룹 유연한 패턴 (예: 605701-01341614)
         /\d{10,}/ // 연속된 숫자
       ];
 
@@ -868,14 +870,15 @@ const Payments = () => {
           const value = knownBanks[key];
           result.bankInfo.bankName = value;
 
-          // "은행키워드 이름" 패턴 체크 (예: "기업 조민호")
-          // 단, 은행명이 붙어있으면 건너뛰기 (예: "토스뱅크" -> "뱅크"를 이름으로 인식하면 안됨)
-          const bankNamePattern = new RegExp(`${key}(?:은행|뱅크)?\\s+([가-힣]{2,5})`);
+          // "은행키워드 예금주" 패턴 체크 (예: "기업 조민호", "국민 더루멘")
+          // 단, 은행명이 붙어있으면 건너뛰기 (예: "토스뱅크" -> "뱅크"를 예금주로 인식하면 안됨)
+          const bankNamePattern = new RegExp(`${key}(?:은행|뱅크)?\\s+([가-힣a-zA-Z0-9]{2,10})`);
           const bankNameMatch = line.match(bankNamePattern);
           if (bankNameMatch) {
             const potentialName = removeNameSuffix(bankNameMatch[1]);
-            // 이름이 유효한 한국 사람 이름인지 확인
-            if (isKoreanName(potentialName)) {
+            // 은행명 뒤에 오는 텍스트는 예금주(사람 이름 또는 상호명)로 인식
+            // 금액이나 계좌번호가 아닌지만 확인
+            if (potentialName && !/^\d+$/.test(potentialName) && potentialName !== '원') {
               result.bankInfo.accountHolder = potentialName;
             }
           }
