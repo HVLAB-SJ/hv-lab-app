@@ -257,6 +257,7 @@ const Payments = () => {
       // 모바일에서 내역 화면으로 전환 - 바로 송금완료 탭으로
       setMobileView('list');
       setStatusFilter('completed');
+      setProjectFilter('all'); // 전체 프로젝트 보이도록 설정
 
       // 로컬 상태 즉시 업데이트 (낙관적 UI)
       updatePayment(String(completeId), { status: 'completed' });
