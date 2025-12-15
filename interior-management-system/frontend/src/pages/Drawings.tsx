@@ -75,7 +75,18 @@ interface DrawingData {
 
 const Drawings = () => {
   const { user } = useAuth();
-  const projects = useFilteredProjects();
+  const allProjects = useFilteredProjects();
+
+  // 공사완료 현장 포함 여부
+  const [includeCompleted, setIncludeCompleted] = useState(() => {
+    const saved = localStorage.getItem('drawings_includeCompleted');
+    return saved === 'true';
+  });
+
+  // 완료된 프로젝트 필터링
+  const projects = includeCompleted
+    ? allProjects
+    : allProjects.filter(p => p.status !== 'completed');
 
   const [selectedProject, setSelectedProject] = useState<string>(() => {
     // 초기 로드 시 localStorage에서 저장된 프로젝트 불러오기
@@ -215,6 +226,11 @@ const Drawings = () => {
       localStorage.setItem(`drawings-selected-project-${user.id}`, selectedProject);
     }
   }, [user?.id, selectedProject]);
+
+  // includeCompleted 설정 저장
+  useEffect(() => {
+    localStorage.setItem('drawings_includeCompleted', String(includeCompleted));
+  }, [includeCompleted]);
 
   // Save selected drawing type to localStorage when it changes
   useEffect(() => {
@@ -928,21 +944,28 @@ const Drawings = () => {
       <div className="bg-white border-b px-3 md:px-6 py-3 flex-shrink-0">
         {/* 모바일 레이아웃 */}
         <div className="md:hidden">
-          {/* 첫 번째 줄: 프로젝트 선택 (우측 정렬) */}
-          <div className="flex justify-end mb-3">
+          {/* 첫 번째 줄: 프로젝트 선택 */}
+          <div className="flex items-center justify-between mb-3">
+            <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeCompleted}
+                onChange={(e) => setIncludeCompleted(e.target.checked)}
+                className="rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+              />
+              공사완료 현장 포함
+            </label>
             <select
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
               className="input max-w-[200px] text-sm"
             >
               {user?.name !== '안팀' && <option value="">프로젝트 선택</option>}
-              {projects
-                .filter(p => p.status !== 'completed')
-                .map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -982,21 +1005,28 @@ const Drawings = () => {
         {/* 데스크톱 레이아웃 */}
         <div className="hidden md:flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-80">
+            <div className="flex flex-col gap-1">
               <select
                 value={selectedProject}
                 onChange={(e) => setSelectedProject(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-80 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 {user?.name !== '안팀' && <option value="">프로젝트를 선택하세요</option>}
-                {projects
-                  .filter(p => p.status !== 'completed')
-                  .map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
               </select>
+              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeCompleted}
+                  onChange={(e) => setIncludeCompleted(e.target.checked)}
+                  className="rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                />
+                공사완료 현장 포함
+              </label>
             </div>
 
             {/* 네이버도면 전용 입력 필드 (데스크톱) */}
