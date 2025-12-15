@@ -78,6 +78,7 @@ export interface Payment {
   requestedBy: string;
   requestDate: Date;
   approvalDate?: Date;
+  completionDate?: Date; // 송금완료 시간
   bankInfo?: {
     accountHolder: string;
     bankName: string;

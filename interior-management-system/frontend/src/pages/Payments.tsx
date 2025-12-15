@@ -1612,6 +1612,15 @@ const Payments = () => {
     // 내 요청만 보기 (송금완료 탭에서만 적용)
     const matchesMyRequests = !showMyRequestsOnly || statusFilter !== 'completed' || record.requestedBy === user?.name;
     return matchesSearch && matchesStatus && matchesProject && matchesMyRequests;
+  }).sort((a, b) => {
+    // 송금완료 탭에서는 completionDate 기준 정렬 (최신 송금완료 순)
+    if (statusFilter === 'completed') {
+      const dateA = a.completionDate ? new Date(a.completionDate).getTime() : 0;
+      const dateB = b.completionDate ? new Date(b.completionDate).getTime() : 0;
+      return dateB - dateA;
+    }
+    // 대기중 탭에서는 요청일 기준 정렬 유지
+    return new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime();
   });
 
   // 협력업체 선택 핸들러
