@@ -2050,7 +2050,9 @@ const Payments = () => {
       .then(() => {
         // 다른 기기에 실시간 동기화 알림
         const socket = socketService.getSocket();
-        socket.emit('payment:refresh');
+        if (socket) {
+          socket.emit('payment:refresh');
+        }
       })
       .catch((error) => {
         console.error('송금완료 처리 실패:', error);
