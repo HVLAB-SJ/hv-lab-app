@@ -26,7 +26,18 @@ const ExecutionHistory = () => {
     deletePaymentFromAPI
   } = useDataStore();
   const { user } = useAuth();
-  const projects = useFilteredProjects(); // 안팀 사용자는 담당 프로젝트만 표시
+  const allProjects = useFilteredProjects(); // 안팀 사용자는 담당 프로젝트만 표시
+
+  // 공사완료 현장 포함 여부
+  const [includeCompleted, setIncludeCompleted] = useState(() => {
+    const saved = localStorage.getItem('executionHistory_includeCompleted');
+    return saved === 'true';
+  });
+
+  // 완료된 프로젝트 필터링
+  const projects = includeCompleted
+    ? allProjects
+    : allProjects.filter(p => p.status !== 'completed');
 
   // 로그인 체크만 수행 (모든 로그인 사용자 접근 가능)
   if (!user) {
@@ -73,21 +84,19 @@ const ExecutionHistory = () => {
   const getInitialProject = () => {
     const lastSelected = localStorage.getItem('lastSelectedProject');
 
-    // 공사완료되지 않은 프로젝트만 필터링
-    const activeProjects = projects.filter(p => p.status !== 'completed');
-
     // "기타"는 항상 유효한 프로젝트로 인정
     if (lastSelected === '기타') {
       return '기타';
     }
 
-    if (lastSelected && activeProjects.some(p => p.name === lastSelected)) {
+    // projects는 이미 includeCompleted에 따라 필터링됨
+    if (lastSelected && projects.some(p => p.name === lastSelected)) {
       return lastSelected;
     }
 
     // 프로젝트가 있으면 첫 번째 프로젝트를 기본값으로
-    if (activeProjects.length > 0) {
-      return activeProjects[0].name;
+    if (projects.length > 0) {
+      return projects[0].name;
     }
 
     return '';
@@ -194,6 +203,11 @@ const ExecutionHistory = () => {
   useEffect(() => {
     localStorage.setItem('hiddenPaymentIds', JSON.stringify(hiddenPaymentIds));
   }, [hiddenPaymentIds]);
+
+  // includeCompleted 설정 저장
+  useEffect(() => {
+    localStorage.setItem('executionHistory_includeCompleted', String(includeCompleted));
+  }, [includeCompleted]);
 
   // executionMemos가 변경될 때마다 localStorage에 저장
   useEffect(() => {
@@ -1090,7 +1104,7 @@ const ExecutionHistory = () => {
   return (
     <div className="space-y-3 md:space-y-4">
       {/* 모바일에서 프로젝트 선택 */}
-      <div className="md:hidden mb-4">
+      <div className="md:hidden mb-4 space-y-2">
         <select
           value={formData.project}
           onChange={(e) => {
@@ -1101,11 +1115,20 @@ const ExecutionHistory = () => {
           }}
           className="w-full px-3 py-2.5 md:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
         >
-          {projects.filter(p => p.status !== 'completed').map(project => (
+          {projects.map(project => (
             <option key={project.id} value={project.name}>{project.name}</option>
           ))}
           {user?.name !== '안팀' && <option value="기타">기타</option>}
         </select>
+        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={includeCompleted}
+            onChange={(e) => setIncludeCompleted(e.target.checked)}
+            className="rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+          />
+          공사완료 현장 포함
+        </label>
       </div>
 
       {/* 모바일에서 탭 표시 */}
@@ -1145,7 +1168,7 @@ const ExecutionHistory = () => {
         }`}>
           <div className="execution-form-inner space-y-4 w-full">
             {/* 프로젝트 선택 */}
-            <div className="exec-project">
+            <div className="exec-project space-y-2">
               <select
                 value={formData.project}
                 onChange={(e) => {
@@ -1157,12 +1180,20 @@ const ExecutionHistory = () => {
                 }}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white cursor-pointer hover:border-gray-400 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
               >
-                {/* 빈칸 옵션 제거 - 모든 환경에서 */}
-                {projects.filter(p => p.status !== 'completed').map(project => (
+                {projects.map(project => (
                   <option key={project.id} value={project.name}>{project.name}</option>
                 ))}
                 {user?.name !== '안팀' && <option value="기타">기타</option>}
               </select>
+              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeCompleted}
+                  onChange={(e) => setIncludeCompleted(e.target.checked)}
+                  className="rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                />
+                공사완료 현장 포함
+              </label>
             </div>
 
             {/* 빠른 입력 */}
