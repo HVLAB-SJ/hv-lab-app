@@ -480,52 +480,84 @@ const Projects = () => {
           </div>
         </div>
 
-        <div className="pt-2 border-t border-gray-200 space-y-2">
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => handleOpenMeetingNotes(project)}
-              className="relative px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              미팅내용
-              {(project.meetingNotes?.length || 0) > 0 && (
-                <span className="ml-1 text-[10px] text-gray-500">
-                  ({project.meetingNotes?.length || 0})
-                </span>
-              )}
+        {/* 펼쳐진 요약 카드 영역 */}
+        <div className="pt-3 border-t border-gray-200 space-y-2">
+          {/* 미팅내용 */}
+          <div
+            onClick={() => handleOpenMeetingNotes(project)}
+            className="relative p-2.5 bg-blue-50 hover:bg-blue-100 rounded-lg cursor-pointer transition-colors border border-blue-100"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-blue-700 flex items-center gap-1">
+                📝 미팅내용
+                {(project.meetingNotes?.length || 0) > 0 && (
+                  <span className="text-blue-500">({project.meetingNotes?.length})</span>
+                )}
+              </span>
               {hasNewItems(project, 'meeting') && (
-                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-white bg-red-500 rounded-full">
-                  N
-                </span>
+                <span className="px-1.5 py-0.5 text-[9px] font-bold text-white bg-red-500 rounded-full">NEW</span>
               )}
-            </button>
-            <button
-              onClick={() => handleOpenCustomerRequests(project)}
-              className="relative px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              고객요청
-              {(project.customerRequests?.length || 0) > 0 && (
-                <span className="ml-1 text-[10px] text-gray-500">
-                  ({project.customerRequests?.length || 0})
-                </span>
-              )}
-              {hasNewItems(project, 'request') && (
-                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-white bg-red-500 rounded-full">
-                  N
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => handleOpenPassword(project)}
-              className="px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              비밀번호
-            </button>
+            </div>
+            {project.meetingNotes && project.meetingNotes.length > 0 ? (
+              <p className="text-xs text-gray-600 line-clamp-1">
+                {project.meetingNotes[project.meetingNotes.length - 1]?.content || '내용 없음'}
+              </p>
+            ) : (
+              <p className="text-xs text-blue-400 italic">+ 미팅 내용을 추가하세요</p>
+            )}
           </div>
+
+          {/* 고객요청 */}
+          <div
+            onClick={() => handleOpenCustomerRequests(project)}
+            className="relative p-2.5 bg-amber-50 hover:bg-amber-100 rounded-lg cursor-pointer transition-colors border border-amber-100"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-amber-700 flex items-center gap-1">
+                📋 고객요청
+                {(project.customerRequests?.length || 0) > 0 && (
+                  <span className="text-amber-500">({project.customerRequests?.length})</span>
+                )}
+              </span>
+              {hasNewItems(project, 'request') && (
+                <span className="px-1.5 py-0.5 text-[9px] font-bold text-white bg-red-500 rounded-full">NEW</span>
+              )}
+            </div>
+            {project.customerRequests && project.customerRequests.length > 0 ? (
+              <p className="text-xs text-gray-600 line-clamp-1">
+                {project.customerRequests[project.customerRequests.length - 1]?.content || '내용 없음'}
+              </p>
+            ) : (
+              <p className="text-xs text-amber-400 italic">+ 고객 요청을 추가하세요</p>
+            )}
+          </div>
+
+          {/* 비밀번호 */}
+          <div
+            onClick={() => handleOpenPassword(project)}
+            className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors border border-gray-200"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                🔑 비밀번호
+              </span>
+              <span className="text-[10px] text-gray-400">클릭하여 수정</span>
+            </div>
+            <div className="flex gap-4 mt-1 text-xs">
+              <span className="text-gray-600">
+                현관: <span className="font-medium text-gray-800">{project.entrancePassword || '-'}</span>
+              </span>
+              <span className="text-gray-600">
+                현장: <span className="font-medium text-gray-800">{project.sitePassword || '-'}</span>
+              </span>
+            </div>
+          </div>
+
           {(user?.role === 'admin' || user?.role === 'manager') && (
-            <div className="flex space-x-2">
+            <div className="flex justify-end pt-1">
               <button
                 onClick={() => handleDelete(project.id, project.name)}
-                className="text-xs text-rose-600 hover:text-rose-700"
+                className="text-xs text-rose-500 hover:text-rose-600"
               >
                 삭제
               </button>
@@ -686,49 +718,58 @@ const Projects = () => {
                         <span className="text-sm">{autoProgress}%</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleOpenMeetingNotes(project)}
-                            className="relative px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                          >
-                            미팅내용
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1.5 min-w-[280px]">
+                        {/* 미팅내용 */}
+                        <div
+                          onClick={() => handleOpenMeetingNotes(project)}
+                          className="flex items-center gap-2 p-2 bg-blue-50 hover:bg-blue-100 rounded cursor-pointer transition-colors"
+                        >
+                          <span className="text-xs font-medium text-blue-700 whitespace-nowrap flex items-center gap-1">
+                            📝 미팅
                             {(project.meetingNotes?.length || 0) > 0 && (
-                              <span className="ml-1 text-[10px] text-gray-500">
-                                ({project.meetingNotes?.length || 0})
-                              </span>
+                              <span className="text-blue-500">({project.meetingNotes?.length})</span>
                             )}
                             {hasNewItems(project, 'meeting') && (
-                              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-white bg-red-500 rounded-full">
-                                N
-                              </span>
+                              <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-red-500 rounded">N</span>
                             )}
-                          </button>
-                          <button
-                            onClick={() => handleOpenCustomerRequests(project)}
-                            className="relative px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                          >
-                            고객요청
+                          </span>
+                          <span className="text-xs text-gray-600 truncate flex-1">
+                            {project.meetingNotes?.length ? project.meetingNotes[project.meetingNotes.length - 1]?.content || '-' : '내용 없음'}
+                          </span>
+                        </div>
+                        {/* 고객요청 */}
+                        <div
+                          onClick={() => handleOpenCustomerRequests(project)}
+                          className="flex items-center gap-2 p-2 bg-amber-50 hover:bg-amber-100 rounded cursor-pointer transition-colors"
+                        >
+                          <span className="text-xs font-medium text-amber-700 whitespace-nowrap flex items-center gap-1">
+                            📋 요청
                             {(project.customerRequests?.length || 0) > 0 && (
-                              <span className="ml-1 text-[10px] text-gray-500">
-                                ({project.customerRequests?.length || 0})
-                              </span>
+                              <span className="text-amber-500">({project.customerRequests?.length})</span>
                             )}
                             {hasNewItems(project, 'request') && (
-                              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-white bg-red-500 rounded-full">
-                                N
-                              </span>
+                              <span className="px-1 py-0.5 text-[9px] font-bold text-white bg-red-500 rounded">N</span>
                             )}
-                          </button>
-                          <button
-                            onClick={() => handleOpenPassword(project)}
-                            className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                          >
-                            비밀번호
-                          </button>
+                          </span>
+                          <span className="text-xs text-gray-600 truncate flex-1">
+                            {project.customerRequests?.length ? project.customerRequests[project.customerRequests.length - 1]?.content || '-' : '내용 없음'}
+                          </span>
                         </div>
-                        <div className="flex space-x-2">
+                        {/* 비밀번호 */}
+                        <div
+                          onClick={() => handleOpenPassword(project)}
+                          className="flex items-center gap-2 p-2 bg-gray-50 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+                        >
+                          <span className="text-xs font-medium text-gray-700 whitespace-nowrap">🔑 비밀번호</span>
+                          <span className="text-xs text-gray-600">
+                            현관: <span className="font-medium">{project.entrancePassword || '-'}</span>
+                            <span className="mx-2">|</span>
+                            현장: <span className="font-medium">{project.sitePassword || '-'}</span>
+                          </span>
+                        </div>
+                        {/* 수정/삭제 버튼 */}
+                        <div className="flex space-x-2 pt-1">
                           <button
                             onClick={() => handleEdit(project)}
                             className="text-xs text-gray-600 hover:text-gray-900"
