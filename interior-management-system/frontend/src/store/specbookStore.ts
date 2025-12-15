@@ -140,6 +140,13 @@ export const useSpecbookStore = create<SpecbookStore>((set, get) => ({
       });
     }
 
+    // 가격순 정렬 (비싼 것부터)
+    filtered = [...filtered].sort((a, b) => {
+      const priceA = parseInt(a.price?.replace(/[^0-9]/g, '') || '0', 10);
+      const priceB = parseInt(b.price?.replace(/[^0-9]/g, '') || '0', 10);
+      return priceB - priceA;
+    });
+
     return filtered;
   },
 
