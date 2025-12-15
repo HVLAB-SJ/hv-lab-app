@@ -27,8 +27,19 @@ interface ProjectGroup {
 
 const AdditionalWork = () => {
   const { user } = useAuth();
-  const filteredProjects = useFilteredProjects();
+  const allFilteredProjects = useFilteredProjects();
   const { constructionPayments } = useDataStore();
+
+  // 공사완료 현장 포함 여부
+  const [includeCompleted, setIncludeCompleted] = useState(() => {
+    const saved = localStorage.getItem('additionalWork_includeCompleted');
+    return saved === 'true';
+  });
+
+  // 완료된 프로젝트 필터링
+  const filteredProjects = includeCompleted
+    ? allFilteredProjects
+    : allFilteredProjects.filter(p => p.status !== 'completed');
   const [additionalWorks, setAdditionalWorks] = useState<AdditionalWork[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWork, setSelectedWork] = useState<AdditionalWork | null>(null);
@@ -94,6 +105,11 @@ const AdditionalWork = () => {
       setFormData(prev => ({ ...prev, project: defaultProject }));
     }
   }, [filteredProjects]);
+
+  // includeCompleted 설정 저장
+  useEffect(() => {
+    localStorage.setItem('additionalWork_includeCompleted', String(includeCompleted));
+  }, [includeCompleted]);
 
   // 클립보드 이미지 붙여넣기 처리
   const handlePaste = useCallback((e: ClipboardEvent) => {
@@ -417,8 +433,8 @@ const AdditionalWork = () => {
         <div className="additional-work-form md:col-span-4 lg:col-span-4 bg-white border border-gray-200 rounded-lg p-4 md:p-5 lg:p-6 h-fit sticky top-4">
           <div className="aw-form-inner space-y-4">
             {/* 프로젝트 선택 */}
-            <div className="aw-project">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <div className="aw-project space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
                 프로젝트 *
               </label>
               <select
@@ -433,6 +449,15 @@ const AdditionalWork = () => {
                   </option>
                 ))}
               </select>
+              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeCompleted}
+                  onChange={(e) => setIncludeCompleted(e.target.checked)}
+                  className="rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                />
+                공사완료 현장 포함
+              </label>
             </div>
 
             {/* 일자 */}
@@ -737,8 +762,8 @@ const AdditionalWork = () => {
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="space-y-3">
               {/* 프로젝트 선택 */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
                   프로젝트 *
                 </label>
                 <select
@@ -753,6 +778,15 @@ const AdditionalWork = () => {
                     </option>
                   ))}
                 </select>
+                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={includeCompleted}
+                    onChange={(e) => setIncludeCompleted(e.target.checked)}
+                    className="rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                  />
+                  공사완료 현장 포함
+                </label>
               </div>
 
               {/* 일자 */}
