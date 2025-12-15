@@ -409,6 +409,18 @@ const Projects = () => {
       filtered = filtered.filter(p => p.status === activeTab);
     }
 
+    // 로그인한 사용자가 담당자인 프로젝트 우선 정렬
+    if (user?.name) {
+      filtered = [...filtered].sort((a, b) => {
+        const aIsMyProject = a.manager === user.name || a.team?.includes(user.name);
+        const bIsMyProject = b.manager === user.name || b.team?.includes(user.name);
+
+        if (aIsMyProject && !bIsMyProject) return -1;
+        if (!aIsMyProject && bIsMyProject) return 1;
+        return 0;
+      });
+    }
+
     return filtered;
   };
 
