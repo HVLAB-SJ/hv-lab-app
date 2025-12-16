@@ -2052,6 +2052,8 @@ const Payments = () => {
 
     // 송금완료 탭으로 즉시 전환
     setStatusFilter('completed');
+    // 모바일에서 프로젝트 드롭다운을 "프로젝트 선택"으로 초기화
+    setFormData(prev => ({ ...prev, project: '' }));
 
     toast.success('송금완료 처리되었습니다');
 
@@ -2831,7 +2833,11 @@ const Payments = () => {
                   </span>
                 </button>
                 <button
-                  onClick={() => setStatusFilter('completed')}
+                  onClick={() => {
+                    setStatusFilter('completed');
+                    // 모바일에서 프로젝트 드롭다운을 "프로젝트 선택"으로 초기화
+                    setFormData(prev => ({ ...prev, project: '' }));
+                  }}
                   className={`px-4 py-2.5 rounded-t-lg font-medium text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
                     statusFilter === 'completed'
                       ? 'bg-white text-gray-900 shadow-sm border-b-2 border-gray-900'
