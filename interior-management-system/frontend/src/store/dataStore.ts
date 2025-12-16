@@ -376,7 +376,8 @@ export const useDataStore = create<DataStore>()(
             accountNumber: p.account_number || ''
           },
           attachments: [],
-          notes: p.notes || ''
+          notes: p.notes || '',
+          completionDate: p.paid_at ? new Date(p.paid_at) : undefined
         };
       });
       set({ payments });

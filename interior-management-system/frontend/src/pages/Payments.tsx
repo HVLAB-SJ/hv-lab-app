@@ -1614,9 +1614,10 @@ const Payments = () => {
     return matchesSearch && matchesStatus && matchesProject && matchesMyRequests;
   }).sort((a, b) => {
     // 송금완료 탭에서는 completionDate 기준 정렬 (최신 송금완료 순)
+    // completionDate가 없으면 requestDate로 폴백
     if (statusFilter === 'completed') {
-      const dateA = a.completionDate ? new Date(a.completionDate).getTime() : 0;
-      const dateB = b.completionDate ? new Date(b.completionDate).getTime() : 0;
+      const dateA = a.completionDate ? new Date(a.completionDate).getTime() : new Date(a.requestDate).getTime();
+      const dateB = b.completionDate ? new Date(b.completionDate).getTime() : new Date(b.requestDate).getTime();
       return dateB - dateA;
     }
     // 대기중 탭에서는 요청일 기준 정렬 유지
@@ -2045,8 +2046,8 @@ const Payments = () => {
       localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
     }
 
-    // 낙관적 업데이트: 즉시 UI 반영 (로컬 상태 업데이트)
-    updatePayment(paymentId, { status: 'completed' });
+    // 낙관적 업데이트: 즉시 UI 반영 (로컬 상태 업데이트) + completionDate 설정
+    updatePayment(paymentId, { status: 'completed', completionDate: new Date() });
     setShowDetailModal(false);
 
     // 송금완료 탭으로 즉시 전환
@@ -2073,8 +2074,8 @@ const Payments = () => {
       }
     } catch (error) {
       console.error('송금완료 처리 실패:', error);
-      // 실패 시 롤백 - 상태와 탭 모두 복구
-      updatePayment(paymentId, { status: 'pending' });
+      // 실패 시 롤백 - 상태와 탭 모두 복구, completionDate도 제거
+      updatePayment(paymentId, { status: 'pending', completionDate: undefined });
       setStatusFilter('pending');
       toast.error('송금완료 처리 실패 - 다시 시도해주세요');
     }
