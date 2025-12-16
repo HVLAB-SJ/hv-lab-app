@@ -69,6 +69,11 @@ const ExecutionHistory = () => {
   });
   // 액션 메뉴 상태 (모바일용)
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+  // 삭제 확인 팝업 상태
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    recordId: string;
+    position: { x: number; y: number };
+  } | null>(null);
   // 항목명 추천
   const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
   const [isItemNameFocused, setIsItemNameFocused] = useState(false); // 항목명 input 포커스 상태
@@ -895,16 +900,32 @@ const ExecutionHistory = () => {
     }
   };
 
-  // 삭제 핸들러
-  const handleDeleteClick = async (recordId: string, e: React.MouseEvent) => {
+  // 삭제 확인 팝업 표시
+  const handleDeleteClick = (recordId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setActionMenuId(null);
+
+    // 클릭 위치 저장
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setDeleteConfirm({
+      recordId,
+      position: {
+        x: rect.left,
+        y: rect.bottom + 4
+      }
+    });
+  };
+
+  // 실제 삭제 실행
+  const executeDelete = async () => {
+    if (!deleteConfirm) return;
+
+    const recordId = deleteConfirm.recordId;
+    setDeleteConfirm(null);
 
     // 레코드 타입 확인 - allRecords뿐만 아니라 executionRecords에서도 직접 확인
     const record = allRecords.find(r => r.id === recordId);
     const isExecutionRecord = executionRecords.some(r => r.id === recordId);
-
-    if (!confirm('정말 삭제하시겠습니까?')) return;
 
     try {
       if (isExecutionRecord) {
@@ -2354,6 +2375,41 @@ const ExecutionHistory = () => {
                   선택 안함
                 </button>
               </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 삭제 확인 팝업 */}
+      {deleteConfirm && (
+        <>
+          {/* 배경 클릭 시 닫기 */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setDeleteConfirm(null)}
+          />
+          {/* 팝업 */}
+          <div
+            className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-3 min-w-[160px]"
+            style={{
+              left: Math.min(deleteConfirm.position.x, window.innerWidth - 180),
+              top: Math.min(deleteConfirm.position.y, window.innerHeight - 100)
+            }}
+          >
+            <p className="text-sm text-gray-700 mb-3">정말 삭제하시겠습니까?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-3 py-1.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={executeDelete}
+                className="flex-1 px-3 py-1.5 text-sm text-white bg-red-500 hover:bg-red-600 rounded transition-colors"
+              >
+                삭제
+              </button>
             </div>
           </div>
         </>
