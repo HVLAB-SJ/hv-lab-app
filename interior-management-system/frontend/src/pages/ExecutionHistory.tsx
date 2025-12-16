@@ -405,6 +405,7 @@ const ExecutionHistory = () => {
 
   // 실행내역 레코드 변환
   // 안팀 사용자인 경우 담당 프로젝트만 필터링
+  console.log('[ExecutionHistory] executionRecords 개수:', executionRecords.length);
   const manualRecords = executionRecords
     .filter(record => user?.name !== '안팀' || filteredProjectNames.includes(record.project))
     .map(record => ({
@@ -582,7 +583,9 @@ const ExecutionHistory = () => {
     };
 
     try {
+      console.log('[ExecutionHistory] 저장 시도:', newRecord.project, newRecord.itemName);
       const savedRecord = await addExecutionRecordToAPI(newRecord);
+      console.log('[ExecutionHistory] 저장 완료:', savedRecord.id, savedRecord.project);
       toast.success('실행내역이 추가되었습니다');
 
       // 폼 초기화 (프로젝트는 유지)
