@@ -586,6 +586,11 @@ const ExecutionHistory = () => {
       console.log('[ExecutionHistory] 저장 시도:', newRecord.project, newRecord.itemName);
       const savedRecord = await addExecutionRecordToAPI(newRecord);
       console.log('[ExecutionHistory] 저장 완료:', savedRecord.id, savedRecord.project);
+
+      // 서버에서 최신 목록 다시 불러오기 (동기화 보장)
+      await loadExecutionRecordsFromAPI();
+      console.log('[ExecutionHistory] 목록 새로고침 완료');
+
       toast.success('실행내역이 추가되었습니다');
 
       // 폼 초기화 (프로젝트는 유지)
