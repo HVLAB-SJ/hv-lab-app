@@ -259,21 +259,30 @@ const Payments = () => {
       setStatusFilter('completed');
       setProjectFilter('all'); // 전체 프로젝트 보이도록 설정
 
-      // 로컬 상태 즉시 업데이트 (낙관적 UI)
-      updatePayment(String(completeId), { status: 'completed' });
+      // 로컬 상태 즉시 업데이트 (낙관적 UI) + completionDate 설정
+      updatePayment(String(completeId), { status: 'completed', completionDate: new Date() });
       toast.success('송금완료 처리되었습니다');
 
+      // 배지 카운트 즉시 업데이트 이벤트 발생
+      window.dispatchEvent(new CustomEvent('paymentCompleted'));
+
       try {
-        // 서버에 송금완료 처리 (백그라운드에서 진행)
+        // 서버에 송금완료 처리
         await updatePaymentInAPI(String(completeId), { status: 'completed' });
 
-        // API 완료 후 목록 새로고침 (서버와 동기화)
-        loadPaymentsFromAPI();
+        // API 완료 후 목록 새로고침 (서버와 동기화) - await로 완료 대기
+        await loadPaymentsFromAPI();
+
+        // 다른 기기에 실시간 동기화 알림
+        const socket = socketService.getSocket();
+        if (socket) {
+          socket.emit('payment:refresh');
+        }
       } catch (error: any) {
         console.error('[자동 송금완료] 처리 실패:', error);
 
-        // 실패 시 롤백 - 다시 대기중으로
-        updatePayment(String(completeId), { status: 'pending' });
+        // 실패 시 롤백 - 다시 대기중으로, completionDate도 제거
+        updatePayment(String(completeId), { status: 'pending', completionDate: undefined });
         setStatusFilter('pending');
 
         let errorMessage = '송금완료 처리에 실패했습니다';
