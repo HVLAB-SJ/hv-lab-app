@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
+import { useDataStore } from '../store/dataStore';
 
 interface FinishCheckItemImage {
   id: number;
@@ -43,8 +44,10 @@ interface Project {
 
 const FinishCheck = () => {
   const { user } = useAuth();
+  const { loadProjectsFromAPI, projects: storeProjects } = useDataStore();
   const filteredProjects = useFilteredProjects();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [spaces, setSpaces] = useState<FinishCheckSpace[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,9 +78,16 @@ const FinishCheck = () => {
     localStorage.setItem('finishCheck_showOnlyIncomplete', String(showOnlyIncomplete));
   }, [showOnlyIncomplete]);
 
+  // 초기 로딩 - 프로젝트 데이터 로드
   useEffect(() => {
-    // Don't load spaces initially - wait for project to be selected
-    // loadSpaces(); // Removed to prevent loading before project is selected
+    const initLoad = async () => {
+      // storeProjects가 비어있으면 API에서 로드
+      if (storeProjects.length === 0) {
+        await loadProjectsFromAPI();
+      }
+      setInitialLoading(false);
+    };
+    initLoad();
 
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -89,8 +99,10 @@ const FinishCheck = () => {
 
   // filteredProjects가 변경될 때 프로젝트 다시 로드
   useEffect(() => {
-    loadProjects();
-  }, [filteredProjects]);
+    if (!initialLoading) {
+      loadProjects();
+    }
+  }, [filteredProjects, initialLoading]);
 
   useEffect(() => {
     if (selectedProjectId !== null) {
