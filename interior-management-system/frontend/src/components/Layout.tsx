@@ -328,10 +328,7 @@ const Layout = () => {
       >
         <div
           className="fixed inset-0 bg-gray-900 bg-opacity-50"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSidebarOpen(false);
-          }}
+          onClick={() => setSidebarOpen(false)}
         />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
           <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200">
@@ -356,10 +353,9 @@ const Layout = () => {
                       : 'border-transparent text-gray-600 hover:border-gray-400 hover:bg-gray-50'
                   )
                 }
-                onClick={(e) => {
-                  // 라우팅이 먼저 처리되도록 사이드바 닫기를 지연
-                  e.stopPropagation();
-                  setTimeout(() => setSidebarOpen(false), 10);
+                onClick={() => {
+                  // 라우팅 후 사이드바 닫기
+                  setSidebarOpen(false);
                 }}
               >
                 <span className="flex items-center justify-between">
