@@ -608,12 +608,22 @@ const ExecutionHistory = () => {
       setIncludeVat(false); // 부가세 체크 초기화
       setIncludeTaxDeduction(false); // 세금공제 체크 초기화
 
-      // 모바일에서는 폼을 닫고 리스트 뷰로 전환, 새 레코드 선택
+      // 새 레코드 선택 (데스크톱/모바일 모두)
+      setSelectedRecord(savedRecord.id);
+
+      // 모바일에서는 폼을 닫고 리스트 뷰로 전환
       if (isMobileDevice) {
-        setSelectedRecord(savedRecord.id);
         setShowMobileForm(false);
         setMobileView('list');
       }
+
+      // 선택된 레코드로 스크롤 (약간의 딜레이 후)
+      setTimeout(() => {
+        const element = document.querySelector(`[data-record-id="${savedRecord.id}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     } catch (error) {
       console.error('실행내역 저장 실패:', error);
       toast.error('실행내역 저장에 실패했습니다');
@@ -1613,6 +1623,7 @@ const ExecutionHistory = () => {
                   {filteredRecords.map((record) => (
                     <tr
                       key={record.id}
+                      data-record-id={record.id}
                       className={`group hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === record.id ? 'bg-blue-50' : ''}`}
                       onClick={() => setSelectedRecord(record.id)}
                     >
@@ -1670,6 +1681,7 @@ const ExecutionHistory = () => {
                 {filteredRecords.map((record) => (
                   <div
                     key={record.id}
+                    data-record-id={record.id}
                     className={`border rounded-lg px-3 py-2 relative ${
                       selectedRecord === record.id ? 'bg-blue-50 border-blue-300' : 'bg-white'
                     }`}
