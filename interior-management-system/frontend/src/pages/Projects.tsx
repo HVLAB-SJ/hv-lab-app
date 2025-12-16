@@ -480,6 +480,15 @@ const Projects = () => {
         </div>
 
         <div className="mb-3 md:mb-4">
+          {/* 비밀번호 버튼 */}
+          <div className="flex items-center justify-end mb-2">
+            <button
+              onClick={() => handleOpenPassword(project)}
+              className="px-2.5 py-1 text-[10px] md:text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors"
+            >
+              비밀번호
+            </button>
+          </div>
           <div className="flex items-center justify-between mb-1.5 md:mb-2">
             <span className="text-[10px] md:text-xs text-gray-600">진행률 (자동 계산)</span>
             <span className="text-xs md:text-sm font-medium text-gray-900">{autoProgress}%</span>
@@ -549,27 +558,6 @@ const Projects = () => {
               </div>
             );
           })()}
-
-          {/* 비밀번호 */}
-          <div
-            onClick={() => handleOpenPassword(project)}
-            className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors border border-gray-200"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                비밀번호
-              </span>
-              <span className="text-[10px] text-gray-400">클릭하여 수정</span>
-            </div>
-            <div className="flex gap-4 mt-1 text-xs">
-              <span className="text-gray-600">
-                현관: <span className="font-medium text-gray-800">{project.entrancePassword || '-'}</span>
-              </span>
-              <span className="text-gray-600">
-                현장: <span className="font-medium text-gray-800">{project.sitePassword || '-'}</span>
-              </span>
-            </div>
-          </div>
 
           {(user?.role === 'admin' || user?.role === 'manager') && (
             <div className="flex justify-end pt-1">
@@ -726,14 +714,22 @@ const Projects = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-24 bg-gray-200 h-1 mr-2">
-                          <div
-                            className="bg-gray-900 h-1"
-                            style={{ width: `${autoProgress}%` }}
-                          />
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => handleOpenPassword(project)}
+                          className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors"
+                        >
+                          비밀번호
+                        </button>
+                        <div className="flex items-center">
+                          <div className="w-24 bg-gray-200 h-1 mr-2">
+                            <div
+                              className="bg-gray-900 h-1"
+                              style={{ width: `${autoProgress}%` }}
+                            />
+                          </div>
+                          <span className="text-sm">{autoProgress}%</span>
                         </div>
-                        <span className="text-sm">{autoProgress}%</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -780,18 +776,6 @@ const Projects = () => {
                             </div>
                           );
                         })()}
-                        {/* 비밀번호 */}
-                        <div
-                          onClick={() => handleOpenPassword(project)}
-                          className="flex items-center gap-2 p-2 bg-gray-50 hover:bg-gray-100 rounded cursor-pointer transition-colors"
-                        >
-                          <span className="text-xs font-medium text-gray-700 whitespace-nowrap">비밀번호</span>
-                          <span className="text-xs text-gray-600">
-                            현관: <span className="font-medium">{project.entrancePassword || '-'}</span>
-                            <span className="mx-2">|</span>
-                            현장: <span className="font-medium">{project.sitePassword || '-'}</span>
-                          </span>
-                        </div>
                         {/* 수정/삭제 버튼 */}
                         <div className="flex space-x-2 pt-1">
                           <button
