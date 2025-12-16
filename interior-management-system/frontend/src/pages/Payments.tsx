@@ -1614,11 +1614,20 @@ const Payments = () => {
     return matchesSearch && matchesStatus && matchesProject && matchesMyRequests;
   }).sort((a, b) => {
     // 송금완료 탭에서는 completionDate 기준 정렬 (최신 송금완료 순)
-    // completionDate가 없으면 requestDate로 폴백
     if (statusFilter === 'completed') {
-      const dateA = a.completionDate ? new Date(a.completionDate).getTime() : new Date(a.requestDate).getTime();
-      const dateB = b.completionDate ? new Date(b.completionDate).getTime() : new Date(b.requestDate).getTime();
-      return dateB - dateA;
+      // completionDate가 있는 항목을 우선 표시, 없는 항목은 맨 아래로
+      const hasDateA = !!a.completionDate;
+      const hasDateB = !!b.completionDate;
+
+      if (hasDateA && !hasDateB) return -1; // A가 위로
+      if (!hasDateA && hasDateB) return 1;  // B가 위로
+
+      // 둘 다 completionDate가 있으면 최신순
+      if (hasDateA && hasDateB) {
+        return new Date(b.completionDate!).getTime() - new Date(a.completionDate!).getTime();
+      }
+      // 둘 다 completionDate가 없으면 requestDate로 정렬
+      return new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime();
     }
     // 대기중 탭에서는 요청일 기준 정렬 유지
     return new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime();
