@@ -1118,11 +1118,17 @@ const SpecBook = () => {
       if (showToast) {
         toast.success('저장되었습니다');
       }
-      invalidateLibrary();
-      loadItems(true);
-      loadAllLibraryItems(true);
-      if (view === 'project' && selectedProject) {
-        loadAllProjectItems();
+      // 데이터 새로고침 (에러가 나도 저장은 성공했으므로 별도 처리)
+      try {
+        invalidateLibrary();
+        loadItems(true);
+        loadAllLibraryItems(true);
+        if (view === 'project' && selectedProject) {
+          loadAllProjectItems();
+        }
+      } catch (refreshError) {
+        console.error('데이터 새로고침 실패:', refreshError);
+        // 새로고침 실패는 무시 (저장은 성공했으므로)
       }
     } catch (error) {
       console.error('Sub 이미지 저장 실패:', error);
