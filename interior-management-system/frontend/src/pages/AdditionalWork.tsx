@@ -324,6 +324,47 @@ const AdditionalWork = () => {
     }
   };
 
+  // 모달에서 저장 시 호출되는 함수
+  const handleModalSave = async (data: {
+    project: string;
+    description: string;
+    amount: number;
+    date: Date;
+    notes?: string;
+    images?: string[];
+  }) => {
+    try {
+      if (selectedWork) {
+        // 수정
+        await additionalWorkService.updateAdditionalWork(selectedWork.id, {
+          project: data.project,
+          description: data.description,
+          amount: data.amount,
+          date: data.date,
+          notes: data.notes,
+          images: data.images
+        });
+        toast.success('추가내역이 수정되었습니다');
+      } else {
+        // 새로 등록
+        await additionalWorkService.createAdditionalWork({
+          project: data.project,
+          description: data.description,
+          amount: data.amount,
+          date: data.date,
+          notes: data.notes,
+          images: data.images
+        });
+        toast.success('추가내역이 등록되었습니다');
+      }
+      handleModalClose(true);
+    } catch (error) {
+      console.error('추가내역 저장 실패:', error);
+      toast.error('추가내역 저장에 실패했습니다');
+      throw error;
+    }
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -933,10 +974,9 @@ const AdditionalWork = () => {
       {/* 수정/추가 모달 */}
       {isModalOpen && (
         <AdditionalWorkModal
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
           work={selectedWork}
-          projects={filteredProjects}
+          onClose={() => handleModalClose(false)}
+          onSave={handleModalSave}
           initialProject={initialProject}
         />
       )}
