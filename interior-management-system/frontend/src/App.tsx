@@ -28,6 +28,26 @@ const Payments = lazy(() => import('./pages/Payments'));
 const QuoteInquiry = lazy(() => import('./pages/QuoteInquiry'));
 const Login = lazy(() => import('./pages/Login'));
 
+// 모든 페이지 미리 로드 (백그라운드에서)
+const prefetchAllPages = () => {
+  import('./pages/Dashboard');
+  import('./pages/Projects');
+  import('./pages/Schedule');
+  import('./pages/Drawings');
+  import('./pages/SiteLog');
+  import('./pages/AfterService');
+  import('./pages/AdditionalWork');
+  import('./pages/ConstructionPayment');
+  import('./pages/Contractors');
+  import('./pages/WorkRequest');
+  import('./pages/FinishCheck');
+  import('./pages/SpecBook');
+  import('./pages/EstimatePreview');
+  import('./pages/ExecutionHistory');
+  import('./pages/Payments');
+  import('./pages/QuoteInquiry');
+};
+
 // 로딩 컴포넌트
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -92,6 +112,11 @@ function App() {
     // Version 1.0.6 - Updated 2025.11.17 with auto-update
     // 브라우저 알림 권한 요청
     requestNotificationPermission();
+
+    // 앱 로드 후 모든 페이지 미리 로드 (탭 전환 속도 개선)
+    setTimeout(() => {
+      prefetchAllPages();
+    }, 1000);
 
     // 버전 체크 (5초 후 첫 체크, 이후 30초마다)
     const checkVersion = async () => {
