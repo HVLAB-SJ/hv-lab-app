@@ -9,44 +9,26 @@ import Layout from './components/Layout';
 import { AuthProvider } from './contexts/AuthContext';
 import { triggerUrgentNotification, requestNotificationPermission } from './utils/notificationSound';
 
-// 페이지 컴포넌트 레이지 로딩 (코드 스플리팅)
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Projects = lazy(() => import('./pages/Projects'));
-const Schedule = lazy(() => import('./pages/Schedule'));
+// 자주 사용하는 페이지는 직접 import (빠른 로딩)
+import Dashboard from './pages/Dashboard';
+import Projects from './pages/Projects';
+import Schedule from './pages/Schedule';
+import Payments from './pages/Payments';
+import FinishCheck from './pages/FinishCheck';
+import Contractors from './pages/Contractors';
+import QuoteInquiry from './pages/QuoteInquiry';
+import Login from './pages/Login';
+
+// 나머지 페이지는 레이지 로딩 (코드 스플리팅)
 const Drawings = lazy(() => import('./pages/Drawings'));
 const SiteLog = lazy(() => import('./pages/SiteLog'));
 const AfterService = lazy(() => import('./pages/AfterService'));
 const AdditionalWork = lazy(() => import('./pages/AdditionalWork'));
 const ConstructionPayment = lazy(() => import('./pages/ConstructionPayment'));
-const Contractors = lazy(() => import('./pages/Contractors'));
 const WorkRequest = lazy(() => import('./pages/WorkRequest'));
-const FinishCheck = lazy(() => import('./pages/FinishCheck'));
 const SpecBook = lazy(() => import('./pages/SpecBook'));
 const EstimatePreview = lazy(() => import('./pages/EstimatePreview'));
 const ExecutionHistory = lazy(() => import('./pages/ExecutionHistory'));
-const Payments = lazy(() => import('./pages/Payments'));
-const QuoteInquiry = lazy(() => import('./pages/QuoteInquiry'));
-const Login = lazy(() => import('./pages/Login'));
-
-// 모든 페이지 미리 로드 (백그라운드에서)
-const prefetchAllPages = () => {
-  import('./pages/Dashboard');
-  import('./pages/Projects');
-  import('./pages/Schedule');
-  import('./pages/Drawings');
-  import('./pages/SiteLog');
-  import('./pages/AfterService');
-  import('./pages/AdditionalWork');
-  import('./pages/ConstructionPayment');
-  import('./pages/Contractors');
-  import('./pages/WorkRequest');
-  import('./pages/FinishCheck');
-  import('./pages/SpecBook');
-  import('./pages/EstimatePreview');
-  import('./pages/ExecutionHistory');
-  import('./pages/Payments');
-  import('./pages/QuoteInquiry');
-};
 
 // 로딩 컴포넌트
 const PageLoader = () => (
@@ -112,11 +94,6 @@ function App() {
     // Version 1.0.6 - Updated 2025.11.17 with auto-update
     // 브라우저 알림 권한 요청
     requestNotificationPermission();
-
-    // 앱 로드 후 모든 페이지 미리 로드 (탭 전환 속도 개선)
-    setTimeout(() => {
-      prefetchAllPages();
-    }, 1000);
 
     // 버전 체크 (5초 후 첫 체크, 이후 30초마다)
     const checkVersion = async () => {
