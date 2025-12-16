@@ -900,20 +900,24 @@ const ExecutionHistory = () => {
     e.stopPropagation();
     setActionMenuId(null);
 
-    // 레코드 타입 확인
+    // 레코드 타입 확인 - allRecords뿐만 아니라 executionRecords에서도 직접 확인
     const record = allRecords.find(r => r.id === recordId);
+    const isExecutionRecord = executionRecords.some(r => r.id === recordId);
 
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
     try {
-      if (record?.type === 'payment') {
+      if (isExecutionRecord) {
+        // 실행내역 삭제 (executionRecords에 있는 경우)
+        await deleteExecutionRecordFromAPI(recordId);
+        toast.success('실행내역이 삭제되었습니다');
+      } else if (record?.type === 'payment') {
         // 결제요청 삭제
         await deletePaymentFromAPI(recordId);
         toast.success('결제요청이 삭제되었습니다');
       } else {
-        // 실행내역 삭제
-        await deleteExecutionRecordFromAPI(recordId);
-        toast.success('실행내역이 삭제되었습니다');
+        toast.error('삭제할 수 없는 항목입니다');
+        return;
       }
 
       if (selectedRecord === recordId) {
