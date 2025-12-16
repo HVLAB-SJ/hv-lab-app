@@ -521,6 +521,11 @@ const ExecutionHistory = () => {
       return;
     }
 
+    if (!formData.itemName || formData.itemName.trim() === '') {
+      toast.error('항목명을 입력해주세요');
+      return;
+    }
+
     setIsSaving(true);
 
     const now = new Date();
