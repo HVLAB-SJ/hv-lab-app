@@ -2072,6 +2072,12 @@ const ExecutionHistory = () => {
                                   laborValue
                                 });
 
+                                // 즉시 UI 숨기기 (선택 해제)
+                                setSelectedRecord(null);
+                                setSplitModeRecord(null);
+                                setSplitMaterialCost('');
+                                setSplitLaborCost('');
+
                                 try {
                                   // 결제요청 금액만 업데이트 (새로운 PATCH API 사용)
                                   console.log('[금액분할] API 호출 시작...');
@@ -2083,14 +2089,7 @@ const ExecutionHistory = () => {
                                   console.log('[금액분할] API 호출 성공:', result);
 
                                   // 결제요청 목록 다시 로드
-                                  console.log('[금액분할] 결제요청 목록 다시 로드...');
                                   await loadPaymentsFromAPI();
-                                  console.log('[금액분할] 목록 로드 완료');
-
-                                  // 분할 모드 종료
-                                  setSplitModeRecord(null);
-                                  setSplitMaterialCost('');
-                                  setSplitLaborCost('');
 
                                   toast.success('금액이 적용되었습니다.');
                                 } catch (error: any) {
