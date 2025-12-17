@@ -1706,7 +1706,10 @@ const ExecutionHistory = () => {
                       key={recordKey}
                       data-record-id={recordKey}
                       className={`group hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === recordKey ? 'bg-blue-50' : ''}`}
-                      onClick={() => setSelectedRecord(recordKey)}
+                      onClick={() => {
+                        setSelectedRecord(recordKey);
+                        setSplitModeRecord(null); // 다른 레코드 선택 시 applied 상태 초기화
+                      }}
                     >
                       <td className="px-3 py-3 text-gray-600 whitespace-nowrap exec-author-col">
                         {record.author || '-'}
@@ -1770,6 +1773,7 @@ const ExecutionHistory = () => {
                     }`}
                     onClick={() => {
                       setSelectedRecord(recordKey);
+                      setSplitModeRecord(null); // 다른 레코드 선택 시 applied 상태 초기화
                       setMobileView('image');
                     }}
                   >
@@ -2000,8 +2004,8 @@ const ExecutionHistory = () => {
 
               return (
                 <div className="h-full flex flex-col">
-                  {/* 결제요청 금액 분할 기능 */}
-                  {fullRecord?.type === 'payment' && (
+                  {/* 결제요청 금액 분할 기능 - applied 상태이면 숨김 */}
+                  {fullRecord?.type === 'payment' && splitModeRecord !== 'applied' && (
                     <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                       {/* 결제요청 금액 정보 */}
                       <p className="text-sm font-semibold text-gray-900 mb-1">결제요청 금액:</p>
@@ -2072,9 +2076,8 @@ const ExecutionHistory = () => {
                                   laborValue
                                 });
 
-                                // 즉시 UI 숨기기 (선택 해제)
-                                setSelectedRecord(null);
-                                setSplitModeRecord(null);
+                                // 금액 분할 UI만 숨기기 (레코드 선택은 유지)
+                                setSplitModeRecord('applied'); // 'applied'로 설정하여 결제요청 금액 섹션 전체 숨김
                                 setSplitMaterialCost('');
                                 setSplitLaborCost('');
 
