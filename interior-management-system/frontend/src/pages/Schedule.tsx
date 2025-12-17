@@ -414,14 +414,17 @@ const CustomEvent = React.memo(({
   // 한글 IME 조합 상태 추적
   const isComposingRef = React.useRef(false);
 
-  // 로컬 편집 상태 - 부모의 editTitle을 초기값으로 사용하고 로컬에서 관리
+  // 로컬 편집 상태 - 부모의 editTitle을 초기값으로 사용하고 로컬에서만 관리
   const [localEditTitle, setLocalEditTitle] = useState(editTitle || '');
+  // 이전 isEditing 상태 추적
+  const prevIsEditingRef = React.useRef(isEditing);
 
-  // editTitle이 변경되면 로컬 상태 동기화 (편집 시작 시)
+  // 편집 시작 시에만 초기값 동기화 (isEditing이 false -> true로 변경될 때만)
   useEffect(() => {
-    if (isEditing && editTitle !== undefined) {
+    if (isEditing && !prevIsEditingRef.current && editTitle !== undefined) {
       setLocalEditTitle(editTitle);
     }
+    prevIsEditingRef.current = isEditing;
   }, [isEditing, editTitle]);
 
   // 사용자 이름에서 성 제거
@@ -448,13 +451,10 @@ const CustomEvent = React.memo(({
   }, []);
 
   // 인라인 편집 모드일 때 - 기존 디자인 유지하면서 텍스트만 수정
-  // 로컬 상태로 입력을 관리하여 부모 리렌더링 방지
+  // 로컬 상태로만 입력을 관리하여 부모 리렌더링 완전 방지
   const handleEditChange = (value: string) => {
     setLocalEditTitle(value);
-    // 부모에도 알림 (선택적)
-    if (onEditTitleChange) {
-      onEditTitleChange(value);
-    }
+    // 부모에게는 blur 시에만 알림 (실시간 업데이트 제거로 이중 입력 방지)
   };
 
   const handleEditBlur = () => {
