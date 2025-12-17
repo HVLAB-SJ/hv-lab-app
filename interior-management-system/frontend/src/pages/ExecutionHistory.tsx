@@ -705,19 +705,19 @@ const ExecutionHistory = () => {
     console.log('[handleEditClick] record.includesVat:', (record as any).includesVat, 'type:', typeof (record as any).includesVat);
     console.log('[handleEditClick] Full record:', JSON.stringify(record, null, 2));
 
-    // 단순화: 저장된 금액 그대로 표시, 체크박스는 저장된 값 사용
-    // 수정완료 시 새로 등록하는 것과 동일한 로직 적용
+    // 단순화: 수정완료 시 새로 등록하는 것과 동일한 로직 적용
     let displayMaterialCost = record.materialCost || 0;
     let displayLaborCost = record.laborCost || 0;
     let wasVatIncluded = false;
     let wasTaxDeducted = false;
 
     if (isPaymentType && originalPayment) {
-      // Payment: 저장된 금액 그대로 사용
-      displayMaterialCost = originalPayment.materialAmount || 0;
-      displayLaborCost = originalPayment.laborAmount || 0;
-      // includesVAT가 명시적으로 true인 경우에만 체크
-      wasVatIncluded = originalPayment.includesVAT === true;
+      // Payment: 총액(amount)을 자재비에 표시, 부가세포함 체크
+      // 사용자가 원래 입력한 총액을 보여주고, 수정완료 시 새로 계산
+      displayMaterialCost = originalPayment.amount || 0;
+      displayLaborCost = 0;
+      // 부가세포함 체크 (부가세가 있으면 체크)
+      wasVatIncluded = (originalPayment.vatAmount || 0) > 0;
     } else {
       // 실행내역: 저장된 값 사용
       wasVatIncluded = (record as any).includesVat === true;
