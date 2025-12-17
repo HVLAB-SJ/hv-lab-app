@@ -384,6 +384,18 @@ const ExecutionHistory = () => {
       const laborCost = payment.laborAmount || 0;
       const totalAmount = payment.amount || 0;
 
+      // 디버그 로그
+      if (materialCost > 0 || laborCost > 0) {
+        console.log('[paymentRecords] 금액분할된 결제요청:', {
+          id: payment.id,
+          itemName: payment.itemName,
+          materialAmount: payment.materialAmount,
+          laborAmount: payment.laborAmount,
+          totalAmount,
+          includesVAT: payment.includesVAT
+        });
+      }
+
       let materialSupplyAmount = materialCost;
       let laborSupplyAmount = laborCost;
       let vatAmount = 0;
@@ -2150,6 +2162,11 @@ const ExecutionHistory = () => {
                                 try {
                                   // 결제요청 금액만 업데이트 (새로운 PATCH API 사용)
                                   console.log('[금액분할] API 호출 시작...');
+                                  console.log('[금액분할] fullRecord 정보:', {
+                                    id: fullRecord.id,
+                                    totalAmount: fullRecord.totalAmount,
+                                    includesVAT: (fullRecord as any).includesVAT
+                                  });
                                   const result = await paymentService.updatePaymentAmounts(
                                     fullRecord.id,
                                     materialValue,
@@ -2158,7 +2175,9 @@ const ExecutionHistory = () => {
                                   console.log('[금액분할] API 호출 성공:', result);
 
                                   // 결제요청 목록 다시 로드
+                                  console.log('[금액분할] 결제요청 목록 다시 로드...');
                                   await loadPaymentsFromAPI();
+                                  console.log('[금액분할] 로드 완료');
 
                                   toast.success('금액이 적용되었습니다.');
                                 } catch (error: any) {
