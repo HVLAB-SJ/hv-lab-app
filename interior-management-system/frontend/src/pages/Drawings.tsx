@@ -243,19 +243,31 @@ const Drawings = () => {
   useEffect(() => {
     if (user?.id && selectedProject && selectedDrawingType) {
       isLoadingRef.current = true; // 로딩 시작
+
+      // 먼저 상태 초기화 (이전 프로젝트 데이터 제거)
+      setUploadedImages([]);
+      setSelectedImageIndex(0);
+      setMarkers([]);
+      setRooms([]);
+      setNaverTypeSqm('');
+      setNaverTypePyeong('');
+      setNaverArea('');
+      setViewMode('full');
+      setSelectedRoomId(null);
+
       const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
 
-      // IndexedDB에서 데이터 로드 (비동기)
+      // 서버에서 데이터 로드 (비동기)
       drawingStorage.getItem(key).then(data => {
         if (data) {
           // 다중 이미지 지원 (기존 단일 이미지 호환)
-          if (data.imageUrls && Array.isArray(data.imageUrls)) {
+          if (data.imageUrls && Array.isArray(data.imageUrls) && data.imageUrls.length > 0) {
             setUploadedImages(data.imageUrls);
           } else if (data.imageUrl) {
             setUploadedImages([data.imageUrl]);
-          } else {
-            setUploadedImages([]);
           }
+          // 이미지가 없으면 빈 배열 유지 (위에서 이미 초기화됨)
+
           setSelectedImageIndex(0);
           setMarkers(data.markers || []);
           setRooms(data.rooms || []);
@@ -263,19 +275,8 @@ const Drawings = () => {
           setNaverTypeSqm(data.naverTypeSqm || '');
           setNaverTypePyeong(data.naverTypePyeong || '');
           setNaverArea(data.naverArea || '');
-        } else {
-          // Clear current data if no saved data exists
-          setUploadedImages([]);
-          setSelectedImageIndex(0);
-          setMarkers([]);
-          setRooms([]);
-          setNaverTypeSqm('');
-          setNaverTypePyeong('');
-          setNaverArea('');
         }
-        // Reset view mode when switching drawings
-        setViewMode('full');
-        setSelectedRoomId(null);
+        // data가 없으면 위에서 이미 초기화됨
 
         // 로딩 완료 - 다음 렌더 사이클에서 저장 가능하도록 설정
         setTimeout(() => {
@@ -283,16 +284,7 @@ const Drawings = () => {
         }, 0);
       }).catch(error => {
         console.error('Failed to load drawing data:', error);
-        // 에러 발생 시에도 초기화
-        setUploadedImages([]);
-        setSelectedImageIndex(0);
-        setMarkers([]);
-        setRooms([]);
-        setNaverTypeSqm('');
-        setNaverTypePyeong('');
-        setNaverArea('');
-        setViewMode('full');
-        setSelectedRoomId(null);
+        // 에러 발생 시에도 초기화 상태 유지
         isLoadingRef.current = false;
       });
     }
@@ -305,7 +297,7 @@ const Drawings = () => {
       return;
     }
 
-    if (user?.id && selectedProject && selectedDrawingType && uploadedImages.length > 0) {
+    if (user?.id && selectedProject && selectedDrawingType) {
       // 이전 타이머 취소
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -314,28 +306,32 @@ const Drawings = () => {
       // 500ms 디바운스로 서버 요청 최적화
       saveTimeoutRef.current = setTimeout(async () => {
         const key = `drawing-${user.id}-${selectedProject}-${selectedDrawingType}`;
-        const data: DrawingData = {
-          type: selectedDrawingType,
-          projectId: selectedProject,
-          imageUrl: uploadedImages[0], // 첫 번째 이미지 (기존 호환)
-          imageUrls: uploadedImages, // 다중 이미지
-          markers,
-          rooms,
-          lastModified: new Date(),
-          naverTypeSqm,
-          naverTypePyeong,
-          naverArea
-        };
 
-        try {
-          // 서버에 저장 (비동기)
-          await drawingStorage.setItem(key, data, user.id);
-          console.log('✅ 도면 저장 완료');
-        } catch (error: any) {
-          console.error('Failed to save drawing data:', error);
-          const errorMsg = error.response?.data?.error || error.message || '알 수 없는 오류';
-          const statusCode = error.response?.status || '';
-          alert(`도면 저장 실패: ${statusCode ? `[${statusCode}] ` : ''}${errorMsg}`);
+        // 이미지가 있을 때만 저장 (빈 상태로 저장하면 불필요한 데이터 생성)
+        if (uploadedImages.length > 0) {
+          const data: DrawingData = {
+            type: selectedDrawingType,
+            projectId: selectedProject,
+            imageUrl: uploadedImages[0], // 첫 번째 이미지 (기존 호환)
+            imageUrls: uploadedImages, // 다중 이미지
+            markers,
+            rooms,
+            lastModified: new Date(),
+            naverTypeSqm,
+            naverTypePyeong,
+            naverArea
+          };
+
+          try {
+            // 서버에 저장 (비동기)
+            await drawingStorage.setItem(key, data, user.id);
+            console.log('✅ 도면 저장 완료');
+          } catch (error: any) {
+            console.error('Failed to save drawing data:', error);
+            const errorMsg = error.response?.data?.error || error.message || '알 수 없는 오류';
+            const statusCode = error.response?.status || '';
+            alert(`도면 저장 실패: ${statusCode ? `[${statusCode}] ` : ''}${errorMsg}`);
+          }
         }
       }, 500);
     }
@@ -395,19 +391,30 @@ const Drawings = () => {
   };
 
   // 이미지 삭제 핸들러
-  const handleDeleteImage = (index: number) => {
+  const handleDeleteImage = async (index: number) => {
     if (!confirm('이 도면을 삭제하시겠습니까?')) return;
 
-    setUploadedImages(prev => {
-      const newImages = prev.filter((_, i) => i !== index);
-      // 선택된 인덱스 조정
-      if (selectedImageIndex >= newImages.length) {
-        setSelectedImageIndex(Math.max(0, newImages.length - 1));
-      } else if (selectedImageIndex > index) {
-        setSelectedImageIndex(selectedImageIndex - 1);
+    const newImages = uploadedImages.filter((_, i) => i !== index);
+
+    // 상태 업데이트
+    setUploadedImages(newImages);
+
+    // 선택된 인덱스 조정
+    if (selectedImageIndex >= newImages.length) {
+      setSelectedImageIndex(Math.max(0, newImages.length - 1));
+    } else if (selectedImageIndex > index) {
+      setSelectedImageIndex(selectedImageIndex - 1);
+    }
+
+    // 모든 이미지가 삭제되면 서버에서도 도면 데이터 삭제
+    if (newImages.length === 0 && user?.id && selectedProject && selectedDrawingType) {
+      try {
+        await drawingStorage.removeItem(`drawing-${user.id}-${selectedProject}-${selectedDrawingType}`);
+        console.log('✅ 도면 데이터 삭제 완료');
+      } catch (error) {
+        console.error('도면 삭제 실패:', error);
       }
-      return newImages;
-    });
+    }
   };
 
   // 이미지 교체 핸들러
