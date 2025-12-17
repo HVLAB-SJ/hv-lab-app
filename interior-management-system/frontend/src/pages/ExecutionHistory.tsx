@@ -2065,6 +2065,13 @@ const ExecutionHistory = () => {
                                 const materialValue = splitMaterialCost === '' ? 0 : splitMaterialCost;
                                 const laborValue = splitLaborCost === '' ? 0 : splitLaborCost;
 
+                                // fullRecord.id는 순수 ID (allRecords에서 가져온 원본 ID)
+                                console.log('[금액분할] 적용 시도:', {
+                                  fullRecordId: fullRecord.id,
+                                  materialValue,
+                                  laborValue
+                                });
+
                                 try {
                                   // 결제요청 금액만 업데이트 (새로운 PATCH API 사용)
                                   await paymentService.updatePaymentAmounts(
