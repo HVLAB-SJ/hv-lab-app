@@ -142,13 +142,16 @@ const ExecutionHistory = () => {
     return stored ? JSON.parse(stored) : {};
   });
 
-  // 금액 분할 모드 상태 - localStorage에서 초기화 (새로고침 후에도 유지)
-  const [splitModeRecord, setSplitModeRecord] = useState<string | null>(() => {
-    const saved = localStorage.getItem('executionHistory_splitApplied');
-    return saved === 'true' ? 'applied' : null;
-  });
+  // 금액 분할 모드 상태
+  const [splitModeRecord, setSplitModeRecord] = useState<string | null>(null);
   const [splitMaterialCost, setSplitMaterialCost] = useState<number | ''>('');
   const [splitLaborCost, setSplitLaborCost] = useState<number | ''>('');
+
+  // 입력 적용된 결제요청 ID 목록 (localStorage에 저장)
+  const [appliedPaymentIds, setAppliedPaymentIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('executionHistory_appliedPaymentIds');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // 초기 데이터 로드 (마운트 시 1회만 실행)
   useEffect(() => {
@@ -2003,8 +2006,8 @@ const ExecutionHistory = () => {
 
               return (
                 <div className="h-full flex flex-col">
-                  {/* 결제요청 금액 분할 기능 - applied 상태이면 숨김 */}
-                  {fullRecord?.type === 'payment' && splitModeRecord !== 'applied' && (
+                  {/* 결제요청 금액 분할 기능 - 해당 레코드가 적용 완료 목록에 있으면 숨김 */}
+                  {fullRecord?.type === 'payment' && !appliedPaymentIds.includes(fullRecord.id) && (
                     <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                       {/* 결제요청 금액 정보 */}
                       <p className="text-sm font-semibold text-gray-900 mb-1">결제요청 금액:</p>
@@ -2076,10 +2079,14 @@ const ExecutionHistory = () => {
                                 });
 
                                 // 금액 분할 UI만 숨기기 (레코드 선택은 유지)
-                                setSplitModeRecord('applied'); // 'applied'로 설정하여 결제요청 금액 섹션 전체 숨김
-                                localStorage.setItem('executionHistory_splitApplied', 'true'); // 새로고침 후에도 유지
+                                setSplitModeRecord(null);
                                 setSplitMaterialCost('');
                                 setSplitLaborCost('');
+
+                                // 해당 결제요청 ID를 적용 완료 목록에 추가
+                                const newAppliedIds = [...appliedPaymentIds, fullRecord.id];
+                                setAppliedPaymentIds(newAppliedIds);
+                                localStorage.setItem('executionHistory_appliedPaymentIds', JSON.stringify(newAppliedIds));
 
                                 try {
                                   // 결제요청 금액만 업데이트 (새로운 PATCH API 사용)
