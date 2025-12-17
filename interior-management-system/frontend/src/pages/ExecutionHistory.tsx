@@ -400,7 +400,7 @@ const ExecutionHistory = () => {
       let laborSupplyAmount = laborCost;
       let vatAmount = 0;
 
-      // 자재비와 인건비가 모두 0인 경우 (이전 버전 데이터)
+      // 자재비와 인건비가 모두 0인 경우 (이전 버전 데이터 또는 아직 금액분할 안 한 경우)
       if (materialCost === 0 && laborCost === 0 && totalAmount > 0) {
         // 전체 금액을 자재비로 처리
         if (payment.includesVAT) {
@@ -411,18 +411,23 @@ const ExecutionHistory = () => {
           vatAmount = 0;
         }
       } else {
-        // 자재비와 인건비가 있는 경우
+        // 금액분할이 된 경우: 사용자가 입력한 값은 이미 부가세 포함 값
+        // 부가세 포함인 경우 공급가액으로 변환
         if (payment.includesVAT) {
-          // 부가세 포함인 경우: 각각 부가세 역산
-          if (materialCost > 0) {
-            materialSupplyAmount = Math.round(materialCost / 1.1);
+          // 전체 금액 기준으로 부가세 계산 (자재비+인건비 합계로 부가세 역산)
+          const inputTotal = materialCost + laborCost;
+          const supplyTotal = Math.round(inputTotal / 1.1);
+          vatAmount = inputTotal - supplyTotal;
+
+          // 자재비와 인건비 비율에 따라 공급가액 분배
+          if (inputTotal > 0) {
+            const materialRatio = materialCost / inputTotal;
+            const laborRatio = laborCost / inputTotal;
+            materialSupplyAmount = Math.round(supplyTotal * materialRatio);
+            laborSupplyAmount = Math.round(supplyTotal * laborRatio);
           }
-          if (laborCost > 0) {
-            laborSupplyAmount = Math.round(laborCost / 1.1);
-          }
-          vatAmount = totalAmount - (materialSupplyAmount + laborSupplyAmount);
         } else {
-          // 부가세 미포함인 경우
+          // 부가세 미포함인 경우: 입력값 그대로 사용
           vatAmount = 0;
         }
       }
