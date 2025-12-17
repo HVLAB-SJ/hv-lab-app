@@ -97,10 +97,12 @@ const projectColors = [
 // 인라인 추가 입력 컴포넌트 (로컬 상태 관리로 중복 입력 방지)
 const InlineAddInput = React.memo(({
   onSave,
-  onCancel
+  onCancel,
+  processList
 }: {
   onSave: (title: string) => void;
   onCancel: () => void;
+  processList?: readonly string[];
 }) => {
   const [localTitle, setLocalTitle] = useState('');
 
@@ -129,6 +131,7 @@ const InlineAddInput = React.memo(({
     >
       <input
         type="text"
+        list="process-suggestions"
         value={localTitle}
         onChange={(e) => setLocalTitle(e.target.value)}
         onBlur={() => {
@@ -164,6 +167,13 @@ const InlineAddInput = React.memo(({
           caretColor: '#374151'
         }}
       />
+      {processList && (
+        <datalist id="process-suggestions">
+          {processList.map((process) => (
+            <option key={process} value={process} />
+          ))}
+        </datalist>
+      )}
     </div>
   );
 });
@@ -381,7 +391,8 @@ const CustomEvent = React.memo(({
   onEditDelete,
   onEditCancel,
   onHoverDelete,
-  onDeleteAction
+  onDeleteAction,
+  processList
 }: {
   event: ScheduleEvent;
   user: { id: string; name: string; role: string } | null;
@@ -394,6 +405,7 @@ const CustomEvent = React.memo(({
   onEditCancel?: () => void;
   onHoverDelete?: () => void;
   onDeleteAction?: () => void;
+  processList?: readonly string[];
 }) => {
   const isSpecificProject = filterProject && filterProject !== 'all';
   const attendees = event.assignedTo || [];
@@ -553,6 +565,7 @@ const CustomEvent = React.memo(({
         {isEditing ? (
           <input
             type="text"
+            list="process-suggestions-edit"
             value={localEditTitle}
             onChange={(e) => handleEditChange(e.target.value)}
             onBlur={handleEditBlur}
@@ -638,6 +651,7 @@ const CustomEvent = React.memo(({
         {isEditing ? (
           <input
             type="text"
+            list="process-suggestions-edit"
             value={localEditTitle}
             onChange={(e) => handleEditChange(e.target.value)}
             onBlur={handleEditBlur}
@@ -710,6 +724,14 @@ const CustomEvent = React.memo(({
             ✕
           </button>
         </div>
+      )}
+      {/* 편집용 공정 자동완성 datalist */}
+      {processList && isEditing && (
+        <datalist id="process-suggestions-edit">
+          {processList.map((process) => (
+            <option key={process} value={process} />
+          ))}
+        </datalist>
       )}
     </div>
   );
@@ -2343,6 +2365,7 @@ const Schedule = () => {
         <InlineAddInput
           onSave={handleInlineAdd}
           onCancel={handleInlineAddCancel}
+          processList={PROCESS_LIST}
         />
       );
     }
@@ -2364,9 +2387,10 @@ const Schedule = () => {
         onEditCancel={isThisEditing ? stableHandleEditCancel : undefined}
         onHoverDelete={() => handleInlineDelete(event)}
         onDeleteAction={() => { deleteActionRef.current = true; }}
+        processList={PROCESS_LIST}
       />
     );
-  }, [user, filterProject, inlineEditEvent, handleInlineEditSave, handleInlineDelete, handleInlineAdd, handleInlineAddCancel, stableHandleTitleChange, stableHandleEditCancel]);
+  }, [user, filterProject, inlineEditEvent, handleInlineEditSave, handleInlineDelete, handleInlineAdd, handleInlineAddCancel, stableHandleTitleChange, stableHandleEditCancel, PROCESS_LIST]);
 
   // 커스텀 툴바
   const CustomToolbar = ({ onNavigate }: { onNavigate: (action: string) => void }) => {
