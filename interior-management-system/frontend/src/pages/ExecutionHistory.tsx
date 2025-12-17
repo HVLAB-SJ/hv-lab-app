@@ -1712,7 +1712,15 @@ const ExecutionHistory = () => {
                       key={recordKey}
                       data-record-id={recordKey}
                       className={`group hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === recordKey ? 'bg-blue-50' : ''}`}
-                      onClick={() => setSelectedRecord(recordKey)}
+                      onClick={() => {
+                        setSelectedRecord(recordKey);
+                        // 미분할 항목 선택 시 자동으로 금액분할 모드 열기
+                        if (record.type === 'payment' && !appliedPaymentIds.includes(record.id)) {
+                          setSplitModeRecord(recordKey);
+                          setSplitMaterialCost(record.totalAmount || 0);
+                          setSplitLaborCost(0);
+                        }
+                      }}
                     >
                       <td className="px-3 py-3 text-gray-600 whitespace-nowrap exec-author-col">
                         {record.author || '-'}
@@ -1784,6 +1792,12 @@ const ExecutionHistory = () => {
                     onClick={() => {
                       setSelectedRecord(recordKey);
                       setMobileView('image');
+                      // 미분할 항목 선택 시 자동으로 금액분할 모드 열기
+                      if (record.type === 'payment' && !appliedPaymentIds.includes(record.id)) {
+                        setSplitModeRecord(recordKey);
+                        setSplitMaterialCost(record.totalAmount || 0);
+                        setSplitLaborCost(0);
+                      }
                     }}
                   >
                     {/* 1행: 항목명 + 총액 + 미분할배지/더보기 */}
@@ -2028,15 +2042,41 @@ const ExecutionHistory = () => {
                   {/* 결제요청 금액 분할 기능 - 해당 레코드가 적용 완료 목록에 있으면 숨김 */}
                   {fullRecord?.type === 'payment' && !appliedPaymentIds.includes(fullRecord.id) && (
                     <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      {/* 결제요청 금액 정보 */}
-                      <p className="text-sm font-semibold text-gray-900 mb-1">결제요청 금액:</p>
-                      <p className="text-sm text-gray-700 mb-2">
-                        총 {fullRecord.totalAmount?.toLocaleString()}원
-                        {fullRecord.itemName && ` (${fullRecord.itemName})`}
-                      </p>
+                      {/* 결제요청 금액 정보 + 100% 버튼 */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">결제요청 금액:</p>
+                          <p className="text-sm text-gray-700">
+                            총 {fullRecord.totalAmount?.toLocaleString()}원
+                            {fullRecord.itemName && ` (${fullRecord.itemName})`}
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => {
+                              setSplitModeRecord(selectedRecord);
+                              setSplitMaterialCost(fullRecord.totalAmount || 0);
+                              setSplitLaborCost(0);
+                            }}
+                            className="px-2 py-1 text-[10px] font-medium bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                          >
+                            자재비 100%
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSplitModeRecord(selectedRecord);
+                              setSplitMaterialCost(0);
+                              setSplitLaborCost(fullRecord.totalAmount || 0);
+                            }}
+                            className="px-2 py-1 text-[10px] font-medium bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                          >
+                            인건비 100%
+                          </button>
+                        </div>
+                      </div>
 
-                      {/* 금액 분할 입력 영역 */}
-                      {splitModeRecord === selectedRecord ? (
+                      {/* 금액 분할 입력 영역 - 항상 표시 */}
+                      {splitModeRecord === selectedRecord && (
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           <div className="grid grid-cols-2 gap-3 mb-3">
                             <div>
@@ -2143,38 +2183,6 @@ const ExecutionHistory = () => {
                             </button>
                           </div>
                         </div>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            // 금액 분할 모드 시작
-                            const totalAmount = fullRecord.totalAmount || 0;
-                            const quickText = (fullRecord as any).quickText || fullRecord.itemName || '';
-
-                            // 자재비/인건비 키워드 확인
-                            const hasMaterial = quickText.includes('자재') || quickText.includes('재료');
-                            const hasLabor = quickText.includes('인건') || quickText.includes('노무') || quickText.includes('인건비');
-
-                            // 기본 비율 (자재비 70%, 인건비 30%)
-                            let materialRatio = 0.7;
-                            let laborRatio = 0.3;
-
-                            // 키워드에 따른 비율 조정
-                            if (hasMaterial && !hasLabor) {
-                              materialRatio = 1;
-                              laborRatio = 0;
-                            } else if (!hasMaterial && hasLabor) {
-                              materialRatio = 0;
-                              laborRatio = 1;
-                            }
-
-                            setSplitMaterialCost(Math.round(totalAmount * materialRatio));
-                            setSplitLaborCost(Math.round(totalAmount * laborRatio));
-                            setSplitModeRecord(selectedRecord);
-                          }}
-                          className="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          금액 분할
-                        </button>
                       )}
                     </div>
                   )}
