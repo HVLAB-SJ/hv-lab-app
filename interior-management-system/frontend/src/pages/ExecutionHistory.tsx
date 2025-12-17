@@ -1725,7 +1725,14 @@ const ExecutionHistory = () => {
                         {record.process || '-'}
                       </td>
                       <td className="px-3 py-3 font-medium exec-item-col">
-                        {record.itemName}
+                        <div className="flex items-center gap-1.5">
+                          {record.itemName}
+                          {record.type === 'payment' && !appliedPaymentIds.includes(record.id) && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded">
+                              미분할
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-right exec-material-col">
                         {(record.materialCost || 0).toLocaleString()}
@@ -1781,7 +1788,14 @@ const ExecutionHistory = () => {
                   >
                     {/* 1행: 항목명 + 총액 + 더보기 */}
                     <div className="flex justify-between items-center">
-                      <p className="font-medium text-gray-900 text-sm truncate flex-1 mr-2">{record.itemName}</p>
+                      <div className="flex items-center gap-1.5 flex-1 mr-2 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate">{record.itemName}</p>
+                        {record.type === 'payment' && !appliedPaymentIds.includes(record.id) && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded shrink-0">
+                            미분할
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1">
                         <p className="text-sm font-bold text-gray-900 shrink-0">
                           {(record.totalAmount || 0).toLocaleString()}원
@@ -1933,7 +1947,14 @@ const ExecutionHistory = () => {
                 <div className="border-b bg-gray-50 p-3">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900 text-sm">{record.itemName}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-medium text-gray-900 text-sm">{record.itemName}</p>
+                        {record.type === 'payment' && !appliedPaymentIds.includes(record.id) && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded">
+                            미분할
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {record.process || '-'} • {format(new Date(record.date), 'yyyy.MM.dd', { locale: ko })}
                       </p>
