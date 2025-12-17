@@ -394,6 +394,16 @@ const CustomEvent = React.memo(({
   // 한글 IME 조합 상태 추적
   const isComposingRef = React.useRef(false);
 
+  // 로컬 편집 상태 - 부모의 editTitle을 초기값으로 사용하고 로컬에서 관리
+  const [localEditTitle, setLocalEditTitle] = useState(editTitle || '');
+
+  // editTitle이 변경되면 로컬 상태 동기화 (편집 시작 시)
+  useEffect(() => {
+    if (isEditing && editTitle !== undefined) {
+      setLocalEditTitle(editTitle);
+    }
+  }, [isEditing, editTitle]);
+
   // 사용자 이름에서 성 제거
   const userNameWithoutSurname = user?.name ? user.name.slice(-2) : null;
 
@@ -418,16 +428,22 @@ const CustomEvent = React.memo(({
   }, []);
 
   // 인라인 편집 모드일 때 - 기존 디자인 유지하면서 텍스트만 수정
-  // 타이핑 중에는 저장하지 않고, 편집 완료 시에만 저장
+  // 로컬 상태로 입력을 관리하여 부모 리렌더링 방지
   const handleEditChange = (value: string) => {
+    setLocalEditTitle(value);
+    // 부모에도 알림 (선택적)
     if (onEditTitleChange) {
       onEditTitleChange(value);
     }
   };
 
   const handleEditBlur = () => {
-    // 편집 완료 시에만 저장
-    if (editTitle?.trim() && onEditSave) {
+    // 편집 완료 시에만 저장 - 로컬 상태 사용
+    if (localEditTitle?.trim() && onEditSave) {
+      // 부모에 최종 값 전달
+      if (onEditTitleChange) {
+        onEditTitleChange(localEditTitle);
+      }
       onEditSave();
     }
     if (onEditCancel) {
@@ -517,7 +533,7 @@ const CustomEvent = React.memo(({
         {isEditing ? (
           <input
             type="text"
-            value={editTitle || ''}
+            value={localEditTitle}
             onChange={(e) => handleEditChange(e.target.value)}
             onBlur={handleEditBlur}
             onKeyDown={handleEditKeyDown}
@@ -602,7 +618,7 @@ const CustomEvent = React.memo(({
         {isEditing ? (
           <input
             type="text"
-            value={editTitle || ''}
+            value={localEditTitle}
             onChange={(e) => handleEditChange(e.target.value)}
             onBlur={handleEditBlur}
             onKeyDown={handleEditKeyDown}
@@ -2323,7 +2339,21 @@ const Schedule = () => {
     );
   }, [filteredEvents, selectedDate, user, isMobileView]);
 
+  // 안정적인 콜백 (리렌더링 방지) - ref를 사용하여 최신 값 참조
+  const inlineEditTitleRef = React.useRef(inlineEditTitle);
+  inlineEditTitleRef.current = inlineEditTitle;
+
+  const stableHandleTitleChange = React.useCallback((value: string) => {
+    setInlineEditTitle(value);
+  }, []);
+
+  const stableHandleEditCancel = React.useCallback(() => {
+    setInlineEditEvent(null);
+    setInlineEditTitle('');
+  }, []);
+
   // 커스텀 이벤트 래퍼 컴포넌트 (props 전달용)
+  // inlineEditTitle 변경 시 리렌더링 방지를 위해 별도의 래퍼 사용
   const CustomEventWrapper = React.useCallback(({ event }: { event: ScheduleEvent }) => {
     // 인라인 추가 이벤트일 때 별도 컴포넌트 사용 (중복 입력 방지)
     if (event.id === '__inline_add__') {
@@ -2338,22 +2368,23 @@ const Schedule = () => {
     const isThisEditing = inlineEditEvent?.id === event.id ||
       (inlineEditEvent?.mergedEventIds && inlineEditEvent.mergedEventIds.includes(event.id));
 
+    // 편집 중인 이벤트만 editTitle을 전달, 아닌 경우 undefined
     return (
       <CustomEvent
         event={event}
         user={user}
         filterProject={filterProject}
         isEditing={isThisEditing}
-        editTitle={isThisEditing ? inlineEditTitle : undefined}
-        onEditTitleChange={isThisEditing ? setInlineEditTitle : undefined}
+        editTitle={isThisEditing ? inlineEditTitleRef.current : undefined}
+        onEditTitleChange={isThisEditing ? stableHandleTitleChange : undefined}
         onEditSave={isThisEditing ? handleInlineEditSave : undefined}
         onEditDelete={isThisEditing ? () => handleInlineDelete(event) : undefined}
-        onEditCancel={isThisEditing ? () => { setInlineEditEvent(null); setInlineEditTitle(''); } : undefined}
+        onEditCancel={isThisEditing ? stableHandleEditCancel : undefined}
         onHoverDelete={() => handleInlineDelete(event)}
         onDeleteAction={() => { deleteActionRef.current = true; }}
       />
     );
-  }, [user, filterProject, inlineEditEvent, inlineEditTitle, handleInlineEditSave, handleInlineDelete, handleInlineAdd, handleInlineAddCancel]);
+  }, [user, filterProject, inlineEditEvent, handleInlineEditSave, handleInlineDelete, handleInlineAdd, handleInlineAddCancel, stableHandleTitleChange, stableHandleEditCancel]);
 
   // 커스텀 툴바
   const CustomToolbar = ({ onNavigate }: { onNavigate: (action: string) => void }) => {
