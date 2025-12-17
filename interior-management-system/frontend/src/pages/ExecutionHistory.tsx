@@ -45,7 +45,23 @@ const ExecutionHistory = () => {
   }
 
   const [searchTerm, setSearchTerm] = useState('');
+  // selectedRecord는 "type_id" 형식으로 저장 (예: "payment_123", "manual_456")
   const [selectedRecord, setSelectedRecord] = useState<string | null>(null);
+
+  // selectedRecord에서 type과 id를 추출하는 헬퍼 함수
+  const parseSelectedRecord = (selected: string | null): { type: string | null; id: string | null } => {
+    if (!selected) return { type: null, id: null };
+    const parts = selected.split('_');
+    if (parts.length >= 2) {
+      const type = parts[0];
+      const id = parts.slice(1).join('_'); // ID에 '_'가 포함될 수 있음
+      return { type, id };
+    }
+    return { type: null, id: null };
+  };
+
+  // 레코드의 고유 키 생성
+  const getRecordKey = (record: { type: string; id: string }) => `${record.type}_${record.id}`;
   const [isDragging, setIsDragging] = useState(false);
   const [includeVat, setIncludeVat] = useState(false);
   const [includeTaxDeduction, setIncludeTaxDeduction] = useState(false);
@@ -297,24 +313,33 @@ const ExecutionHistory = () => {
         return;
       }
 
+      // type_id 형식에서 type과 id 분리
+      const { type: selectedType, id: selectedId } = parseSelectedRecord(selectedRecord);
+      if (!selectedType || !selectedId) {
+        toast.error('레코드를 찾을 수 없습니다');
+        return;
+      }
+
       // 실행내역(manual) 레코드인지 확인
-      const executionRecord = executionRecords.find(r => r.id === selectedRecord);
-      if (executionRecord) {
-        // 실행내역인 경우 서버 API로 저장
-        const updatedImages = [...(executionRecord.images || []), ...newImages];
-        try {
-          await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
-          toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
-        } catch (error) {
-          console.error('이미지 저장 실패:', error);
-          toast.error('이미지 저장에 실패했습니다');
+      if (selectedType === 'manual') {
+        const executionRecord = executionRecords.find(r => r.id === selectedId);
+        if (executionRecord) {
+          // 실행내역인 경우 서버 API로 저장
+          const updatedImages = [...(executionRecord.images || []), ...newImages];
+          try {
+            await updateExecutionRecordInAPI(selectedId, { images: updatedImages });
+            toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+          } catch (error) {
+            console.error('이미지 저장 실패:', error);
+            toast.error('이미지 저장에 실패했습니다');
+          }
         }
       } else {
         // 결제요청 레코드인 경우 로컬 저장소에 저장
-        const existingImages = paymentRecordImages[selectedRecord] || [];
+        const existingImages = paymentRecordImages[selectedId] || [];
         setPaymentRecordImages(prev => ({
           ...prev,
-          [selectedRecord]: [...existingImages, ...newImages]
+          [selectedId]: [...existingImages, ...newImages]
         }));
         toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
       }
@@ -614,8 +639,8 @@ const ExecutionHistory = () => {
       setIncludeVat(false); // 부가세 체크 초기화
       setIncludeTaxDeduction(false); // 세금공제 체크 초기화
 
-      // 새 레코드 선택 (데스크톱/모바일 모두)
-      setSelectedRecord(savedRecord.id);
+      // 새 레코드 선택 (데스크톱/모바일 모두) - manual 타입
+      setSelectedRecord(`manual_${savedRecord.id}`);
 
       // 모바일에서는 폼을 닫고 리스트 뷰로 전환
       if (isMobileDevice) {
@@ -625,7 +650,7 @@ const ExecutionHistory = () => {
 
       // 선택된 레코드로 스크롤 (약간의 딜레이 후)
       setTimeout(() => {
-        const element = document.querySelector(`[data-record-id="${savedRecord.id}"]`);
+        const element = document.querySelector(`[data-record-id="manual_${savedRecord.id}"]`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -743,7 +768,9 @@ const ExecutionHistory = () => {
     setIncludeVat(wasVatIncluded);
     // 세금공제가 적용되어 있었으면 체크박스 선택
     setIncludeTaxDeduction(wasTaxDeducted);
-    setSelectedRecord(record.id);
+    // type_id 형식으로 선택
+    const recordType = (record as any).type || 'manual';
+    setSelectedRecord(`${recordType}_${record.id}`);
     // 모바일에서는 입력 폼으로 이동
     if (isMobileDevice) {
       setMobileView('form');
@@ -900,15 +927,15 @@ const ExecutionHistory = () => {
     }
   };
 
-  // 삭제 확인 팝업 표시
-  const handleDeleteClick = (recordId: string, e: React.MouseEvent) => {
+  // 삭제 확인 팝업 표시 - recordKey는 type_id 형식
+  const handleDeleteClick = (recordKey: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setActionMenuId(null);
 
     // 클릭 위치 저장
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setDeleteConfirm({
-      recordId,
+      recordId: recordKey, // type_id 형식으로 저장
       position: {
         x: rect.left,
         y: rect.bottom + 4
@@ -920,28 +947,31 @@ const ExecutionHistory = () => {
   const executeDelete = async () => {
     if (!deleteConfirm) return;
 
-    const recordId = deleteConfirm.recordId;
+    const recordKey = deleteConfirm.recordId; // type_id 형식
     setDeleteConfirm(null);
 
-    // 레코드 타입 확인 - allRecords뿐만 아니라 executionRecords에서도 직접 확인
-    const record = allRecords.find(r => r.id === recordId);
-    const isExecutionRecord = executionRecords.some(r => r.id === recordId);
+    // type과 id 분리
+    const { type, id } = parseSelectedRecord(recordKey);
+    if (!type || !id) {
+      toast.error('삭제할 수 없는 항목입니다');
+      return;
+    }
 
     try {
-      if (isExecutionRecord) {
-        // 실행내역 삭제 (executionRecords에 있는 경우)
-        await deleteExecutionRecordFromAPI(recordId);
+      if (type === 'manual') {
+        // 실행내역 삭제
+        await deleteExecutionRecordFromAPI(id);
         toast.success('실행내역이 삭제되었습니다');
-      } else if (record?.type === 'payment') {
+      } else if (type === 'payment') {
         // 결제요청 삭제
-        await deletePaymentFromAPI(recordId);
+        await deletePaymentFromAPI(id);
         toast.success('결제요청이 삭제되었습니다');
       } else {
         toast.error('삭제할 수 없는 항목입니다');
         return;
       }
 
-      if (selectedRecord === recordId) {
+      if (selectedRecord === recordKey) {
         setSelectedRecord(null);
       }
     } catch (error) {
@@ -1024,27 +1054,35 @@ const ExecutionHistory = () => {
           });
         })
       ).then(async newImages => {
+        // type_id 형식에서 type과 id 분리
+        const { type: selectedType, id: selectedId } = parseSelectedRecord(selectedRecord);
+        if (!selectedType || !selectedId) {
+          toast.error('레코드를 찾을 수 없습니다');
+          return;
+        }
+
         // 실행내역(manual) 레코드인지 확인
-        const executionRecord = executionRecords.find(r => r.id === selectedRecord);
+        if (selectedType === 'manual') {
+          const executionRecord = executionRecords.find(r => r.id === selectedId);
+          if (executionRecord) {
+            // 실행내역인 경우 서버 API로 저장
+            const existingImages = executionRecord.images || [];
+            const updatedImages = [...existingImages, ...newImages];
 
-        if (executionRecord) {
-          // 실행내역인 경우 서버 API로 저장
-          const existingImages = executionRecord.images || [];
-          const updatedImages = [...existingImages, ...newImages];
-
-          try {
-            await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
-            toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
-          } catch (error) {
-            console.error('이미지 저장 실패:', error);
-            toast.error('이미지 저장에 실패했습니다');
+            try {
+              await updateExecutionRecordInAPI(selectedId, { images: updatedImages });
+              toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
+            } catch (error) {
+              console.error('이미지 저장 실패:', error);
+              toast.error('이미지 저장에 실패했습니다');
+            }
           }
         } else {
           // 결제요청 레코드인 경우 로컬 저장소에 저장
-          const existingImages = paymentRecordImages[selectedRecord] || [];
+          const existingImages = paymentRecordImages[selectedId] || [];
           setPaymentRecordImages(prev => ({
             ...prev,
-            [selectedRecord]: [...existingImages, ...newImages]
+            [selectedId]: [...existingImages, ...newImages]
           }));
           toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
         }
@@ -1065,19 +1103,25 @@ const ExecutionHistory = () => {
   const removeImage = async (index: number) => {
     if (!selectedRecord) return;
 
-    const record = executionRecords.find(r => r.id === selectedRecord);
-    if (record) {
-      const updatedImages = record.images?.filter((_, i) => i !== index) || [];
-      try {
-        await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
-      } catch (error) {
-        console.error('이미지 삭제 실패:', error);
+    // type_id 형식에서 type과 id 분리
+    const { type: selectedType, id: selectedId } = parseSelectedRecord(selectedRecord);
+    if (!selectedType || !selectedId) return;
+
+    if (selectedType === 'manual') {
+      const record = executionRecords.find(r => r.id === selectedId);
+      if (record) {
+        const updatedImages = record.images?.filter((_, i) => i !== index) || [];
+        try {
+          await updateExecutionRecordInAPI(selectedId, { images: updatedImages });
+        } catch (error) {
+          console.error('이미지 삭제 실패:', error);
+        }
       }
     } else {
       // 결제요청 레코드인 경우
       setPaymentRecordImages(prev => ({
         ...prev,
-        [selectedRecord]: prev[selectedRecord]?.filter((_, i) => i !== index) || []
+        [selectedId]: prev[selectedId]?.filter((_, i) => i !== index) || []
       }));
     }
   };
@@ -1127,20 +1171,29 @@ const ExecutionHistory = () => {
         });
       })
     ).then(async newImages => {
-      // 실제 레코드에 이미지 추가
-      const record = executionRecords.find(r => r.id === selectedRecord);
-      if (record) {
-        const updatedImages = [...(record.images || []), ...newImages];
-        try {
-          await updateExecutionRecordInAPI(selectedRecord, { images: updatedImages });
-        } catch (error) {
-          console.error('이미지 저장 실패:', error);
+      // type_id 형식에서 type과 id 분리
+      const { type: selectedType, id: selectedId } = parseSelectedRecord(selectedRecord);
+      if (!selectedType || !selectedId) {
+        toast.error('레코드를 찾을 수 없습니다');
+        return;
+      }
+
+      // 실행내역인 경우 서버에 저장
+      if (selectedType === 'manual') {
+        const record = executionRecords.find(r => r.id === selectedId);
+        if (record) {
+          const updatedImages = [...(record.images || []), ...newImages];
+          try {
+            await updateExecutionRecordInAPI(selectedId, { images: updatedImages });
+          } catch (error) {
+            console.error('이미지 저장 실패:', error);
+          }
         }
       } else {
         // 결제요청 레코드인 경우 별도 저장소에 저장
         setPaymentRecordImages(prev => ({
           ...prev,
-          [selectedRecord]: [...(prev[selectedRecord] || []), ...newImages]
+          [selectedId]: [...(prev[selectedId] || []), ...newImages]
         }));
       }
       toast.success(`${newImages.length}개의 이미지가 추가되었습니다`);
@@ -1646,12 +1699,14 @@ const ExecutionHistory = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {filteredRecords.map((record) => (
+                  {filteredRecords.map((record) => {
+                    const recordKey = getRecordKey(record);
+                    return (
                     <tr
-                      key={record.id}
-                      data-record-id={record.id}
-                      className={`group hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === record.id ? 'bg-blue-50' : ''}`}
-                      onClick={() => setSelectedRecord(record.id)}
+                      key={recordKey}
+                      data-record-id={recordKey}
+                      className={`group hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === recordKey ? 'bg-blue-50' : ''}`}
+                      onClick={() => setSelectedRecord(recordKey)}
                     >
                       <td className="px-3 py-3 text-gray-600 whitespace-nowrap exec-author-col">
                         {record.author || '-'}
@@ -1689,7 +1744,7 @@ const ExecutionHistory = () => {
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={(e) => handleDeleteClick(record.id, e)}
+                            onClick={(e) => handleDeleteClick(recordKey, e)}
                             className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
                             title="삭제"
                           >
@@ -1698,21 +1753,23 @@ const ExecutionHistory = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
 
               {/* 모바일 카드 뷰 - 컴팩트 레이아웃 */}
               <div className="md:hidden space-y-1.5 p-2">
-                {filteredRecords.map((record) => (
+                {filteredRecords.map((record) => {
+                  const recordKey = getRecordKey(record);
+                  return (
                   <div
-                    key={record.id}
-                    data-record-id={record.id}
+                    key={recordKey}
+                    data-record-id={recordKey}
                     className={`border rounded-lg px-3 py-2 relative ${
-                      selectedRecord === record.id ? 'bg-blue-50 border-blue-300' : 'bg-white'
+                      selectedRecord === recordKey ? 'bg-blue-50 border-blue-300' : 'bg-white'
                     }`}
                     onClick={() => {
-                      setSelectedRecord(record.id);
+                      setSelectedRecord(recordKey);
                       setMobileView('image');
                     }}
                   >
@@ -1726,7 +1783,7 @@ const ExecutionHistory = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActionMenuId(actionMenuId === record.id ? null : record.id);
+                            setActionMenuId(actionMenuId === recordKey ? null : recordKey);
                           }}
                           className="p-1 text-gray-400 hover:text-gray-600"
                         >
@@ -1742,7 +1799,7 @@ const ExecutionHistory = () => {
                       </span>
                     </div>
                     {/* 액션 메뉴 */}
-                    {actionMenuId === record.id && (
+                    {actionMenuId === recordKey && (
                       <div className="absolute right-2 top-8 bg-white border rounded-lg shadow-lg z-10 py-1">
                         <button
                           onClick={(e) => handleEditClick(record as ExecutionRecord, e)}
@@ -1752,7 +1809,7 @@ const ExecutionHistory = () => {
                           수정
                         </button>
                         <button
-                          onClick={(e) => handleDeleteClick(record.id, e)}
+                          onClick={(e) => handleDeleteClick(recordKey, e)}
                           className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1761,7 +1818,7 @@ const ExecutionHistory = () => {
                       </div>
                     )}
                   </div>
-                ))}
+                )})}
               </div>
               </>
             ) : (
@@ -1793,17 +1850,18 @@ const ExecutionHistory = () => {
                 {selectedRecord && (
                   <button
                     onClick={async () => {
-                      // executionRecords에 있는 레코드 찾기
-                      const execRecord = executionRecords.find(r => r.id === selectedRecord);
+                      // type과 id 분리
+                      const { type, id } = parseSelectedRecord(selectedRecord);
+                      if (!type || !id) {
+                        toast.error('삭제할 수 없는 항목입니다');
+                        return;
+                      }
 
-                      // allRecords에서 선택된 레코드 찾기
-                      const selectedItem = allRecords.find(r => r.id === selectedRecord);
-
-                      if (execRecord) {
-                        // executionRecords에 있는 레코드는 삭제 가능
+                      if (type === 'manual') {
+                        // 실행내역 삭제
                         if (confirm('선택한 실행내역을 삭제하시겠습니까?')) {
                           try {
-                            await deleteExecutionRecordFromAPI(selectedRecord);
+                            await deleteExecutionRecordFromAPI(id);
                             setSelectedRecord(null);
                             toast.success('실행내역이 삭제되었습니다');
                           } catch (error) {
@@ -1811,10 +1869,10 @@ const ExecutionHistory = () => {
                             toast.error('실행내역 삭제에 실패했습니다');
                           }
                         }
-                      } else if (selectedItem?.type === 'payment') {
+                      } else if (type === 'payment') {
                         // payment 타입(결제요청)은 실행내역에서만 숨김
                         if (confirm('이 결제요청을 실행내역에서 숨기시겠습니까?\n(결제요청 자체는 삭제되지 않습니다)')) {
-                          setHiddenPaymentIds(prev => [...prev, selectedRecord]);
+                          setHiddenPaymentIds(prev => [...prev, id]);
                           setSelectedRecord(null);
                           toast.success('결제요청이 실행내역에서 숨겨졌습니다');
                         }
@@ -1862,7 +1920,8 @@ const ExecutionHistory = () => {
 
           {/* 모바일에서 선택한 내역 정보 표시 */}
           {isMobileDevice && selectedRecord && mobileView === 'image' && (() => {
-            const record = allRecords.find(r => r.id === selectedRecord);
+            // type_id 형식으로 레코드 찾기
+            const record = allRecords.find(r => getRecordKey(r) === selectedRecord);
             if (record) {
               return (
                 <div className="border-b bg-gray-50 p-3">
@@ -1891,8 +1950,12 @@ const ExecutionHistory = () => {
               const target = e.target as HTMLElement;
               if (!target.closest('img') && !target.closest('button') && !target.closest('textarea') && !target.closest('input') && !target.closest('label') && selectedRecord) {
                 const images = (() => {
-                  const record = executionRecords.find(r => r.id === selectedRecord);
-                  const fullRecord = allRecords.find(r => r.id === selectedRecord);
+                  // type_id 형식에서 레코드 찾기
+                  const fullRecord = allRecords.find(r => getRecordKey(r) === selectedRecord);
+                  const { type: selectedType, id: selectedId } = parseSelectedRecord(selectedRecord);
+                  const record = selectedType === 'manual' && selectedId
+                    ? executionRecords.find(r => r.id === selectedId)
+                    : null;
                   // allRecords의 images에 이미 paymentRecordImages가 포함되어 있음
                   return fullRecord?.images || record?.images || [];
                 })();
@@ -1906,15 +1969,24 @@ const ExecutionHistory = () => {
           >
             {/* 선택된 레코드가 있을 때 */}
             {selectedRecord ? (() => {
-              const record = executionRecords.find(r => r.id === selectedRecord);
-              const fullRecord = allRecords.find(r => r.id === selectedRecord);
+              // type_id 형식에서 type과 id 분리
+              const { type: selectedType, id: selectedId } = parseSelectedRecord(selectedRecord);
+              const record = selectedType === 'manual' && selectedId
+                ? executionRecords.find(r => r.id === selectedId)
+                : null;
+              // allRecords에서 type과 id 모두 일치하는 레코드 찾기
+              const fullRecord = allRecords.find(r => getRecordKey(r) === selectedRecord);
               // allRecords의 images에 이미 paymentRecordImages가 포함되어 있음
               const images = fullRecord?.images || record?.images || [];
 
               // 디버깅: 선택된 레코드의 이미지 상태
-              const originalPayment = payments.find(p => p.id === selectedRecord);
+              const originalPayment = selectedType === 'payment' && selectedId
+                ? payments.find(p => p.id === selectedId)
+                : null;
               console.log('[ExecutionHistory] 선택된 레코드:', {
                 selectedRecord,
+                selectedType,
+                selectedId,
                 fullRecordExists: !!fullRecord,
                 fullRecordType: fullRecord?.type,
                 fullRecordImages: fullRecord?.images?.length || 0,
@@ -1922,7 +1994,7 @@ const ExecutionHistory = () => {
                 recordImages: record?.images?.length || 0,
                 originalPaymentExists: !!originalPayment,
                 originalPaymentImages: originalPayment?.images?.length || 0,
-                paymentRecordImagesForId: paymentRecordImages[selectedRecord]?.length || 0,
+                paymentRecordImagesForId: selectedId ? paymentRecordImages[selectedId]?.length || 0 : 0,
                 finalImagesCount: images.length
               });
 
