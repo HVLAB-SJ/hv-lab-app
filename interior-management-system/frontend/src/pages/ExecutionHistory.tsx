@@ -1706,10 +1706,7 @@ const ExecutionHistory = () => {
                       key={recordKey}
                       data-record-id={recordKey}
                       className={`group hover:bg-gray-50 cursor-pointer text-sm ${selectedRecord === recordKey ? 'bg-blue-50' : ''}`}
-                      onClick={() => {
-                        setSelectedRecord(recordKey);
-                        setSplitModeRecord(null); // 다른 레코드 선택 시 applied 상태 초기화
-                      }}
+                      onClick={() => setSelectedRecord(recordKey)}
                     >
                       <td className="px-3 py-3 text-gray-600 whitespace-nowrap exec-author-col">
                         {record.author || '-'}
@@ -1773,7 +1770,6 @@ const ExecutionHistory = () => {
                     }`}
                     onClick={() => {
                       setSelectedRecord(recordKey);
-                      setSplitModeRecord(null); // 다른 레코드 선택 시 applied 상태 초기화
                       setMobileView('image');
                     }}
                   >
