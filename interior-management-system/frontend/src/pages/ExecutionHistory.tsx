@@ -707,9 +707,20 @@ const ExecutionHistory = () => {
 
     let wasVatIncluded = false;
     if (isPaymentType && originalPayment) {
-      wasVatIncluded = originalPayment.includesVAT === true;
-    } else if (!isPaymentType && (record as any).includesVat === true) {
-      wasVatIncluded = true;
+      // includesVAT 필드가 있으면 사용, 없으면 vatAmount > 0 여부로 추정
+      if (originalPayment.includesVAT !== undefined) {
+        wasVatIncluded = originalPayment.includesVAT === true;
+      } else {
+        // 기존 데이터: vatAmount가 있으면 부가세 포함으로 추정
+        wasVatIncluded = (originalPayment.vatAmount || 0) > 0;
+      }
+    } else if (!isPaymentType) {
+      // 실행내역: includesVat 필드 또는 vatAmount로 추정
+      if ((record as any).includesVat !== undefined) {
+        wasVatIncluded = (record as any).includesVat === true;
+      } else {
+        wasVatIncluded = (record.vatAmount || 0) > 0;
+      }
     }
 
     // 원본 금액 가져오기 (부가세 포함된 원래 입력값으로 역산)
