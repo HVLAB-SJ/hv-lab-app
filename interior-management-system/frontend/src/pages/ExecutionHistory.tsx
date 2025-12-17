@@ -707,7 +707,10 @@ const ExecutionHistory = () => {
 
     let wasVatIncluded = false;
     if (isPaymentType && originalPayment) {
-      // includesVAT 필드가 있으면 사용, 없으면 vatAmount > 0 여부로 추정
+      // Payment 데이터의 부가세 포함 여부 결정:
+      // - includesVAT 필드가 명시적으로 true인 경우에만 부가세 포함으로 처리
+      // - 기존 데이터(includesVAT 필드 없음)는 부가세가 별도로 입력된 것이므로 false로 처리
+      //   (materialAmount가 공급가액이고, vatAmount가 별도로 입력된 부가세)
       console.log('[handleEditClick] Payment VAT check:', {
         includesVAT: originalPayment.includesVAT,
         includesVATType: typeof originalPayment.includesVAT,
@@ -716,12 +719,9 @@ const ExecutionHistory = () => {
         laborAmount: originalPayment.laborAmount,
         amount: originalPayment.amount
       });
-      if (originalPayment.includesVAT !== undefined) {
-        wasVatIncluded = originalPayment.includesVAT === true;
-      } else {
-        // 기존 데이터: vatAmount가 있으면 부가세 포함으로 추정
-        wasVatIncluded = (originalPayment.vatAmount || 0) > 0;
-      }
+      // includesVAT === true인 경우에만 부가세 포함으로 처리
+      // undefined이거나 false인 경우는 공급가액이 직접 입력된 것
+      wasVatIncluded = originalPayment.includesVAT === true;
       console.log('[handleEditClick] wasVatIncluded result:', wasVatIncluded);
     } else if (!isPaymentType) {
       // 실행내역: includesVat 필드 또는 vatAmount로 추정
@@ -850,8 +850,12 @@ const ExecutionHistory = () => {
       let vatAmount = 0;
       let totalAmount = materialCost + laborCost;
 
-      // 부가세 포함인 경우: 입력된 금액이 부가세 포함 총액
+      // Payment 타입인지 확인
+      const isPaymentType = (editingRecord as any).type === 'payment';
+
+      // 부가세 계산 로직
       if (includeVat) {
+        // 부가세 포함: 입력된 금액이 부가세 포함 총액
         const totalInput = materialCost + laborCost;
         const actualAmount = Math.round(totalInput / 1.1);
         vatAmount = totalInput - actualAmount;
@@ -864,6 +868,12 @@ const ExecutionHistory = () => {
           laborCost = Math.round(actualAmount * laborRatio);
         }
         totalAmount = totalInput;
+      } else if (isPaymentType) {
+        // Payment 타입이고 부가세 미포함: 입력된 금액이 공급가액
+        // 공급가액에 10% 부가세 추가
+        const supplyAmount = materialCost + laborCost;
+        vatAmount = Math.round(supplyAmount * 0.1);
+        totalAmount = supplyAmount + vatAmount;
       }
 
       // 3.3% 세금공제 적용 (자재비/인건비 각각에 3.3% 공제)
