@@ -1891,15 +1891,8 @@ const Schedule = () => {
 
     eventsByDate.forEach((dayEvents) => {
       if (isSpecificProject) {
-        // 개별 프로젝트: ID순으로 정렬 (작성 순서)
-        const sortedByCreation = [...dayEvents].sort((a, b) => {
-          // ID가 숫자인 경우 숫자 비교, 아니면 문자열 비교
-          const aId = parseInt(a.id) || 0;
-          const bId = parseInt(b.id) || 0;
-          return aId - bId;
-        });
-
-        sortedByCreation.forEach((event, idx) => {
+        // 개별 프로젝트: 배열 순서 유지 (등록 순서)
+        dayEvents.forEach((event, idx) => {
           const adjustedStart = moment(event.start).startOf('day').add(idx, 'milliseconds').toDate();
           result.push({
             ...event,

@@ -521,6 +521,12 @@ export const useDataStore = create<DataStore>()(
           time: s.time
         };
       });
+      // ID 순으로 정렬 (등록 순서 = 생성 시간 순서)
+      schedules.sort((a, b) => {
+        const aNum = parseInt(a.id) || 0;
+        const bNum = parseInt(b.id) || 0;
+        return aNum - bNum;
+      });
       set({ schedules });
     } catch (error) {
       console.error('Failed to load schedules from API:', error);
