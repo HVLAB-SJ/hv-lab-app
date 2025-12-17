@@ -764,8 +764,12 @@ const Schedule = () => {
   // 디버깅: 사용자 정보 로그
   console.log('👤 Current user:', user?.name, 'Short name:', userNameWithoutSurname);
 
-  // Load schedules from API on mount
+  // Load schedules from API on mount (한 번만 실행)
+  const initialLoadDone = React.useRef(false);
   useEffect(() => {
+    if (initialLoadDone.current) return;
+    initialLoadDone.current = true;
+
     loadSchedulesFromAPI().catch(error => {
       console.error('Failed to load schedules:', error);
       toast.error('일정을 불러오는데 실패했습니다');
