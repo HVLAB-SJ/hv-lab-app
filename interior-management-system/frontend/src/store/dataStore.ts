@@ -642,6 +642,11 @@ export const useDataStore = create<DataStore>()(
     const { schedules } = get();
     const deletedSchedule = schedules.find(s => s.id === id);
 
+    // 이미 로컬에서 삭제된 경우 무시
+    if (!deletedSchedule) {
+      return;
+    }
+
     // 즉시 로컬에서 삭제 (낙관적 업데이트)
     set((state) => ({ schedules: state.schedules.filter((s) => s.id !== id) }));
 
@@ -650,11 +655,18 @@ export const useDataStore = create<DataStore>()(
       if (!id.startsWith('temp_')) {
         await scheduleService.deleteSchedule(id);
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      // 404 에러는 이미 삭제된 것이므로 무시 (롤백하지 않음)
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status === 404) {
+        console.log('Schedule already deleted on server:', id);
+        return;
+      }
+
       console.error('Failed to delete schedule from API:', error);
-      // 실패 시 롤백
+      // 다른 에러인 경우에만 롤백
       if (deletedSchedule) {
-        set((state) => ({ schedules: [deletedSchedule, ...state.schedules] }));
+        set((state) => ({ schedules: [...state.schedules, deletedSchedule] }));
       }
       throw error;
     }
