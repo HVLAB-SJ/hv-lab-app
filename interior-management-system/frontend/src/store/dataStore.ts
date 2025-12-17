@@ -532,12 +532,12 @@ export const useDataStore = create<DataStore>()(
     // 임시 ID 생성 (temp_로 시작하지 않으면 새로 생성)
     const tempId = schedule.id?.startsWith('temp_') ? schedule.id : `temp_${Date.now()}`;
 
-    // 즉시 로컬 상태에 추가 (낙관적 업데이트)
+    // 즉시 로컬 상태에 추가 (낙관적 업데이트) - 등록 순서대로 맨 뒤에 추가
     const tempSchedule: Schedule = {
       ...schedule,
       id: tempId,
     };
-    set((state) => ({ schedules: [tempSchedule, ...state.schedules] }));
+    set((state) => ({ schedules: [...state.schedules, tempSchedule] }));
 
     try {
       const apiSchedule = await scheduleService.createSchedule({
