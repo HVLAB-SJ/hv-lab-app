@@ -708,12 +708,21 @@ const ExecutionHistory = () => {
     let wasVatIncluded = false;
     if (isPaymentType && originalPayment) {
       // includesVAT 필드가 있으면 사용, 없으면 vatAmount > 0 여부로 추정
+      console.log('[handleEditClick] Payment VAT check:', {
+        includesVAT: originalPayment.includesVAT,
+        includesVATType: typeof originalPayment.includesVAT,
+        vatAmount: originalPayment.vatAmount,
+        materialAmount: originalPayment.materialAmount,
+        laborAmount: originalPayment.laborAmount,
+        amount: originalPayment.amount
+      });
       if (originalPayment.includesVAT !== undefined) {
         wasVatIncluded = originalPayment.includesVAT === true;
       } else {
         // 기존 데이터: vatAmount가 있으면 부가세 포함으로 추정
         wasVatIncluded = (originalPayment.vatAmount || 0) > 0;
       }
+      console.log('[handleEditClick] wasVatIncluded result:', wasVatIncluded);
     } else if (!isPaymentType) {
       // 실행내역: includesVat 필드 또는 vatAmount로 추정
       if ((record as any).includesVat !== undefined) {
