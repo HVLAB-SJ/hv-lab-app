@@ -662,15 +662,18 @@ export const useDataStore = create<DataStore>()(
         await scheduleService.deleteSchedule(id);
       }
     } catch (error: unknown) {
-      // 404 에러는 이미 삭제된 것이므로 무시 (롤백하지 않음)
       const axiosError = error as { response?: { status?: number } };
-      if (axiosError?.response?.status === 404) {
-        console.log('Schedule already deleted on server:', id);
+      const status = axiosError?.response?.status;
+
+      // 404: 이미 삭제됨 - 롤백하지 않음
+      // 502, 503, 504: 서버 게이트웨이 에러 - 삭제가 성공했을 수 있으므로 롤백하지 않음
+      if (status === 404 || status === 502 || status === 503 || status === 504) {
+        console.log('Schedule delete - ignoring error (status:', status, '):', id);
         return;
       }
 
       console.error('Failed to delete schedule from API:', error);
-      // 다른 에러인 경우에만 롤백
+      // 다른 에러인 경우에만 롤백 (400, 401, 403, 500 등)
       if (deletedSchedule) {
         set((state) => ({ schedules: [...state.schedules, deletedSchedule] }));
       }
