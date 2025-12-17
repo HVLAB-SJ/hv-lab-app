@@ -1740,15 +1740,15 @@ const ExecutionHistory = () => {
                         <span className="exec-total-full">{(record.totalAmount || 0).toLocaleString()}원</span>
                         <span className="exec-total-short">{(record.totalAmount || 0).toLocaleString()}</span>
                       </td>
-                      <td className="px-2 py-3 text-center">
-                        {/* 미분할 배지 - 호버 시 숨김 */}
+                      <td className="px-2 py-3 text-center relative">
+                        {/* 미분할 배지 - 호버 시 숨김, 절대 위치로 셀 높이 영향 없음 */}
                         {record.type === 'payment' && !appliedPaymentIds.includes(record.id) && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded group-hover:hidden">
+                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded group-hover:opacity-0 transition-opacity">
                             미분할
                           </span>
                         )}
-                        {/* 수정/삭제 버튼 - 호버 시 표시 */}
-                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* 수정/삭제 버튼 - 호버 시 표시, 절대 위치로 배지 위에 겹침 */}
+                        <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={(e) => handleEditClick(record as ExecutionRecord, e)}
                             className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
