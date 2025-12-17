@@ -705,93 +705,30 @@ const ExecutionHistory = () => {
     console.log('[handleEditClick] record.includesVat:', (record as any).includesVat, 'type:', typeof (record as any).includesVat);
     console.log('[handleEditClick] Full record:', JSON.stringify(record, null, 2));
 
-    let wasVatIncluded = false;
-    if (isPaymentType && originalPayment) {
-      // Payment 데이터의 부가세 포함 여부 결정:
-      // - includesVAT 필드가 명시적으로 true인 경우에만 부가세 포함으로 처리
-      // - 기존 데이터(includesVAT 필드 없음)는 부가세가 별도로 입력된 것이므로 false로 처리
-      //   (materialAmount가 공급가액이고, vatAmount가 별도로 입력된 부가세)
-      console.log('[handleEditClick] Payment VAT check:', {
-        includesVAT: originalPayment.includesVAT,
-        includesVATType: typeof originalPayment.includesVAT,
-        vatAmount: originalPayment.vatAmount,
-        materialAmount: originalPayment.materialAmount,
-        laborAmount: originalPayment.laborAmount,
-        amount: originalPayment.amount
-      });
-      // includesVAT === true인 경우에만 부가세 포함으로 처리
-      // undefined이거나 false인 경우는 공급가액이 직접 입력된 것
-      wasVatIncluded = originalPayment.includesVAT === true;
-      console.log('[handleEditClick] wasVatIncluded result:', wasVatIncluded);
-    } else if (!isPaymentType) {
-      // 실행내역: includesVat 필드 또는 vatAmount로 추정
-      if ((record as any).includesVat !== undefined) {
-        wasVatIncluded = (record as any).includesVat === true;
-      } else {
-        wasVatIncluded = (record.vatAmount || 0) > 0;
-      }
-    }
-
-    // 원본 금액 가져오기 (부가세 포함된 원래 입력값으로 역산)
+    // 단순화: 저장된 금액 그대로 표시, 체크박스는 저장된 값 사용
+    // 수정완료 시 새로 등록하는 것과 동일한 로직 적용
     let displayMaterialCost = record.materialCost || 0;
     let displayLaborCost = record.laborCost || 0;
-
-    // 3.3% 세금공제 여부 확인
-    // 실행내역 타입: DB에 저장된 includesTaxDeduction 필드 사용
-    const wasTaxDeducted = !isPaymentType && (record as any).includesTaxDeduction === true;
+    let wasVatIncluded = false;
+    let wasTaxDeducted = false;
 
     if (isPaymentType && originalPayment) {
-      // payment 원본 데이터의 금액 사용
+      // Payment: 저장된 금액 그대로 사용
       displayMaterialCost = originalPayment.materialAmount || 0;
       displayLaborCost = originalPayment.laborAmount || 0;
-
-      // 부가세 포함인 경우: 저장된 금액은 공급가액이므로 부가세 포함 금액으로 역산
-      if (wasVatIncluded) {
-        const totalWithVat = originalPayment.amount || 0;
-        const supplyAmount = displayMaterialCost + displayLaborCost;
-        if (supplyAmount > 0) {
-          const materialRatio = displayMaterialCost / supplyAmount;
-          displayMaterialCost = Math.round(totalWithVat * materialRatio);
-          displayLaborCost = Math.round(totalWithVat * (1 - materialRatio));
-        }
-      }
-    } else if (!isPaymentType) {
-      // 실행내역 타입: 세금공제와 부가세 역산 처리
-
-      // 1단계: 세금공제가 적용된 경우 먼저 역산 (공제된 금액 / 0.967 = 공제 전 금액)
-      if (wasTaxDeducted) {
-        displayMaterialCost = Math.round((record.materialCost || 0) / 0.967);
-        displayLaborCost = Math.round((record.laborCost || 0) / 0.967);
-      }
-
-      // 2단계: 부가세가 포함되어 있었던 경우 원본 금액으로 역산
-      // 저장된 금액은 부가세 제외 공급가액이므로, 부가세 포함 금액으로 복원
-      if (wasVatIncluded) {
-        // totalAmount = 부가세 포함 총액
-        const totalWithVat = record.totalAmount || 0;
-        const supplyAmount = displayMaterialCost + displayLaborCost;
-
-        if (supplyAmount > 0) {
-          // 원본 비율에 따라 부가세 포함 금액으로 역산
-          const materialRatio = displayMaterialCost / supplyAmount;
-          const laborRatio = displayLaborCost / supplyAmount;
-          displayMaterialCost = Math.round(totalWithVat * materialRatio);
-          displayLaborCost = Math.round(totalWithVat * laborRatio);
-        }
-      }
+      // includesVAT가 명시적으로 true인 경우에만 체크
+      wasVatIncluded = originalPayment.includesVAT === true;
+    } else {
+      // 실행내역: 저장된 값 사용
+      wasVatIncluded = (record as any).includesVat === true;
+      wasTaxDeducted = (record as any).includesTaxDeduction === true;
     }
 
-    console.log('[handleEditClick] VAT/Tax check:', {
-      wasVatIncluded,
-      wasTaxDeducted,
-      includesVat: (record as any).includesVat,
-      includesTaxDeduction: (record as any).includesTaxDeduction,
+    console.log('[handleEditClick] Simple logic:', {
       displayMaterialCost,
       displayLaborCost,
-      originalMaterialCost: record.materialCost,
-      originalLaborCost: record.laborCost,
-      totalAmount: record.totalAmount,
-      vatAmount: record.vatAmount
+      wasVatIncluded,
+      wasTaxDeducted
     });
 
     setEditingRecord(record);
@@ -845,17 +782,14 @@ const ExecutionHistory = () => {
     }
 
     try {
+      // 새로 등록하는 것과 동일한 로직 적용
       let materialCost = Number(formData.materialCost) || 0;
       let laborCost = Number(formData.laborCost) || 0;
       let vatAmount = 0;
-      let totalAmount = materialCost + laborCost;
+      let totalAmount = 0;
 
-      // Payment 타입인지 확인
-      const isPaymentType = (editingRecord as any).type === 'payment';
-
-      // 부가세 계산 로직
       if (includeVat) {
-        // 부가세 포함: 입력된 금액이 부가세 포함 총액
+        // 부가세 포함인 경우: 입력된 금액이 부가세 포함 총액
         const totalInput = materialCost + laborCost;
         const actualAmount = Math.round(totalInput / 1.1);
         vatAmount = totalInput - actualAmount;
@@ -868,12 +802,10 @@ const ExecutionHistory = () => {
           laborCost = Math.round(actualAmount * laborRatio);
         }
         totalAmount = totalInput;
-      } else if (isPaymentType) {
-        // Payment 타입이고 부가세 미포함: 입력된 금액이 공급가액
-        // 공급가액에 10% 부가세 추가
-        const supplyAmount = materialCost + laborCost;
-        vatAmount = Math.round(supplyAmount * 0.1);
-        totalAmount = supplyAmount + vatAmount;
+      } else {
+        // 부가세 미포함인 경우: 입력된 금액 그대로 사용
+        vatAmount = 0;
+        totalAmount = materialCost + laborCost;
       }
 
       // 3.3% 세금공제 적용 (자재비/인건비 각각에 3.3% 공제)
