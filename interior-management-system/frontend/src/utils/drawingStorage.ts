@@ -7,6 +7,7 @@ interface DrawingData {
   type: string;
   projectId: string;
   imageUrl: string;
+  imageUrls?: string[]; // 다중 이미지 지원
   markers: any[];
   rooms: any[];
   lastModified: Date;
@@ -53,6 +54,7 @@ class DrawingStorage {
         projectId: data.projectId,
         type: data.type,
         imageUrl: data.imageUrl,
+        imageUrls: data.imageUrls || [], // 다중 이미지 전송
         markers: data.markers,
         rooms: data.rooms,
         naverTypeSqm: data.naverTypeSqm,
@@ -97,6 +99,7 @@ class DrawingStorage {
         type: serverData.type,
         projectId: serverData.projectId,
         imageUrl: serverData.imageUrl,
+        imageUrls: serverData.imageUrls || [], // 다중 이미지 수신
         markers: serverData.markers || [],
         rooms: serverData.rooms || [],
         lastModified: new Date(serverData.updatedAt),

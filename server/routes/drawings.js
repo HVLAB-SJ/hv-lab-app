@@ -149,7 +149,8 @@ const ensureTableExists = () => {
           const requiredColumns = [
             { name: 'naver_type_sqm', sql: "ALTER TABLE drawings ADD COLUMN naver_type_sqm TEXT" },
             { name: 'naver_type_pyeong', sql: "ALTER TABLE drawings ADD COLUMN naver_type_pyeong TEXT" },
-            { name: 'naver_area', sql: "ALTER TABLE drawings ADD COLUMN naver_area TEXT" }
+            { name: 'naver_area', sql: "ALTER TABLE drawings ADD COLUMN naver_area TEXT" },
+            { name: 'image_urls', sql: "ALTER TABLE drawings ADD COLUMN image_urls TEXT DEFAULT '[]'" }
           ];
 
           // 누락된 컬럼 추가
@@ -298,11 +299,26 @@ router.get('/:projectId/:type', authenticateToken, async (req, res) => {
     }
 
     try {
+      // image_urls 파싱 (없으면 image_url 기반으로 배열 생성)
+      let imageUrls = [];
+      if (drawing.image_urls) {
+        try {
+          imageUrls = JSON.parse(drawing.image_urls);
+        } catch (e) {
+          imageUrls = [];
+        }
+      }
+      // image_urls가 비어있고 image_url이 있으면 호환성 유지
+      if (imageUrls.length === 0 && drawing.image_url) {
+        imageUrls = [drawing.image_url];
+      }
+
       const parsedDrawing = {
         id: drawing.id,
         projectId: drawing.project_id,
         type: drawing.type,
         imageUrl: drawing.image_url,
+        imageUrls: imageUrls,
         markers: JSON.parse(drawing.markers || '[]'),
         rooms: JSON.parse(drawing.rooms || '[]'),
         naverTypeSqm: drawing.naver_type_sqm,
@@ -342,19 +358,35 @@ router.get('/project/:projectId', authenticateToken, async (req, res) => {
     }
 
     try {
-      const parsedDrawings = (drawings || []).map(drawing => ({
-        id: drawing.id,
-        projectId: drawing.project_id,
-        type: drawing.type,
-        imageUrl: drawing.image_url,
-        markers: JSON.parse(drawing.markers || '[]'),
-        rooms: JSON.parse(drawing.rooms || '[]'),
-        naverTypeSqm: drawing.naver_type_sqm,
-        naverTypePyeong: drawing.naver_type_pyeong,
-        naverArea: drawing.naver_area,
-        createdAt: drawing.created_at,
-        updatedAt: drawing.updated_at
-      }));
+      const parsedDrawings = (drawings || []).map(drawing => {
+        // image_urls 파싱
+        let imageUrls = [];
+        if (drawing.image_urls) {
+          try {
+            imageUrls = JSON.parse(drawing.image_urls);
+          } catch (e) {
+            imageUrls = [];
+          }
+        }
+        if (imageUrls.length === 0 && drawing.image_url) {
+          imageUrls = [drawing.image_url];
+        }
+
+        return {
+          id: drawing.id,
+          projectId: drawing.project_id,
+          type: drawing.type,
+          imageUrl: drawing.image_url,
+          imageUrls: imageUrls,
+          markers: JSON.parse(drawing.markers || '[]'),
+          rooms: JSON.parse(drawing.rooms || '[]'),
+          naverTypeSqm: drawing.naver_type_sqm,
+          naverTypePyeong: drawing.naver_type_pyeong,
+          naverArea: drawing.naver_area,
+          createdAt: drawing.created_at,
+          updatedAt: drawing.updated_at
+        };
+      });
 
       res.json(parsedDrawings);
     } catch (parseErr) {
@@ -366,9 +398,9 @@ router.get('/project/:projectId', authenticateToken, async (req, res) => {
 
 // 도면 저장/업데이트 (이미지 URL 방식)
 router.post('/', authenticateToken, async (req, res) => {
-  const { projectId, type, imageUrl, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea } = req.body;
+  const { projectId, type, imageUrl, imageUrls, markers, rooms, naverTypeSqm, naverTypePyeong, naverArea } = req.body;
 
-  console.log(`[drawings] POST request - projectId: ${projectId}, type: ${type}, imageUrl: ${imageUrl ? 'provided' : 'none'}`);
+  console.log(`[drawings] POST request - projectId: ${projectId}, type: ${type}, imageUrl: ${imageUrl ? 'provided' : 'none'}, imageUrls: ${imageUrls?.length || 0}개`);
 
   if (!projectId || !type) {
     return res.status(400).json({ error: 'projectId와 type은 필수입니다' });
@@ -391,16 +423,19 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     if (existing) {
-      // 업데이트
+      // 업데이트 - image_urls도 함께 저장
       const updateQuery = `
         UPDATE drawings
-        SET image_url = ?, markers = ?, rooms = ?, naver_type_sqm = ?, naver_type_pyeong = ?, naver_area = ?, updated_at = ?
+        SET image_url = ?, image_urls = ?, markers = ?, rooms = ?, naver_type_sqm = ?, naver_type_pyeong = ?, naver_area = ?, updated_at = ?
         WHERE id = ?
       `;
 
+      // imageUrls 배열을 JSON 문자열로 변환
+      const imageUrlsJson = JSON.stringify(imageUrls || []);
+
       db.run(
         updateQuery,
-        [imageUrl || existing.image_url, JSON.stringify(markers || []), JSON.stringify(rooms || []), naverTypeSqm, naverTypePyeong, naverArea, now, existing.id],
+        [imageUrl || existing.image_url, imageUrlsJson, JSON.stringify(markers || []), JSON.stringify(rooms || []), naverTypeSqm, naverTypePyeong, naverArea, now, existing.id],
         function(updateErr) {
           if (updateErr) {
             console.error('[drawings] Failed to update:', updateErr);
@@ -413,6 +448,7 @@ router.post('/', authenticateToken, async (req, res) => {
             projectId,
             type,
             imageUrl: imageUrl || existing.image_url,
+            imageUrls: imageUrls || [],
             markers: markers || [],
             rooms: rooms || [],
             naverTypeSqm,
@@ -423,16 +459,19 @@ router.post('/', authenticateToken, async (req, res) => {
         }
       );
     } else {
-      // 신규 생성
+      // 신규 생성 - image_urls도 함께 저장
       const id = generateId();
       const insertQuery = `
-        INSERT INTO drawings (id, project_id, type, image_url, markers, rooms, naver_type_sqm, naver_type_pyeong, naver_area, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO drawings (id, project_id, type, image_url, image_urls, markers, rooms, naver_type_sqm, naver_type_pyeong, naver_area, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
+
+      // imageUrls 배열을 JSON 문자열로 변환
+      const imageUrlsJson = JSON.stringify(imageUrls || []);
 
       db.run(
         insertQuery,
-        [id, projectId, type, imageUrl, JSON.stringify(markers || []), JSON.stringify(rooms || []), naverTypeSqm, naverTypePyeong, naverArea, now, now],
+        [id, projectId, type, imageUrl, imageUrlsJson, JSON.stringify(markers || []), JSON.stringify(rooms || []), naverTypeSqm, naverTypePyeong, naverArea, now, now],
         function(insertErr) {
           if (insertErr) {
             console.error('[drawings] Failed to create:', insertErr);
@@ -445,6 +484,7 @@ router.post('/', authenticateToken, async (req, res) => {
             projectId,
             type,
             imageUrl,
+            imageUrls: imageUrls || [],
             markers: markers || [],
             rooms: rooms || [],
             naverTypeSqm,

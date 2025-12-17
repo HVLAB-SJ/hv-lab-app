@@ -379,8 +379,12 @@ const Drawings = () => {
         });
       } else {
         // 새 이미지 추가
-        setUploadedImages(prev => [...prev, imageUrl]);
-        setSelectedImageIndex(uploadedImages.length); // 새로 추가된 이미지 선택
+        setUploadedImages(prev => {
+          const newImages = [...prev, imageUrl];
+          // 새로 추가된 이미지 선택 (prev.length가 새 인덱스)
+          setSelectedImageIndex(prev.length);
+          return newImages;
+        });
       }
     } catch (error: any) {
       console.error('이미지 업로드 실패:', error);
