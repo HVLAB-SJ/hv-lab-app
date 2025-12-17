@@ -1710,8 +1710,9 @@ const Schedule = () => {
       return;
     }
 
+    const tempId = `temp_${Date.now()}`;
     const newSchedule: Schedule = {
-      id: Date.now().toString(),
+      id: tempId,
       title: processName,
       start: dropDate,
       end: dropDate,
@@ -1720,14 +1721,21 @@ const Schedule = () => {
       type: 'construction'
     };
 
+    // 낙관적 업데이트: 즉시 UI에 표시
+    addSchedule(newSchedule);
+
     try {
-      // addScheduleToAPI가 store에 직접 추가하므로 별도 처리 불필요
+      // API 호출 후 서버 ID로 교체
       await addScheduleToAPI(newSchedule);
+      // addScheduleToAPI가 서버 응답으로 store를 업데이트하므로 임시 항목 제거
+      deleteSchedule(tempId);
     } catch (error) {
       console.error('일정 추가 실패:', error);
       toast.error('일정 추가에 실패했습니다');
+      // 실패 시 임시 항목 제거
+      deleteSchedule(tempId);
     }
-  }, [filterProject, addScheduleToAPI, user]);
+  }, [filterProject, addScheduleToAPI, addSchedule, deleteSchedule, user]);
 
   // 외부에서 드래그해서 캘린더에 드롭할 때 핸들러
   const onDropFromOutside = useCallback(({ start }: { start: Date; end: Date; allDay: boolean }) => {
@@ -1783,8 +1791,9 @@ const Schedule = () => {
     const savedDate = inlineAddDate;
     setInlineAddDate(null); // 즉시 입력창 닫기
 
+    const tempId = `temp_${Date.now()}`;
     const newSchedule = {
-      id: Date.now().toString(),
+      id: tempId,
       title: title.trim(),
       start: savedDate,
       end: savedDate,
@@ -1795,14 +1804,21 @@ const Schedule = () => {
       description: ''
     };
 
+    // 낙관적 업데이트: 즉시 UI에 표시
+    addSchedule(newSchedule);
+
     try {
-      // addScheduleToAPI가 store에 직접 추가하므로 별도 처리 불필요
+      // API 호출 후 서버 ID로 교체
       await addScheduleToAPI(newSchedule);
+      // addScheduleToAPI가 서버 응답으로 store를 업데이트하므로 임시 항목 제거
+      deleteSchedule(tempId);
     } catch (error) {
       console.error('일정 추가 실패:', error);
       toast.error('일정 추가에 실패했습니다');
+      // 실패 시 임시 항목 제거
+      deleteSchedule(tempId);
     }
-  }, [inlineAddDate, filterProject, addScheduleToAPI, user]);
+  }, [inlineAddDate, filterProject, addScheduleToAPI, addSchedule, deleteSchedule, user]);
 
   // 인라인 추가 취소
   const handleInlineAddCancel = useCallback(() => {
@@ -1841,12 +1857,15 @@ const Schedule = () => {
     // 병합된 일정인 경우 모든 이벤트 ID 추출
     const eventIds = event.mergedEventIds || [event.id];
 
-    try {
-      // deleteScheduleFromAPI가 store를 직접 업데이트하므로 별도 처리 불필요
-      await Promise.all(eventIds.map(id => deleteScheduleFromAPI(id)));
+    // 낙관적 업데이트: 즉시 UI에서 제거
+    eventIds.forEach(id => deleteSchedule(id));
 
-      // 성공 메시지 표시
-      toast.success('삭제됨 (Ctrl+Z로 복원)', { duration: 2000 });
+    // 성공 메시지 즉시 표시
+    toast.success('삭제됨 (Ctrl+Z로 복원)', { duration: 2000 });
+
+    try {
+      // 백그라운드에서 API 호출
+      await Promise.all(eventIds.map(id => deleteScheduleFromAPI(id)));
     } catch (error) {
       console.error('일정 삭제 실패:', error);
       toast.error('일정 삭제에 실패했습니다');
@@ -1858,7 +1877,7 @@ const Schedule = () => {
 
     setInlineEditEvent(null);
     setInlineEditTitle('');
-  }, [deleteScheduleFromAPI, loadSchedulesFromAPI]);
+  }, [deleteSchedule, deleteScheduleFromAPI, loadSchedulesFromAPI]);
 
   // 필터링된 이벤트를 먼저 정의 (useEffect보다 먼저 와야 함)
   // 이미 groupEventsByProjectAndDate에서 사용자 일정의 시간을 조정했으므로 여기서는 필터링만
