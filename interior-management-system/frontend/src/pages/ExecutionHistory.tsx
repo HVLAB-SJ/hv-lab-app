@@ -142,8 +142,11 @@ const ExecutionHistory = () => {
     return stored ? JSON.parse(stored) : {};
   });
 
-  // 금액 분할 모드 상태
-  const [splitModeRecord, setSplitModeRecord] = useState<string | null>(null);
+  // 금액 분할 모드 상태 - localStorage에서 초기화 (새로고침 후에도 유지)
+  const [splitModeRecord, setSplitModeRecord] = useState<string | null>(() => {
+    const saved = localStorage.getItem('executionHistory_splitApplied');
+    return saved === 'true' ? 'applied' : null;
+  });
   const [splitMaterialCost, setSplitMaterialCost] = useState<number | ''>('');
   const [splitLaborCost, setSplitLaborCost] = useState<number | ''>('');
 
@@ -2074,6 +2077,7 @@ const ExecutionHistory = () => {
 
                                 // 금액 분할 UI만 숨기기 (레코드 선택은 유지)
                                 setSplitModeRecord('applied'); // 'applied'로 설정하여 결제요청 금액 섹션 전체 숨김
+                                localStorage.setItem('executionHistory_splitApplied', 'true'); // 새로고침 후에도 유지
                                 setSplitMaterialCost('');
                                 setSplitLaborCost('');
 
