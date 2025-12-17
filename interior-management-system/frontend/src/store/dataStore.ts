@@ -529,13 +529,17 @@ export const useDataStore = create<DataStore>()(
   },
 
   addScheduleToAPI: async (schedule: Schedule & { asRequestId?: string }) => {
-    try {
-      console.log('🚀 addScheduleToAPI - Input schedule:', {
-        project: schedule.project,
-        attendees: schedule.attendees,
-        title: schedule.title
-      });
+    // 임시 ID 생성 (temp_로 시작하지 않으면 새로 생성)
+    const tempId = schedule.id?.startsWith('temp_') ? schedule.id : `temp_${Date.now()}`;
 
+    // 즉시 로컬 상태에 추가 (낙관적 업데이트)
+    const tempSchedule: Schedule = {
+      ...schedule,
+      id: tempId,
+    };
+    set((state) => ({ schedules: [tempSchedule, ...state.schedules] }));
+
+    try {
       const apiSchedule = await scheduleService.createSchedule({
         project: schedule.project || '',
         title: schedule.title,
@@ -550,24 +554,12 @@ export const useDataStore = create<DataStore>()(
         time: schedule.time
       });
 
-      console.log('🚀 addScheduleToAPI - API Response:', {
-        id: apiSchedule._id,
-        assigneeNames: apiSchedule.assigneeNames,
-        assignedTo: apiSchedule.assignedTo,
-        project: apiSchedule.project
-      });
-
       // 서버가 잘못 추가한 담당자를 필터링 - 원래 요청한 담당자만 유지
       const requestedAttendees = schedule.attendees || [];
       let finalAttendees = apiSchedule.assigneeNames || apiSchedule.assignedTo?.map(a => typeof a === 'object' ? a.name : a) || [];
 
       // 만약 요청한 담당자가 있고, 서버에서 더 많은 담당자를 반환했다면 필터링
       if (requestedAttendees.length > 0 && finalAttendees.length > requestedAttendees.length) {
-        console.log('⚠️ Server added extra attendees, filtering to match request:', {
-          requested: requestedAttendees,
-          serverReturned: finalAttendees
-        });
-        // 요청한 담당자만 유지
         finalAttendees = requestedAttendees;
       }
 
@@ -584,11 +576,16 @@ export const useDataStore = create<DataStore>()(
         time: apiSchedule.time
       };
 
-      console.log('🚀 addScheduleToAPI - Final schedule attendees:', newSchedule.attendees);
-
-      set((state) => ({ schedules: [newSchedule, ...state.schedules] }));
+      // 임시 항목을 서버 응답으로 교체
+      set((state) => ({
+        schedules: state.schedules.map(s => s.id === tempId ? newSchedule : s)
+      }));
     } catch (error) {
       console.error('Failed to add schedule to API:', error);
+      // 실패 시 임시 항목 제거
+      set((state) => ({
+        schedules: state.schedules.filter(s => s.id !== tempId)
+      }));
       throw error;
     }
   },
@@ -641,11 +638,24 @@ export const useDataStore = create<DataStore>()(
   },
 
   deleteScheduleFromAPI: async (id: string) => {
+    // 삭제할 항목 백업 (롤백용)
+    const { schedules } = get();
+    const deletedSchedule = schedules.find(s => s.id === id);
+
+    // 즉시 로컬에서 삭제 (낙관적 업데이트)
+    set((state) => ({ schedules: state.schedules.filter((s) => s.id !== id) }));
+
     try {
-      await scheduleService.deleteSchedule(id);
-      set((state) => ({ schedules: state.schedules.filter((s) => s.id !== id) }));
+      // temp_로 시작하는 임시 항목은 API 호출하지 않음
+      if (!id.startsWith('temp_')) {
+        await scheduleService.deleteSchedule(id);
+      }
     } catch (error) {
       console.error('Failed to delete schedule from API:', error);
+      // 실패 시 롤백
+      if (deletedSchedule) {
+        set((state) => ({ schedules: [deletedSchedule, ...state.schedules] }));
+      }
       throw error;
     }
   },
