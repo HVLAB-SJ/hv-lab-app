@@ -436,13 +436,29 @@ const ExecutionHistory = () => {
           vatAmount = 0;
         }
       } else {
-        // 금액분할이 된 경우: DB에 저장된 materialAmount, laborAmount는 이미 공급가액
-        // includesVAT 여부와 관계없이 저장된 값 그대로 사용
-        materialSupplyAmount = materialCost;
-        laborSupplyAmount = laborCost;
-        // 부가세는 totalAmount에서 공급가액 합계를 빼서 계산
-        vatAmount = totalAmount - (materialCost + laborCost);
-        if (vatAmount < 0) vatAmount = 0;
+        // 금액분할이 된 경우
+        if (payment.includesVAT) {
+          // VAT 포함인 경우: 입력된 자재비/인건비는 VAT 포함 금액이므로 공급가액으로 변환
+          const totalInputAmount = materialCost + laborCost;
+          if (totalInputAmount > 0) {
+            // 입력된 비율에 따라 공급가액 분배
+            const supplyTotal = Math.round(totalAmount / 1.1);
+            vatAmount = totalAmount - supplyTotal;
+            const materialRatio = materialCost / totalInputAmount;
+            const laborRatio = laborCost / totalInputAmount;
+            materialSupplyAmount = Math.round(supplyTotal * materialRatio);
+            laborSupplyAmount = supplyTotal - materialSupplyAmount; // 반올림 오차 방지
+          } else {
+            materialSupplyAmount = 0;
+            laborSupplyAmount = 0;
+            vatAmount = 0;
+          }
+        } else {
+          // VAT 미포함인 경우: 입력된 값이 그대로 공급가액
+          materialSupplyAmount = materialCost;
+          laborSupplyAmount = laborCost;
+          vatAmount = 0;
+        }
       }
 
       return {
