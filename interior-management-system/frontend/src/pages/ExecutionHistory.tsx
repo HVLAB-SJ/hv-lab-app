@@ -148,12 +148,6 @@ const ExecutionHistory = () => {
   const [splitMaterialCost, setSplitMaterialCost] = useState<number | ''>('');
   const [splitLaborCost, setSplitLaborCost] = useState<number | ''>('');
 
-  // 입력 적용된 결제요청 ID 목록 (localStorage에 저장)
-  const [appliedPaymentIds, setAppliedPaymentIds] = useState<string[]>(() => {
-    const saved = localStorage.getItem('executionHistory_appliedPaymentIds');
-    return saved ? JSON.parse(saved) : [];
-  });
-
   // 초기 데이터 로드 (마운트 시 1회만 실행)
   useEffect(() => {
     const loadData = async () => {
@@ -462,6 +456,9 @@ const ExecutionHistory = () => {
         }
       }
 
+      // 금액분할이 적용되었는지 여부 (서버 데이터 기준)
+      const isSplitApplied = materialCost > 0 || laborCost > 0;
+
       return {
         id: payment.id,
         type: 'payment' as const,
@@ -476,7 +473,8 @@ const ExecutionHistory = () => {
         totalAmount: totalAmount, // 총액
         images: (payment.images && payment.images.length > 0) ? payment.images : (paymentRecordImages[payment.id] || []),  // 서버 이미지 우선, 비어있으면 로컬 이미지
         notes: payment.notes,
-        quickText: (payment as any).quickText || ''  // 원본 텍스트 추가
+        quickText: (payment as any).quickText || '',  // 원본 텍스트 추가
+        isSplitApplied  // 금액분할 적용 여부 (서버 데이터 기준)
       };
     });
 
@@ -1724,7 +1722,7 @@ const ExecutionHistory = () => {
                       onClick={() => {
                         setSelectedRecord(recordKey);
                         // 미분할 항목 선택 시 자동으로 금액분할 모드 열기
-                        if (record.type === 'payment' && !appliedPaymentIds.includes(record.id)) {
+                        if (record.type === 'payment' && !(record as any).isSplitApplied) {
                           setSplitModeRecord(recordKey);
                           setSplitMaterialCost(record.totalAmount || 0);
                           setSplitLaborCost(0);
@@ -1759,7 +1757,7 @@ const ExecutionHistory = () => {
                       </td>
                       <td className="px-2 py-3 text-center relative">
                         {/* 미분할 배지 - 호버 시 숨김, 절대 위치로 셀 높이 영향 없음 */}
-                        {record.type === 'payment' && !appliedPaymentIds.includes(record.id) && (
+                        {record.type === 'payment' && !(record as any).isSplitApplied && (
                           <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded group-hover:opacity-0 transition-opacity">
                             미분할
                           </span>
@@ -1802,7 +1800,7 @@ const ExecutionHistory = () => {
                       setSelectedRecord(recordKey);
                       setMobileView('image');
                       // 미분할 항목 선택 시 자동으로 금액분할 모드 열기
-                      if (record.type === 'payment' && !appliedPaymentIds.includes(record.id)) {
+                      if (record.type === 'payment' && !(record as any).isSplitApplied) {
                         setSplitModeRecord(recordKey);
                         setSplitMaterialCost(record.totalAmount || 0);
                         setSplitLaborCost(0);
@@ -1816,7 +1814,7 @@ const ExecutionHistory = () => {
                         <p className="text-sm font-bold text-gray-900 shrink-0">
                           {(record.totalAmount || 0).toLocaleString()}원
                         </p>
-                        {record.type === 'payment' && !appliedPaymentIds.includes(record.id) && (
+                        {record.type === 'payment' && !(record as any).isSplitApplied && (
                           <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded shrink-0">
                             미분할
                           </span>
@@ -1977,7 +1975,7 @@ const ExecutionHistory = () => {
                       <p className="text-sm font-bold text-gray-900">
                         ₩{(record.totalAmount || 0).toLocaleString()}
                       </p>
-                      {record.type === 'payment' && !appliedPaymentIds.includes(record.id) && (
+                      {record.type === 'payment' && !(record as any).isSplitApplied && (
                         <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded">
                           미분할
                         </span>
@@ -2048,8 +2046,8 @@ const ExecutionHistory = () => {
 
               return (
                 <div className="h-full flex flex-col">
-                  {/* 결제요청 금액 분할 기능 - 해당 레코드가 적용 완료 목록에 있으면 숨김 */}
-                  {fullRecord?.type === 'payment' && !appliedPaymentIds.includes(fullRecord.id) && (
+                  {/* 결제요청 금액 분할 기능 - 서버에 금액분할이 적용되지 않은 경우만 표시 */}
+                  {fullRecord?.type === 'payment' && !(fullRecord as any).isSplitApplied && (
                     <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                       {/* 결제요청 금액 정보 + 100% 버튼 */}
                       <div className="flex items-center justify-between mb-2">
@@ -2151,11 +2149,6 @@ const ExecutionHistory = () => {
                                 setSplitMaterialCost('');
                                 setSplitLaborCost('');
 
-                                // 해당 결제요청 ID를 적용 완료 목록에 추가
-                                const newAppliedIds = [...appliedPaymentIds, fullRecord.id];
-                                setAppliedPaymentIds(newAppliedIds);
-                                localStorage.setItem('executionHistory_appliedPaymentIds', JSON.stringify(newAppliedIds));
-
                                 // 이전 값 저장 (롤백용)
                                 const prevMaterialAmount = fullRecord.materialAmount;
                                 const prevLaborAmount = fullRecord.laborAmount;
@@ -2184,10 +2177,6 @@ const ExecutionHistory = () => {
                                     materialAmount: prevMaterialAmount,
                                     laborAmount: prevLaborAmount
                                   });
-                                  // 적용 완료 목록에서 제거
-                                  const rolledBackIds = appliedPaymentIds.filter(id => id !== fullRecord.id);
-                                  setAppliedPaymentIds(rolledBackIds);
-                                  localStorage.setItem('executionHistory_appliedPaymentIds', JSON.stringify(rolledBackIds));
                                   toast.error('금액 적용에 실패했습니다. 다시 시도해주세요.');
                                 }
                               }}
