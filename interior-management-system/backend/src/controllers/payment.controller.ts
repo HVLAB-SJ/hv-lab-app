@@ -255,6 +255,45 @@ export const updatePaymentStatus = async (req: Request, res: Response): Promise<
   }
 };
 
+// Update payment amounts only (for split amounts in ExecutionHistory)
+export const updatePaymentAmounts = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { materialAmount, laborAmount } = req.body;
+
+    console.log('[updatePaymentAmounts] 요청:', { id: req.params.id, materialAmount, laborAmount });
+
+    const payment = await Payment.findByIdAndUpdate(
+      req.params.id,
+      {
+        materialAmount: materialAmount ?? 0,
+        laborAmount: laborAmount ?? 0
+      },
+      { new: true, runValidators: true }
+    )
+      .populate('project', 'name');
+
+    if (!payment) {
+      res.status(404).json({ error: 'Payment not found' });
+      return;
+    }
+
+    console.log('[updatePaymentAmounts] 업데이트 완료:', { id: payment._id, materialAmount: payment.materialAmount, laborAmount: payment.laborAmount });
+
+    // 금액 변경 시 모든 클라이언트에게 실시간 브로드캐스트
+    io.emit('payment:refresh', {
+      paymentId: payment._id,
+      materialAmount: payment.materialAmount,
+      laborAmount: payment.laborAmount,
+      updatedAt: new Date().toISOString()
+    });
+
+    res.json(payment);
+  } catch (error) {
+    console.error('Update payment amounts error:', error);
+    res.status(500).json({ error: 'Failed to update payment amounts' });
+  }
+};
+
 // Delete payment
 export const deletePayment = async (req: Request, res: Response): Promise<void> => {
   try {

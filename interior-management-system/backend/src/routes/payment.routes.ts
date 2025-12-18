@@ -5,6 +5,7 @@ import {
   createPayment,
   updatePayment,
   updatePaymentStatus,
+  updatePaymentAmounts,
   deletePayment
 } from '../controllers/payment.controller';
 
@@ -24,6 +25,9 @@ router.put('/:id', updatePayment);
 
 // Update payment status
 router.put('/:id/status', updatePaymentStatus);
+
+// Update payment amounts (for split amounts)
+router.patch('/:id/amounts', updatePaymentAmounts);
 
 // Delete payment
 router.delete('/:id', deletePayment);
