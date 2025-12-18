@@ -367,8 +367,20 @@ const ExecutionHistory = () => {
   // 이미 executionRecord가 생성된 payment와 숨긴 payment는 제외
   // 안팀 사용자인 경우 담당 프로젝트만 필터링
   console.log('[ExecutionHistory] payments 배열:', payments.length, '개');
-  console.log('[ExecutionHistory] 이미지가 있는 payments:', payments.filter(p => p.images && p.images.length > 0).map(p => ({ id: p.id, imagesCount: p.images?.length })));
-  console.log('[ExecutionHistory] paymentRecordImages 상태:', Object.keys(paymentRecordImages).length, '개 레코드', Object.entries(paymentRecordImages).slice(0, 3).map(([id, imgs]) => ({ id, count: imgs?.length })));
+  console.log('[ExecutionHistory] payments 상태별:', {
+    completed: payments.filter(p => p.status === 'completed').length,
+    approved: payments.filter(p => p.status === 'approved').length,
+    pending: payments.filter(p => p.status === 'pending').length,
+    other: payments.filter(p => !['completed', 'approved', 'pending'].includes(p.status)).length
+  });
+  console.log('[ExecutionHistory] 송금완료 payments 샘플:', payments.filter(p => p.status === 'completed').slice(0, 3).map(p => ({
+    id: p.id,
+    status: p.status,
+    project: p.project,
+    amount: p.amount,
+    materialAmount: p.materialAmount,
+    laborAmount: p.laborAmount
+  })));
 
   const paymentRecords = payments
     .filter(p => {
@@ -376,6 +388,19 @@ const ExecutionHistory = () => {
       const notDuplicated = !executionRecords.some(r => r.paymentId === p.id);
       const notHidden = !hiddenPaymentIds.includes(p.id);
       const projectMatch = user?.name !== '안팀' || filteredProjectNames.includes(p.project);
+
+      // 디버그: completed 상태인데 필터링에서 제외되는 경우 로그
+      if (p.status === 'completed' && (!statusMatch || !notDuplicated || !notHidden || !projectMatch)) {
+        console.log('[ExecutionHistory] 송금완료 항목 필터링 제외:', {
+          id: p.id,
+          statusMatch,
+          notDuplicated,
+          notHidden,
+          projectMatch,
+          executionRecordPaymentIds: executionRecords.map(r => r.paymentId).filter(id => id === p.id)
+        });
+      }
+
       return statusMatch && notDuplicated && notHidden && projectMatch;
     })
     .map(payment => {
