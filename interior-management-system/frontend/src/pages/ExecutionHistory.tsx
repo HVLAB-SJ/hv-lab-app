@@ -2156,27 +2156,40 @@ const ExecutionHistory = () => {
                                 setAppliedPaymentIds(newAppliedIds);
                                 localStorage.setItem('executionHistory_appliedPaymentIds', JSON.stringify(newAppliedIds));
 
+                                // 이전 값 저장 (롤백용)
+                                const prevMaterialAmount = fullRecord.materialAmount;
+                                const prevLaborAmount = fullRecord.laborAmount;
+
                                 // 낙관적 업데이트: 로컬 상태 먼저 업데이트
                                 updatePayment(fullRecord.id, {
                                   materialAmount: materialValue,
                                   laborAmount: laborValue
                                 });
                                 console.log('[금액분할] 낙관적 업데이트 완료');
-                                toast.success('금액이 적용되었습니다.');
 
-                                // API 호출은 백그라운드에서 수행
-                                paymentService.updatePaymentAmounts(
-                                  fullRecord.id,
-                                  materialValue,
-                                  laborValue
-                                ).then((result) => {
+                                // API 호출 및 결과 확인
+                                try {
+                                  const result = await paymentService.updatePaymentAmounts(
+                                    fullRecord.id,
+                                    materialValue,
+                                    laborValue
+                                  );
                                   console.log('[금액분할] API 호출 성공:', result);
-                                }).catch((error: any) => {
+                                  toast.success('금액이 적용되었습니다.');
+                                } catch (error: any) {
                                   console.error('금액 적용 실패:', error);
                                   console.error('에러 상세:', error?.response?.data || error?.message);
-                                  // 에러 시 롤백하지 않음 (502 등 서버 오류일 수 있음)
-                                  // 새로고침 시 서버에서 다시 로드됨
-                                });
+                                  // API 실패 시 롤백
+                                  updatePayment(fullRecord.id, {
+                                    materialAmount: prevMaterialAmount,
+                                    laborAmount: prevLaborAmount
+                                  });
+                                  // 적용 완료 목록에서 제거
+                                  const rolledBackIds = appliedPaymentIds.filter(id => id !== fullRecord.id);
+                                  setAppliedPaymentIds(rolledBackIds);
+                                  localStorage.setItem('executionHistory_appliedPaymentIds', JSON.stringify(rolledBackIds));
+                                  toast.error('금액 적용에 실패했습니다. 다시 시도해주세요.');
+                                }
                               }}
                               className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gray-700 rounded-lg hover:bg-gray-800 transition-colors"
                             >
