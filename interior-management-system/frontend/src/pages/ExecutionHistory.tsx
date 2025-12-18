@@ -23,7 +23,8 @@ const ExecutionHistory = () => {
     deleteExecutionRecordFromAPI,
     updateExecutionRecordInAPI,
     updatePaymentInAPI,
-    deletePaymentFromAPI
+    deletePaymentFromAPI,
+    updatePayment
   } = useDataStore();
   const { user } = useAuth();
   const allProjects = useFilteredProjects(); // 안팀 사용자는 담당 프로젝트만 표시
@@ -2155,32 +2156,27 @@ const ExecutionHistory = () => {
                                 setAppliedPaymentIds(newAppliedIds);
                                 localStorage.setItem('executionHistory_appliedPaymentIds', JSON.stringify(newAppliedIds));
 
-                                try {
-                                  // 결제요청 금액만 업데이트 (새로운 PATCH API 사용)
-                                  console.log('[금액분할] API 호출 시작...');
-                                  console.log('[금액분할] fullRecord 정보:', {
-                                    id: fullRecord.id,
-                                    totalAmount: fullRecord.totalAmount,
-                                    includesVAT: (fullRecord as any).includesVAT
-                                  });
-                                  const result = await paymentService.updatePaymentAmounts(
-                                    fullRecord.id,
-                                    materialValue,
-                                    laborValue
-                                  );
+                                // 낙관적 업데이트: 로컬 상태 먼저 업데이트
+                                updatePayment(fullRecord.id, {
+                                  materialAmount: materialValue,
+                                  laborAmount: laborValue
+                                });
+                                console.log('[금액분할] 낙관적 업데이트 완료');
+                                toast.success('금액이 적용되었습니다.');
+
+                                // API 호출은 백그라운드에서 수행
+                                paymentService.updatePaymentAmounts(
+                                  fullRecord.id,
+                                  materialValue,
+                                  laborValue
+                                ).then((result) => {
                                   console.log('[금액분할] API 호출 성공:', result);
-
-                                  // 결제요청 목록 다시 로드
-                                  console.log('[금액분할] 결제요청 목록 다시 로드...');
-                                  await loadPaymentsFromAPI();
-                                  console.log('[금액분할] 로드 완료');
-
-                                  toast.success('금액이 적용되었습니다.');
-                                } catch (error: any) {
+                                }).catch((error: any) => {
                                   console.error('금액 적용 실패:', error);
                                   console.error('에러 상세:', error?.response?.data || error?.message);
-                                  toast.error('금액 적용에 실패했습니다.');
-                                }
+                                  // 에러 시 롤백하지 않음 (502 등 서버 오류일 수 있음)
+                                  // 새로고침 시 서버에서 다시 로드됨
+                                });
                               }}
                               className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gray-700 rounded-lg hover:bg-gray-800 transition-colors"
                             >
