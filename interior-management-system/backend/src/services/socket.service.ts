@@ -74,6 +74,18 @@ export const initializeSocket = (io: Server): void => {
       socket.to(`project:${data.projectId}`).emit('payment:update', data);
     });
 
+    // Payment refresh - 모든 클라이언트에 브로드캐스트
+    socket.on('payment:refresh', (data?: any) => {
+      console.log('🔄 [Socket] payment:refresh 브로드캐스트 요청:', socket.data.userId);
+      // 자신을 제외한 모든 클라이언트에게 브로드캐스트
+      socket.broadcast.emit('payment:refresh', {
+        paymentId: data?.paymentId,
+        status: data?.status,
+        updatedAt: new Date().toISOString(),
+        updatedBy: socket.data.userId
+      });
+    });
+
     // Real-time chat for project
     socket.on('message:send', (data: any) => {
       socket.to(`project:${data.projectId}`).emit('message:receive', {

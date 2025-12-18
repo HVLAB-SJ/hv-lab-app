@@ -2090,7 +2090,11 @@ const Payments = () => {
       // 다른 기기에 실시간 동기화 알림
       const socket = socketService.getSocket();
       if (socket) {
-        socket.emit('payment:refresh');
+        socket.emit('payment:refresh', {
+          paymentId,
+          status: 'completed'
+        });
+        console.log('[송금완료] 실시간 동기화 이벤트 전송:', paymentId);
       }
     } catch (error) {
       console.error('송금완료 처리 실패:', error);
