@@ -40,6 +40,7 @@ const Payments = () => {
   const {
     payments,
     loadPaymentsFromAPI,
+    loadProjectsFromAPI,
     addPaymentToAPI,
     deletePaymentFromAPI,
     updatePaymentInAPI,
@@ -161,6 +162,10 @@ const Payments = () => {
 
   // 초기 데이터 로드
   useEffect(() => {
+    // 프로젝트와 결제 데이터를 API에서 로드 (localStorage 캐시 대신 최신 데이터 사용)
+    loadProjectsFromAPI().catch(error => {
+      console.error('Failed to load projects:', error);
+    });
     loadPaymentsFromAPI().catch(error => {
       console.error('Failed to load payments:', error);
     });
@@ -182,7 +187,7 @@ const Payments = () => {
     }
 
     return () => window.removeEventListener('resize', checkMobile);
-  }, [loadPaymentsFromAPI, projects]);
+  }, [loadPaymentsFromAPI, loadProjectsFromAPI, projects]);
 
   // 자동 새로고침 (30초마다) + 페이지 포커스 시 새로고침
   useEffect(() => {

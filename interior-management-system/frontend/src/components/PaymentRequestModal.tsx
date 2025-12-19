@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { X, Upload, Image as ImageIcon, FileText, Trash2, AlertCircle } from 'lucide-react';
 import { useDataStore, type Payment } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
+import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import contractorService from '../services/contractorService';
 import type { PaymentRequestFormData, Contractor } from '../types/forms';
 import { removePosition } from '../utils/formatters';
@@ -15,8 +16,16 @@ interface PaymentRequestModalProps {
 
 const PaymentRequestModal = ({ payment, onClose, onSave }: PaymentRequestModalProps) => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm();
-  const { projects, payments } = useDataStore();
+  const { payments, loadProjectsFromAPI } = useDataStore();
+  const projects = useFilteredProjects();
   const { user } = useAuth();
+
+  // 모달 열릴 때 프로젝트 목록을 API에서 최신 데이터로 로드
+  useEffect(() => {
+    loadProjectsFromAPI().catch(error => {
+      console.error('Failed to load projects:', error);
+    });
+  }, [loadProjectsFromAPI]);
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
