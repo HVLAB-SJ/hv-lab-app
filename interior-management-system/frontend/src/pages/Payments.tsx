@@ -72,6 +72,7 @@ const Payments = () => {
   const [cashReceiptProject, setCashReceiptProject] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false); // 중복 제출 방지
   const autoCompleteProcessedRef = useRef(false); // 자동 송금완료 처리 여부 (중복 방지)
+  const recentlyAddedPaymentRef = useRef<string | null>(null); // 방금 추가한 결제요청 ID (socket 중복 방지)
 
   // 협력업체 관련 상태
   const [contractors, setContractors] = useState<Contractor[]>([]);
@@ -218,6 +219,13 @@ const Payments = () => {
 
     const handlePaymentRefresh = (data: { paymentId: string; status: string; updatedAt: string }) => {
       console.log('🔄 [실시간 동기화] 결제 상태 변경 감지:', data);
+
+      // 방금 자신이 추가한 결제요청인 경우 무시 (3초간)
+      if (recentlyAddedPaymentRef.current && data.paymentId === recentlyAddedPaymentRef.current) {
+        console.log('⏭️ [실시간 동기화] 자신이 추가한 결제요청 - 새로고침 스킵');
+        return;
+      }
+
       // 결제 목록 새로고침
       loadPaymentsFromAPI().catch(error => {
         console.error('[실시간 동기화] 새로고침 실패:', error);
@@ -1876,6 +1884,13 @@ const Payments = () => {
         console.log('💰 Creating payment:', newPayment);
         console.log('💰 Images in payment:', formData.quickImages?.length || 0, '개');
         const newPaymentId = await addPaymentToAPI(newPayment);
+
+        // 방금 추가한 결제요청 ID 저장 (socket 이벤트로 인한 중복 로드 방지)
+        recentlyAddedPaymentRef.current = newPaymentId;
+        // 5초 후 해제 (충분한 시간 후 정상 동기화 허용)
+        setTimeout(() => {
+          recentlyAddedPaymentRef.current = null;
+        }, 5000);
 
         toast.success('결제요청이 추가되었습니다');
 
