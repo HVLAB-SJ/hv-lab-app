@@ -193,6 +193,11 @@ const Payments = () => {
   // 자동 새로고침 (30초마다) + 페이지 포커스 시 새로고침
   useEffect(() => {
     const autoRefreshInterval = setInterval(() => {
+      // 방금 결제요청을 추가한 경우 자동 새로고침 스킵 (깜빡임 방지)
+      if (recentlyAddedPaymentRef.current) {
+        console.log('[자동 새로고침] 방금 추가한 결제요청 있음 - 스킵');
+        return;
+      }
       console.log('[자동 새로고침] 결제 내역 업데이트 중...');
       loadPaymentsFromAPI().catch(error => {
         console.error('[자동 새로고침] 실패:', error);
@@ -202,6 +207,11 @@ const Payments = () => {
     // 페이지가 다시 보일 때 새로고침 (탭 전환, 창 활성화 시)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        // 방금 결제요청을 추가한 경우 포커스 새로고침도 스킵
+        if (recentlyAddedPaymentRef.current) {
+          console.log('[포커스 새로고침] 방금 추가한 결제요청 있음 - 스킵');
+          return;
+        }
         console.log('[포커스 새로고침] 페이지 활성화 - 결제 내역 업데이트 중...');
         loadPaymentsFromAPI().catch(error => {
           console.error('[포커스 새로고침] 실패:', error);
@@ -223,11 +233,12 @@ const Payments = () => {
     let retryCount = 0;
     let retryInterval: NodeJS.Timeout | null = null;
 
-    const handlePaymentRefresh = (data: { paymentId: string; status: string; updatedAt: string }) => {
+    const handlePaymentRefresh = (data: { paymentId: string | number; status: string; updatedAt: string }) => {
       console.log('🔄 [실시간 동기화] 결제 상태 변경 감지:', data);
 
-      // 방금 자신이 추가한 결제요청인 경우 무시 (3초간)
-      if (recentlyAddedPaymentRef.current && data.paymentId === recentlyAddedPaymentRef.current) {
+      // 방금 자신이 추가한 결제요청인 경우 무시 (5초간)
+      // 타입 변환하여 비교 (서버는 숫자, 클라이언트는 문자열)
+      if (recentlyAddedPaymentRef.current && String(data.paymentId) === recentlyAddedPaymentRef.current) {
         console.log('⏭️ [실시간 동기화] 자신이 추가한 결제요청 - 새로고침 스킵');
         return;
       }
