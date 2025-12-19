@@ -73,6 +73,7 @@ const Payments = () => {
   const [cashReceiptProject, setCashReceiptProject] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false); // 중복 제출 방지
   const autoCompleteProcessedRef = useRef(false); // 자동 송금완료 처리 여부 (중복 방지)
+  const enteredViaCompleteLinkRef = useRef(false); // 완료 링크로 진입했는지 여부 (프로젝트 자동선택 방지)
   const recentlyAddedPaymentRef = useRef<string | null>(null); // 방금 추가한 결제요청 ID (socket 중복 방지)
 
   // 협력업체 관련 상태
@@ -177,8 +178,8 @@ const Payments = () => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
-    // 프로젝트 자동 선택 - 초기값 설정
-    if (projects.length > 0 && !formData.project) {
+    // 프로젝트 자동 선택 - 초기값 설정 (완료 링크로 진입한 경우 제외)
+    if (projects.length > 0 && !formData.project && !enteredViaCompleteLinkRef.current) {
       const initialProject = getInitialProject();
       if (initialProject) {
         setFormData(prev => ({ ...prev, project: initialProject }));
@@ -304,10 +305,14 @@ const Payments = () => {
       // URL 파라미터 즉시 제거 (중복 처리 방지)
       window.history.replaceState({}, '', '/payments');
 
+      // 완료 링크로 진입했음을 표시 (프로젝트 자동선택 방지)
+      enteredViaCompleteLinkRef.current = true;
+
       // 모바일에서 내역 화면으로 전환 - 바로 송금완료 탭으로
       setMobileView('list');
       setStatusFilter('completed');
       setProjectFilter('all'); // 전체 프로젝트 보이도록 설정
+      setFormData(prev => ({ ...prev, project: '' })); // 폼 프로젝트도 초기화하여 전체 표시
 
       // 로컬 상태 즉시 업데이트 (낙관적 UI) + completionDate 설정
       updatePayment(String(completeId), { status: 'completed', completionDate: new Date() });
