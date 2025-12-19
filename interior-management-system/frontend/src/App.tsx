@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import Layout from './components/Layout';
 import { AuthProvider } from './contexts/AuthContext';
 import { triggerUrgentNotification, requestNotificationPermission } from './utils/notificationSound';
+import socketService from './services/socket';
 
 // 자주 사용하는 페이지는 직접 import (빠른 로딩)
 import Dashboard from './pages/Dashboard';
@@ -128,6 +129,9 @@ function App() {
     const socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling']
     });
+
+    // 전역 socketService에 소켓 인스턴스 설정 (다른 컴포넌트에서 사용 가능)
+    socketService.setSocket(socket);
 
     socket.on('connect', () => {
       console.log('🔌 Socket.IO 연결됨');

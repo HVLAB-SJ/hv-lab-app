@@ -212,8 +212,9 @@ const Payments = () => {
 
   // Socket.IO 실시간 동기화 - 다른 사용자가 송금완료 시 즉시 반영
   useEffect(() => {
-    const socket = socketService.getSocket();
-    if (!socket) return;
+    let socket = socketService.getSocket();
+    let retryCount = 0;
+    let retryInterval: NodeJS.Timeout | null = null;
 
     const handlePaymentRefresh = (data: { paymentId: string; status: string; updatedAt: string }) => {
       console.log('🔄 [실시간 동기화] 결제 상태 변경 감지:', data);
@@ -223,10 +224,46 @@ const Payments = () => {
       });
     };
 
-    socket.on('payment:refresh', handlePaymentRefresh);
+    const setupSocketListener = () => {
+      socket = socketService.getSocket();
+      if (socket) {
+        console.log('✅ [Payments] Socket 연결 확인, payment:refresh 리스너 등록');
+        socket.on('payment:refresh', handlePaymentRefresh);
+        if (retryInterval) {
+          clearInterval(retryInterval);
+          retryInterval = null;
+        }
+        return true;
+      }
+      return false;
+    };
+
+    // 즉시 시도
+    if (!setupSocketListener()) {
+      // 소켓이 아직 없으면 500ms마다 재시도 (최대 10회)
+      console.log('⏳ [Payments] Socket 대기 중...');
+      retryInterval = setInterval(() => {
+        retryCount++;
+        if (setupSocketListener() || retryCount >= 10) {
+          if (retryInterval) {
+            clearInterval(retryInterval);
+            retryInterval = null;
+          }
+          if (retryCount >= 10 && !socketService.getSocket()) {
+            console.warn('⚠️ [Payments] Socket 연결 실패 - 실시간 동기화 불가');
+          }
+        }
+      }, 500);
+    }
 
     return () => {
-      socket.off('payment:refresh', handlePaymentRefresh);
+      if (retryInterval) {
+        clearInterval(retryInterval);
+      }
+      const currentSocket = socketService.getSocket();
+      if (currentSocket) {
+        currentSocket.off('payment:refresh', handlePaymentRefresh);
+      }
     };
   }, [loadPaymentsFromAPI]);
 

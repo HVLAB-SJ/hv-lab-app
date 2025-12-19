@@ -126,6 +126,11 @@ class SocketService {
   getSocket() {
     return this.socket;
   }
+
+  // Set socket instance (for external socket created elsewhere)
+  setSocket(socket: Socket) {
+    this.socket = socket;
+  }
 }
 
 export default new SocketService();
