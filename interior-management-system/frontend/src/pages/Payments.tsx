@@ -163,6 +163,9 @@ const Payments = () => {
 
   // 초기 데이터 로드
   useEffect(() => {
+    // 컴포넌트 마운트 시 projectFilter를 'all'로 초기화 (모바일/데스크탑 동일하게)
+    setProjectFilter('all');
+
     // 프로젝트와 결제 데이터를 API에서 로드 (localStorage 캐시 대신 최신 데이터 사용)
     loadProjectsFromAPI().catch(error => {
       console.error('Failed to load projects:', error);
@@ -188,7 +191,8 @@ const Payments = () => {
     }
 
     return () => window.removeEventListener('resize', checkMobile);
-  }, [loadPaymentsFromAPI, loadProjectsFromAPI, projects]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 자동 새로고침 (30초마다) + 페이지 포커스 시 새로고침
   useEffect(() => {
@@ -1738,15 +1742,15 @@ const Payments = () => {
     '프로젝트 수': projects.length
   });
 
-  // 필터링 (대기중은 전체 프로젝트, 송금완료는 선택한 프로젝트만)
+  // 필터링 (대기중/송금완료 모두 전체 프로젝트 표시, projectFilter로 필터링)
   const filteredRecords = allRecords.filter(record => {
     const matchesSearch = searchTerm === '' ||
       record.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.process?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = record.status === statusFilter;
-    // 대기중(pending)은 항상 전체 프로젝트 표시, 송금완료(completed)는 폼에서 선택한 프로젝트만 표시
-    const matchesProject = statusFilter === 'pending' || !formData.project || record.project === formData.project;
+    // projectFilter가 'all'이거나 비어있으면 전체 표시, 아니면 해당 프로젝트만
+    const matchesProject = projectFilter === 'all' || !projectFilter || record.project === projectFilter;
     // 내 요청만 보기 (송금완료 탭에서만 적용)
     const matchesMyRequests = !showMyRequestsOnly || statusFilter !== 'completed' || record.requestedBy === user?.name;
     return matchesSearch && matchesStatus && matchesProject && matchesMyRequests;
