@@ -726,6 +726,8 @@ const Payments = () => {
 
     // 계좌번호가 발견된 줄 인덱스 추적
     let accountNumberFoundAtIndex = -1;
+    // 은행명이 발견된 줄 인덱스 추적
+    let bankNameFoundAtIndex = -1;
 
     // 대괄호 안의 텍스트를 용도/설명으로 추출 (예금주로 취급하지 않음)
     lines.forEach(line => {
@@ -754,11 +756,14 @@ const Payments = () => {
           result.amounts.total = amount;
         }
       }
-      // 계산식이 없을 때만 "만원" 또는 "만" 단위 처리 (예: 35만원, 35만, (35만))
+      // 계산식이 없을 때만 "만원" 또는 "만" 단위 처리 (예: 35만원, 35만, (35만), 27만5천원)
       else {
-        manwonMatch = line.match(/(\d+)\s*만\s*원?/);
-        if (manwonMatch) {
-          const amount = parseInt(manwonMatch[1]) * 10000;
+        // 먼저 "X만Y천원" 패턴 체크 (예: 27만5천원, 1만2천원)
+        const manCheonMatch = line.match(/(\d+)\s*만\s*(\d+)\s*천\s*원?/);
+        if (manCheonMatch) {
+          const manAmount = parseInt(manCheonMatch[1]) * 10000;
+          const cheonAmount = parseInt(manCheonMatch[2]) * 1000;
+          const amount = manAmount + cheonAmount;
           // 자재비/인건비 키워드 확인
           if (line.includes('자재') || line.includes('재료')) {
             result.amounts.material = amount;
@@ -767,8 +772,25 @@ const Payments = () => {
           } else if (!result.amounts.total) {
             result.amounts.total = amount;
           }
-          // "만원" 또는 "만" 처리된 라인은 이후 처리에서 제외하기 위해 표시
-          line = line.replace(/(\d+)\s*만\s*원?/g, '');
+          // 처리된 라인 표시
+          line = line.replace(/(\d+)\s*만\s*(\d+)\s*천\s*원?/g, '');
+          manwonMatch = manCheonMatch; // 이후 처리에서 제외하기 위해 설정
+        } else {
+          // "X만원" 패턴 (예: 35만원, 35만)
+          manwonMatch = line.match(/(\d+)\s*만\s*원?/);
+          if (manwonMatch) {
+            const amount = parseInt(manwonMatch[1]) * 10000;
+            // 자재비/인건비 키워드 확인
+            if (line.includes('자재') || line.includes('재료')) {
+              result.amounts.material = amount;
+            } else if (line.includes('인건') || line.includes('노무')) {
+              result.amounts.labor = amount;
+            } else if (!result.amounts.total) {
+              result.amounts.total = amount;
+            }
+            // "만원" 또는 "만" 처리된 라인은 이후 처리에서 제외하기 위해 표시
+            line = line.replace(/(\d+)\s*만\s*원?/g, '');
+          }
         }
       }
 
@@ -944,6 +966,7 @@ const Payments = () => {
         if (line.includes(key)) {
           const value = knownBanks[key];
           result.bankInfo.bankName = value;
+          bankNameFoundAtIndex = index; // 은행명이 발견된 줄 인덱스 저장
 
           // "은행키워드 예금주" 패턴 체크 (예: "기업 조민호", "국민 더루멘")
           // 단, 은행명이 붙어있으면 건너뛰기 (예: "토스뱅크" -> "뱅크"를 예금주로 인식하면 안됨)
@@ -1123,6 +1146,27 @@ const Payments = () => {
         }
       }
     });
+
+    // 은행명이 발견되었다면, 은행명 다음 줄에서 예금주 찾기 (기존 예금주보다 우선)
+    // 은행명 바로 다음 줄에 있는 이름이 더 신뢰할 수 있음
+    if (bankNameFoundAtIndex >= 0 && bankNameFoundAtIndex + 1 < lines.length) {
+      const nextLine = lines[bankNameFoundAtIndex + 1];
+      // 다음 줄 전체가 2-5글자 한글이면 그것이 예금주일 가능성이 매우 높음 (이홍주, 김철수 등)
+      const trimmedNext = nextLine.trim();
+      if (/^[가-힣]{2,5}$/.test(trimmedNext) && isKoreanName(trimmedNext)) {
+        result.bankInfo.accountHolder = trimmedNext; // 기존 예금주 덮어씀
+      } else {
+        // 다음 줄의 모든 단어를 검사하여 한국 사람 이름 찾기
+        const words = nextLine.split(/\s+/);
+        for (const rawWord of words) {
+          const word = removeNameSuffix(rawWord);
+          if (isKoreanName(word)) {
+            result.bankInfo.accountHolder = word; // 기존 예금주 덮어씀
+            break;
+          }
+        }
+      }
+    }
     } // 무통장 입금 안내가 아닌 경우 종료
 
     // 보양이 포함되면 가설로 설정
