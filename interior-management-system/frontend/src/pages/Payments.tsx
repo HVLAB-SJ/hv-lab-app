@@ -739,9 +739,28 @@ const Payments = () => {
 
     // 각 줄을 분석하여 역할 추정
     lines.forEach((line, index) => {
-      // 0-1. 부가세 포함 체크
-      if (line.includes('부가세포함') || line.includes('부가세 포함') || line.includes('(부가세포함)')) {
+      // 0-1. 부가세 포함 체크 및 금액 추출 (부가세포함 금액은 최종 금액으로 우선 처리)
+      const isVatLine = line.includes('부가세포함') || line.includes('부가세 포함') || line.includes('(부가세포함)');
+      if (isVatLine) {
         result.includeVat = true;
+        // 부가세포함 줄의 금액을 최종 금액으로 설정 (최우선)
+        const vatManCheonMatch = line.match(/(\d+)\s*만\s*(\d+)\s*천\s*원?/);
+        const vatManMatch = line.match(/(\d+)\s*만\s*원?/);
+        const vatDirectMatch = line.match(/([\d,]+)\s*원/);
+
+        if (vatManCheonMatch) {
+          const amount = parseInt(vatManCheonMatch[1]) * 10000 + parseInt(vatManCheonMatch[2]) * 1000;
+          result.amounts.total = amount; // 기존 값 덮어씀
+        } else if (vatManMatch) {
+          const amount = parseInt(vatManMatch[1]) * 10000;
+          result.amounts.total = amount; // 기존 값 덮어씀
+        } else if (vatDirectMatch) {
+          const amount = parseInt(vatDirectMatch[1].replace(/,/g, ''));
+          if (amount >= 1000) {
+            result.amounts.total = amount; // 기존 값 덮어씀
+          }
+        }
+        return; // 부가세 줄은 이후 금액 처리 스킵
       }
 
       // 0-2. 계산식 결과 우선 처리 (예: "29만x6품=1,740,000원", "3x5=150,000")
