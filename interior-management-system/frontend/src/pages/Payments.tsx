@@ -2824,11 +2824,83 @@ const Payments = () => {
                         className="w-full px-3 py-2 text-left hover:bg-gray-100 border-b last:border-b-0 flex justify-between items-center"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
+                          // 은행명과 계좌번호 파싱
+                          let bankName = suggestion.bankName || '';
+                          let accountNumber = suggestion.accountNumber || '';
+
+                          // 계좌번호에 은행명이 포함되어 있으면 분리
+                          const bankKeywords = [
+                            'KB국민은행', '국민은행', '국민',
+                            '신한은행', '신한',
+                            '우리은행', '우리',
+                            '하나은행', '하나',
+                            'NH농협은행', '농협은행', '농협',
+                            'IBK기업은행', '기업은행', '기업',
+                            'SC제일은행', '제일은행',
+                            '한국씨티은행', '씨티은행',
+                            '카카오뱅크', '카카오',
+                            '케이뱅크',
+                            '토스뱅크', '토스',
+                            '새마을금고', '새마을',
+                            '신협',
+                            '우체국',
+                            'KDB산업은행', '산업은행',
+                            '수협은행', '수협',
+                            '대구은행', '부산은행', '경남은행', '광주은행', '전북은행', '제주은행'
+                          ];
+
+                          // 은행명 매핑 (짧은 이름 -> 전체 이름)
+                          const bankNameMap: Record<string, string> = {
+                            '국민은행': 'KB국민은행', '국민': 'KB국민은행',
+                            '신한': '신한은행',
+                            '우리': '우리은행',
+                            '하나': '하나은행',
+                            '농협은행': 'NH농협은행', '농협': 'NH농협은행',
+                            '기업은행': 'IBK기업은행', '기업': 'IBK기업은행',
+                            '제일은행': 'SC제일은행',
+                            '씨티은행': '한국씨티은행',
+                            '카카오': '카카오뱅크',
+                            '토스': '토스뱅크',
+                            '새마을': '새마을금고',
+                            '산업은행': 'KDB산업은행',
+                            '수협': '수협은행'
+                          };
+
+                          // accountNumber에서 은행명 찾아서 분리
+                          for (const keyword of bankKeywords) {
+                            if (accountNumber.includes(keyword)) {
+                              // 은행명이 없으면 설정
+                              if (!bankName) {
+                                bankName = bankNameMap[keyword] || keyword;
+                              }
+                              // 계좌번호에서 은행명 제거
+                              accountNumber = accountNumber.replace(keyword, '').trim();
+                              break;
+                            }
+                          }
+
+                          // bankName에서도 분리 (혹시 bankName에 계좌번호가 포함된 경우)
+                          for (const keyword of bankKeywords) {
+                            if (bankName.includes(keyword)) {
+                              const extractedBank = bankNameMap[keyword] || keyword;
+                              // 은행명 외의 부분이 있으면 계좌번호로
+                              const remaining = bankName.replace(keyword, '').trim();
+                              if (remaining && /\d/.test(remaining)) {
+                                accountNumber = remaining;
+                              }
+                              bankName = extractedBank;
+                              break;
+                            }
+                          }
+
+                          // 계좌번호에서 숫자와 하이픈만 남기기
+                          accountNumber = accountNumber.replace(/[^\d\-]/g, '').trim();
+
                           setFormData({
                             ...formData,
                             accountHolder: suggestion.name,
-                            bankName: suggestion.bankName || formData.bankName,
-                            accountNumber: suggestion.accountNumber || formData.accountNumber
+                            bankName: bankName || formData.bankName,
+                            accountNumber: accountNumber || formData.accountNumber
                           });
                           setIsAccountHolderFocused(false);
                         }}
