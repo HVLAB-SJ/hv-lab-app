@@ -1377,6 +1377,13 @@ const Payments = () => {
       const accountHolder = analysis.bankInfo.accountHolder || '';
       let matchedByAccountNumber = false; // 계좌번호로 매칭되었는지 여부
 
+      console.log('=== 자동채우기 매칭 시작 ===');
+      console.log('분석된 계좌번호:', analysis.bankInfo.accountNumber);
+      console.log('숫자만 추출:', cleanAccountNumber);
+      console.log('분석된 예금주:', accountHolder);
+      console.log('협력업체 수:', contractors.length);
+      console.log('송금완료 내역 수:', currentPayments.filter((p: any) => p.status === 'completed').length);
+
       // 계좌번호로 협력업체 찾기 (완전 일치 또는 부분 일치)
       let matchingContractor = contractors.find((contractor: Contractor) => {
         const contractorAccountNumber = extractAccountNumberOnly(contractor.accountNumber || '');
@@ -1464,12 +1471,20 @@ const Payments = () => {
         // 계좌번호로 송금완료 내역 찾기 (완전 일치 - 숫자만 비교)
         console.log('입력 계좌번호 (숫자만):', cleanAccountNumber);
 
+        // 비슷한 계좌번호 목록 출력 (디버깅용)
+        const similarAccounts = currentPayments
+          .filter((p: any) => p.status === 'completed' && p.account_number)
+          .map((p: any) => ({
+            holder: p.account_holder,
+            account: p.account_number,
+            clean: extractAccountNumberOnly(p.account_number || '')
+          }))
+          .filter((p: any) => p.clean.includes(cleanAccountNumber.substring(0, 6)) || cleanAccountNumber.includes(p.clean.substring(0, 6)));
+        console.log('비슷한 계좌번호 목록:', similarAccounts);
+
         let matchingPayment = currentPayments.find((payment: any) => {
           const paymentAccountNumber = extractAccountNumberOnly(payment.account_number || '');
           const isMatch = paymentAccountNumber && paymentAccountNumber === cleanAccountNumber && payment.status === 'completed';
-          if (payment.account_holder?.includes('김승일')) {
-            console.log('김승일 계좌 비교:', paymentAccountNumber, '===', cleanAccountNumber, '결과:', isMatch);
-          }
           return isMatch;
         });
 
