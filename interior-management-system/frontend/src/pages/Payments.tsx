@@ -848,7 +848,8 @@ const Payments = () => {
         /\d{6}[\s\-]+\d{8}/, // 6-8 패턴 (예: 605701-01341614)
         /\d{6}[\s\-]+\d{2}[\s\-]+\d{6}/, // 6-2-6 패턴 (예: 421013-52-133594)
         /\d{5,7}[\s\-]+\d{2}[\s\-]+\d{5,7}/, // 더 유연한 6-2-6 패턴
-        /\d{2,4}[\s\-]+\d{2,4}[\s\-]+\d{2,4}[\s\-]+\d{2,4}/, // 4개 그룹 패턴 (3-4-4-2 등 지원)
+        /\d{3}[\s\-]+\d{4}[\s\-]+\d{2}[\s\-]+\d{5,6}/, // 3-4-2-5 패턴 (예: 746 9103 44 87307)
+        /\d{2,4}[\s\-]+\d{2,5}[\s\-]+\d{2,4}[\s\-]+\d{4,6}/, // 4개 그룹 패턴 (더 유연하게)
         /\d{3}[\s\-]+\d{2}[\s\-]+\d{6}/, // 3-2-6 패턴
         /\d{3}[\s\-]+\d{4}[\s\-]+\d{7}/, // 3-4-7 패턴
         /\d{4}[\s\-]+\d{4}[\s\-]+\d{5}/, // 4-4-5 패턴
@@ -942,12 +943,15 @@ const Payments = () => {
       // 1-2. 숫자 패턴 분석 (금액 인식)
       const numberPatterns = line.match(/[\d,]+/g);
       if (numberPatterns) {
+        // 계좌번호에 포함된 숫자들을 추출 (공백/하이픈 제거 후 개별 숫자 그룹)
+        const accountNumberParts = accountNumberText ? accountNumberText.split(/[\s\-]+/).filter(p => p) : [];
+
         numberPatterns.forEach(numStr => {
           const num = parseInt(numStr.replace(/,/g, ''));
           const numStrClean = numStr.replace(/,/g, '');
 
-          // 계좌번호에 포함된 숫자인지 확인
-          const isPartOfAccountNumber = accountNumberText && accountNumberText.includes(numStrClean);
+          // 계좌번호에 포함된 숫자인지 확인 (각 부분별로 체크)
+          const isPartOfAccountNumber = accountNumberParts.some(part => part === numStrClean);
 
           // 계좌번호 가능성 (연속된 10자리 이상 숫자)
           if (!result.bankInfo.accountNumber && numStrClean.length >= 10 && numStrClean.length <= 20) {
@@ -955,7 +959,8 @@ const Payments = () => {
             accountNumberText = numStrClean; // 나중에 참조할 수 있도록 저장
           }
           // 금액 가능성 (1000 이상, 계좌번호 부분이 아닌 경우)
-          else if (num >= 1000 && !manwonMatch && !isPartOfAccountNumber) {  // 만원 처리된 경우와 계좌번호 부분 제외
+          // 이미 "만원" 패턴으로 금액이 설정된 경우(manwonMatch)에는 추가 금액을 찾지 않음
+          else if (num >= 1000 && !manwonMatch && !isPartOfAccountNumber) {
             // 자재비/인건비 키워드 확인
             if (line.includes('자재') || line.includes('재료')) {
               result.amounts.material = num;
