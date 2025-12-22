@@ -346,7 +346,11 @@ const Payments = () => {
         // 다른 기기에 실시간 동기화 알림
         const socket = socketService.getSocket();
         if (socket) {
-          socket.emit('payment:refresh');
+          socket.emit('payment:refresh', {
+            paymentId: completeId,
+            status: 'completed',
+            updatedAt: new Date().toISOString()
+          });
         }
       } catch (error: any) {
         console.error('[자동 송금완료] 처리 실패:', error);

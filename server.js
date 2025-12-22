@@ -136,6 +136,12 @@ io.on('connection', (socket) => {
     socket.to(`project-${data.projectId}`).emit('comment-added', data);
   });
 
+  // 결제 요청 실시간 동기화 - 클라이언트에서 보낸 이벤트를 다른 모든 클라이언트에 브로드캐스트
+  socket.on('payment:refresh', (data) => {
+    // 자신을 제외한 모든 클라이언트에게 브로드캐스트
+    socket.broadcast.emit('payment:refresh', data || { status: 'refresh', updatedAt: new Date().toISOString() });
+  });
+
   socket.on('disconnect', () => {
     console.log('클라이언트 연결 해제:', socket.id);
   });
