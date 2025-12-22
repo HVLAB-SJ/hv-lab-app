@@ -2227,31 +2227,33 @@ const Payments = () => {
     // 배지 카운트 즉시 업데이트 이벤트 발생
     window.dispatchEvent(new CustomEvent('paymentCompleted'));
 
-    try {
-      // API 호출 - 완료될 때까지 대기
-      await updatePaymentInAPI(paymentId, { status: 'completed' });
-      console.log('[송금완료] API 업데이트 성공:', paymentId);
+    // API 호출은 백그라운드에서 처리 (UI 블로킹 없음)
+    updatePaymentInAPI(paymentId, { status: 'completed' })
+      .then(() => {
+        console.log('[송금완료] API 업데이트 성공:', paymentId);
 
-      // API 완료 후 서버 데이터와 동기화 (가장 중요!)
-      await loadPaymentsFromAPI();
-      console.log('[송금완료] 데이터 동기화 완료');
+        // 다른 기기에 실시간 동기화 알림
+        const socket = socketService.getSocket();
+        if (socket) {
+          socket.emit('payment:refresh', {
+            paymentId,
+            status: 'completed'
+          });
+          console.log('[송금완료] 실시간 동기화 이벤트 전송:', paymentId);
+        }
 
-      // 다른 기기에 실시간 동기화 알림
-      const socket = socketService.getSocket();
-      if (socket) {
-        socket.emit('payment:refresh', {
-          paymentId,
-          status: 'completed'
+        // 백그라운드에서 서버 데이터와 동기화 (UI에 영향 없음)
+        loadPaymentsFromAPI().catch(err => {
+          console.error('[송금완료] 백그라운드 동기화 실패:', err);
         });
-        console.log('[송금완료] 실시간 동기화 이벤트 전송:', paymentId);
-      }
-    } catch (error) {
-      console.error('송금완료 처리 실패:', error);
-      // 실패 시 롤백 - 상태와 탭 모두 복구, completionDate도 제거
-      updatePayment(paymentId, { status: 'pending', completionDate: undefined });
-      setStatusFilter('pending');
-      toast.error('송금완료 처리 실패 - 다시 시도해주세요');
-    }
+      })
+      .catch((error) => {
+        console.error('송금완료 처리 실패:', error);
+        // 실패 시 롤백 - 상태와 탭 모두 복구, completionDate도 제거
+        updatePayment(paymentId, { status: 'pending', completionDate: undefined });
+        setStatusFilter('pending');
+        toast.error('송금완료 처리 실패 - 다시 시도해주세요');
+      });
   };
 
   // 파일 선택 처리
