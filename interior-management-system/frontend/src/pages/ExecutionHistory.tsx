@@ -588,7 +588,7 @@ const ExecutionHistory = () => {
       materialCost: materialCost || prev.materialCost,
       laborCost: laborCost || prev.laborCost,
       images: [...prev.images, ...prev.quickImages],
-      quickText: '',
+      // quickText는 유지 (사용자가 확인할 수 있도록)
       quickImages: []
     }));
 
