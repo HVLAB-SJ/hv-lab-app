@@ -848,6 +848,7 @@ const Payments = () => {
         /\d{6}[\s\-]+\d{8}/, // 6-8 패턴 (예: 605701-01341614)
         /\d{6}[\s\-]+\d{2}[\s\-]+\d{6}/, // 6-2-6 패턴 (예: 421013-52-133594)
         /\d{5,7}[\s\-]+\d{2}[\s\-]+\d{5,7}/, // 더 유연한 6-2-6 패턴
+        /\d{4}[\s\-]+\d{3}[\s\-]+\d{6}/, // 4-3-6 패턴 (예: 1005 082 797000)
         /\d{3}[\s\-]+\d{4}[\s\-]+\d{2}[\s\-]+\d{5,6}/, // 3-4-2-5 패턴 (예: 746 9103 44 87307)
         /\d{2,4}[\s\-]+\d{2,5}[\s\-]+\d{2,4}[\s\-]+\d{4,6}/, // 4개 그룹 패턴 (더 유연하게)
         /\d{3}[\s\-]+\d{2}[\s\-]+\d{6}/, // 3-2-6 패턴
@@ -1415,15 +1416,17 @@ const Payments = () => {
 
       // 일치하는 협력업체가 있으면 정보 자동 채우기
       if (matchingContractor) {
-        // 계좌번호로 매칭된 경우, 저장된 예금주를 우선 사용 (부분 이름 입력 시에도 전체 이름으로 업데이트)
-        // 예: "승일" 입력 + 계좌번호 일치 → "김승일"로 예금주 설정
-        if (matchedByAccountNumber && matchingContractor.name) {
+        // 협력업체에서 예금주를 무조건 사용 (텍스트에서 예금주 인식 여부와 관계없이)
+        if (matchingContractor.name) {
           updatedFormData.accountHolder = matchingContractor.name;
-          console.log('협력업체 계좌번호 매칭으로 예금주 업데이트:', accountHolder, '→', matchingContractor.name);
-        } else {
-          updatedFormData.accountHolder = matchingContractor.name || analysis.bankInfo.accountHolder;
+          console.log('협력업체에서 예금주 설정:', matchingContractor.name);
         }
-        updatedFormData.bankName = matchingContractor.bankName || analysis.bankInfo.bankName;
+        // 은행명도 저장된 값 우선 사용
+        if (matchingContractor.bankName) {
+          updatedFormData.bankName = matchingContractor.bankName;
+        } else if (analysis.bankInfo.bankName) {
+          updatedFormData.bankName = analysis.bankInfo.bankName;
+        }
 
         // 계좌번호로 매칭되었거나, 예금주로 찾았지만 계좌가 부분 일치할 때만 협력업체 계좌 사용
         if (matchedByAccountNumber) {
@@ -1514,18 +1517,22 @@ const Payments = () => {
             account_holder: matchingPayment.account_holder,
             account_number: matchingPayment.account_number,
             vendor_name: matchingPayment.vendor_name,
-            status: matchingPayment.status
+            status: matchingPayment.status,
+            paymentMatchedByAccountNumber
           });
 
-          // 계좌번호로 매칭된 경우, 저장된 예금주를 우선 사용 (부분 이름 입력 시에도 전체 이름으로 업데이트)
-          // 예: "승일" 입력 + 계좌번호 일치 → "김승일"로 예금주 설정
-          if (paymentMatchedByAccountNumber && matchingPayment.account_holder) {
+          // 계좌번호로 매칭된 경우, 저장된 예금주를 무조건 사용 (텍스트에서 예금주 인식 여부와 관계없이)
+          // 예: 계좌번호 일치 → 해당 계좌의 예금주로 설정
+          if (matchingPayment.account_holder) {
             updatedFormData.accountHolder = matchingPayment.account_holder;
-            console.log('계좌번호 매칭으로 예금주 업데이트:', accountHolder, '→', matchingPayment.account_holder);
-          } else {
-            updatedFormData.accountHolder = matchingPayment.account_holder || analysis.bankInfo.accountHolder;
+            console.log('송금내역에서 예금주 설정:', matchingPayment.account_holder);
           }
-          updatedFormData.bankName = matchingPayment.bank_name || analysis.bankInfo.bankName;
+          // 은행명도 저장된 값 우선 사용
+          if (matchingPayment.bank_name) {
+            updatedFormData.bankName = matchingPayment.bank_name;
+          } else if (analysis.bankInfo.bankName) {
+            updatedFormData.bankName = analysis.bankInfo.bankName;
+          }
 
           // 계좌번호로 매칭되었거나, 예금주로 찾았지만 계좌가 부분 일치할 때만 송금내역 계좌 사용
           if (paymentMatchedByAccountNumber) {
