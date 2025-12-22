@@ -2237,39 +2237,28 @@ const Payments = () => {
       localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
     }
 
+    // 1. 즉시 UI 업데이트 (낙관적 업데이트)
+    updatePayment(paymentId, { status: 'completed', completionDate: new Date() });
+    setShowDetailModal(false);
+    setStatusFilter('completed');
+    setFormData(prev => ({ ...prev, project: '' }));
+    toast.success('송금완료 처리되었습니다');
+    window.dispatchEvent(new CustomEvent('paymentCompleted'));
+
+    // 2. API 호출 (백그라운드) - 실패 시 롤백
     try {
-      // API 먼저 호출하고 성공하면 UI 업데이트
       await updatePaymentInAPI(paymentId, { status: 'completed' });
 
-      // API 성공 후 로컬 상태 업데이트
-      updatePayment(paymentId, { status: 'completed', completionDate: new Date() });
-      setShowDetailModal(false);
-
-      // 송금완료 탭으로 전환
-      setStatusFilter('completed');
-      // 모바일에서 프로젝트 드롭다운을 "프로젝트 선택"으로 초기화
-      setFormData(prev => ({ ...prev, project: '' }));
-
-      toast.success('송금완료 처리되었습니다');
-
-      // 배지 카운트 즉시 업데이트 이벤트 발생
-      window.dispatchEvent(new CustomEvent('paymentCompleted'));
-
-      // 다른 기기에 실시간 동기화 알림
+      // 성공 시 다른 기기에 실시간 동기화
       const socket = socketService.getSocket();
       if (socket) {
-        socket.emit('payment:refresh', {
-          paymentId,
-          status: 'completed'
-        });
+        socket.emit('payment:refresh', { paymentId, status: 'completed' });
       }
-
-      // 서버 데이터와 동기화 (UI 업데이트 후)
-      loadPaymentsFromAPI().catch(err => {
-        console.error('[송금완료] 동기화 실패:', err);
-      });
     } catch (error) {
-      console.error('송금완료 처리 실패:', error);
+      console.error('송금완료 API 실패:', error);
+      // 실패 시 롤백
+      updatePayment(paymentId, { status: 'pending', completionDate: undefined });
+      setStatusFilter('pending');
       toast.error('송금완료 처리 실패 - 다시 시도해주세요');
     }
   };
