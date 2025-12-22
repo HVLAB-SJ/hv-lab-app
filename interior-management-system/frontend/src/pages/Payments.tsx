@@ -1459,47 +1459,47 @@ const Payments = () => {
         console.log('입력 계좌번호:', cleanAccountNumber);
         console.log('입력 예금주:', accountHolder);
 
-        // 김씨 관련 결제 내역 디버깅 (더 넓은 범위로 검색)
-        const kimPayments = currentPayments.filter((p: any) => p.account_holder && p.account_holder.includes('김'));
-        console.log('김씨 결제 내역:', kimPayments.length, '건');
-        kimPayments.forEach((p: any) => console.log('  -', p.account_holder, '|', p.account_number, '|', p.vendor_name, '|', p.status));
+        // payments 데이터 구조 확인 (bankInfo 객체 사용)
+        const completedPayments = currentPayments.filter((p: any) => p.status === 'completed');
+        console.log('송금완료 건수:', completedPayments.length);
 
-        // 전체 예금주 목록 출력 (처음 20개)
-        const allHolders = [...new Set(currentPayments.map((p: any) => p.account_holder).filter(Boolean))];
+        // 전체 예금주 목록 출력 (처음 20개) - bankInfo.accountHolder 사용
+        const allHolders = [...new Set(completedPayments.map((p: any) => p.bankInfo?.accountHolder).filter(Boolean))];
         console.log('전체 예금주 목록 (처음 20개):', allHolders.slice(0, 20));
 
         // 계좌번호로 송금완료 내역 찾기 (완전 일치 - 숫자만 비교)
         console.log('입력 계좌번호 (숫자만):', cleanAccountNumber);
 
-        // 비슷한 계좌번호 목록 출력 (디버깅용)
-        const similarAccounts = currentPayments
-          .filter((p: any) => p.status === 'completed' && p.account_number)
+        // 비슷한 계좌번호 목록 출력 (디버깅용) - bankInfo.accountNumber 사용
+        const similarAccounts = completedPayments
+          .filter((p: any) => p.bankInfo?.accountNumber)
           .map((p: any) => ({
-            holder: p.account_holder,
-            account: p.account_number,
-            clean: extractAccountNumberOnly(p.account_number || '')
+            holder: p.bankInfo?.accountHolder,
+            account: p.bankInfo?.accountNumber,
+            clean: extractAccountNumberOnly(p.bankInfo?.accountNumber || '')
           }))
           .filter((p: any) => p.clean.includes(cleanAccountNumber.substring(0, 6)) || cleanAccountNumber.includes(p.clean.substring(0, 6)));
         console.log('비슷한 계좌번호 목록:', similarAccounts);
 
+        // bankInfo 객체 구조 사용하여 검색
         let matchingPayment = currentPayments.find((payment: any) => {
-          const paymentAccountNumber = extractAccountNumberOnly(payment.account_number || '');
+          const paymentAccountNumber = extractAccountNumberOnly(payment.bankInfo?.accountNumber || '');
           const isMatch = paymentAccountNumber && paymentAccountNumber === cleanAccountNumber && payment.status === 'completed';
           return isMatch;
         });
 
         if (matchingPayment) {
-          console.log('계좌번호 완전 일치로 찾음:', matchingPayment.account_holder, matchingPayment.vendor_name);
+          console.log('계좌번호 완전 일치로 찾음:', matchingPayment.bankInfo?.accountHolder, matchingPayment.process);
         }
 
         // 완전 일치 못 찾으면 부분 일치로 찾기
         if (!matchingPayment && cleanAccountNumber) {
           matchingPayment = currentPayments.find((payment: any) => {
-            const paymentAccountNumber = extractAccountNumberOnly(payment.account_number || '');
+            const paymentAccountNumber = extractAccountNumberOnly(payment.bankInfo?.accountNumber || '');
             return isPartialAccountMatch(cleanAccountNumber, paymentAccountNumber) && payment.status === 'completed';
           });
           if (matchingPayment) {
-            console.log('계좌번호 부분 일치로 찾음:', matchingPayment.account_holder, matchingPayment.vendor_name);
+            console.log('계좌번호 부분 일치로 찾음:', matchingPayment.bankInfo?.accountHolder, matchingPayment.process);
           }
         }
 
@@ -1511,12 +1511,12 @@ const Payments = () => {
         // 단, 예금주로 찾았을 때 계좌번호가 아예 다르면 계좌번호는 가져오지 않음 (동명이인 방지)
         if (!matchingPayment && accountHolder) {
           matchingPayment = currentPayments.find((payment: any) => {
-            return payment.account_holder === accountHolder && payment.status === 'completed';
+            return payment.bankInfo?.accountHolder === accountHolder && payment.status === 'completed';
           });
           if (matchingPayment) {
-            console.log('예금주로 이전 결제 내역 찾음:', matchingPayment.account_holder, '공정:', matchingPayment.vendor_name);
+            console.log('예금주로 이전 결제 내역 찾음:', matchingPayment.bankInfo?.accountHolder, '공정:', matchingPayment.process);
             // 계좌번호가 입력되었고, 송금내역 계좌와 부분 일치하지 않으면 계좌번호는 사용 안함
-            const paymentAccountNumber = extractAccountNumberOnly(matchingPayment.account_number || '');
+            const paymentAccountNumber = extractAccountNumberOnly(matchingPayment.bankInfo?.accountNumber || '');
             if (cleanAccountNumber && !isPartialAccountMatch(cleanAccountNumber, paymentAccountNumber)) {
               console.log('예금주는 같지만 계좌번호가 다름 (동명이인 가능성) - 계좌번호 유지');
               paymentMatchedByAccountNumber = false;
@@ -1529,38 +1529,39 @@ const Payments = () => {
         // 일치하는 송금완료 내역이 있으면 정보 자동 채우기
         if (matchingPayment) {
           console.log('매칭된 송금내역:', {
-            account_holder: matchingPayment.account_holder,
-            account_number: matchingPayment.account_number,
-            vendor_name: matchingPayment.vendor_name,
+            accountHolder: matchingPayment.bankInfo?.accountHolder,
+            accountNumber: matchingPayment.bankInfo?.accountNumber,
+            bankName: matchingPayment.bankInfo?.bankName,
+            process: matchingPayment.process,
             status: matchingPayment.status,
             paymentMatchedByAccountNumber
           });
 
           // 계좌번호로 매칭된 경우, 저장된 예금주를 무조건 사용 (텍스트에서 예금주 인식 여부와 관계없이)
           // 예: 계좌번호 일치 → 해당 계좌의 예금주로 설정
-          if (matchingPayment.account_holder) {
-            updatedFormData.accountHolder = matchingPayment.account_holder;
-            console.log('송금내역에서 예금주 설정:', matchingPayment.account_holder);
+          if (matchingPayment.bankInfo?.accountHolder) {
+            updatedFormData.accountHolder = matchingPayment.bankInfo.accountHolder;
+            console.log('송금내역에서 예금주 설정:', matchingPayment.bankInfo.accountHolder);
           }
           // 은행명도 저장된 값 우선 사용
-          if (matchingPayment.bank_name) {
-            updatedFormData.bankName = matchingPayment.bank_name;
+          if (matchingPayment.bankInfo?.bankName) {
+            updatedFormData.bankName = matchingPayment.bankInfo.bankName;
           } else if (analysis.bankInfo.bankName) {
             updatedFormData.bankName = analysis.bankInfo.bankName;
           }
 
           // 계좌번호로 매칭되었거나, 예금주로 찾았지만 계좌가 부분 일치할 때만 송금내역 계좌 사용
           if (paymentMatchedByAccountNumber) {
-            updatedFormData.accountNumber = matchingPayment.account_number || analysis.bankInfo.accountNumber;
+            updatedFormData.accountNumber = matchingPayment.bankInfo?.accountNumber || analysis.bankInfo.accountNumber;
           }
           // 그렇지 않으면 입력된 계좌번호 그대로 사용
 
           // 공정 정보도 있으면 설정 (동명이인이라도 공정은 가져옴 - 사용자가 확인)
-          if (matchingPayment.vendor_name && !updatedFormData.process) {
-            updatedFormData.process = matchingPayment.vendor_name;
-            console.log('이전 결제 내역에서 공정 설정:', matchingPayment.vendor_name);
+          if (matchingPayment.process && !updatedFormData.process) {
+            updatedFormData.process = matchingPayment.process;
+            console.log('이전 결제 내역에서 공정 설정:', matchingPayment.process);
           } else {
-            console.log('공정 설정 안됨 - vendor_name:', matchingPayment.vendor_name, 'updatedFormData.process:', updatedFormData.process);
+            console.log('공정 설정 안됨 - process:', matchingPayment.process, 'updatedFormData.process:', updatedFormData.process);
           }
         } else {
           console.log('매칭된 송금내역 없음');
