@@ -2237,47 +2237,41 @@ const Payments = () => {
       localStorage.setItem('executionMemos', JSON.stringify(executionMemos));
     }
 
-    // 낙관적 업데이트: 즉시 UI 반영 (로컬 상태 업데이트) + completionDate 설정
-    updatePayment(paymentId, { status: 'completed', completionDate: new Date() });
-    setShowDetailModal(false);
+    try {
+      // API 먼저 호출하고 성공하면 UI 업데이트
+      await updatePaymentInAPI(paymentId, { status: 'completed' });
 
-    // 송금완료 탭으로 즉시 전환
-    setStatusFilter('completed');
-    // 모바일에서 프로젝트 드롭다운을 "프로젝트 선택"으로 초기화
-    setFormData(prev => ({ ...prev, project: '' }));
+      // API 성공 후 로컬 상태 업데이트
+      updatePayment(paymentId, { status: 'completed', completionDate: new Date() });
+      setShowDetailModal(false);
 
-    toast.success('송금완료 처리되었습니다');
+      // 송금완료 탭으로 전환
+      setStatusFilter('completed');
+      // 모바일에서 프로젝트 드롭다운을 "프로젝트 선택"으로 초기화
+      setFormData(prev => ({ ...prev, project: '' }));
 
-    // 배지 카운트 즉시 업데이트 이벤트 발생
-    window.dispatchEvent(new CustomEvent('paymentCompleted'));
+      toast.success('송금완료 처리되었습니다');
 
-    // API 호출은 백그라운드에서 처리 (UI 블로킹 없음)
-    updatePaymentInAPI(paymentId, { status: 'completed' })
-      .then(() => {
-        console.log('[송금완료] API 업데이트 성공:', paymentId);
+      // 배지 카운트 즉시 업데이트 이벤트 발생
+      window.dispatchEvent(new CustomEvent('paymentCompleted'));
 
-        // 다른 기기에 실시간 동기화 알림
-        const socket = socketService.getSocket();
-        if (socket) {
-          socket.emit('payment:refresh', {
-            paymentId,
-            status: 'completed'
-          });
-          console.log('[송금완료] 실시간 동기화 이벤트 전송:', paymentId);
-        }
-
-        // 백그라운드에서 서버 데이터와 동기화 (UI에 영향 없음)
-        loadPaymentsFromAPI().catch(err => {
-          console.error('[송금완료] 백그라운드 동기화 실패:', err);
+      // 다른 기기에 실시간 동기화 알림
+      const socket = socketService.getSocket();
+      if (socket) {
+        socket.emit('payment:refresh', {
+          paymentId,
+          status: 'completed'
         });
-      })
-      .catch((error) => {
-        console.error('송금완료 처리 실패:', error);
-        // 실패 시 롤백 - 상태와 탭 모두 복구, completionDate도 제거
-        updatePayment(paymentId, { status: 'pending', completionDate: undefined });
-        setStatusFilter('pending');
-        toast.error('송금완료 처리 실패 - 다시 시도해주세요');
+      }
+
+      // 서버 데이터와 동기화 (UI 업데이트 후)
+      loadPaymentsFromAPI().catch(err => {
+        console.error('[송금완료] 동기화 실패:', err);
       });
+    } catch (error) {
+      console.error('송금완료 처리 실패:', error);
+      toast.error('송금완료 처리 실패 - 다시 시도해주세요');
+    }
   };
 
   // 파일 선택 처리
