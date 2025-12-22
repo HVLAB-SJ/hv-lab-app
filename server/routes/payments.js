@@ -5,9 +5,13 @@ const { authenticateToken, isManager } = require('../middleware/auth');
 const coolsmsService = require('../../utils/coolsmsService'); // CoolSMS 서비스
 const { sanitizeDatesArray, sanitizeDates } = require('../utils/dateUtils');
 
+// 프로덕션 환경에서는 불필요한 로그 비활성화 (메모리 절약)
+const DEBUG = process.env.NODE_ENV !== 'production';
+const debugLog = (...args) => { if (DEBUG) console.log(...args); };
+
 // 결제 요청 목록 조회
 router.get('/', authenticateToken, (req, res) => {
-  console.log('[GET /api/payments] Request received');
+  debugLog('[GET /api/payments] Request received');
   const { status, project_id, user_id } = req.query;
   let query = `
     SELECT pr.*,
@@ -43,7 +47,7 @@ router.get('/', authenticateToken, (req, res) => {
       console.error('[GET /api/payments] Database error:', err);
       return res.status(500).json({ error: '결제 요청 조회 실패' });
     }
-    console.log('[GET /api/payments] Found', requests.length, 'payments');
+    debugLog('[GET /api/payments] Found', requests.length, 'payments');
     // Convert SQLite dates to ISO 8601
     const sanitized = sanitizeDatesArray(requests, ['created_at', 'updated_at', 'approved_at', 'paid_at']);
     // images 필드 JSON 파싱
@@ -89,8 +93,8 @@ router.get('/:id', authenticateToken, (req, res) => {
 
 // 결제 요청 생성
 router.post('/', authenticateToken, async (req, res) => {
-  console.log('[POST /api/payments] Received request body:', req.body);
-  console.log('[POST /api/payments] User:', req.user);
+  debugLog('[POST /api/payments] Received request body (keys):', Object.keys(req.body));
+  debugLog('[POST /api/payments] User:', req.user?.id);
 
   const {
     project_id,
@@ -117,12 +121,13 @@ router.post('/', authenticateToken, async (req, res) => {
   // process 필드가 있으면 description으로 사용
   const finalDescription = process || description || '';
 
-  console.log('[POST /api/payments] 필드 값 확인:');
-  console.log('  - process:', process);
-  console.log('  - description:', description);
-  console.log('  - vendor_name:', vendor_name);
-  console.log('  - itemName:', itemName);
-  console.log('  - images:', images ? `${images.length}개` : 'none');
+  debugLog('[POST /api/payments] 필드 값 확인:', {
+    process: process || '',
+    description: description || '',
+    vendor_name: vendor_name || '',
+    itemName: itemName || '',
+    images: images ? `${images.length}개` : 'none'
+  });
 
   // Convert project name to project_id if necessary
   let finalProjectId = project_id;
@@ -131,10 +136,10 @@ router.post('/', authenticateToken, async (req, res) => {
   if (project_id && !isNaN(project_id)) {
     // It's a numeric string or number, ensure it's a number
     finalProjectId = Number(project_id);
-    console.log('[POST /api/payments] Using numeric project_id:', finalProjectId);
+    debugLog('[POST /api/payments] Using numeric project_id:', finalProjectId);
   } else if (project_id) {
     // It's a non-numeric string, try to look up by name
-    console.log('[POST /api/payments] project_id is a name, looking up ID for:', project_id);
+    debugLog('[POST /api/payments] project_id is a name, looking up ID for:', project_id);
 
     // Look up project by name
     const project = await new Promise((resolve, reject) => {
@@ -157,7 +162,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     finalProjectId = project.id;
-    console.log('[POST /api/payments] Found project ID:', finalProjectId);
+    debugLog('[POST /api/payments] Found project ID:', finalProjectId);
   }
 
   // Check if project exists by ID
@@ -202,7 +207,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
       // 알림 전송 (관리자에게) - 모든 결제요청에 대해 SMS 발송
       const paymentId = this.lastID;
-      console.log('[결제요청 생성] Payment ID:', paymentId);
+      debugLog('[결제요청 생성] Payment ID:', paymentId);
 
       sendPaymentNotification({
         id: paymentId,
@@ -230,7 +235,7 @@ router.post('/', authenticateToken, async (req, res) => {
           status: 'created',
           updatedAt: new Date().toISOString()
         });
-        console.log(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${paymentId}, status: created`);
+        debugLog(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${paymentId}, status: created`);
       }
 
       res.status(201).json({
@@ -245,8 +250,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
-  console.log('Payment update request for ID:', id);
-  console.log('Request body:', req.body);
+  debugLog('Payment update request for ID:', id);
 
   const {
     project,
@@ -379,7 +383,7 @@ router.put('/:id', authenticateToken, (req, res) => {
               if (updateErr) {
                 console.error('실행내역 업데이트 실패:', updateErr);
               } else {
-                console.log('실행내역도 함께 업데이트됨');
+                debugLog('실행내역도 함께 업데이트됨');
               }
             }
           );
@@ -394,7 +398,7 @@ router.put('/:id', authenticateToken, (req, res) => {
           status: 'updated',
           updatedAt: new Date().toISOString()
         });
-        console.log(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: updated`);
+        debugLog(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: updated`);
       }
 
       res.json({ message: '결제 요청이 수정되었습니다.' });
@@ -458,7 +462,7 @@ router.patch('/:id/amounts', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { materialAmount, laborAmount } = req.body;
 
-  console.log(`[PATCH /api/payments/:id/amounts] Updating payment ${id} amounts:`, { materialAmount, laborAmount });
+  debugLog(`[PATCH /api/payments/:id/amounts] Updating payment ${id} amounts:`, { materialAmount, laborAmount });
 
   db.run(
     `UPDATE payment_requests
@@ -480,7 +484,7 @@ router.patch('/:id/amounts', authenticateToken, (req, res) => {
         return res.status(404).json({ error: '결제 요청을 찾을 수 없습니다.' });
       }
 
-      console.log(`[PATCH /api/payments/:id/amounts] Successfully updated payment ${id}`);
+      debugLog(`[PATCH /api/payments/:id/amounts] Successfully updated payment ${id}`);
       res.json({ message: '금액이 수정되었습니다.' });
     }
   );
@@ -491,7 +495,7 @@ router.put('/:id/images', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { images } = req.body;
 
-  console.log(`[PUT /api/payments/:id/images] Updating images for payment ${id}, count: ${images?.length || 0}`);
+  debugLog(`[PUT /api/payments/:id/images] Updating images for payment ${id}, count: ${images?.length || 0}`);
 
   const imagesJson = images ? JSON.stringify(images) : '[]';
 
@@ -509,7 +513,7 @@ router.put('/:id/images', authenticateToken, (req, res) => {
         return res.status(404).json({ error: '결제 요청을 찾을 수 없습니다.' });
       }
 
-      console.log(`[PUT /api/payments/:id/images] Successfully updated images for payment ${id}`);
+      debugLog(`[PUT /api/payments/:id/images] Successfully updated images for payment ${id}`);
       res.json({ message: '이미지가 업데이트되었습니다.', images: images || [] });
     }
   );
@@ -520,7 +524,7 @@ router.put('/:id/status', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  console.log(`[PUT /api/payments/:id/status] Updating payment ${id} to status: ${status}`);
+  debugLog(`[PUT /api/payments/:id/status] Updating payment ${id} to status: ${status}`);
 
   // 유효한 상태값 검증
   const validStatuses = ['pending', 'reviewing', 'approved', 'rejected', 'completed'];
@@ -542,7 +546,7 @@ router.put('/:id/status', authenticateToken, (req, res) => {
         return res.status(404).json({ error: '결제 요청을 찾을 수 없습니다.' });
       }
 
-      console.log(`[PUT /api/payments/:id/status] Successfully updated payment ${id} to ${status}`);
+      debugLog(`[PUT /api/payments/:id/status] Successfully updated payment ${id} to ${status}`);
 
       // 상태가 completed로 변경되면 paid_at 업데이트
       if (status === 'completed') {
@@ -564,7 +568,7 @@ router.put('/:id/status', authenticateToken, (req, res) => {
           status: status,
           updatedAt: new Date().toISOString()
         });
-        console.log(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: ${status}`);
+        debugLog(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: ${status}`);
       }
 
       res.json({ message: '상태가 변경되었습니다.' });
@@ -602,7 +606,7 @@ router.post('/:id/complete', authenticateToken, isManager, (req, res) => {
           status: 'completed',
           updatedAt: new Date().toISOString()
         });
-        console.log(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: completed`);
+        debugLog(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: completed`);
       }
 
       res.json({ message: '결제가 완료되었습니다.' });
@@ -627,7 +631,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
       if (this.changes === 0) {
         return res.status(404).json({ error: '삭제할 수 없는 요청입니다. (이미 삭제되었거나 존재하지 않습니다)' });
       }
-      console.log(`[DELETE /api/payments/:id] Deleted payment request ${id} by user ${req.user.id}`);
+      debugLog(`[DELETE /api/payments/:id] Deleted payment request ${id} by user ${req.user.id}`);
 
       // Socket.IO로 실시간 알림 전송
       const io = req.app.get('io');
@@ -637,7 +641,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
           status: 'deleted',
           updatedAt: new Date().toISOString()
         });
-        console.log(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: deleted`);
+        debugLog(`[Socket.IO] payment:refresh 이벤트 발송 - paymentId: ${id}, status: deleted`);
       }
 
       res.json({ message: '결제 요청이 삭제되었습니다.' });
@@ -668,12 +672,12 @@ router.get('/stats/summary', authenticateToken, (req, res) => {
 
 // 알림 전송 함수들 - CoolSMS 문자 발송
 async function sendPaymentNotification(data) {
-  console.log(`새 결제 요청: ${data.requester}님이 ${data.amount.toLocaleString()}원 요청`);
+  debugLog(`새 결제 요청: ${data.requester}님이 ${data.amount?.toLocaleString?.() || data.amount}원 요청`);
 
   // 부가세/세금공제 둘 다 미체크인 경우 기존 번호로는 발송하지 않음
   // (프론트엔드에서 01089423283으로 별도 발송)
   if (!data.includes_vat && !data.apply_tax_deduction) {
-    console.log('[CoolSMS] 부가세/세금공제 미체크 - 기존 번호로 발송 생략 (별도 번호로 발송됨)');
+    debugLog('[CoolSMS] 부가세/세금공제 미체크 - 기존 번호로 발송 생략 (별도 번호로 발송됨)');
     return;
   }
 
@@ -686,13 +690,11 @@ async function sendPaymentNotification(data) {
       });
     });
 
-    console.log('[CoolSMS] 프로젝트 조회 결과:', project);
-    console.log('[CoolSMS] 결제 요청 데이터:', {
+    debugLog('[CoolSMS] 프로젝트 조회 결과:', project?.name);
+    debugLog('[CoolSMS] 결제 요청 데이터:', {
       project_id: data.project_id,
       amount: data.amount,
-      account_holder: data.account_holder,
-      bank_name: data.bank_name,
-      account_number: data.account_number
+      account_holder: data.account_holder
     });
 
     // CoolSMS 문자 발송 데이터
@@ -712,34 +714,27 @@ async function sendPaymentNotification(data) {
       applyTaxDeduction: data.apply_tax_deduction
     };
 
-    console.log('[CoolSMS] 문자 발송 데이터:', notificationData);
-    console.log('[DEBUG] request_type 원본값:', data.request_type);
+    debugLog('[CoolSMS] 문자 발송 데이터:', { paymentId: notificationData.paymentId, amount: notificationData.amount });
 
     // CoolSMS로 문자 발송
     try {
       const results = await coolsmsService.sendPaymentNotification(notificationData);
-      console.log('✅ CoolSMS 발송 결과:', results);
+      debugLog('CoolSMS 발송 완료:', results?.success);
     } catch (coolsmsError) {
-      console.error('❌ CoolSMS 문자 발송 실패:', coolsmsError.message);
+      console.error('CoolSMS 문자 발송 실패:', coolsmsError.message);
     }
   } catch (error) {
-    console.error('❌ 결제 알림 발송 실패:', error);
+    console.error('결제 알림 발송 실패:', error?.message || error);
     // 에러가 발생해도 결제 요청 처리는 계속 진행
   }
 }
 
 async function notifyApproval(requestId, status) {
-  console.log(`결제 요청 #${requestId}이 ${status === 'approved' ? '승인' : '거절'}되었습니다.`);
-
-  // 현재는 카카오톡 알림 대신 콘솔 로그만 출력
-  // 추후 필요시 SMS 또는 이메일 알림 추가 가능
+  debugLog(`결제 요청 #${requestId}이 ${status === 'approved' ? '승인' : '거절'}되었습니다.`);
 }
 
 async function notifyCompletion(requestId) {
-  console.log(`결제 요청 #${requestId}의 결제가 완료되었습니다.`);
-
-  // 현재는 카카오톡 알림 대신 콘솔 로그만 출력
-  // 추후 필요시 SMS 또는 이메일 알림 추가 가능
+  debugLog(`결제 요청 #${requestId}의 결제가 완료되었습니다.`);
 }
 
 // 토스페이먼츠 서비스
@@ -753,11 +748,7 @@ router.post('/toss/instant-transfer', authenticateToken, isManager, async (req, 
   try {
     const { paymentId, receiverName, receiverBank, receiverAccount, amount, description } = req.body;
 
-    console.log('[POST /api/payments/toss/instant-transfer] 송금 요청:', {
-      paymentId,
-      receiverName,
-      amount
-    });
+    debugLog('[POST /api/payments/toss/instant-transfer] 송금 요청:', { paymentId, amount });
 
     // 필수 정보 확인
     if (!receiverName || !receiverBank || !receiverAccount || !amount) {
@@ -870,13 +861,7 @@ router.post('/tosspay/instant-transfer', authenticateToken, isManager, async (re
   try {
     const { paymentId, receiverName, receiverBank, receiverAccount, amount, description } = req.body;
 
-    console.log('[POST /api/payments/tosspay/instant-transfer] 송금 요청:', {
-      paymentId,
-      receiverName,
-      receiverBank,
-      receiverAccount,
-      amount
-    });
+    debugLog('[POST /api/payments/tosspay/instant-transfer] 송금 요청:', { paymentId, amount });
 
     // 필수 정보 확인
     if (!receiverName || !receiverBank || !receiverAccount || !amount) {
@@ -991,17 +976,7 @@ router.post('/send-toss-payment-sms', authenticateToken, async (req, res) => {
   try {
     const { recipientPhone, accountHolder, bankName, accountNumber, amount, projectName, itemName, process, paymentId } = req.body;
 
-    console.log('[POST /api/payments/send-toss-payment-sms] SMS 발송 요청:', {
-      recipientPhone,
-      accountHolder,
-      bankName,
-      accountNumber,
-      amount,
-      projectName,
-      itemName,
-      process,
-      paymentId
-    });
+    debugLog('[POST /api/payments/send-toss-payment-sms] SMS 발송 요청:', { paymentId, amount });
 
     // 필수 정보 확인
     if (!recipientPhone || !accountHolder || !bankName || !accountNumber || !amount) {
@@ -1039,13 +1014,13 @@ router.post('/send-toss-payment-sms', authenticateToken, async (req, res) => {
       message += `\n\n완료:\n${completeLink}`;
     }
 
-    console.log('[토스 SMS] 발송할 메시지:', message);
+    debugLog('[토스 SMS] 발송할 메시지 길이:', message.length);
 
     // SMS 발송
     const result = await coolsmsService.sendSMS(recipientPhone, message, ' ');
 
     if (result.success) {
-      console.log('[토스 SMS] 발송 성공:', result.response);
+      debugLog('[토스 SMS] 발송 성공');
       res.json({
         success: true,
         message: '토스 송금 SMS가 발송되었습니다.'
@@ -1074,13 +1049,7 @@ router.post('/openbanking/instant-transfer', authenticateToken, isManager, async
   try {
     const { paymentId, receiverName, receiverBank, receiverAccount, amount, description } = req.body;
 
-    console.log('[POST /api/payments/openbanking/instant-transfer] 송금 요청:', {
-      paymentId,
-      receiverName,
-      receiverBank,
-      receiverAccount,
-      amount
-    });
+    debugLog('[POST /api/payments/openbanking/instant-transfer] 송금 요청:', { paymentId, amount });
 
     // 필수 정보 확인
     if (!receiverName || !receiverBank || !receiverAccount || !amount) {
@@ -1164,13 +1133,7 @@ router.post('/openbanking/instant-transfer', authenticateToken, isManager, async
 
     // 오픈뱅킹 입금이체 API 호출 (계좌번호 사용)
     const apiUrl = process.env.OPENBANKING_API_URL || 'https://openapi.openbanking.or.kr';
-    console.log('[오픈뱅킹] API 호출 시작:', {
-      url: `${apiUrl}/v2.0/transfer/deposit/acnt_num`,
-      bankTranId,
-      receiverBank: bankCode,
-      receiverAccount: cleanAccountNumber,
-      amount
-    });
+    debugLog('[오픈뱅킹] API 호출 시작:', { bankTranId, amount });
 
     const openBankingResponse = await fetch(`${apiUrl}/v2.0/transfer/deposit/acnt_num`, {
       method: 'POST',
@@ -1198,21 +1161,11 @@ router.post('/openbanking/instant-transfer', authenticateToken, isManager, async
 
     const openbankingResult = await openBankingResponse.json();
 
-    console.log('[오픈뱅킹] API 응답:', {
-      rsp_code: openbankingResult.rsp_code,
-      rsp_message: openbankingResult.rsp_message,
-      api_tran_id: openbankingResult.api_tran_id,
-      api_tran_dtm: openbankingResult.api_tran_dtm,
-      tran_amt: openbankingResult.tran_amt
-    });
+    debugLog('[오픈뱅킹] API 응답:', { rsp_code: openbankingResult.rsp_code });
 
     if (openbankingResult.rsp_code === 'A0000' && openbankingResult.api_tran_id) {
       // 송금 성공
-      console.log('[오픈뱅킹] 송금 성공:', {
-        api_tran_id: openbankingResult.api_tran_id,
-        tran_amt: openbankingResult.tran_amt,
-        wd_bank_code_name: openbankingResult.wd_bank_code_name
-      });
+      debugLog('[오픈뱅킹] 송금 성공:', { api_tran_id: openbankingResult.api_tran_id });
 
       db.run(
         `UPDATE payment_requests
@@ -1225,7 +1178,7 @@ router.post('/openbanking/instant-transfer', authenticateToken, isManager, async
           if (err) {
             console.error('송금 정보 저장 실패:', err);
           } else {
-            console.log(`[오픈뱅킹] 결제 요청 ${paymentId} 상태 업데이트 완료`);
+            debugLog(`[오픈뱅킹] 결제 요청 ${paymentId} 상태 업데이트 완료`);
           }
         }
       );
@@ -1237,14 +1190,7 @@ router.post('/openbanking/instant-transfer', authenticateToken, isManager, async
       });
     } else {
       // 송금 실패
-      console.error('[오픈뱅킹] 송금 실패:', {
-        rsp_code: openbankingResult.rsp_code,
-        rsp_message: openbankingResult.rsp_message,
-        bank_tran_id: bankTranId,
-        receiverBank: bankCode,
-        receiverAccount: cleanAccountNumber,
-        amount
-      });
+      console.error('[오픈뱅킹] 송금 실패:', openbankingResult.rsp_code, openbankingResult.rsp_message);
 
       res.status(400).json({
         success: false,
