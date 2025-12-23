@@ -1833,10 +1833,10 @@ const Payments = () => {
     if (!a) return 1;
     if (!b) return -1;
 
-    // 송금완료 탭에서는 요청일(requestDate) 기준 정렬 (최신 요청 순)
-    // completionDate 대신 requestDate를 사용하여 새로 추가한 항목이 맨 위에 표시되도록 함
+    // 송금완료 탭에서는 송금완료 시간(completionDate/paid_at) 기준 정렬 (최근 송금완료 순)
+    // 마지막에 송금완료한 내역이 맨 위에 표시되도록 함
     if (statusFilter === 'completed') {
-      return safeParseDate(b.requestDate) - safeParseDate(a.requestDate);
+      return safeParseDate(b.completionDate) - safeParseDate(a.completionDate);
     }
     // 대기중 탭에서는 요청일 기준 정렬 유지 (안전한 파싱 사용)
     return safeParseDate(b.requestDate) - safeParseDate(a.requestDate);
