@@ -1,6 +1,18 @@
 import axios from 'axios';
 
-const API_URL = '/api'; // 하드코딩으로 수정
+// 호스트에 따라 API URL 결정
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    // Firebase Hosting (hv-lab-app.web.app 또는 hv-lab-app.firebaseapp.com)
+    if (host.includes('hv-lab-app') || host.includes('firebaseapp.com')) {
+      return 'https://hvlab.app/api';
+    }
+  }
+  // Railway 또는 로컬 개발
+  return '/api';
+};
+const API_URL = getApiUrl();
 
 const api = axios.create({
   baseURL: API_URL,

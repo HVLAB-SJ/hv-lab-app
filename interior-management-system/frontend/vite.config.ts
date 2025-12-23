@@ -2,8 +2,13 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base: '/',
+  // Firebase 배포 시 환경변수 설정
+  define: mode === 'production' ? {
+    'import.meta.env.VITE_API_URL': JSON.stringify('https://hvlab.app/api'),
+    'import.meta.env.VITE_SOCKET_URL': JSON.stringify('https://hvlab.app'),
+  } : {},
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
@@ -91,4 +96,4 @@ export default defineConfig({
   preview: {
     allowedHosts: ['hvlab.app', 'localhost']
   }
-});
+}));

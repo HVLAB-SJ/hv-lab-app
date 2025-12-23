@@ -1,6 +1,18 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// 호스트에 따라 API URL 결정
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    // Firebase Hosting (hv-lab-app.web.app 또는 hv-lab-app.firebaseapp.com)
+    if (host.includes('hv-lab-app') || host.includes('firebaseapp.com')) {
+      return 'https://hvlab.app/api';
+    }
+  }
+  // Railway 또는 로컬 개발
+  return '/api';
+};
+const API_URL = getApiUrl();
 
 export interface LoginCredentials {
   username: string;

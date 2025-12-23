@@ -8,7 +8,19 @@ import type {
   ActiveUser
 } from '../types/socket';
 
-const SOCKET_URL = window.location.origin; // 하드코딩으로 수정
+// 호스트에 따라 Socket URL 결정
+const getSocketUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    // Firebase Hosting (hv-lab-app.web.app 또는 hv-lab-app.firebaseapp.com)
+    if (host.includes('hv-lab-app') || host.includes('firebaseapp.com')) {
+      return 'https://hvlab.app';
+    }
+  }
+  // Railway 또는 로컬 개발
+  return window.location.origin;
+};
+const SOCKET_URL = getSocketUrl();
 
 class SocketService {
   private socket: Socket | null = null;
