@@ -1317,6 +1317,30 @@ app.get('/specbook/item/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// 스펙북 아이템 이미지 조회 (프론트엔드 LazySpecbookImage 컴포넌트용)
+app.get('/specbook/item/:id/image', authenticateToken, async (req, res) => {
+  try {
+    const doc = await db.collection('specbook_items').doc(req.params.id).get();
+    if (!doc.exists) {
+      return res.status(404).json({ error: '아이템을 찾을 수 없습니다.' });
+    }
+
+    const data = doc.data();
+
+    // Storage URL 우선, 없으면 base64 이미지
+    const imageUrl = data.main_image_url || data.image_url || data.image || null;
+    const subImages = data.sub_image_urls || data.sub_images || [];
+
+    res.json({
+      image_url: imageUrl,
+      sub_images: Array.isArray(subImages) ? subImages : []
+    });
+  } catch (error) {
+    console.error('스펙북 이미지 조회 오류:', error);
+    res.status(500).json({ error: '스펙북 이미지 조회 실패' });
+  }
+});
+
 // 스펙북 이미지 업로드 (Firebase Storage 사용)
 app.post('/specbook/:id/upload-image', authenticateToken, async (req, res) => {
   try {

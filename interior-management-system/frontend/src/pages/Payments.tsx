@@ -2291,7 +2291,7 @@ const Payments = () => {
     updatePayment(paymentId, { status: 'completed', completionDate: new Date() });
     setShowDetailModal(false);
     setStatusFilter('completed');
-    setFormData(prev => ({ ...prev, project: '' }));
+    // 프로젝트 필터는 유지 (사라지는 버그 수정)
     toast.success('송금완료 처리되었습니다');
     window.dispatchEvent(new CustomEvent('paymentCompleted'));
 

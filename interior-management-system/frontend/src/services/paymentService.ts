@@ -86,8 +86,8 @@ const paymentService = {
       account_number: data.bankInfo?.accountNumber || '',
       notes: data.notes || '',
       itemName: data.itemName || '',
-      materialAmount: data.materialAmount || 0,
-      laborAmount: data.laborAmount || 0,
+      materialAmount: data.materialAmount ?? data.amount,  // 미지정 시 전체금액을 자재비로
+      laborAmount: data.laborAmount ?? 0,
       originalMaterialAmount: data.originalMaterialAmount || 0,
       originalLaborAmount: data.originalLaborAmount || 0,
       applyTaxDeduction: data.applyTaxDeduction || false,
