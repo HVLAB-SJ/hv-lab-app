@@ -12,12 +12,12 @@ import type {
 const getSocketUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    // Firebase Hosting (hv-lab-app.web.app 또는 hv-lab-app.firebaseapp.com)
-    if (host.includes('hv-lab-app') || host.includes('firebaseapp.com')) {
-      return 'https://hvlab.app';
+    // Firebase Hosting (hvlab.app, hv-lab-app.web.app, hv-lab-app.firebaseapp.com)
+    if (host === 'hvlab.app' || host.includes('hv-lab-app') || host.includes('firebaseapp.com')) {
+      return 'https://api.hvlab.app';
     }
   }
-  // Railway 또는 로컬 개발
+  // 로컬 개발
   return window.location.origin;
 };
 const SOCKET_URL = getSocketUrl();

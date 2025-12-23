@@ -4,12 +4,12 @@ import axios from 'axios';
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    // Firebase Hosting (hv-lab-app.web.app 또는 hv-lab-app.firebaseapp.com)
-    if (host.includes('hv-lab-app') || host.includes('firebaseapp.com')) {
-      return 'https://hvlab.app/api';
+    // Firebase Hosting (hvlab.app, hv-lab-app.web.app, hv-lab-app.firebaseapp.com)
+    if (host === 'hvlab.app' || host.includes('hv-lab-app') || host.includes('firebaseapp.com')) {
+      return 'https://api.hvlab.app/api';
     }
   }
-  // Railway 또는 로컬 개발
+  // 로컬 개발
   return '/api';
 };
 const API_URL = getApiUrl();
