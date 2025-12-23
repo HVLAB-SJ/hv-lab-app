@@ -336,7 +336,7 @@ export const useDataStore = create<DataStore>()(
       const payments: Payment[] = apiPayments.map((p: PaymentResponse) => {
         return {
           id: String(p.id),
-          project: p.project_name,
+          project: p.project_name || '',  // null인 경우 빈 문자열 (프론트엔드에서 '-' 표시)
           purpose: p.description,
           process: p.vendor_name,
           itemName: p.item_name || '',
@@ -377,12 +377,23 @@ export const useDataStore = create<DataStore>()(
           },
           attachments: [],
           notes: p.notes || '',
-          completionDate: p.paid_at ? new Date(p.paid_at) : undefined
+          completionDate: p.paid_at ? new Date(p.paid_at) :
+            // status가 completed인데 paid_at이 없으면 현재 시간 사용 (낙관적 업데이트 대비)
+            (p.status === 'completed' ? new Date() : undefined)
         };
       });
 
-      // 최근 추가된 결제요청 보호: 서버 응답에 없는 최근 항목 유지 (30초 이내 추가된 것)
+      // 기존 로컬 데이터의 completionDate 보존 (API 응답에 paid_at이 없을 경우)
       const currentPayments = get().payments;
+      const currentPaymentMap = new Map(currentPayments.map(p => [p.id, p]));
+      payments.forEach(payment => {
+        if (!payment.completionDate && payment.status === 'completed') {
+          const existing = currentPaymentMap.get(payment.id);
+          if (existing?.completionDate) {
+            payment.completionDate = existing.completionDate;
+          }
+        }
+      });
       const apiPaymentIds = new Set(payments.map(p => p.id));
       const recentThreshold = 30000; // 30초
       const now = Date.now();
