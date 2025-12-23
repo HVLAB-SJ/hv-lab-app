@@ -52,9 +52,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // 인증 성공 시 스펙북 데이터 백그라운드에서 사전 로딩
         preloadSpecbook();
       }
-    } catch {
-      localStorage.removeItem('token');
-      delete api.defaults.headers.common['Authorization'];
+    } catch (error: unknown) {
+      // 401 에러인 경우에만 토큰 삭제 (토큰이 만료되었거나 유효하지 않음)
+      // 네트워크 에러나 서버 에러는 토큰을 유지하여 재시도 가능하게 함
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete api.defaults.headers.common['Authorization'];
+      } else {
+        // 네트워크 에러 등의 경우 토큰은 유지하고, 로컬스토리지에서 유저 정보 복원 시도
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
+            setUser(JSON.parse(savedUser));
+          } catch {
+            // 파싱 실패 시 무시
+          }
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -66,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { token, user } = response.data;
 
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));  // 유저 정보도 저장
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
 
@@ -91,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');  // 유저 정보도 삭제
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
     navigate('/login');

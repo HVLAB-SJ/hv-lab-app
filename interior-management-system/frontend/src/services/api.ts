@@ -39,8 +39,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // 401 에러 처리는 AuthContext의 checkAuth에서 담당
+    // 여기서는 /auth/me 요청이 아닌 경우에만 로그인 페이지로 리다이렉트
+    if (error.response?.status === 401 && !error.config?.url?.includes('/auth/me')) {
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       window.location.href = '/login';
     }
     return Promise.reject(error);
