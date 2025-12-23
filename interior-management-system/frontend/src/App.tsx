@@ -124,37 +124,50 @@ function App() {
     setTimeout(checkVersion, 5000); // 5초 후 첫 체크
     const versionInterval = setInterval(checkVersion, 30000); // 30초마다 체크
 
-    // Socket.IO 연결
-    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
-    const socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling']
-    });
+    // Socket.IO 연결 - 로컬 개발 환경에서만 사용
+    // Cloud Functions는 WebSocket을 지원하지 않으므로 프로덕션에서는 비활성화
+    const host = window.location.hostname;
+    const isProduction = host === 'hvlab.app' || host.includes('hv-lab-app') || host.includes('firebaseapp.com');
 
-    // 전역 socketService에 소켓 인스턴스 설정 (다른 컴포넌트에서 사용 가능)
-    socketService.setSocket(socket);
+    let socket: ReturnType<typeof io> | null = null;
 
-    socket.on('connect', () => {
-      console.log('🔌 Socket.IO 연결됨');
-    });
+    if (!isProduction) {
+      // 로컬 개발 환경에서만 Socket.IO 연결
+      const SOCKET_URL = window.location.origin;
+      socket = io(SOCKET_URL, {
+        transports: ['websocket', 'polling']
+      });
 
-    // 긴급 결제 알림 수신
-    socket.on('urgent-payment', (data: {
-      project: string;
-      amount: number;
-      urgency: 'urgent' | 'emergency'
-    }) => {
-      console.log('🚨 긴급 결제 알림 수신:', data);
+      // 전역 socketService에 소켓 인스턴스 설정 (다른 컴포넌트에서 사용 가능)
+      socketService.setSocket(socket);
 
-      const message = `${data.project} 프로젝트에서 ${data.amount.toLocaleString()}원 결제 요청`;
-      triggerUrgentNotification(data.urgency, message);
-    });
+      socket.on('connect', () => {
+        console.log('🔌 Socket.IO 연결됨');
+      });
 
-    socket.on('disconnect', () => {
-      console.log('🔌 Socket.IO 연결 해제됨');
-    });
+      // 긴급 결제 알림 수신
+      socket.on('urgent-payment', (data: {
+        project: string;
+        amount: number;
+        urgency: 'urgent' | 'emergency'
+      }) => {
+        console.log('🚨 긴급 결제 알림 수신:', data);
+
+        const message = `${data.project} 프로젝트에서 ${data.amount.toLocaleString()}원 결제 요청`;
+        triggerUrgentNotification(data.urgency, message);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('🔌 Socket.IO 연결 해제됨');
+      });
+    } else {
+      console.log('📡 프로덕션 환경: Socket.IO 비활성화 (HTTP 폴링 사용)');
+    }
 
     return () => {
-      socket.disconnect();
+      if (socket) {
+        socket.disconnect();
+      }
       clearInterval(versionInterval);
     };
   }, []);

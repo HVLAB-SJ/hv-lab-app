@@ -67,7 +67,7 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-f969db16'], (function (workbox) { 'use strict';
+define(['./workbox-b2f3ebbb'], (function (workbox) { 'use strict';
 
   self.skipWaiting();
   workbox.clientsClaim();
@@ -78,37 +78,37 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
    * See https://goo.gl/S9QRab
    */
   workbox.precacheAndRoute([{
-    "url": "assets/AdditionalWork-BANVDFAL.js",
+    "url": "assets/AdditionalWork-CS5u4IKk.js",
     "revision": null
   }, {
-    "url": "assets/additionalWorkService-ppR2kBuQ.js",
+    "url": "assets/additionalWorkService-BRGFyF-Y.js",
     "revision": null
   }, {
-    "url": "assets/AfterService-ld6lr7cp.js",
+    "url": "assets/AfterService-B2n5OmAq.js",
     "revision": null
   }, {
-    "url": "assets/ConstructionPayment-DfNEZhev.js",
+    "url": "assets/ConstructionPayment-B4m-0tYA.js",
     "revision": null
   }, {
-    "url": "assets/Drawings-Ba_2OMb6.js",
+    "url": "assets/Drawings-Dg-i0_vz.js",
     "revision": null
   }, {
-    "url": "assets/EstimatePreview-iGXb2F1z.js",
+    "url": "assets/EstimatePreview-BuT46_m7.js",
     "revision": null
   }, {
-    "url": "assets/ExecutionHistory-m8uQcSFN.js",
+    "url": "assets/ExecutionHistory-Cfacy3sK.js",
     "revision": null
   }, {
-    "url": "assets/index-B8Kq-km9.js",
+    "url": "assets/index-BLnDdVJl.js",
     "revision": null
   }, {
-    "url": "assets/index-DxNmxBjH.css",
+    "url": "assets/index-D-j3bmbH.css",
     "revision": null
   }, {
-    "url": "assets/SiteLog-DxE87XzS.js",
+    "url": "assets/SiteLog-Nq8SXozU.js",
     "revision": null
   }, {
-    "url": "assets/Specbook-CoOpDItG.js",
+    "url": "assets/Specbook-DnnjgUNk.js",
     "revision": null
   }, {
     "url": "assets/vendor-calendar-DjAQlTCo.js",
@@ -129,7 +129,7 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "url": "assets/workbox-window.prod.es5-B9K5rw8f.js",
     "revision": null
   }, {
-    "url": "assets/WorkRequest-BZoQqHIy.js",
+    "url": "assets/WorkRequest-Bk9_JQon.js",
     "revision": null
   }, {
     "url": "favicon.png",
@@ -145,7 +145,7 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "revision": "13c8dc084d8e721d3dbb3d62d72ae126"
   }, {
     "url": "index.html",
-    "revision": "06c2fc825a6d16aa0796fe41f8a8e87b"
+    "revision": "e88f322c8c18506c72d2e908691660c7"
   }, {
     "url": "vite.svg",
     "revision": "8e3a10e157f75ada21ab742c022d5430"
@@ -165,14 +165,13 @@ define(['./workbox-f969db16'], (function (workbox) { 'use strict';
     "directoryIndex": null
   });
   workbox.cleanupOutdatedCaches();
-  workbox.registerRoute(/^https:\/\/api\./i, new workbox.NetworkFirst({
-    "cacheName": "api-cache",
-    plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 100,
-      maxAgeSeconds: 86400
-    }), new workbox.CacheableResponsePlugin({
-      statuses: [0, 200]
-    })]
+  workbox.registerRoute(/^https:\/\/.*cloudfunctions\.net/i, new workbox.NetworkOnly({
+    "cacheName": "api-cache-v2",
+    plugins: []
+  }), 'GET');
+  workbox.registerRoute(/^https:\/\/api\./i, new workbox.NetworkOnly({
+    "cacheName": "api-cache-legacy",
+    plugins: []
   }), 'GET');
   workbox.registerRoute(/\.(?:png|jpg|jpeg|svg|gif|webp)$/, new workbox.CacheFirst({
     "cacheName": "image-cache",

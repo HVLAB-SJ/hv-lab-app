@@ -381,7 +381,7 @@ const Layout = () => {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="desktop-sidebar hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+      <div className="desktop-sidebar hidden lg:fixed lg:inset-y-0 lg:flex lg:w-56 lg:flex-col">
         <div className="flex flex-col bg-white border-r border-gray-200">
           <div className="flex h-16 items-center px-6 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-900">HV LAB</h2>
@@ -423,7 +423,7 @@ const Layout = () => {
       </div>
 
       {/* Main content */}
-      <div className="main-content lg:pl-64">
+      <div className="main-content lg:pl-56">
         {/* Top header */}
         <header className="sticky top-0 z-30 bg-white border-b border-gray-200 print-hide">
           <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">

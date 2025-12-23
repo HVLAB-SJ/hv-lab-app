@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { formatTimeKorean } from '../utils/formatters';
 import { PROCESS_LIST } from '../constants';
+import api from '../services/api';
 
 // 드래그앤드롭 캘린더 컴포넌트
 const DragAndDropCalendar = withDragAndDrop(Calendar);
@@ -864,17 +865,12 @@ const Schedule = () => {
   const loadProcessList = useCallback(async () => {
     setProcessLoading(true);
     try {
-      const response = await fetch('/api/processes');
-      if (response.ok) {
-        const data = await response.json();
-        setProcessList(data);
-      } else {
-        console.error('공정 목록 로딩 실패');
-        toast.error('공정 목록을 불러올 수 없습니다');
-      }
+      const response = await api.get('/processes');
+      setProcessList(response.data);
     } catch (error) {
       console.error('공정 목록 로딩 오류:', error);
-      toast.error('서버 연결에 실패했습니다');
+      // 실패시 기본 목록 사용
+      setProcessList([]);
     } finally {
       setProcessLoading(false);
     }

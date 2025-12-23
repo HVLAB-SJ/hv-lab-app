@@ -400,6 +400,7 @@ export const useDataStore = create<DataStore>()(
         process: payment.process,
         itemName: payment.itemName,
         amount: payment.amount,
+        status: payment.status || 'pending',  // status 필드 추가
         category: payment.category,
         urgency: payment.urgency,
         requestedBy: payment.requestedBy,

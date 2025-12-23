@@ -6,7 +6,7 @@ const getApiUrl = () => {
     const host = window.location.hostname;
     // Firebase Hosting (hvlab.app, hv-lab-app.web.app, hv-lab-app.firebaseapp.com)
     if (host === 'hvlab.app' || host.includes('hv-lab-app') || host.includes('firebaseapp.com')) {
-      return 'https://api.hvlab.app/api';
+      return 'https://asia-northeast3-hv-lab-app.cloudfunctions.net/api';
     }
   }
   // 로컬 개발

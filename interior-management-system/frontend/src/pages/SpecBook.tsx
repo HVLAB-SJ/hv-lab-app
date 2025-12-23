@@ -126,7 +126,10 @@ const SortableSubImage = ({
   const fileName = hasFileName ? fileData.split('|')[0] : '';
   const actualData = hasFileName ? fileData.split('|')[1] : fileData;
 
-  const isImage = actualData.startsWith('data:image');
+  // Firebase Storage URL 또는 base64 이미지 감지
+  const isStorageImage = actualData.startsWith('https://storage.googleapis.com/') &&
+    (actualData.includes('.jpg') || actualData.includes('.jpeg') || actualData.includes('.png') || actualData.includes('.gif') || actualData.includes('.webp'));
+  const isImage = actualData.startsWith('data:image') || isStorageImage;
   const isPDF = actualData.startsWith('data:application/pdf');
   const isWord = actualData.includes('wordprocessingml') || actualData.includes('msword');
   const isExcel = actualData.includes('spreadsheetml') || actualData.includes('ms-excel');
@@ -1200,7 +1203,10 @@ const SpecBook = () => {
       subImages.forEach(fileData => {
         const hasFileName = fileData.includes('|') && !fileData.startsWith('data:image');
         const data = hasFileName ? fileData.split('|')[1] : fileData;
-        if (data.startsWith('data:image')) {
+        // base64 이미지 또는 Firebase Storage URL 확인
+        const isStorageUrl = data.startsWith('https://storage.googleapis.com/') &&
+          (data.includes('.jpg') || data.includes('.jpeg') || data.includes('.png') || data.includes('.gif') || data.includes('.webp'));
+        if (data.startsWith('data:image') || isStorageUrl) {
           imageList.push(data);
         }
       });

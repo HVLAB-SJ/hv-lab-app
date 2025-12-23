@@ -6,8 +6,8 @@ export default defineConfig(({ mode }) => ({
   base: '/',
   // Firebase 배포 시 환경변수 설정
   define: mode === 'production' ? {
-    'import.meta.env.VITE_API_URL': JSON.stringify('https://hvlab.app/api'),
-    'import.meta.env.VITE_SOCKET_URL': JSON.stringify('https://hvlab.app'),
+    'import.meta.env.VITE_API_URL': JSON.stringify('https://asia-northeast3-hv-lab-app.cloudfunctions.net/api'),
+    'import.meta.env.VITE_SOCKET_URL': JSON.stringify(''), // Cloud Functions doesn't support WebSocket
   } : {},
   build: {
     outDir: 'dist',
@@ -52,17 +52,19 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\./i,
-            handler: 'NetworkFirst',
+            // Cloud Functions API
+            urlPattern: /^https:\/\/.*cloudfunctions\.net/i,
+            handler: 'NetworkOnly',
             options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
+              cacheName: 'api-cache-v2'
+            }
+          },
+          {
+            // Railway API (legacy)
+            urlPattern: /^https:\/\/api\./i,
+            handler: 'NetworkOnly',
+            options: {
+              cacheName: 'api-cache-legacy'
             }
           },
           {

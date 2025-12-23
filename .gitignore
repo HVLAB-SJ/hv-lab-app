@@ -17,3 +17,4 @@ database-backup-*.db
 railway-backup-*.db
 *.sqlite
 *.sqlite3
+serviceAccountKey.json
