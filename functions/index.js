@@ -445,8 +445,24 @@ app.get('/payments', authenticateToken, async (req, res) => {
 app.post('/payments', authenticateToken, async (req, res) => {
   try {
     const now = new Date().toISOString();
+
+    // projectId로 프로젝트 이름을 조회 (projectId가 숫자 ID인 경우)
+    let projectName = req.body.projectId;
+    if (req.body.projectId) {
+      try {
+        const projectDoc = await db.collection('projects').doc(String(req.body.projectId)).get();
+        if (projectDoc.exists) {
+          projectName = projectDoc.data().name || req.body.projectId;
+        }
+      } catch (e) {
+        // projectId가 이미 이름인 경우 그대로 사용
+        projectName = req.body.projectId;
+      }
+    }
+
     const paymentData = {
       ...req.body,
+      project_name: projectName,  // 프로젝트 이름을 project_name으로 저장
       status: req.body.status || 'pending',
       created_by: req.user.id,
       created_by_name: req.user.username,  // JWT에서 username 저장

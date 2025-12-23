@@ -19,6 +19,31 @@ import { compressImage } from '../utils/imageUtils';
 import { safeLocalStorageSet } from '../utils/storageUtils';
 import { PAYMENT_PROCESS_LIST, BANK_CODE_MAP, TOSS_BANK_NAME_MAP } from '../constants';
 
+// 안전한 날짜 파싱 헬퍼 함수 (Invalid Date 방지)
+const safeParseDate = (dateValue: string | Date | undefined | null): number => {
+  if (!dateValue) return 0;
+  try {
+    const date = new Date(dateValue);
+    const time = date.getTime();
+    // NaN 체크 (Invalid Date인 경우 getTime()은 NaN을 반환)
+    return isNaN(time) ? 0 : time;
+  } catch {
+    return 0;
+  }
+};
+
+// 안전하게 날짜 포맷팅 (Invalid Date 방지)
+const safeFormatDate = (dateValue: string | Date | undefined | null, formatStr: string, options?: { locale?: typeof ko }): string | null => {
+  if (!dateValue) return null;
+  try {
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return null;
+    return format(date, formatStr, options);
+  } catch {
+    return null;
+  }
+};
+
 // 협력업체 타입 정의
 interface Contractor {
   id?: string;
@@ -1786,6 +1811,9 @@ const Payments = () => {
 
   // 필터링 (대기중/송금완료 모두 전체 프로젝트 표시, projectFilter로 필터링)
   const filteredRecords = allRecords.filter(record => {
+    // undefined/null 레코드 또는 id가 없는 레코드 제외
+    if (!record || !record.id) return false;
+
     const matchesSearch = searchTerm === '' ||
       record.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1800,24 +1828,31 @@ const Payments = () => {
     const matchesMyRequests = !showMyRequestsOnly || statusFilter !== 'completed' || record.requestedBy === user?.name;
     return matchesSearch && matchesStatus && matchesProject && matchesMyRequests;
   }).sort((a, b) => {
+    // null/undefined 안전 체크
+    if (!a && !b) return 0;
+    if (!a) return 1;
+    if (!b) return -1;
+
     // 송금완료 탭에서는 completionDate 기준 정렬 (최신 송금완료 순)
     if (statusFilter === 'completed') {
-      // completionDate가 있는 항목을 우선 표시, 없는 항목은 맨 아래로
-      const hasDateA = !!a.completionDate;
-      const hasDateB = !!b.completionDate;
+      // completionDate가 있고 유효한 항목을 우선 표시
+      const dateTimeA = safeParseDate(a.completionDate);
+      const dateTimeB = safeParseDate(b.completionDate);
+      const hasDateA = dateTimeA > 0;
+      const hasDateB = dateTimeB > 0;
 
       if (hasDateA && !hasDateB) return -1; // A가 위로
       if (!hasDateA && hasDateB) return 1;  // B가 위로
 
       // 둘 다 completionDate가 있으면 최신순
       if (hasDateA && hasDateB) {
-        return new Date(b.completionDate!).getTime() - new Date(a.completionDate!).getTime();
+        return dateTimeB - dateTimeA;
       }
-      // 둘 다 completionDate가 없으면 requestDate로 정렬
-      return new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime();
+      // 둘 다 completionDate가 없으면 requestDate로 정렬 (안전한 파싱 사용)
+      return safeParseDate(b.requestDate) - safeParseDate(a.requestDate);
     }
-    // 대기중 탭에서는 요청일 기준 정렬 유지
-    return new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime();
+    // 대기중 탭에서는 요청일 기준 정렬 유지 (안전한 파싱 사용)
+    return safeParseDate(b.requestDate) - safeParseDate(a.requestDate);
   });
 
   // 협력업체 선택 핸들러
@@ -3096,7 +3131,7 @@ const Payments = () => {
                   <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                     statusFilter === 'pending' ? 'bg-gray-900 text-white' : 'bg-gray-300 text-gray-600'
                   }`}>
-                    {allRecords.filter(r => r.status === 'pending').length}
+                    {allRecords.filter(r => r && r.id && r.status !== 'completed').length}
                   </span>
                 </button>
                 <button
@@ -3115,7 +3150,7 @@ const Payments = () => {
                   <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                     statusFilter === 'completed' ? 'bg-gray-900 text-white' : 'bg-gray-300 text-gray-600'
                   }`}>
-                    {allRecords.filter(r => r.status === 'completed').length}
+                    {allRecords.filter(r => r && r.id && r.status === 'completed').length}
                   </span>
                 </button>
                 {/* 내 요청만 보기 체크박스 (송금완료 탭에서만) */}
@@ -3181,7 +3216,7 @@ const Payments = () => {
                             {totalAmount.toLocaleString()}원
                           </p>
                           <p className="text-[10px] text-gray-400">
-                            {record.requestedBy || '-'} · {format(new Date(record.requestDate), 'MM/dd', { locale: ko })}
+                            {record.requestedBy || '-'} · {safeFormatDate(record.requestDate, 'MM/dd', { locale: ko }) || '-'}
                           </p>
                         </div>
                       </div>
@@ -3325,7 +3360,7 @@ const Payments = () => {
                     <div className="flex-1">
                       <p className="font-medium text-gray-900 text-sm">{record.purpose || record.itemName}</p>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        {record.process || '-'} • {format(new Date(record.requestDate), 'yyyy.MM.dd', { locale: ko })}
+                        {record.process || '-'} • {safeFormatDate(record.requestDate, 'yyyy.MM.dd', { locale: ko }) || '-'}
                       </p>
                     </div>
                     <p className="text-sm font-bold text-gray-900">
