@@ -377,9 +377,8 @@ export const useDataStore = create<DataStore>()(
           },
           attachments: [],
           notes: p.notes || '',
-          completionDate: p.paid_at ? new Date(p.paid_at) :
-            // status가 completed인데 paid_at이 없으면 현재 시간 사용 (낙관적 업데이트 대비)
-            (p.status === 'completed' ? new Date() : undefined)
+          // completionDate는 아래에서 로컬 데이터와 병합하여 설정
+          completionDate: p.paid_at ? new Date(p.paid_at) : undefined
         };
       });
 
@@ -387,10 +386,15 @@ export const useDataStore = create<DataStore>()(
       const currentPayments = get().payments;
       const currentPaymentMap = new Map(currentPayments.map(p => [p.id, p]));
       payments.forEach(payment => {
+        // API에서 paid_at이 없어서 completionDate가 undefined인 경우
         if (!payment.completionDate && payment.status === 'completed') {
           const existing = currentPaymentMap.get(payment.id);
           if (existing?.completionDate) {
+            // 기존 로컬 데이터의 completionDate 사용
             payment.completionDate = existing.completionDate;
+          } else {
+            // 로컬에도 없으면 현재 시간 사용 (최초 완료 처리)
+            payment.completionDate = new Date();
           }
         }
       });
