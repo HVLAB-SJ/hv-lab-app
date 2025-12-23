@@ -381,18 +381,21 @@ export const useDataStore = create<DataStore>()(
         };
       });
 
-      // 최근 추가된 결제요청 보호: 서버 응답에 없는 최근 항목 유지 (15초 이내 추가된 것)
+      // 최근 추가된 결제요청 보호: 서버 응답에 없는 최근 항목 유지 (30초 이내 추가된 것)
       const currentPayments = get().payments;
       const apiPaymentIds = new Set(payments.map(p => p.id));
-      const recentThreshold = 15000; // 15초
+      const recentThreshold = 30000; // 30초
       const now = Date.now();
 
       const recentLocalPayments = currentPayments.filter(p => {
         // 서버에 이미 있으면 보호할 필요 없음
         if (apiPaymentIds.has(p.id)) return false;
-        // 15초 이내에 추가된 항목만 보호
-        const paymentTime = p.requestDate instanceof Date ? p.requestDate.getTime() : new Date(p.requestDate).getTime();
-        return (now - paymentTime) < recentThreshold;
+        // _addedAt이 있으면 그것을 사용 (로컬에서 추가된 시점)
+        const addedAt = (p as any)._addedAt;
+        if (addedAt && (now - addedAt) < recentThreshold) {
+          return true;
+        }
+        return false;
       });
 
       if (recentLocalPayments.length > 0) {
@@ -442,9 +445,11 @@ export const useDataStore = create<DataStore>()(
       const newPaymentId = String(result.id);
 
       // 로컬 상태에 바로 추가 (전체 목록 재로드 제거로 속도 개선)
-      const newPayment: Payment = {
+      // _addedAt 필드 추가하여 최근 추가된 항목으로 표시 (API 응답 지연 시 보호용)
+      const newPayment: Payment & { _addedAt: number } = {
         ...payment,
-        id: newPaymentId
+        id: newPaymentId,
+        _addedAt: Date.now()
       };
       set((state) => ({ payments: [newPayment, ...state.payments] }));
       return newPaymentId;
