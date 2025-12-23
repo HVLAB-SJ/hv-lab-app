@@ -2015,11 +2015,14 @@ const Payments = () => {
 
         toast.success('결제요청이 추가되었습니다');
 
-        // 세금공제 미체크일 경우 타인에게 토스 송금 문자 발송 (부가세 포함 여부와 관계없이)
-        if (!includeTaxDeduction && formData.accountHolder && formData.bankName && formData.accountNumber) {
+        // SMS 발송 조건:
+        // - 부가세 또는 세금공제 중 하나라도 체크됨: 01074088864로 발송
+        // - 둘 다 체크 안됨: 01089423283으로 토스 송금 문자 발송
+        if (formData.accountHolder && formData.bankName && formData.accountNumber) {
+          const recipientPhone = (includeVat || includeTaxDeduction) ? '01074088864' : '01089423283';
           try {
             await api.post('/payments/send-toss-payment-sms', {
-              recipientPhone: '01089423283',
+              recipientPhone: recipientPhone,
               accountHolder: formData.accountHolder,
               bankName: formData.bankName,
               accountNumber: formData.accountNumber,
