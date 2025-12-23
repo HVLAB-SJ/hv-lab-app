@@ -387,22 +387,50 @@ export const useDataStore = create<DataStore>()(
       const recentThreshold = 30000; // 30초
       const now = Date.now();
 
+      console.log('[loadPaymentsFromAPI] === 보호 로직 시작 ===');
+      console.log('[loadPaymentsFromAPI] API 응답 개수:', payments.length);
+      console.log('[loadPaymentsFromAPI] 현재 로컬 개수:', currentPayments.length);
+      console.log('[loadPaymentsFromAPI] 현재 로컬 ID 목록:', currentPayments.map(p => p.id));
+
       const recentLocalPayments = currentPayments.filter(p => {
+        // temp_ ID로 시작하는 낙관적 업데이트 항목은 무조건 보호
+        if (p.id.startsWith('temp_')) {
+          console.log('[loadPaymentsFromAPI] 낙관적 업데이트 항목 보호 (temp ID):', p.id);
+          return true;
+        }
         // 서버에 이미 있으면 보호할 필요 없음
-        if (apiPaymentIds.has(p.id)) return false;
+        if (apiPaymentIds.has(p.id)) {
+          console.log('[loadPaymentsFromAPI] 서버에 있음 - 보호 불필요:', p.id);
+          return false;
+        }
         // _addedAt이 있으면 그것을 사용 (로컬에서 추가된 시점)
         const addedAt = (p as any)._addedAt;
         if (addedAt && (now - addedAt) < recentThreshold) {
+          console.log('[loadPaymentsFromAPI] 최근 추가 항목 보호:', p.id, '추가된지', (now - addedAt) / 1000, '초');
           return true;
         }
+        console.log('[loadPaymentsFromAPI] 보호 안됨 (서버에 없고 _addedAt 없음):', p.id);
         return false;
       });
 
+      console.log('[loadPaymentsFromAPI] 보호 대상 개수:', recentLocalPayments.length);
+      console.log('[loadPaymentsFromAPI] 보호 대상 ID:', recentLocalPayments.map(p => p.id));
+
       if (recentLocalPayments.length > 0) {
-        console.log(`[loadPaymentsFromAPI] 최근 추가된 ${recentLocalPayments.length}개 항목 보호`);
-        // 최근 항목을 맨 앞에 유지
-        set({ payments: [...recentLocalPayments, ...payments] });
+        console.log(`[loadPaymentsFromAPI] 총 ${recentLocalPayments.length}개 항목 보호`);
+        // 최근 항목을 맨 앞에 유지 (중복 제거)
+        const protectedIds = new Set(recentLocalPayments.map(p => p.id));
+        const filteredApiPayments = payments.filter(p => !protectedIds.has(p.id));
+        // 보호된 항목의 _addedAt 갱신 (다음 새로고침에서도 보호되도록)
+        const updatedProtectedPayments = recentLocalPayments.map(p => ({
+          ...p,
+          _addedAt: Date.now()  // 보호 시간 갱신
+        }));
+        const finalPayments = [...updatedProtectedPayments, ...filteredApiPayments];
+        console.log('[loadPaymentsFromAPI] 최종 결과 개수:', finalPayments.length);
+        set({ payments: finalPayments });
       } else {
+        console.log('[loadPaymentsFromAPI] 보호 항목 없음 - API 결과만 사용');
         set({ payments });
       }
     } catch (error) {
@@ -412,6 +440,20 @@ export const useDataStore = create<DataStore>()(
   },
 
   addPaymentToAPI: async (payment: Payment) => {
+    // 낙관적 업데이트: 서버 호출 전에 먼저 로컬에 추가
+    // temp ID로 시작하여 나중에 서버 ID로 교체
+    const tempId = `temp_${Date.now()}`;
+    const tempPayment: Payment & { _addedAt: number; _tempId: string } = {
+      ...payment,
+      id: tempId,
+      _addedAt: Date.now(),
+      _tempId: tempId
+    };
+
+    // 즉시 로컬 상태에 추가 (UI에서 바로 보임)
+    set((state) => ({ payments: [tempPayment, ...state.payments] }));
+    console.log('[addPaymentToAPI] 낙관적 업데이트 - temp ID:', tempId);
+
     try {
       // 프로젝트 이름을 ID로 변환
       const state = get();
@@ -444,17 +486,27 @@ export const useDataStore = create<DataStore>()(
       const result = await paymentService.createPayment(paymentData);
       const newPaymentId = String(result.id);
 
-      // 로컬 상태에 바로 추가 (전체 목록 재로드 제거로 속도 개선)
-      // _addedAt 필드 추가하여 최근 추가된 항목으로 표시 (API 응답 지연 시 보호용)
-      const newPayment: Payment & { _addedAt: number } = {
-        ...payment,
-        id: newPaymentId,
-        _addedAt: Date.now()
-      };
-      set((state) => ({ payments: [newPayment, ...state.payments] }));
+      // 서버 응답 후: temp ID를 실제 ID로 교체하고 _addedAt 갱신
+      set((state) => ({
+        payments: state.payments.map(p => {
+          if ((p as any)._tempId === tempId) {
+            return {
+              ...p,
+              id: newPaymentId,
+              _addedAt: Date.now()  // 보호 시간 갱신
+            };
+          }
+          return p;
+        })
+      }));
+      console.log('[addPaymentToAPI] 서버 응답 - 실제 ID:', newPaymentId);
       return newPaymentId;
     } catch (error) {
       console.error('Failed to add payment to API:', error);
+      // 실패 시 낙관적으로 추가한 항목 제거
+      set((state) => ({
+        payments: state.payments.filter(p => (p as any)._tempId !== tempId)
+      }));
       throw error;
     }
   },
