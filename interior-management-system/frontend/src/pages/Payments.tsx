@@ -2008,15 +2008,15 @@ const Payments = () => {
 
         // 방금 추가한 결제요청 ID 저장 (socket 이벤트로 인한 중복 로드 방지)
         recentlyAddedPaymentRef.current = newPaymentId;
-        // 5초 후 해제 (충분한 시간 후 정상 동기화 허용)
+        // 10초 후 해제 (충분한 시간 후 정상 동기화 허용)
         setTimeout(() => {
           recentlyAddedPaymentRef.current = null;
-        }, 5000);
+        }, 10000);
 
         toast.success('결제요청이 추가되었습니다');
 
-        // 부가세/세금공제 둘 다 미체크일 경우 타인에게 토스 송금 문자 발송
-        if (!includeVat && !includeTaxDeduction && formData.accountHolder && formData.bankName && formData.accountNumber) {
+        // 세금공제 미체크일 경우 타인에게 토스 송금 문자 발송 (부가세 포함 여부와 관계없이)
+        if (!includeTaxDeduction && formData.accountHolder && formData.bankName && formData.accountNumber) {
           try {
             await api.post('/payments/send-toss-payment-sms', {
               recipientPhone: '01089423283',
