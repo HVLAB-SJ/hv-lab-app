@@ -228,6 +228,7 @@ app.get('/projects/:id', authenticateToken, async (req, res) => {
 
 app.post('/projects', authenticateToken, async (req, res) => {
   try {
+    const now = new Date().toISOString();
     const projectData = {
       name: req.body.name,
       client: req.body.client || '',
@@ -239,8 +240,10 @@ app.post('/projects', authenticateToken, async (req, res) => {
       description: req.body.description || '',
       manager_name: req.body.manager || null,
       manager_id: req.user.id,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp()
+      created_by: req.user.id,
+      created_by_name: req.user.username,
+      created_at: now,
+      updated_at: now
     };
 
     const docRef = await db.collection('projects').add(projectData);
@@ -337,6 +340,7 @@ app.get('/schedules', authenticateToken, async (req, res) => {
 
 app.post('/schedules', authenticateToken, async (req, res) => {
   try {
+    const now = new Date().toISOString();
     const scheduleData = {
       title: req.body.title,
       description: req.body.description || '',
@@ -351,8 +355,9 @@ app.post('/schedules', authenticateToken, async (req, res) => {
       time: req.body.time || null,
       color: req.body.color || null,
       created_by: req.user.id,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp()
+      created_by_name: req.user.username,
+      created_at: now,
+      updated_at: now
     };
 
     const docRef = await db.collection('schedules').add(scheduleData);
@@ -417,7 +422,19 @@ app.get('/payments', authenticateToken, async (req, res) => {
     const snapshot = await db.collection('payment_requests').get();
     const payments = [];
     snapshot.forEach(doc => {
-      payments.push({ _id: doc.id, ...doc.data() });
+      const data = doc.data();
+      payments.push({
+        id: doc.id,
+        ...data,
+        status: data.status || 'pending',  // status가 없으면 기본값 'pending'
+        // 프론트엔드 호환성: requester_name 필드도 함께 반환
+        requester_name: data.requestedBy || data.requester_name || data.created_by_name || '',
+        // 프론트엔드 호환성: VAT/세금공제 필드 (스네이크 케이스로 변환, 정수값 1/0)
+        includes_vat: data.includesVAT ? 1 : 0,
+        apply_tax_deduction: data.applyTaxDeduction ? 1 : 0,
+        // 프론트엔드 호환성: 송금완료 날짜 (completionDate -> paid_at)
+        paid_at: data.completionDate || data.paid_at || null
+      });
     });
     res.json(payments);
   } catch (error) {
@@ -427,27 +444,70 @@ app.get('/payments', authenticateToken, async (req, res) => {
 
 app.post('/payments', authenticateToken, async (req, res) => {
   try {
+    const now = new Date().toISOString();
     const paymentData = {
       ...req.body,
+      status: req.body.status || 'pending',
       created_by: req.user.id,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp()
+      created_by_name: req.user.username,  // JWT에서 username 저장
+      requestedBy: req.body.requestedBy || req.user.username,  // 요청자 이름 (프론트엔드에서 전달)
+      created_at: now,
+      updated_at: now
     };
     const docRef = await db.collection('payment_requests').add(paymentData);
     res.status(201).json({ id: docRef.id, ...paymentData });
   } catch (error) {
+    console.error('결제 생성 실패:', error);
     res.status(500).json({ error: '결제 생성 실패' });
   }
 });
 
 app.put('/payments/:id', authenticateToken, async (req, res) => {
   try {
+    const docRef = db.collection('payment_requests').doc(req.params.id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: '결제요청을 찾을 수 없습니다.' });
+    }
+
     const updates = { ...req.body, updated_at: admin.firestore.FieldValue.serverTimestamp() };
-    await db.collection('payment_requests').doc(req.params.id).update(updates);
-    const doc = await db.collection('payment_requests').doc(req.params.id).get();
-    res.json({ id: doc.id, ...doc.data() });
+    await docRef.update(updates);
+    const updatedDoc = await docRef.get();
+    res.json({ id: updatedDoc.id, ...updatedDoc.data() });
   } catch (error) {
+    console.error('결제 수정 실패:', error);
     res.status(500).json({ error: '결제 수정 실패' });
+  }
+});
+
+// 결제 상태 변경 (송금완료 등)
+app.put('/payments/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const docRef = db.collection('payment_requests').doc(req.params.id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: '결제요청을 찾을 수 없습니다.' });
+    }
+
+    const updates = {
+      status: status,
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    // completed 상태로 변경 시 completed_at 추가
+    if (status === 'completed') {
+      updates.completed_at = admin.firestore.FieldValue.serverTimestamp();
+    }
+
+    await docRef.update(updates);
+    const updatedDoc = await docRef.get();
+    res.json({ id: updatedDoc.id, ...updatedDoc.data() });
+  } catch (error) {
+    console.error('결제 상태 변경 실패:', error);
+    res.status(500).json({ error: '결제 상태 변경 실패' });
   }
 });
 
@@ -614,10 +674,13 @@ app.get('/workrequests', authenticateToken, async (req, res) => {
 
 app.post('/workrequests', authenticateToken, async (req, res) => {
   try {
+    const now = new Date().toISOString();
     const data = {
       ...req.body,
       created_by: req.user.id,
-      created_at: admin.firestore.FieldValue.serverTimestamp()
+      created_by_name: req.user.username,
+      created_at: now,
+      updated_at: now
     };
     const docRef = await db.collection('work_requests').add(data);
     res.status(201).json({ id: docRef.id, ...data });
@@ -708,10 +771,11 @@ app.get('/as-requests/:id', authenticateToken, async (req, res) => {
 
 app.post('/as-requests', authenticateToken, async (req, res) => {
   try {
+    const now = new Date().toISOString();
     const data = {
       project: req.body.project,
       client: req.body.client,
-      requestDate: req.body.requestDate || new Date().toISOString(),
+      requestDate: req.body.requestDate || now,
       siteAddress: req.body.siteAddress,
       entrancePassword: req.body.entrancePassword || '',
       description: req.body.description || '',
@@ -723,8 +787,9 @@ app.post('/as-requests', authenticateToken, async (req, res) => {
       status: req.body.status || 'pending',
       images: req.body.images || [],
       created_by: req.user.id,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      created_by_name: req.user.username,
+      createdAt: now,
+      updatedAt: now
     };
     const docRef = await db.collection('as_requests').add(data);
     res.status(201).json({ _id: docRef.id, ...data });
@@ -896,9 +961,13 @@ app.get('/contractors', authenticateToken, async (req, res) => {
 
 app.post('/contractors', authenticateToken, async (req, res) => {
   try {
+    const now = new Date().toISOString();
     const data = {
       ...req.body,
-      created_at: admin.firestore.FieldValue.serverTimestamp()
+      created_by: req.user.id,
+      created_by_name: req.user.username,
+      created_at: now,
+      updated_at: now
     };
     const docRef = await db.collection('contractors').add(data);
     res.status(201).json({ id: docRef.id, ...data });
