@@ -13,7 +13,13 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "*",
+    origin: [
+      'https://hvlab.app',
+      'https://hv-lab-app.web.app',
+      'https://hv-lab-app.firebaseapp.com',
+      'http://localhost:5173',
+      'http://localhost:3000'
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
@@ -72,15 +78,33 @@ setTimeout(() => {
 }, 1500);
 
 const PORT = process.env.PORT || 3000;
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+
+// CORS 허용 도메인 목록
+const ALLOWED_ORIGINS = [
+  'https://hvlab.app',
+  'https://hv-lab-app.web.app',
+  'https://hv-lab-app.firebaseapp.com',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
 
 console.log(`Port configuration: ${PORT}`);
-console.log(`CORS Origin: ${CORS_ORIGIN}`);
+console.log(`Allowed CORS Origins: ${ALLOWED_ORIGINS.join(', ')}`);
 console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 
 // 미들웨어 설정
 app.use(cors({
-  origin: CORS_ORIGIN,
+  origin: function(origin, callback) {
+    // origin이 없는 경우 (같은 origin 요청, Postman 등)
+    if (!origin) return callback(null, true);
+
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log(`CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '200mb' })); // Increase limit for large image uploads
