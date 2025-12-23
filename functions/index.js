@@ -432,8 +432,8 @@ app.get('/payments', authenticateToken, async (req, res) => {
         // 프론트엔드 호환성: VAT/세금공제 필드 (스네이크 케이스로 변환, 정수값 1/0)
         includes_vat: data.includesVAT ? 1 : 0,
         apply_tax_deduction: data.applyTaxDeduction ? 1 : 0,
-        // 프론트엔드 호환성: 송금완료 날짜 (completionDate -> paid_at)
-        paid_at: data.completionDate || data.paid_at || null
+        // 프론트엔드 호환성: 송금완료 날짜 (completed_at -> paid_at)
+        paid_at: data.completed_at || data.completionDate || data.paid_at || null
       });
     });
     res.json(payments);
@@ -446,17 +446,20 @@ app.post('/payments', authenticateToken, async (req, res) => {
   try {
     const now = new Date().toISOString();
 
-    // projectId로 프로젝트 이름을 조회 (projectId가 숫자 ID인 경우)
-    let projectName = req.body.projectId;
+    // projectId로 프로젝트 이름 조회
+    let projectName = '';
     if (req.body.projectId) {
       try {
         const projectDoc = await db.collection('projects').doc(String(req.body.projectId)).get();
         if (projectDoc.exists) {
-          projectName = projectDoc.data().name || req.body.projectId;
+          projectName = projectDoc.data().name || '';
+        } else {
+          // 프로젝트를 찾지 못하면 projectId 자체를 이름으로 사용 (문자열인 경우)
+          projectName = String(req.body.projectId);
         }
       } catch (e) {
-        // projectId가 이미 이름인 경우 그대로 사용
-        projectName = req.body.projectId;
+        console.error('프로젝트 조회 실패:', e);
+        projectName = String(req.body.projectId);
       }
     }
 
@@ -487,7 +490,22 @@ app.put('/payments/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: '결제요청을 찾을 수 없습니다.' });
     }
 
-    const updates = { ...req.body, updated_at: admin.firestore.FieldValue.serverTimestamp() };
+    // projectId가 있으면 프로젝트 이름 조회
+    let updates = { ...req.body, updated_at: admin.firestore.FieldValue.serverTimestamp() };
+    if (req.body.projectId) {
+      try {
+        const projectDoc = await db.collection('projects').doc(String(req.body.projectId)).get();
+        if (projectDoc.exists) {
+          updates.project_name = projectDoc.data().name || '';
+        } else {
+          updates.project_name = String(req.body.projectId);
+        }
+      } catch (e) {
+        console.error('프로젝트 조회 실패:', e);
+        updates.project_name = String(req.body.projectId);
+      }
+    }
+
     await docRef.update(updates);
     const updatedDoc = await docRef.get();
     res.json({ id: updatedDoc.id, ...updatedDoc.data() });
@@ -1415,7 +1433,14 @@ app.get('/execution-records', authenticateToken, async (req, res) => {
   try {
     const snapshot = await db.collection('execution_records').get();
     const items = [];
-    snapshot.forEach(doc => items.push({ _id: doc.id, ...doc.data() }));
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      items.push({
+        _id: doc.id,
+        id: data.id || parseInt(doc.id), // id 필드 보장
+        ...data
+      });
+    });
     res.json(items);
   } catch (error) {
     res.status(500).json({ error: '실행내역 조회 실패' });
