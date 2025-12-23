@@ -1790,7 +1790,10 @@ const Payments = () => {
       record.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.process?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = record.status === statusFilter;
+    // status가 'completed'가 아닌 모든 항목은 '대기중(pending)'으로 처리
+    const matchesStatus = statusFilter === 'pending'
+      ? record.status !== 'completed'  // 대기중 탭: completed가 아닌 모든 항목
+      : record.status === 'completed'; // 송금완료 탭: completed인 항목만
     // projectFilter가 'all'이거나 비어있으면 전체 표시, 아니면 해당 프로젝트만
     const matchesProject = projectFilter === 'all' || !projectFilter || record.project === projectFilter;
     // 내 요청만 보기 (송금완료 탭에서만 적용)
