@@ -380,7 +380,28 @@ export const useDataStore = create<DataStore>()(
           completionDate: p.paid_at ? new Date(p.paid_at) : undefined
         };
       });
-      set({ payments });
+
+      // 최근 추가된 결제요청 보호: 서버 응답에 없는 최근 항목 유지 (15초 이내 추가된 것)
+      const currentPayments = get().payments;
+      const apiPaymentIds = new Set(payments.map(p => p.id));
+      const recentThreshold = 15000; // 15초
+      const now = Date.now();
+
+      const recentLocalPayments = currentPayments.filter(p => {
+        // 서버에 이미 있으면 보호할 필요 없음
+        if (apiPaymentIds.has(p.id)) return false;
+        // 15초 이내에 추가된 항목만 보호
+        const paymentTime = p.requestDate instanceof Date ? p.requestDate.getTime() : new Date(p.requestDate).getTime();
+        return (now - paymentTime) < recentThreshold;
+      });
+
+      if (recentLocalPayments.length > 0) {
+        console.log(`[loadPaymentsFromAPI] 최근 추가된 ${recentLocalPayments.length}개 항목 보호`);
+        // 최근 항목을 맨 앞에 유지
+        set({ payments: [...recentLocalPayments, ...payments] });
+      } else {
+        set({ payments });
+      }
     } catch (error) {
       console.error('Failed to load payments from API:', error);
       throw error;
