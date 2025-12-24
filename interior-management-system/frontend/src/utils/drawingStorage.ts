@@ -1,7 +1,9 @@
 // 서버 기반 도면 데이터 저장소
-// 파일 업로드 방식으로 이미지 저장
+// Firestore/Railway 데이터 소스 자동 선택
 
 import api from '../services/api';
+import drawingFirestoreService from '../services/firestore/drawingFirestoreService';
+import { getDataSourceConfig } from '../services/firestore/dataSourceConfig';
 
 interface DrawingData {
   type: string;
@@ -17,21 +19,70 @@ interface DrawingData {
   naverArea?: string;
 }
 
-class DrawingStorage {
-  // 이미지 파일 업로드
+// Railway API 서비스
+const railwayDrawingService = {
   async uploadImage(file: File): Promise<string> {
     const formData = new FormData();
     formData.append('image', file);
 
-    try {
-      const response = await api.post('/drawings/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+    const response = await api.post('/drawings/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
 
-      console.log('✅ 이미지 업로드 성공:', response.data.imageUrl);
-      return response.data.imageUrl;
+    console.log('✅ [Railway] 이미지 업로드 성공:', response.data.imageUrl);
+    return response.data.imageUrl;
+  },
+
+  async setItem(projectId: string, type: string, data: DrawingData): Promise<void> {
+    await api.post('/drawings', {
+      projectId: data.projectId,
+      type: data.type,
+      imageUrl: data.imageUrl,
+      imageUrls: data.imageUrls || [],
+      markers: data.markers,
+      rooms: data.rooms,
+      naverTypeSqm: data.naverTypeSqm,
+      naverTypePyeong: data.naverTypePyeong,
+      naverArea: data.naverArea
+    });
+    console.log('✅ [Railway] 도면 데이터 저장 성공');
+  },
+
+  async getItem(projectId: string, type: string): Promise<DrawingData | null> {
+    const response = await api.get(`/drawings/${projectId}/${encodeURIComponent(type)}`);
+    const serverData = response.data;
+
+    return {
+      type: serverData.type,
+      projectId: serverData.projectId,
+      imageUrl: serverData.imageUrl,
+      imageUrls: serverData.imageUrls || [],
+      markers: serverData.markers || [],
+      rooms: serverData.rooms || [],
+      lastModified: new Date(serverData.updatedAt),
+      naverTypeSqm: serverData.naverTypeSqm,
+      naverTypePyeong: serverData.naverTypePyeong,
+      naverArea: serverData.naverArea
+    };
+  },
+
+  async removeItem(projectId: string, type: string): Promise<void> {
+    await api.delete(`/drawings/${projectId}/${encodeURIComponent(type)}`);
+  }
+};
+
+class DrawingStorage {
+  // 이미지 파일 업로드
+  async uploadImage(file: File): Promise<string> {
+    try {
+      if (getDataSourceConfig()) {
+        console.log('[drawingStorage] Using Firestore');
+        return await drawingFirestoreService.uploadImage(file);
+      }
+      console.log('[drawingStorage] Using Railway API');
+      return await railwayDrawingService.uploadImage(file);
     } catch (error: any) {
       console.error('이미지 업로드 실패:', error);
       const errorMsg = error.response?.data?.error || error.message || '알 수 없는 오류';
@@ -50,17 +101,13 @@ class DrawingStorage {
         roomsCount: data.rooms?.length || 0
       });
 
-      await api.post('/drawings', {
-        projectId: data.projectId,
-        type: data.type,
-        imageUrl: data.imageUrl,
-        imageUrls: data.imageUrls || [], // 다중 이미지 전송
-        markers: data.markers,
-        rooms: data.rooms,
-        naverTypeSqm: data.naverTypeSqm,
-        naverTypePyeong: data.naverTypePyeong,
-        naverArea: data.naverArea
-      });
+      if (getDataSourceConfig()) {
+        console.log('[drawingStorage] Using Firestore');
+        await drawingFirestoreService.setItem(data.projectId, data.type, data);
+      } else {
+        console.log('[drawingStorage] Using Railway API');
+        await railwayDrawingService.setItem(data.projectId, data.type, data);
+      }
       console.log('✅ 도면 데이터 저장 성공');
     } catch (error: any) {
       console.error('서버 도면 저장 실패:', error);
@@ -91,22 +138,13 @@ class DrawingStorage {
 
       console.log(`[drawingStorage] 도면 조회 요청: projectId=${projectId}, type=${type}`);
 
-      const response = await api.get(`/drawings/${projectId}/${encodeURIComponent(type)}`);
+      if (getDataSourceConfig()) {
+        console.log('[drawingStorage] Using Firestore');
+        return await drawingFirestoreService.getItem(projectId, type);
+      }
 
-      const serverData = response.data;
-
-      return {
-        type: serverData.type,
-        projectId: serverData.projectId,
-        imageUrl: serverData.imageUrl,
-        imageUrls: serverData.imageUrls || [], // 다중 이미지 수신
-        markers: serverData.markers || [],
-        rooms: serverData.rooms || [],
-        lastModified: new Date(serverData.updatedAt),
-        naverTypeSqm: serverData.naverTypeSqm,
-        naverTypePyeong: serverData.naverTypePyeong,
-        naverArea: serverData.naverArea
-      };
+      console.log('[drawingStorage] Using Railway API');
+      return await railwayDrawingService.getItem(projectId, type);
     } catch (error: any) {
       // 404는 데이터가 없는 것이므로 null 반환
       if (error.response?.status === 404) {
@@ -136,7 +174,13 @@ class DrawingStorage {
       const projectId = parts[2];
       const type = parts.slice(3).join('-');
 
-      await api.delete(`/drawings/${projectId}/${encodeURIComponent(type)}`);
+      if (getDataSourceConfig()) {
+        console.log('[drawingStorage] Using Firestore');
+        await drawingFirestoreService.removeItem(projectId, type);
+      } else {
+        console.log('[drawingStorage] Using Railway API');
+        await railwayDrawingService.removeItem(projectId, type);
+      }
     } catch (error) {
       console.error('서버 도면 삭제 실패:', error);
       throw error;
