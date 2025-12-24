@@ -45,6 +45,26 @@ const simpleHash = async (password: string): Promise<string> => {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
+// UTF-8 문자열을 Base64로 인코딩 (한글 지원)
+const utf8ToBase64 = (str: string): string => {
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(str);
+  let binary = '';
+  bytes.forEach(byte => binary += String.fromCharCode(byte));
+  return btoa(binary);
+};
+
+// Base64를 UTF-8 문자열로 디코딩 (한글 지원)
+const base64ToUtf8 = (base64: string): string => {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  const decoder = new TextDecoder();
+  return decoder.decode(bytes);
+};
+
 // 토큰 생성 (간단한 JWT-like 토큰)
 const generateToken = (user: User): string => {
   const payload = {
@@ -54,13 +74,13 @@ const generateToken = (user: User): string => {
     iat: Date.now(),
     exp: Date.now() + (30 * 24 * 60 * 60 * 1000) // 30 days
   };
-  return btoa(JSON.stringify(payload));
+  return utf8ToBase64(JSON.stringify(payload));
 };
 
 // 토큰 검증
 const verifyToken = (token: string): { id: string; username: string; role: string } | null => {
   try {
-    const payload = JSON.parse(atob(token));
+    const payload = JSON.parse(base64ToUtf8(token));
     if (payload.exp < Date.now()) {
       return null; // 토큰 만료
     }
