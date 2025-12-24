@@ -1,6 +1,4 @@
-import api from './api';
 import constructionPaymentFirestoreService from './firestore/constructionPaymentFirestoreService';
-import { getDataSourceConfig } from './firestore/dataSourceConfig';
 
 export interface ConstructionPaymentData {
   project: string;
@@ -49,75 +47,31 @@ export interface ConstructionPaymentResponse {
   updatedAt: string;
 }
 
-// Railway API 서비스 (기존)
-const railwayConstructionPaymentService = {
-  getAllConstructionPayments: async (): Promise<ConstructionPaymentResponse[]> => {
-    const response = await api.get('/construction-payments');
-    return response.data;
-  },
-
-  getConstructionPaymentById: async (id: string): Promise<ConstructionPaymentResponse> => {
-    const response = await api.get(`/construction-payments/${id}`);
-    return response.data;
-  },
-
-  createConstructionPayment: async (data: ConstructionPaymentData): Promise<ConstructionPaymentResponse> => {
-    const response = await api.post('/construction-payments', data);
-    return response.data;
-  },
-
-  updateConstructionPayment: async (id: string, data: Partial<ConstructionPaymentData>): Promise<ConstructionPaymentResponse> => {
-    const response = await api.put(`/construction-payments/${id}`, data);
-    return response.data;
-  },
-
-  deleteConstructionPayment: async (id: string): Promise<void> => {
-    await api.delete(`/construction-payments/${id}`);
-  }
-};
-
-// 통합 서비스 (데이터 소스에 따라 자동 선택)
+// Firebase Firestore 전용 서비스
 const constructionPaymentService = {
-  getAllConstructionPayments: async (): Promise<ConstructionPaymentResponse[]> => {
-    if (getDataSourceConfig()) {
-      console.log('[constructionPaymentService] Using Firestore');
-      return constructionPaymentFirestoreService.getAllConstructionPayments();
-    }
-    console.log('[constructionPaymentService] Using Railway API');
-    return railwayConstructionPaymentService.getAllConstructionPayments();
+  getAllConstructionPayments: (): Promise<ConstructionPaymentResponse[]> => {
+    return constructionPaymentFirestoreService.getAllConstructionPayments();
   },
 
   getConstructionPaymentById: async (id: string): Promise<ConstructionPaymentResponse> => {
-    if (getDataSourceConfig()) {
-      const result = await constructionPaymentFirestoreService.getConstructionPaymentById(id);
-      if (!result) throw new Error('Construction payment not found');
-      return result;
-    }
-    return railwayConstructionPaymentService.getConstructionPaymentById(id);
+    const result = await constructionPaymentFirestoreService.getConstructionPaymentById(id);
+    if (!result) throw new Error('Construction payment not found');
+    return result;
   },
 
-  createConstructionPayment: async (data: ConstructionPaymentData): Promise<ConstructionPaymentResponse> => {
-    if (getDataSourceConfig()) {
-      return constructionPaymentFirestoreService.createConstructionPayment(data);
-    }
-    return railwayConstructionPaymentService.createConstructionPayment(data);
+  createConstructionPayment: (data: ConstructionPaymentData): Promise<ConstructionPaymentResponse> => {
+    return constructionPaymentFirestoreService.createConstructionPayment(data);
   },
 
-  updateConstructionPayment: async (id: string, data: Partial<ConstructionPaymentData>): Promise<ConstructionPaymentResponse> => {
-    if (getDataSourceConfig()) {
-      return constructionPaymentFirestoreService.updateConstructionPayment(id, data);
-    }
-    return railwayConstructionPaymentService.updateConstructionPayment(id, data);
+  updateConstructionPayment: (id: string, data: Partial<ConstructionPaymentData>): Promise<ConstructionPaymentResponse> => {
+    return constructionPaymentFirestoreService.updateConstructionPayment(id, data);
   },
 
-  deleteConstructionPayment: async (id: string): Promise<void> => {
-    if (getDataSourceConfig()) {
-      return constructionPaymentFirestoreService.deleteConstructionPayment(id);
-    }
-    return railwayConstructionPaymentService.deleteConstructionPayment(id);
+  deleteConstructionPayment: (id: string): Promise<void> => {
+    return constructionPaymentFirestoreService.deleteConstructionPayment(id);
   },
 
-  // Firestore 실시간 구독 (Firestore 전용)
+  // Firestore 실시간 구독
   subscribeToConstructionPayments: constructionPaymentFirestoreService.subscribeToConstructionPayments
 };
 

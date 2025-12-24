@@ -1,7 +1,5 @@
 import { create } from 'zustand';
-import api from '../services/api';
 import specbookFirestoreService from '../services/firestore/specbookFirestoreService';
-import { getDataSourceConfig } from '../services/firestore/dataSourceConfig';
 
 export interface SpecBookItem {
   id: number;
@@ -87,15 +85,7 @@ export const useSpecbookStore = create<SpecbookStore>((set, get) => ({
     try {
       console.log('[SpecbookStore] 라이브러리 사전 로딩 시작...');
 
-      let items: SpecBookItem[];
-      if (getDataSourceConfig()) {
-        console.log('[SpecbookStore] Using Firestore');
-        items = await specbookFirestoreService.getLibraryMeta();
-      } else {
-        console.log('[SpecbookStore] Using Railway API');
-        const response = await api.get('/specbook/library/meta');
-        items = response.data;
-      }
+      const items = await specbookFirestoreService.getLibraryMeta();
 
       set({
         libraryItems: items,
@@ -116,13 +106,7 @@ export const useSpecbookStore = create<SpecbookStore>((set, get) => ({
     if (state.categoriesLoaded) return;
 
     try {
-      let categories: string[];
-      if (getDataSourceConfig()) {
-        categories = await specbookFirestoreService.getCategories();
-      } else {
-        const response = await api.get('/specbook/categories');
-        categories = response.data;
-      }
+      const categories = await specbookFirestoreService.getCategories();
 
       set({
         categories: categories,
@@ -183,13 +167,7 @@ export const useSpecbookStore = create<SpecbookStore>((set, get) => ({
     }
 
     try {
-      let items: SpecBookItem[];
-      if (getDataSourceConfig()) {
-        items = await specbookFirestoreService.getProjectMeta(projectId);
-      } else {
-        const response = await api.get(`/specbook/project/${projectId}/meta`);
-        items = response.data;
-      }
+      const items = await specbookFirestoreService.getProjectMeta(projectId);
 
       // 캐시에 저장
       set(state => {

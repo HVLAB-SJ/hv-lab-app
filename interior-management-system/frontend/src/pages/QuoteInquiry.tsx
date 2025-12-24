@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
-import { Mail, Phone, MapPin, Calendar, User, Building, Trash2 } from 'lucide-react';
+import { Mail, Phone, MapPin, User, Building, Trash2 } from 'lucide-react';
 import quoteInquiryService, { QuoteInquiry as QuoteInquiryType } from '../services/quoteInquiryService';
-import { getDataSourceConfig } from '../services/firestore/dataSourceConfig';
 
 const QuoteInquiry = () => {
   const [inquiries, setInquiries] = useState<QuoteInquiryType[]>([]);
@@ -12,18 +11,12 @@ const QuoteInquiry = () => {
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    // Firestore 사용 시 실시간 구독
-    if (getDataSourceConfig()) {
-      console.log('[QuoteInquiry] Using Firestore subscription');
-      unsubscribeRef.current = quoteInquiryService.subscribeToQuoteInquiries((data) => {
-        setInquiries(data);
-        setLoading(false);
-      });
-      setLoading(true);
-    } else {
-      // Railway API 사용 시
-      loadInquiries();
-    }
+    // Firestore 실시간 구독
+    unsubscribeRef.current = quoteInquiryService.subscribeToQuoteInquiries((data) => {
+      setInquiries(data);
+      setLoading(false);
+    });
+    setLoading(true);
 
     return () => {
       if (unsubscribeRef.current) {
@@ -32,31 +25,10 @@ const QuoteInquiry = () => {
     };
   }, []);
 
-  const loadInquiries = async () => {
-    try {
-      // 데이터가 없을 때만 로딩 표시
-      if (inquiries.length === 0) {
-        setLoading(true);
-      }
-      const data = await quoteInquiryService.getAllQuoteInquiries();
-      setInquiries(data);
-    } catch (error) {
-      console.error('Failed to load inquiries:', error);
-      toast.error('견적문의를 불러오는데 실패했습니다');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const markAsRead = async (id: string) => {
     try {
       await quoteInquiryService.markAsRead(id);
-      // Firestore 사용 시 실시간 동기화로 자동 업데이트됨
-      if (!getDataSourceConfig()) {
-        setInquiries(prev =>
-          prev.map(inq => inq.id === id ? { ...inq, isRead: true } : inq)
-        );
-      }
+      // Firestore 실시간 동기화로 자동 업데이트됨
       // 배지 업데이트를 위한 이벤트 발생
       window.dispatchEvent(new CustomEvent('quoteInquiryRead'));
     } catch (error) {
@@ -80,10 +52,7 @@ const QuoteInquiry = () => {
 
     try {
       await quoteInquiryService.deleteQuoteInquiry(id);
-      // Firestore 사용 시 실시간 동기화로 자동 업데이트됨
-      if (!getDataSourceConfig()) {
-        setInquiries(prev => prev.filter(inq => inq.id !== id));
-      }
+      // Firestore 실시간 동기화로 자동 업데이트됨
 
       // 삭제된 항목이 선택된 항목이면 선택 해제
       if (selectedInquiry?.id === id) {
