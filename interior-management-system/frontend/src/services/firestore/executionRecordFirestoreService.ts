@@ -18,6 +18,37 @@ import {
 } from 'firebase/firestore';
 import { COLLECTIONS } from './index';
 
+// 프로젝트 캐시 (name -> id 매핑)
+let projectNameToIdCache: Map<string, number> = new Map();
+let projectCachePromise: Promise<void> | null = null;
+
+async function loadProjectCache(): Promise<void> {
+  if (projectNameToIdCache.size > 0) return;
+  if (projectCachePromise) return projectCachePromise;
+
+  projectCachePromise = (async () => {
+    try {
+      const projectsRef = collection(db, COLLECTIONS.PROJECTS);
+      const querySnapshot = await getDocs(projectsRef);
+
+      querySnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const id = parseInt(doc.id);
+        if (!isNaN(id) && data.name) {
+          projectNameToIdCache.set(data.name, id);
+        }
+      });
+      console.log('[executionRecordFirestoreService] 프로젝트 캐시 로드 완료:', projectNameToIdCache.size, '개');
+    } catch (error) {
+      console.error('[executionRecordFirestoreService] 프로젝트 캐시 로드 실패:', error);
+      projectCachePromise = null;
+      throw error;
+    }
+  })();
+
+  return projectCachePromise;
+}
+
 // Firestore 실행내역 타입
 export interface FirestoreExecutionRecord {
   id: number;
@@ -155,6 +186,9 @@ const executionRecordFirestoreService = {
 
   // 실행내역 생성
   createRecord: async (data: Record<string, unknown>): Promise<ExecutionRecordResponse> => {
+    // 프로젝트 캐시 로드
+    await loadProjectCache();
+
     // 새 문서 ID 생성 (현재 최대 ID + 1)
     const collectionRef = collection(db, COLLECTIONS.EXECUTION_RECORDS);
     const querySnapshot = await getDocs(collectionRef);
@@ -171,10 +205,24 @@ const executionRecordFirestoreService = {
     const firestoreData = convertToFirestoreFormat(data);
     const now = new Date().toISOString();
 
+    // 프로젝트 이름으로 ID 조회 (projectId가 없거나 0인 경우)
+    let resolvedProjectId = firestoreData.projectId || 0;
+    const resolvedProjectName = firestoreData.projectName || '';
+
+    if ((!resolvedProjectId || resolvedProjectId === 0) && resolvedProjectName) {
+      const cachedId = projectNameToIdCache.get(resolvedProjectName);
+      if (cachedId) {
+        resolvedProjectId = cachedId;
+        console.log('[executionRecordFirestoreService] 프로젝트명으로 ID 조회:', resolvedProjectName, '->', resolvedProjectId);
+      } else {
+        console.warn('[executionRecordFirestoreService] 프로젝트명에 해당하는 ID를 찾을 수 없음:', resolvedProjectName);
+      }
+    }
+
     const newRecord: FirestoreExecutionRecord = {
       id: newId,
-      projectId: firestoreData.projectId || 0,
-      projectName: firestoreData.projectName || '',
+      projectId: resolvedProjectId,
+      projectName: resolvedProjectName,
       author: firestoreData.author || '',
       date: firestoreData.date || now.split('T')[0],
       process: firestoreData.process || '',
