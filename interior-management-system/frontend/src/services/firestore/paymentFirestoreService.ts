@@ -341,12 +341,13 @@ const paymentFirestoreService = {
 
   // 실시간 결제요청 목록 구독
   subscribeToPayments: (callback: (payments: PaymentResponse[]) => void): Unsubscribe => {
-    loadProjectsCache();
-
     const collectionRef = collection(db, COLLECTIONS.PAYMENTS);
     const q = query(collectionRef, orderBy('id', 'desc'));
 
-    return onSnapshot(q, (snapshot) => {
+    return onSnapshot(q, async (snapshot) => {
+      // 캐시가 로드될 때까지 기다림
+      await loadProjectsCache();
+
       const payments = snapshot.docs.map(doc => {
         const data = doc.data() as FirestorePayment;
         return convertToPaymentResponse({ ...data, id: parseInt(doc.id) || data.id });
