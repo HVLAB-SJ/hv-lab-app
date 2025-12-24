@@ -794,8 +794,8 @@ export const useDataStore = create<DataStore>()(
         endDate: (p.endDate || p.end_date) ? new Date(p.endDate || p.end_date) : undefined,
         contractAmount: p.budget || p.contractAmount || 0,
         spent: p.actualCost || p.spent || 0,
-        // Backend returns 'manager' field with manager name(s)
-        manager: p.manager || '미지정',
+        // Backend returns 'manager' field - can be string or object {_id, name, username}
+        manager: typeof p.manager === 'object' && p.manager !== null ? (p.manager.name || '미지정') : (p.manager || '미지정'),
         // team: p.fieldManagers?.map(fm => typeof fm === 'object' ? fm.name : fm) || [],
         team: [], // 팀 정보를 항상 빈 배열로 설정하여 자동 할당 방지
         description: p.description || '',
@@ -850,8 +850,8 @@ export const useDataStore = create<DataStore>()(
         endDate: (apiProject.endDate || apiProject.end_date) ? new Date(apiProject.endDate || apiProject.end_date) : undefined,
         contractAmount: apiProject.budget || apiProject.contractAmount || 0,
         spent: apiProject.actualCost || apiProject.spent || 0,
-        // Backend returns 'manager' field with manager name(s)
-        manager: apiProject.manager || '미지정',
+        // Backend returns 'manager' field - can be string or object {_id, name, username}
+        manager: typeof apiProject.manager === 'object' && apiProject.manager !== null ? (apiProject.manager.name || '미지정') : (apiProject.manager || '미지정'),
         team: [], // 팀 정보를 항상 빈 배열로 설정하여 자동 할당 방지
         description: apiProject.description || '',
         meetingNotes: (apiProject as { meetingNotes?: Array<{ id: string; content: string; date: string | Date }> }).meetingNotes?.map((note) => ({
@@ -893,8 +893,8 @@ export const useDataStore = create<DataStore>()(
         endDate: (apiProject.endDate || apiProject.end_date) ? new Date(apiProject.endDate || apiProject.end_date) : undefined,
         contractAmount: apiProject.budget || apiProject.contractAmount || 0,
         spent: apiProject.actualCost || apiProject.spent || 0,
-        // Backend returns 'manager' field with manager name(s)
-        manager: apiProject.manager || '미지정',
+        // Backend returns 'manager' field - can be string or object {_id, name, username}
+        manager: typeof apiProject.manager === 'object' && apiProject.manager !== null ? (apiProject.manager.name || '미지정') : (apiProject.manager || '미지정'),
         team: [], // 팀 정보를 항상 빈 배열로 설정하여 자동 할당 방지
         description: apiProject.description || '',
         meetingNotes: (apiProject as { meetingNotes?: Array<{ id: string; content: string; date: string | Date }> }).meetingNotes?.map((note) => ({
