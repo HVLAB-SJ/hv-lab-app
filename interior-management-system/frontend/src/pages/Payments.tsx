@@ -1794,21 +1794,6 @@ const Payments = () => {
     new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
   );
 
-  // 디버깅: 결제 데이터 확인
-  const pendingCount = allRecords.filter(r => r.status === 'pending').length;
-  const statusValues = [...new Set(allRecords.map(r => r.status))];
-  console.log('[결제요청 디버깅]', {
-    '전체 payments': payments.length,
-    '프로젝트 필터링 후': projectFilteredPayments.length,
-    '대기중 결제(pending)': pendingCount,
-    '완료된 결제(completed)': payments.filter(p => p.status === 'completed').length,
-    '현재 statusFilter': statusFilter,
-    '사용된 status 값들': statusValues,
-    '현재 사용자': user?.name,
-    '프로젝트 수': projects.length,
-    'allRecords': allRecords.length
-  });
-
   // 필터링 (대기중/송금완료 모두 전체 프로젝트 표시, projectFilter로 필터링)
   const filteredRecords = allRecords.filter(record => {
     // undefined/null 레코드 또는 id가 없는 레코드 제외
