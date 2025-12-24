@@ -156,7 +156,6 @@ const ExecutionHistory = () => {
           loadPaymentsFromAPI(),
           loadExecutionRecordsFromAPI()
         ]);
-        console.log('[ExecutionHistory] 데이터 로드 완료');
       } catch (error) {
         console.error('Failed to load data:', error);
       }
@@ -361,40 +360,12 @@ const ExecutionHistory = () => {
   // 승인된 결제요청을 실행내역 형식으로 변환
   // 이미 executionRecord가 생성된 payment와 숨긴 payment는 제외
   // 안팀 사용자인 경우 담당 프로젝트만 필터링
-  console.log('[ExecutionHistory] payments 배열:', payments.length, '개');
-  console.log('[ExecutionHistory] payments 상태별:', {
-    completed: payments.filter(p => p.status === 'completed').length,
-    approved: payments.filter(p => p.status === 'approved').length,
-    pending: payments.filter(p => p.status === 'pending').length,
-    other: payments.filter(p => !['completed', 'approved', 'pending'].includes(p.status)).length
-  });
-  console.log('[ExecutionHistory] 송금완료 payments 샘플:', payments.filter(p => p.status === 'completed').slice(0, 3).map(p => ({
-    id: p.id,
-    status: p.status,
-    project: p.project,
-    amount: p.amount,
-    materialAmount: p.materialAmount,
-    laborAmount: p.laborAmount
-  })));
-
   const paymentRecords = payments
     .filter(p => {
       const statusMatch = (p.status === 'approved' || p.status === 'completed');
       const notDuplicated = !executionRecords.some(r => r.paymentId === p.id);
       const notHidden = !hiddenPaymentIds.includes(p.id);
       const projectMatch = user?.name !== '안팀' || filteredProjectNames.includes(p.project);
-
-      // 디버그: completed 상태인데 필터링에서 제외되는 경우 로그
-      if (p.status === 'completed' && (!statusMatch || !notDuplicated || !notHidden || !projectMatch)) {
-        console.log('[ExecutionHistory] 송금완료 항목 필터링 제외:', {
-          id: p.id,
-          statusMatch,
-          notDuplicated,
-          notHidden,
-          projectMatch,
-          executionRecordPaymentIds: executionRecords.map(r => r.paymentId).filter(id => id === p.id)
-        });
-      }
 
       return statusMatch && notDuplicated && notHidden && projectMatch;
     })
@@ -403,18 +374,6 @@ const ExecutionHistory = () => {
       const materialCost = payment.materialAmount || 0;
       const laborCost = payment.laborAmount || 0;
       const totalAmount = payment.amount || 0;
-
-      // 디버그 로그
-      if (materialCost > 0 || laborCost > 0) {
-        console.log('[paymentRecords] 금액분할된 결제요청:', {
-          id: payment.id,
-          itemName: payment.itemName,
-          materialAmount: payment.materialAmount,
-          laborAmount: payment.laborAmount,
-          totalAmount,
-          includesVAT: payment.includesVAT
-        });
-      }
 
       let materialSupplyAmount = materialCost;
       let laborSupplyAmount = laborCost;
@@ -478,15 +437,8 @@ const ExecutionHistory = () => {
       };
     });
 
-  // 디버그: paymentRecords의 이미지 확인
-  const recordsWithImages = paymentRecords.filter(r => r.images && r.images.length > 0);
-  if (recordsWithImages.length > 0) {
-    console.log('[ExecutionHistory] 이미지가 있는 paymentRecords:', recordsWithImages.map(r => ({ id: r.id, imagesCount: r.images.length })));
-  }
-
   // 실행내역 레코드 변환
   // 안팀 사용자인 경우 담당 프로젝트만 필터링
-  console.log('[ExecutionHistory] executionRecords 개수:', executionRecords.length);
   const manualRecords = executionRecords
     .filter(record => user?.name !== '안팀' || filteredProjectNames.includes(record.project))
     .map(record => ({
@@ -504,7 +456,6 @@ const ExecutionHistory = () => {
   const allRecords = allRecordsRaw.filter(record => {
     const uniqueKey = `${record.type}_${record.id}`;
     if (seenKeys.has(uniqueKey)) {
-      console.warn('[ExecutionHistory] 중복 레코드 발견:', uniqueKey, record.itemName);
       return false;
     }
     seenKeys.add(uniqueKey);
@@ -723,16 +674,6 @@ const ExecutionHistory = () => {
     const isPaymentType = record.type === 'payment';
     const originalPayment = isPaymentType ? payments.find(p => String(p.id) === String(record.id)) : null;
 
-    console.log('[handleEditClick] Record type:', record.type, 'isPaymentType:', isPaymentType);
-    console.log('[handleEditClick] Original payment:', originalPayment);
-    console.log('[handleEditClick] Record vatAmount:', record.vatAmount);
-
-    // 부가세 포함 여부 확인
-    // 1. payment 타입: originalPayment.includesVAT 확인
-    // 2. 실행내역 타입: DB에 저장된 includesVat 필드 사용
-    console.log('[handleEditClick] record.includesVat:', (record as any).includesVat, 'type:', typeof (record as any).includesVat);
-    console.log('[handleEditClick] Full record:', JSON.stringify(record, null, 2));
-
     // 단순화: 수정완료 시 새로 등록하는 것과 동일한 로직 적용
     let displayMaterialCost = record.materialCost || 0;
     let displayLaborCost = record.laborCost || 0;
@@ -751,13 +692,6 @@ const ExecutionHistory = () => {
       wasVatIncluded = (record as any).includesVat === true;
       wasTaxDeducted = (record as any).includesTaxDeduction === true;
     }
-
-    console.log('[handleEditClick] Simple logic:', {
-      displayMaterialCost,
-      displayLaborCost,
-      wasVatIncluded,
-      wasTaxDeducted
-    });
 
     setEditingRecord(record);
     setFormData(prev => ({
