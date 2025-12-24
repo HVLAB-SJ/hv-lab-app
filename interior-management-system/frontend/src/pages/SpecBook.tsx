@@ -6,6 +6,7 @@ import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useAuth } from '../contexts/AuthContext';
 import ImageCropper from '../components/ImageCropper';
 import { useSpecbookStore } from '../store/specbookStore';
+import { createDocument, COLLECTIONS } from '../services/firestore';
 import {
   DndContext,
   closestCenter,
@@ -1904,11 +1905,19 @@ const SpecBook = () => {
                             try {
                               const sourceItem = allLibraryItems.find(i => i.id === Number(itemId));
                               if (sourceItem) {
-                                const { id, created_at, updated_at, ...itemData } = sourceItem;
-                                await api.post('/specbook/base64', {
-                                  ...itemData,
-                                  isLibrary: false,
-                                  projectId: project.id
+                                // Firestore에 직접 저장
+                                await createDocument(COLLECTIONS.SPECBOOK_ITEMS, {
+                                  name: sourceItem.name,
+                                  category: sourceItem.category,
+                                  brand: sourceItem.brand,
+                                  price: sourceItem.price,
+                                  image_url: sourceItem.image_url,
+                                  sub_images: sourceItem.sub_images || [],
+                                  description: sourceItem.description,
+                                  grade: sourceItem.grade || '',
+                                  project_id: project.id,
+                                  is_library: 0,
+                                  display_order: 0
                                 });
                                 toast.success(`"${project.title}"에 아이템이 추가되었습니다`);
                                 loadAllProjectItems();
