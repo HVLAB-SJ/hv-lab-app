@@ -1,4 +1,6 @@
 import api from './api';
+import executionRecordFirestoreService from './firestore/executionRecordFirestoreService';
+import { getDataSourceConfig } from './firestore/dataSourceConfig';
 
 export interface ExecutionRecordResponse {
   id: number;
@@ -15,8 +17,8 @@ export interface ExecutionRecordResponse {
   notes: string;
   images: string[];
   payment_id: number | null;
-  includes_tax_deduction: number; // 0 or 1
-  includes_vat: number; // 0 or 1
+  includes_tax_deduction: number;
+  includes_vat: number;
   created_at: string;
   updated_at: string;
 }
@@ -38,36 +40,79 @@ export interface ExecutionRecordData {
   includes_vat?: boolean;
 }
 
-const executionRecordService = {
-  // 모든 실행내역 조회
+// Railway API 서비스 (기존)
+const railwayExecutionRecordService = {
   getAllRecords: async (): Promise<ExecutionRecordResponse[]> => {
     const response = await api.get('/execution-records');
     return response.data;
   },
 
-  // 단일 실행내역 조회
   getRecordById: async (id: string): Promise<ExecutionRecordResponse> => {
     const response = await api.get(`/execution-records/${id}`);
     return response.data;
   },
 
-  // 실행내역 생성
   createRecord: async (data: ExecutionRecordData): Promise<ExecutionRecordResponse> => {
     console.log('[executionRecordService.createRecord] Creating:', data);
     const response = await api.post('/execution-records', data);
     return response.data;
   },
 
-  // 실행내역 수정
   updateRecord: async (id: string, data: Partial<ExecutionRecordData>): Promise<ExecutionRecordResponse> => {
     const response = await api.put(`/execution-records/${id}`, data);
     return response.data;
   },
 
-  // 실행내역 삭제
   deleteRecord: async (id: string): Promise<void> => {
     await api.delete(`/execution-records/${id}`);
   }
+};
+
+// 통합 서비스 (데이터 소스에 따라 자동 선택)
+const executionRecordService = {
+  getAllRecords: async (): Promise<ExecutionRecordResponse[]> => {
+    if (getDataSourceConfig()) {
+      console.log('[executionRecordService] Using Firestore');
+      return executionRecordFirestoreService.getAllRecords();
+    }
+    console.log('[executionRecordService] Using Railway API');
+    return railwayExecutionRecordService.getAllRecords();
+  },
+
+  getRecordById: async (id: string): Promise<ExecutionRecordResponse> => {
+    if (getDataSourceConfig()) {
+      const result = await executionRecordFirestoreService.getRecordById(id);
+      if (!result) throw new Error('Execution record not found');
+      return result;
+    }
+    return railwayExecutionRecordService.getRecordById(id);
+  },
+
+  createRecord: async (data: ExecutionRecordData): Promise<ExecutionRecordResponse> => {
+    if (getDataSourceConfig()) {
+      return executionRecordFirestoreService.createRecord(data as unknown as Record<string, unknown>);
+    }
+    return railwayExecutionRecordService.createRecord(data);
+  },
+
+  updateRecord: async (id: string, data: Partial<ExecutionRecordData>): Promise<ExecutionRecordResponse> => {
+    if (getDataSourceConfig()) {
+      return executionRecordFirestoreService.updateRecord(id, data as unknown as Record<string, unknown>);
+    }
+    return railwayExecutionRecordService.updateRecord(id, data);
+  },
+
+  deleteRecord: async (id: string): Promise<void> => {
+    if (getDataSourceConfig()) {
+      return executionRecordFirestoreService.deleteRecord(id);
+    }
+    return railwayExecutionRecordService.deleteRecord(id);
+  },
+
+  // Firestore 실시간 구독 (Firestore 전용)
+  subscribeToRecords: executionRecordFirestoreService.subscribeToRecords,
+  getRecordsByProject: executionRecordFirestoreService.getRecordsByProject,
+  getRecordByPaymentId: executionRecordFirestoreService.getRecordByPaymentId
 };
 
 export default executionRecordService;

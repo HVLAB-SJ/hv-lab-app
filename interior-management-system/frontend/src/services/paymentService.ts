@@ -1,4 +1,6 @@
 import api from './api';
+import paymentFirestoreService from './firestore/paymentFirestoreService';
+import { getDataSourceConfig } from './firestore/dataSourceConfig';
 
 export interface PaymentData {
   projectId: string;
@@ -23,7 +25,7 @@ export interface PaymentData {
   applyTaxDeduction?: boolean;
   includesVAT?: boolean;
   quickText?: string;
-  images?: string[];  // base64 이미지 배열
+  images?: string[];
 }
 
 export interface PaymentResponse {
@@ -49,8 +51,8 @@ export interface PaymentResponse {
   original_labor_amount?: number;
   apply_tax_deduction?: number;
   includes_vat?: number;
-  quick_text?: string;  // 자동으로 항목 채우기에 입력했던 원본 텍스트
-  images?: string;  // JSON 문자열로 저장된 이미지 배열
+  quick_text?: string;
+  images?: string;
   notes: string;
   status: 'pending' | 'reviewing' | 'approved' | 'on-hold' | 'rejected' | 'completed';
   created_at: string;
@@ -59,50 +61,45 @@ export interface PaymentResponse {
   paid_at?: string;
 }
 
-const paymentService = {
-  // Get all payments
+// Railway API 서비스 (기존)
+const railwayPaymentService = {
   getAllPayments: async (): Promise<PaymentResponse[]> => {
     const response = await api.get('/payments');
     return response.data;
   },
 
-  // Get single payment
   getPaymentById: async (id: string): Promise<PaymentResponse> => {
     const response = await api.get(`/payments/${id}`);
     return response.data;
   },
 
-  // Create payment
   createPayment: async (data: PaymentData): Promise<PaymentResponse> => {
-    // Convert to backend format (camelCase -> snake_case)
     const requestData = {
       project_id: data.projectId,
       request_type: data.category,
       vendor_name: data.process || '',
-      description: data.purpose || '',  // Ensure empty string instead of undefined
+      description: data.purpose || '',
       amount: data.amount,
       account_holder: data.bankInfo?.accountHolder || '',
       bank_name: data.bankInfo?.bankName || '',
       account_number: data.bankInfo?.accountNumber || '',
       notes: data.notes || '',
       itemName: data.itemName || '',
-      materialAmount: data.materialAmount ?? data.amount,  // 미지정 시 전체금액을 자재비로
+      materialAmount: data.materialAmount ?? data.amount,
       laborAmount: data.laborAmount ?? 0,
       originalMaterialAmount: data.originalMaterialAmount || 0,
       originalLaborAmount: data.originalLaborAmount || 0,
       applyTaxDeduction: data.applyTaxDeduction || false,
       includesVAT: data.includesVAT || false,
-      quickText: data.quickText || '',  // 원본 텍스트 추가
-      images: data.images || []  // 이미지 배열 추가
+      quickText: data.quickText || '',
+      images: data.images || []
     };
     console.log('[paymentService.createPayment] Sending to backend:', requestData);
     const response = await api.post('/payments', requestData);
     return response.data;
   },
 
-  // Update payment
   updatePayment: async (id: string, data: Partial<PaymentData>): Promise<PaymentResponse> => {
-    // Convert to backend format (camelCase -> snake_case)
     const backendData: Record<string, unknown> = {};
     if ((data as any).projectId !== undefined) backendData.project = (data as any).projectId;
     if (data.purpose !== undefined) backendData.description = data.purpose;
@@ -127,28 +124,92 @@ const paymentService = {
     return response.data;
   },
 
-  // Update payment status
   updatePaymentStatus: async (id: string, status: string): Promise<PaymentResponse> => {
     const response = await api.put(`/payments/${id}/status`, { status });
     return response.data;
   },
 
-  // Update payment amounts only (for split amounts)
   updatePaymentAmounts: async (id: string, materialAmount: number, laborAmount: number): Promise<PaymentResponse> => {
     const response = await api.patch(`/payments/${id}/amounts`, { materialAmount, laborAmount });
     return response.data;
   },
 
-  // Update payment images
   updatePaymentImages: async (id: string, images: string[]): Promise<{ message: string; images: string[] }> => {
     const response = await api.put(`/payments/${id}/images`, { images });
     return response.data;
   },
 
-  // Delete payment
   deletePayment: async (id: string): Promise<void> => {
     await api.delete(`/payments/${id}`);
   }
+};
+
+// 통합 서비스 (데이터 소스에 따라 자동 선택)
+const paymentService = {
+  getAllPayments: async (): Promise<PaymentResponse[]> => {
+    if (getDataSourceConfig()) {
+      console.log('[paymentService] Using Firestore');
+      return paymentFirestoreService.getAllPayments();
+    }
+    console.log('[paymentService] Using Railway API');
+    return railwayPaymentService.getAllPayments();
+  },
+
+  getPaymentById: async (id: string): Promise<PaymentResponse> => {
+    if (getDataSourceConfig()) {
+      const result = await paymentFirestoreService.getPaymentById(id);
+      if (!result) throw new Error('Payment not found');
+      return result;
+    }
+    return railwayPaymentService.getPaymentById(id);
+  },
+
+  createPayment: async (data: PaymentData): Promise<PaymentResponse> => {
+    if (getDataSourceConfig()) {
+      return paymentFirestoreService.createPayment(data as unknown as Record<string, unknown>);
+    }
+    return railwayPaymentService.createPayment(data);
+  },
+
+  updatePayment: async (id: string, data: Partial<PaymentData>): Promise<PaymentResponse> => {
+    if (getDataSourceConfig()) {
+      return paymentFirestoreService.updatePayment(id, data as unknown as Record<string, unknown>);
+    }
+    return railwayPaymentService.updatePayment(id, data);
+  },
+
+  updatePaymentStatus: async (id: string, status: string): Promise<PaymentResponse> => {
+    if (getDataSourceConfig()) {
+      return paymentFirestoreService.updatePaymentStatus(id, status);
+    }
+    return railwayPaymentService.updatePaymentStatus(id, status);
+  },
+
+  updatePaymentAmounts: async (id: string, materialAmount: number, laborAmount: number): Promise<PaymentResponse> => {
+    if (getDataSourceConfig()) {
+      return paymentFirestoreService.updatePaymentAmounts(id, materialAmount, laborAmount);
+    }
+    return railwayPaymentService.updatePaymentAmounts(id, materialAmount, laborAmount);
+  },
+
+  updatePaymentImages: async (id: string, images: string[]): Promise<{ message: string; images: string[] }> => {
+    if (getDataSourceConfig()) {
+      return paymentFirestoreService.updatePaymentImages(id, images);
+    }
+    return railwayPaymentService.updatePaymentImages(id, images);
+  },
+
+  deletePayment: async (id: string): Promise<void> => {
+    if (getDataSourceConfig()) {
+      return paymentFirestoreService.deletePayment(id);
+    }
+    return railwayPaymentService.deletePayment(id);
+  },
+
+  // Firestore 실시간 구독 (Firestore 전용)
+  subscribeToPayments: paymentFirestoreService.subscribeToPayments,
+  getPaymentsByProject: paymentFirestoreService.getPaymentsByProject,
+  clearProjectsCache: paymentFirestoreService.clearProjectsCache
 };
 
 export default paymentService;

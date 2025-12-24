@@ -1,4 +1,6 @@
 import api from './api';
+import projectFirestoreService from './firestore/projectFirestoreService';
+import { getDataSourceConfig } from './firestore/dataSourceConfig';
 
 export interface ProjectData {
   name: string;
@@ -42,6 +44,7 @@ export interface ProjectData {
 
 export interface ProjectResponse {
   _id: string;
+  id?: number;
   name: string;
   client: {
     name: string;
@@ -93,25 +96,34 @@ export interface ProjectResponse {
   };
   createdAt: string;
   updatedAt: string;
+  meetingNotes?: Array<{
+    id: string;
+    content: string;
+    date: string | Date;
+  }>;
+  customerRequests?: Array<{
+    id: string;
+    content: string;
+    completed: boolean;
+    createdAt: string | Date;
+  }>;
+  entrancePassword?: string;
+  sitePassword?: string;
 }
 
-const projectService = {
-  // Get all projects
+// Railway API 서비스 (기존)
+const railwayProjectService = {
   getAllProjects: async (): Promise<ProjectResponse[]> => {
     const response = await api.get('/projects');
     return response.data;
   },
 
-  // Get single project
   getProjectById: async (id: string): Promise<ProjectResponse> => {
     const response = await api.get(`/projects/${id}`);
     return response.data;
   },
 
-  // Create project
   createProject: async (data: ProjectData): Promise<ProjectResponse> => {
-    // Convert frontend format to backend format
-    // Backend expects: client (string), location (string), startDate/endDate (YYYY-MM-DD), manager (string)
     const backendData: Record<string, unknown> = {
       name: data.name,
       client: typeof data.client === 'string' ? data.client : data.client.name,
@@ -121,8 +133,6 @@ const projectService = {
       description: data.description || ''
     };
 
-    // Only add dates if they exist
-    // Convert Date objects to YYYY-MM-DD format for SQLite
     if (data.startDate) {
       const dateObj = typeof data.startDate === 'string' ? new Date(data.startDate) : data.startDate;
       backendData.startDate = dateObj.toISOString().split('T')[0];
@@ -133,15 +143,11 @@ const projectService = {
     }
 
     console.log('[projectService.createProject] Sending to backend:', backendData);
-
     const response = await api.post('/projects', backendData);
     return response.data;
   },
 
-  // Update project
   updateProject: async (id: string, data: Partial<ProjectData>): Promise<ProjectResponse> => {
-    // Convert frontend format to backend format
-    // Backend expects: client (string), location (string), startDate/endDate (YYYY-MM-DD), manager (string)
     const backendData: Record<string, unknown> = {};
 
     if (data.name !== undefined) backendData.name = data.name;
@@ -152,47 +158,28 @@ const projectService = {
       backendData.location = typeof data.location === 'string' ? data.location : data.location.address;
     }
     if (data.startDate !== undefined) {
-      // If it's already in YYYY-MM-DD format, use it directly
       if (typeof data.startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.startDate)) {
         backendData.startDate = data.startDate;
       } else {
-        // Otherwise convert Date or ISO string to YYYY-MM-DD
         const dateObj = typeof data.startDate === 'string' ? new Date(data.startDate) : data.startDate;
         backendData.startDate = dateObj.toISOString().split('T')[0];
       }
     }
     if (data.endDate !== undefined) {
-      // If it's already in YYYY-MM-DD format, use it directly
       if (typeof data.endDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.endDate)) {
         backendData.endDate = data.endDate;
       } else {
-        // Otherwise convert Date or ISO string to YYYY-MM-DD
         const dateObj = typeof data.endDate === 'string' ? new Date(data.endDate) : data.endDate;
         backendData.endDate = dateObj.toISOString().split('T')[0];
       }
     }
-    if (data.status !== undefined) {
-      backendData.status = data.status;
-    }
-    if (data.manager !== undefined) {
-      backendData.manager = data.manager;
-    }
-    if (data.description !== undefined) {
-      backendData.description = data.description;
-    }
-    // Handle new fields for meeting notes, customer requests, and passwords
-    if (data.meetingNotes !== undefined) {
-      backendData.meetingNotes = data.meetingNotes;
-    }
-    if (data.customerRequests !== undefined) {
-      backendData.customerRequests = data.customerRequests;
-    }
-    if (data.entrancePassword !== undefined) {
-      backendData.entrancePassword = data.entrancePassword;
-    }
-    if (data.sitePassword !== undefined) {
-      backendData.sitePassword = data.sitePassword;
-    }
+    if (data.status !== undefined) backendData.status = data.status;
+    if (data.manager !== undefined) backendData.manager = data.manager;
+    if (data.description !== undefined) backendData.description = data.description;
+    if (data.meetingNotes !== undefined) backendData.meetingNotes = data.meetingNotes;
+    if (data.customerRequests !== undefined) backendData.customerRequests = data.customerRequests;
+    if (data.entrancePassword !== undefined) backendData.entrancePassword = data.entrancePassword;
+    if (data.sitePassword !== undefined) backendData.sitePassword = data.sitePassword;
 
     console.log('[projectService.updateProject] Sending to backend:', backendData);
 
@@ -207,10 +194,55 @@ const projectService = {
     }
   },
 
-  // Delete project
   deleteProject: async (id: string): Promise<void> => {
     await api.delete(`/projects/${id}`);
   }
+};
+
+// 통합 서비스 (데이터 소스에 따라 자동 선택)
+const projectService = {
+  getAllProjects: async (): Promise<ProjectResponse[]> => {
+    if (getDataSourceConfig()) {
+      console.log('[projectService] Using Firestore');
+      return projectFirestoreService.getAllProjects();
+    }
+    console.log('[projectService] Using Railway API');
+    return railwayProjectService.getAllProjects();
+  },
+
+  getProjectById: async (id: string): Promise<ProjectResponse> => {
+    if (getDataSourceConfig()) {
+      const result = await projectFirestoreService.getProjectById(id);
+      if (!result) throw new Error('Project not found');
+      return result;
+    }
+    return railwayProjectService.getProjectById(id);
+  },
+
+  createProject: async (data: ProjectData): Promise<ProjectResponse> => {
+    if (getDataSourceConfig()) {
+      return projectFirestoreService.createProject(data as unknown as Record<string, unknown>);
+    }
+    return railwayProjectService.createProject(data);
+  },
+
+  updateProject: async (id: string, data: Partial<ProjectData>): Promise<ProjectResponse> => {
+    if (getDataSourceConfig()) {
+      return projectFirestoreService.updateProject(id, data as unknown as Record<string, unknown>);
+    }
+    return railwayProjectService.updateProject(id, data);
+  },
+
+  deleteProject: async (id: string): Promise<void> => {
+    if (getDataSourceConfig()) {
+      return projectFirestoreService.deleteProject(id);
+    }
+    return railwayProjectService.deleteProject(id);
+  },
+
+  // Firestore 실시간 구독 (Firestore 전용)
+  subscribeToProjects: projectFirestoreService.subscribeToProjects,
+  subscribeToProject: projectFirestoreService.subscribeToProject
 };
 
 export default projectService;
