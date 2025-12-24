@@ -10,13 +10,10 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
-  query,
-  orderBy,
   onSnapshot,
-  Unsubscribe,
-  Timestamp
+  Unsubscribe
 } from 'firebase/firestore';
-import { COLLECTIONS, timestampToString } from './index';
+import { COLLECTIONS } from './index';
 
 // Firestore 프로젝트 타입
 export interface FirestoreProject {
@@ -229,13 +226,16 @@ const projectFirestoreService = {
   // 모든 프로젝트 조회
   getAllProjects: async (): Promise<ProjectResponse[]> => {
     const collectionRef = collection(db, COLLECTIONS.PROJECTS);
-    const q = query(collectionRef, orderBy('id', 'desc'));
-    const querySnapshot = await getDocs(q);
+    // orderBy 제거 - Firestore 인덱스 문제로 인해 클라이언트에서 정렬
+    const querySnapshot = await getDocs(collectionRef);
 
-    return querySnapshot.docs.map(doc => {
+    const projects = querySnapshot.docs.map(doc => {
       const data = doc.data() as FirestoreProject;
       return convertToProjectResponse({ ...data, id: doc.id });
     });
+
+    // 클라이언트에서 ID 기준 내림차순 정렬
+    return projects.sort((a, b) => (b.id || 0) - (a.id || 0));
   },
 
   // 단일 프로젝트 조회
@@ -323,13 +323,15 @@ const projectFirestoreService = {
   // 실시간 프로젝트 목록 구독
   subscribeToProjects: (callback: (projects: ProjectResponse[]) => void): Unsubscribe => {
     const collectionRef = collection(db, COLLECTIONS.PROJECTS);
-    const q = query(collectionRef, orderBy('id', 'desc'));
+    // orderBy 제거 - Firestore 인덱스 문제로 인해 클라이언트에서 정렬
 
-    return onSnapshot(q, (snapshot) => {
+    return onSnapshot(collectionRef, (snapshot) => {
       const projects = snapshot.docs.map(doc => {
         const data = doc.data() as FirestoreProject;
         return convertToProjectResponse({ ...data, id: doc.id });
       });
+      // 클라이언트에서 ID 기준 내림차순 정렬
+      projects.sort((a, b) => (b.id || 0) - (a.id || 0));
       callback(projects);
     });
   },
