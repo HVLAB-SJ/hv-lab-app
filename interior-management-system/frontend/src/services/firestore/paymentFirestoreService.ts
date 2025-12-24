@@ -124,6 +124,17 @@ async function loadProjectsCache(): Promise<void> {
 function convertToPaymentResponse(firestoreData: FirestorePayment): PaymentResponse {
   const project = projectsCache.get(String(firestoreData.projectId)) || { name: '', color: '#4A90E2' };
 
+  // 디버깅: 프로젝트명이 비어있는 경우 로그
+  if (!project.name && firestoreData.status === 'pending') {
+    console.warn('[convertToPaymentResponse] 프로젝트명 없음!', {
+      paymentId: firestoreData.id,
+      projectId: firestoreData.projectId,
+      cacheSize: projectsCache.size,
+      cacheKeys: Array.from(projectsCache.keys()).slice(0, 5),
+      vendorName: firestoreData.vendorName
+    });
+  }
+
   return {
     id: firestoreData.id,
     project_id: firestoreData.projectId,
