@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Pencil, Trash2, Upload, Settings, X, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api from '../services/api';
+import specbookService from '../services/specbookService';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useAuth } from '../contexts/AuthContext';
 import ImageCropper from '../components/ImageCropper';
@@ -576,8 +576,8 @@ const SpecBook = () => {
     }
 
     try {
-      const response = await api.get('/specbook/categories');
-      setCategories(response.data);
+      const data = await specbookService.getCategories();
+      setCategories(data);
     } catch (error) {
       console.error('카테고리 로드 실패:', error);
     }
@@ -616,9 +616,9 @@ const SpecBook = () => {
 
     try {
       // 메타데이터만 로드 (이미지 제외) - 빠른 로딩
-      const response = await api.get('/specbook/library/meta');
+      const data = await specbookService.getLibraryMeta();
       if (isMountedRef.current) {
-        setAllLibraryItems(response.data);
+        setAllLibraryItems(data);
         // 캐시 갱신
         if (forceRefresh) {
           invalidateLibrary();
@@ -633,8 +633,8 @@ const SpecBook = () => {
     if (!selectedProject) return;
     try {
       // 메타데이터만 로드 (이미지 제외) - 빠른 로딩
-      const response = await api.get(`/specbook/project/${selectedProject}/meta`);
-      setAllProjectItems(response.data);
+      const data = await specbookService.getProjectMeta(selectedProject);
+      setAllProjectItems(data);
     } catch (error) {
       console.error('전체 프로젝트 아이템 로드 실패:', error);
     }
@@ -682,10 +682,21 @@ const SpecBook = () => {
           params.grades = selectedGrades.join(',');
         }
 
-        const response = await api.get('/specbook/library/meta', { params });
+        const data = await specbookService.getLibraryMeta();
         if (isMountedRef.current) {
-          // 라이브러리는 가격순 정렬 적용
-          const allItems = sortByPriceDesc(response.data);
+          // 라이브러리는 가격순 정렬 적용 (필터링도 적용)
+          let filteredData = data;
+          if (selectedCategory !== '전체') {
+            filteredData = filteredData.filter(item => item.category === selectedCategory);
+          }
+          if (selectedGrades.length > 0) {
+            filteredData = filteredData.filter(item => {
+              if (!item.grade) return false;
+              const itemGrades = item.grade.split(',').map(g => g.trim());
+              return selectedGrades.some(g => itemGrades.includes(g));
+            });
+          }
+          const allItems = sortByPriceDesc(filteredData);
           // 점진적 렌더링 적용
           const chunkSize = 20;
           const firstChunk = allItems.slice(0, chunkSize);
@@ -722,9 +733,21 @@ const SpecBook = () => {
           params.grades = selectedGrades.join(',');
         }
 
-        const response = await api.get(`/specbook/project/${selectedProject}/meta`, { params });
+        const data = await specbookService.getProjectMeta(selectedProject);
         if (isMountedRef.current) {
-          const allItems = response.data;
+          // 클라이언트 사이드 필터링
+          let filteredData = data;
+          if (selectedCategory !== '전체') {
+            filteredData = filteredData.filter(item => item.category === selectedCategory);
+          }
+          if (selectedGrades.length > 0) {
+            filteredData = filteredData.filter(item => {
+              if (!item.grade) return false;
+              const itemGrades = item.grade.split(',').map(g => g.trim());
+              return selectedGrades.some(g => itemGrades.includes(g));
+            });
+          }
+          const allItems = filteredData;
           // 점진적 렌더링: 첫 20개를 즉시 표시
           const chunkSize = 20;
           const firstChunk = allItems.slice(0, chunkSize);
@@ -852,7 +875,17 @@ const SpecBook = () => {
           projectId: editingItem.project_id,  // 원래 값 유지
           isLibrary: editingItem.is_library === 1  // 원래 값 유지
         };
-        await api.put(`/specbook/base64/${editingItem.id}`, submitData);
+        await specbookService.updateItemBase64(editingItem.id, {
+          name: submitData.name,
+          category: submitData.category,
+          brand: submitData.brand,
+          price: submitData.price,
+          grade: submitData.grade,
+          description: submitData.description,
+          image: submitData.imageData || undefined,
+          project_id: submitData.projectId,
+          is_library: submitData.isLibrary ? 1 : 0
+        });
         toast.success('스펙북 아이템이 수정되었습니다');
       } else {
         // 새 아이템 추가: 항상 라이브러리에만 추가
@@ -867,7 +900,17 @@ const SpecBook = () => {
           projectId: null,
           isLibrary: true
         };
-        await api.post('/specbook/base64', submitData);
+        await specbookService.createItemBase64({
+          name: submitData.name,
+          category: submitData.category,
+          brand: submitData.brand,
+          price: submitData.price,
+          grade: submitData.grade,
+          description: submitData.description,
+          image: submitData.imageData || undefined,
+          project_id: submitData.projectId,
+          is_library: submitData.isLibrary ? 1 : 0
+        });
         toast.success('스펙북 아이템이 추가되었습니다');
       }
 
@@ -917,7 +960,7 @@ const SpecBook = () => {
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
     try {
-      await api.delete(`/specbook/${id}`);
+      await specbookService.deleteItem(id);
       toast.success('스펙북 아이템이 삭제되었습니다');
       loadItems();
       // 스펙 라이브러리에서 삭제한 경우 전체 라이브러리 아이템도 업데이트
@@ -970,9 +1013,7 @@ const SpecBook = () => {
       // 기존 아이템에 변경사항이 있으면 저장 (백그라운드)
       const hasChanged = JSON.stringify(subImages) !== JSON.stringify(initialSubImagesRef.current);
       if (hasChanged) {
-        api.put(`/specbook/${selectedItemForImages.id}/sub-images`, {
-          sub_images: subImages
-        }).catch(error => {
+        specbookService.updateSubImages(selectedItemForImages.id, subImages).catch(error => {
           console.error('기존 아이템 Sub 이미지 저장 실패:', error);
         });
       }
@@ -985,8 +1026,8 @@ const SpecBook = () => {
     setIsSubImageModalOpen(true);
 
     // 서버에서 sub_images 가져오기 (백그라운드)
-    api.get(`/specbook/item/${item.id}`).then(response => {
-      const freshItem = response.data;
+    specbookService.getItemById(item.id).then(freshItem => {
+      if (!freshItem) return;
       let initialImages = freshItem.sub_images || [];
 
       // 프로젝트 아이템이고 sub_images가 비어있으면, 라이브러리에서 같은 이름의 아이템 찾아서 sub_images 가져오기
@@ -996,15 +1037,14 @@ const SpecBook = () => {
         );
         if (libraryItem) {
           // 라이브러리 아이템의 sub_images도 서버에서 가져오기
-          api.get(`/specbook/item/${libraryItem.id}`).then(libResponse => {
-            const libImages = libResponse.data.sub_images || [];
+          specbookService.getItemById(libraryItem.id).then(libItem => {
+            if (!libItem) return;
+            const libImages = libItem.sub_images || [];
             if (libImages.length > 0) {
               setSubImages([...libImages]);
               initialSubImagesRef.current = [...libImages];
               // 프로젝트 아이템에도 sub_images 저장 (백그라운드)
-              api.put(`/specbook/${item.id}/sub-images`, {
-                sub_images: libImages
-              }).catch(error => {
+              specbookService.updateSubImages(item.id, libImages).catch(error => {
                 console.error('프로젝트 아이템에 sub_images 동기화 실패:', error);
               });
             }
@@ -1114,9 +1154,7 @@ const SpecBook = () => {
   const saveSubImagesImmediately = useCallback(async (itemId: number, images: string[], showToast: boolean = false) => {
     setIsSavingSubImages(true);
     try {
-      await api.put(`/specbook/${itemId}/sub-images`, {
-        sub_images: images
-      });
+      await specbookService.updateSubImages(itemId, images);
       // 성공 시 초기값 업데이트
       initialSubImagesRef.current = [...images];
       if (showToast) {
@@ -1323,12 +1361,12 @@ const SpecBook = () => {
 
       try {
         // 백엔드에 새로운 순서 저장
-        await api.put('/specbook/reorder', {
-          items: newItems.map((item, index) => ({
+        await specbookService.reorderItems(
+          newItems.map((item, index) => ({
             id: item.id,
             display_order: index
           }))
-        });
+        );
         toast.success('아이템 순서가 업데이트되었습니다');
       } catch (error) {
         console.error('순서 업데이트 실패:', error);
@@ -1364,7 +1402,7 @@ const SpecBook = () => {
 
     // 서버에 즉시 저장
     try {
-      await api.put('/specbook/categories', { categories: updatedCategories });
+      await specbookService.updateCategories(updatedCategories);
       setCategories(updatedCategories);
       toast.success('카테고리가 추가되었습니다');
     } catch (error) {
@@ -1397,7 +1435,7 @@ const SpecBook = () => {
 
     // 서버에 즉시 저장
     try {
-      await api.put('/specbook/categories', { categories: updatedCategories });
+      await specbookService.updateCategories(updatedCategories);
       setCategories(updatedCategories);
       toast.success('카테고리 이름이 변경되었습니다');
     } catch (error) {
@@ -1419,7 +1457,7 @@ const SpecBook = () => {
 
     // 서버에 즉시 저장
     try {
-      await api.put('/specbook/categories', { categories: updatedCategories });
+      await specbookService.updateCategories(updatedCategories);
       setCategories(updatedCategories);
       toast.success('카테고리가 삭제되었습니다');
     } catch (error) {
@@ -1443,7 +1481,7 @@ const SpecBook = () => {
 
       // 서버에 즉시 저장
       try {
-        await api.put('/specbook/categories', { categories: updatedCategories });
+        await specbookService.updateCategories(updatedCategories);
         setCategories(updatedCategories);
         toast.success('카테고리 순서가 변경되었습니다');
       } catch (error) {
@@ -2156,11 +2194,17 @@ const SpecBook = () => {
                       // 라이브러리 아이템을 프로젝트에 복사
                       const sourceItem = allLibraryItems.find(i => i.id === Number(itemId));
                       if (sourceItem) {
-                        const { id, created_at, updated_at, ...itemData } = sourceItem;
-                        await api.post('/specbook/base64', {
-                          ...itemData,
-                          isLibrary: false,
-                          projectId: selectedProject
+                        await specbookService.createItemBase64({
+                          name: sourceItem.name,
+                          category: sourceItem.category,
+                          brand: sourceItem.brand,
+                          price: sourceItem.price,
+                          description: sourceItem.description,
+                          sub_images: sourceItem.sub_images,
+                          grade: sourceItem.grade,
+                          is_library: 0,
+                          project_id: selectedProject,
+                          display_order: items.length
                         });
                         toast.success('아이템이 프로젝트에 추가되었습니다');
                         loadItems(); // 프로젝트 아이템 새로고침
@@ -2745,11 +2789,16 @@ const SpecBook = () => {
                     try {
                       const sourceItem = allLibraryItems.find(i => i.id === draggedItemId);
                       if (sourceItem) {
-                        const { id, created_at, updated_at, ...itemData } = sourceItem;
-                        await api.post('/specbook/base64', {
-                          ...itemData,
-                          isLibrary: false,
-                          projectId: project.id
+                        await specbookService.createItemBase64({
+                          name: sourceItem.name,
+                          category: sourceItem.category,
+                          brand: sourceItem.brand,
+                          price: sourceItem.price,
+                          description: sourceItem.description,
+                          sub_images: sourceItem.sub_images,
+                          grade: sourceItem.grade,
+                          is_library: 0,
+                          project_id: project.id
                         });
                         toast.success(`"${project.title}"에 아이템이 추가되었습니다`);
                         loadAllProjectItems();

@@ -3,7 +3,7 @@ import { Download, FileText, Plus, Trash2, Eye, Clock, Settings } from 'lucide-r
 import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
-import api from '../services/api';
+import estimatePreviewService from '../services/estimatePreviewService';
 import { useAuth } from '../contexts/AuthContext';
 
 interface EstimateForm {
@@ -176,8 +176,8 @@ const EstimatePreview: React.FC = () => {
 
   const loadEstimateHistory = async () => {
     try {
-      const response = await api.get('/estimate-preview/list');
-      setSavedEstimates(response.data);
+      const estimates = await estimatePreviewService.getList();
+      setSavedEstimates(estimates);
     } catch (error) {
       console.error('가견적서 목록 로드 실패:', error);
     }
@@ -185,9 +185,9 @@ const EstimatePreview: React.FC = () => {
 
   const loadPriceSettings = async () => {
     try {
-      const response = await api.get('/estimate-preview/settings/prices');
-      if (response.data && response.data.settings && Object.keys(response.data.settings).length > 0) {
-        setPriceSettings(response.data.settings);
+      const response = await estimatePreviewService.getPriceSettings();
+      if (response && response.settings && Object.keys(response.settings).length > 0) {
+        setPriceSettings(response.settings);
       }
     } catch (error) {
       console.error('가격 설정 로드 실패:', error);
@@ -196,7 +196,7 @@ const EstimatePreview: React.FC = () => {
 
   const savePriceSettings = async () => {
     try {
-      await api.post('/estimate-preview/settings/prices', { settings: priceSettings });
+      await estimatePreviewService.savePriceSettings(priceSettings);
       // 조용히 저장 (toast 없이)
     } catch (error) {
       console.error('가격 설정 저장 실패:', error);
@@ -299,8 +299,8 @@ const EstimatePreview: React.FC = () => {
         ceilingDemolition: JSON.stringify(form.ceilingDemolition)
       };
 
-      const response = await api.post('/estimate-preview/create', formData);
-      setResult(response.data);
+      const savedEstimate = await estimatePreviewService.create(formData as any, user?.name);
+      setResult(savedEstimate);
       toast.success('견적이 계산되었습니다');
       loadEstimateHistory(); // 저장 후 목록 새로고침
     } catch (error) {
@@ -346,8 +346,8 @@ const EstimatePreview: React.FC = () => {
         ceilingDemolition: JSON.stringify(form.ceilingDemolition)
       };
 
-      const response = await api.post('/estimate-preview/calculate', formData);
-      setResult(response.data);
+      const result = await estimatePreviewService.calculate(formData as any);
+      setResult(result);
     } catch (error) {
       console.error('자동 견적 계산 실패:', error);
       setResult(null);
@@ -358,8 +358,11 @@ const EstimatePreview: React.FC = () => {
 
   const loadEstimate = async (id: number) => {
     try {
-      const response = await api.get(`/estimate-preview/${id}`);
-      const data = response.data;
+      const data = await estimatePreviewService.getById(id);
+      if (!data) {
+        toast.error('가견적서를 찾을 수 없습니다');
+        return;
+      }
 
       // 폼 데이터 설정
       setForm({
@@ -422,7 +425,7 @@ const EstimatePreview: React.FC = () => {
     if (!window.confirm('이 가견적서를 삭제하시겠습니까?')) return;
 
     try {
-      await api.delete(`/estimate-preview/${id}`);
+      await estimatePreviewService.delete(id);
       toast.success('가견적서가 삭제되었습니다');
       loadEstimateHistory();
     } catch (error) {
