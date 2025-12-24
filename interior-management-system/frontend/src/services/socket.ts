@@ -8,17 +8,11 @@ import type {
   ActiveUser
 } from '../types/socket';
 
-// 호스트에 따라 Socket URL 결정
+// Socket URL - 로컬 개발 환경에서만 사용
+// 프로덕션(Firebase Hosting)에서는 Socket.IO 대신 Firestore 실시간 구독 사용
 const getSocketUrl = () => {
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    // Firebase Hosting (hvlab.app, hv-lab-app.web.app, hv-lab-app.firebaseapp.com)
-    if (host === 'hvlab.app' || host.includes('hv-lab-app') || host.includes('firebaseapp.com')) {
-      return 'https://api.hvlab.app';
-    }
-  }
-  // 로컬 개발
-  return window.location.origin;
+  // 항상 현재 origin 사용 (로컬 개발용)
+  return typeof window !== 'undefined' ? window.location.origin : '';
 };
 const SOCKET_URL = getSocketUrl();
 
