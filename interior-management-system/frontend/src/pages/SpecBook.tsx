@@ -128,8 +128,12 @@ const SortableSubImage = ({
   const actualData = hasFileName ? fileData.split('|')[1] : fileData;
 
   // Firebase Storage URL 또는 base64 이미지 감지
-  const isStorageImage = actualData.startsWith('https://storage.googleapis.com/') &&
-    (actualData.includes('.jpg') || actualData.includes('.jpeg') || actualData.includes('.png') || actualData.includes('.gif') || actualData.includes('.webp'));
+  const isFirebaseStorageUrl = actualData.startsWith('https://firebasestorage.googleapis.com/') ||
+    actualData.startsWith('https://storage.googleapis.com/');
+  const hasImageExtension = actualData.includes('.jpg') || actualData.includes('.jpeg') ||
+    actualData.includes('.png') || actualData.includes('.gif') || actualData.includes('.webp');
+  // Firebase Storage URL은 확장자가 URL 인코딩될 수 있으므로, /o/specbook/ 경로면 이미지로 간주
+  const isStorageImage = isFirebaseStorageUrl && (hasImageExtension || actualData.includes('/o/specbook'));
   const isImage = actualData.startsWith('data:image') || isStorageImage;
   const isPDF = actualData.startsWith('data:application/pdf');
   const isWord = actualData.includes('wordprocessingml') || actualData.includes('msword');
@@ -1243,8 +1247,11 @@ const SpecBook = () => {
         const hasFileName = fileData.includes('|') && !fileData.startsWith('data:image');
         const data = hasFileName ? fileData.split('|')[1] : fileData;
         // base64 이미지 또는 Firebase Storage URL 확인
-        const isStorageUrl = data.startsWith('https://storage.googleapis.com/') &&
-          (data.includes('.jpg') || data.includes('.jpeg') || data.includes('.png') || data.includes('.gif') || data.includes('.webp'));
+        const isFirebaseUrl = data.startsWith('https://firebasestorage.googleapis.com/') ||
+          data.startsWith('https://storage.googleapis.com/');
+        const hasExt = data.includes('.jpg') || data.includes('.jpeg') ||
+          data.includes('.png') || data.includes('.gif') || data.includes('.webp');
+        const isStorageUrl = isFirebaseUrl && (hasExt || data.includes('/o/specbook'));
         if (data.startsWith('data:image') || isStorageUrl) {
           imageList.push(data);
         }
