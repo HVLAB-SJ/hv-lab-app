@@ -1865,51 +1865,88 @@ const SpecBook = () => {
             </div>
             {/* 중앙 경계선 (데스크톱에서만 표시) */}
             <div className="hidden md:block w-px bg-gray-300 self-stretch"></div>
-            {/* 우측: 드롭 영역 (데스크톱에서만 표시) */}
+            {/* 우측: 프로젝트 목록 드롭 영역 (데스크톱에서만 표시) */}
             <div className="specbook-drop-zone hidden md:flex w-1/2 flex-col overflow-hidden pl-3 pb-4">
-              {/* 프로젝트 선택 드롭다운 - 세로모드에서 드롭 영역 위에 표시 */}
-              <div className="specbook-drop-project-select hidden mb-2">
-                <select
-                  value={view === 'library' ? '' : (selectedProject || '')}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setView('project');
-                      setSelectedProject(Number(e.target.value));
-                    }
-                  }}
-                  className="h-9 border border-gray-300 rounded-lg focus:outline-none bg-white text-sm px-3"
-                >
-                  <option value="">프로젝트 선택</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.title}
-                    </option>
-                  ))}
-                </select>
+              <div className="mb-2 text-sm font-medium text-gray-700 flex items-center gap-2">
+                <span>프로젝트에 드래그하여 추가</span>
+                {isDraggingItem && (
+                  <span className="text-xs text-blue-600 animate-pulse">드래그 중...</span>
+                )}
               </div>
-              <div
-                className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 border-2 border-dashed border-gray-300 transition-colors"
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.currentTarget.classList.add('bg-blue-50', 'border-blue-400');
-                }}
-                onDragLeave={(e) => {
-                  e.currentTarget.classList.remove('bg-blue-50', 'border-blue-400');
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.currentTarget.classList.remove('bg-blue-50', 'border-blue-400');
-                  const itemId = e.dataTransfer.getData('itemId');
-                  if (itemId) {
-                    setDraggedItemId(Number(itemId));
-                    setShowProjectSelectModal(true);
-                  }
-                }}
-              >
-                <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-                  <span className="specbook-drop-text-landscape">좌측에서 아이템을 드래그하여 추가하세요</span>
-                  <span className="specbook-drop-text-portrait">상단에서 아이템을 드래그하여 추가하세요</span>
-                </div>
+              <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-3">
+                {projects.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                    등록된 프로젝트가 없습니다
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                    {projects.map((project) => (
+                      <div
+                        key={project.id}
+                        className={`p-3 bg-white rounded-lg border-2 transition-all cursor-pointer ${
+                          isDraggingItem
+                            ? 'border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                        }`}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'copy';
+                          e.currentTarget.classList.add('bg-blue-100', 'border-blue-500', 'scale-[1.02]');
+                        }}
+                        onDragLeave={(e) => {
+                          e.currentTarget.classList.remove('bg-blue-100', 'border-blue-500', 'scale-[1.02]');
+                        }}
+                        onDrop={async (e) => {
+                          e.preventDefault();
+                          e.currentTarget.classList.remove('bg-blue-100', 'border-blue-500', 'scale-[1.02]');
+                          const itemId = e.dataTransfer.getData('itemId');
+                          if (itemId) {
+                            try {
+                              const sourceItem = allLibraryItems.find(i => i.id === Number(itemId));
+                              if (sourceItem) {
+                                const { id, created_at, updated_at, ...itemData } = sourceItem;
+                                await api.post('/specbook/base64', {
+                                  ...itemData,
+                                  isLibrary: false,
+                                  projectId: project.id
+                                });
+                                toast.success(`"${project.title}"에 아이템이 추가되었습니다`);
+                                loadAllProjectItems();
+                              }
+                            } catch (error) {
+                              console.error('아이템 추가 실패:', error);
+                              toast.error('아이템 추가 실패');
+                            }
+                          }
+                        }}
+                        onClick={() => {
+                          setView('project');
+                          setSelectedProject(project.id);
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: project.colorCode || '#3B82F6' }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 text-sm truncate">{project.title}</div>
+                            <div className="text-xs text-gray-500">
+                              {allProjectItems.filter(item => item.project_id === project.id).length}개 아이템
+                            </div>
+                          </div>
+                          {isDraggingItem && (
+                            <div className="text-blue-500">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
