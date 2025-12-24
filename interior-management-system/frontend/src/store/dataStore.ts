@@ -418,7 +418,6 @@ export const useDataStore = create<DataStore>()(
         }
         // 서버에 이미 있으면 보호할 필요 없음
         if (apiPaymentIds.has(p.id)) {
-          console.log('[loadPaymentsFromAPI] 서버에 있음 - 보호 불필요:', p.id);
           return false;
         }
         // _addedAt이 있으면 그것을 사용 (로컬에서 추가된 시점)
