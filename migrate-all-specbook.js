@@ -1,6 +1,7 @@
 /**
- * 스펙북 아이템의 base64 이미지를 Firebase Storage로 마이그레이션
- * - image_url (main_image)과 sub_images의 base64 데이터를 Storage로 업로드
+ * 모든 스펙북 이미지를 Firebase Storage로 마이그레이션
+ * - Railway에서 모든 아이템 조회
+ * - Base64 이미지를 Firebase Storage로 업로드
  * - Firestore 문서를 Storage URL로 업데이트
  */
 
@@ -12,14 +13,6 @@ const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiLs
 const PROJECT_ID = 'hv-lab-app';
 const BUCKET = 'hv-lab-app.firebasestorage.app';
 
-// 1MB 초과로 실패한 스펙북 아이템 (이미지는 이미 Storage에 업로드됨)
-const FAILED_ITEMS = [
-  'NEOREST NX',           // ID: 160 (2.9MB)
-  '웨이브 R 투피스',      // ID: 157 (3.3MB)
-  '웨이브 S 투피스',      // ID: 78 (3.3MB)
-  '모노플러스 8000'       // ID: 84 (7.8MB)
-];
-
 function base64url(input) {
   return Buffer.from(input).toString('base64')
     .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
@@ -28,14 +21,12 @@ function base64url(input) {
 async function getAccessToken() {
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: 'RS256', typ: 'JWT' };
-
   const payload = {
     iss: serviceAccount.client_email,
     scope: 'https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/devstorage.read_write',
     aud: 'https://oauth2.googleapis.com/token',
     iat: now, exp: now + 3600
   };
-
   const headerB64 = base64url(JSON.stringify(header));
   const payloadB64 = base64url(JSON.stringify(payload));
   const signatureInput = headerB64 + '.' + payloadB64;
@@ -97,40 +88,8 @@ async function getItemDetail(itemId) {
 
 function isBase64Image(str) {
   if (typeof str !== 'string') return false;
-  // data:image로 시작하거나, 긴 base64 문자열인 경우
-  return str.startsWith('data:image') ||
-         (str.length > 1000 && /^[A-Za-z0-9+/=]+$/.test(str.substring(0, 100)));
-}
-
-// 파일명|data:... 형식 또는 큰 Base64 데이터 포함 여부
-function hasLargeData(str) {
-  if (typeof str !== 'string') return false;
-  // 1KB 이상이면 큰 데이터로 간주
-  return str.length > 1000;
-}
-
-// sub_images에서 Base64 제거하고 파일명만 추출
-function cleanSubImage(subImage, itemId, index) {
-  if (typeof subImage !== 'string') return subImage;
-
-  // 형식: "파일명|data:..." 인 경우 파일명만 추출
-  if (subImage.includes('|data:')) {
-    const filename = subImage.split('|')[0];
-    console.log(`    📎 파일명 추출: ${filename}`);
-    return filename;
-  }
-
-  // data: 로 시작하면 Storage URL로 교체
-  if (subImage.startsWith('data:')) {
-    return getStorageUrl(itemId, `sub_${index}`);
-  }
-
-  // 긴 Base64 문자열이면 Storage URL로 교체
-  if (subImage.length > 10000 && /^[A-Za-z0-9+/=]+$/.test(subImage.substring(0, 100))) {
-    return getStorageUrl(itemId, `sub_${index}`);
-  }
-
-  return subImage;
+  if (str.startsWith('http://') || str.startsWith('https://')) return false;
+  return str.startsWith('data:') || str.length > 1000;
 }
 
 function getContentType(base64Data) {
@@ -139,6 +98,17 @@ function getContentType(base64Data) {
     if (match) return match[1];
   }
   return 'image/jpeg';
+}
+
+function getExtension(contentType) {
+  const ext = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+    'application/pdf': 'pdf'
+  };
+  return ext[contentType] || 'jpg';
 }
 
 async function uploadToStorage(accessToken, path, base64Data) {
@@ -166,7 +136,7 @@ async function uploadToStorage(accessToken, path, base64Data) {
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          const publicUrl = `https://storage.googleapis.com/${BUCKET}/${path}`;
+          const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/${encodedPath}?alt=media`;
           resolve(publicUrl);
         } else {
           reject(new Error('Storage upload failed: ' + res.statusCode));
@@ -185,19 +155,11 @@ function convertToFirestoreValue(value) {
   } else if (typeof value === 'string') {
     return { stringValue: value };
   } else if (typeof value === 'number') {
-    if (Number.isInteger(value)) {
-      return { integerValue: String(value) };
-    } else {
-      return { doubleValue: value };
-    }
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
   } else if (typeof value === 'boolean') {
     return { booleanValue: value };
   } else if (Array.isArray(value)) {
-    return {
-      arrayValue: {
-        values: value.map(v => convertToFirestoreValue(v))
-      }
-    };
+    return { arrayValue: { values: value.map(v => convertToFirestoreValue(v)) } };
   } else if (typeof value === 'object') {
     const fields = {};
     for (const [k, v] of Object.entries(value)) {
@@ -209,26 +171,18 @@ function convertToFirestoreValue(value) {
 }
 
 async function deleteFirestoreDoc(accessToken, docId) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const req = https.request({
       hostname: 'firestore.googleapis.com',
       path: `/v1/projects/${PROJECT_ID}/databases/(default)/documents/specbook_items/${docId}`,
       method: 'DELETE',
-      headers: {
-        'Authorization': 'Bearer ' + accessToken
-      }
+      headers: { 'Authorization': 'Bearer ' + accessToken }
     }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300 || res.statusCode === 404) {
-          resolve(true);
-        } else {
-          reject(new Error('Delete failed: ' + res.statusCode));
-        }
-      });
+      res.on('end', () => resolve(true));
     });
-    req.on('error', reject);
+    req.on('error', () => resolve(false));
     req.end();
   });
 }
@@ -241,7 +195,6 @@ async function createFirestoreDoc(accessToken, docId, data) {
         fields[key] = convertToFirestoreValue(value);
       }
     }
-    // id 필드는 명시적으로 추가
     fields['id'] = { integerValue: String(docId) };
 
     const body = JSON.stringify({ fields });
@@ -262,7 +215,7 @@ async function createFirestoreDoc(accessToken, docId, data) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(true);
         } else {
-          reject(new Error('Create failed: ' + res.statusCode + ' ' + data.substring(0, 300)));
+          reject(new Error('Create failed: ' + res.statusCode + ' ' + data.substring(0, 200)));
         }
       });
     });
@@ -272,131 +225,143 @@ async function createFirestoreDoc(accessToken, docId, data) {
   });
 }
 
-// Storage URL 생성 (이미지가 이미 업로드된 경우)
-function getStorageUrl(itemId, imageType) {
-  const path = encodeURIComponent(`specbook/${itemId}/${imageType}.jpg`);
-  return `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/${path}?alt=media`;
-}
+// 파일명|data:... 형식 처리
+function extractFilename(subImage) {
+  if (typeof subImage !== 'string') return { filename: null, data: null };
 
-// Base64를 Storage URL로 교체
-function replaceBase64WithStorageUrl(itemId, imageData, imageType) {
-  if (!isBase64Image(imageData)) {
-    return imageData; // 이미 URL이면 그대로 반환
+  if (subImage.includes('|data:')) {
+    const parts = subImage.split('|');
+    return { filename: parts[0], data: parts.slice(1).join('|') };
   }
-  return getStorageUrl(itemId, imageType);
+
+  if (subImage.startsWith('data:')) {
+    return { filename: null, data: subImage };
+  }
+
+  if (subImage.length > 10000) {
+    return { filename: null, data: subImage };
+  }
+
+  return { filename: subImage, data: null };
 }
 
-async function processItem(accessToken, item) {
-  console.log(`\n📦 처리 중: ${item.name} (ID: ${item.id})`);
-
+async function processItem(accessToken, item, index, total) {
   const detail = await getItemDetail(item.id);
-  if (!detail) {
-    throw new Error('아이템 상세 정보를 찾을 수 없음');
-  }
+  if (!detail) throw new Error('Item not found');
 
   const processedItem = { ...detail };
-  let replacedCount = 0;
+  let uploadCount = 0;
+
+  // image_url 처리
+  if (detail.image_url && isBase64Image(detail.image_url)) {
+    try {
+      const contentType = getContentType(detail.image_url);
+      const ext = getExtension(contentType);
+      const path = `specbook/${item.id}/main.${ext}`;
+      const url = await uploadToStorage(accessToken, path, detail.image_url);
+      processedItem.image_url = url;
+      uploadCount++;
+    } catch (e) {
+      console.log(`    ⚠️ image_url 업로드 실패`);
+    }
+  }
 
   // image 필드 처리 (레거시)
   if (detail.image && isBase64Image(detail.image)) {
-    const originalLen = detail.image.length;
-    processedItem.image = getStorageUrl(item.id, 'main');
-    replacedCount++;
-    console.log(`  📷 image 필드: ${(originalLen/1024).toFixed(0)}KB → Storage URL`);
+    try {
+      const contentType = getContentType(detail.image);
+      const ext = getExtension(contentType);
+      const path = `specbook/${item.id}/image.${ext}`;
+      const url = await uploadToStorage(accessToken, path, detail.image);
+      processedItem.image = url;
+      uploadCount++;
+    } catch (e) {
+      console.log(`    ⚠️ image 업로드 실패`);
+    }
   }
 
-  // image_url 필드 처리
-  if (detail.image_url && isBase64Image(detail.image_url)) {
-    const originalLen = detail.image_url.length;
-    processedItem.image_url = getStorageUrl(item.id, 'main');
-    replacedCount++;
-    console.log(`  📷 image_url 필드: ${(originalLen/1024).toFixed(0)}KB → Storage URL`);
-  }
-
-  // description 필드에서 Base64 이미지 제거 (매우 큰 경우)
-  if (detail.description && detail.description.length > 100000) {
-    const originalLen = detail.description.length;
-    // Base64 이미지를 빈 문자열로 교체
-    processedItem.description = detail.description.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, '[이미지 제거됨]');
-    console.log(`  📝 description 필드: ${(originalLen/1024).toFixed(0)}KB → ${(processedItem.description.length/1024).toFixed(0)}KB`);
-    replacedCount++;
-  }
-
-  // sub_images 처리 - Base64/파일데이터 제거
+  // sub_images 처리
   if (Array.isArray(detail.sub_images) && detail.sub_images.length > 0) {
-    console.log(`  📎 sub_images 처리 중 (${detail.sub_images.length}개)...`);
     const newSubImages = [];
     for (let i = 0; i < detail.sub_images.length; i++) {
       const img = detail.sub_images[i];
-      const originalLen = img.length;
-      const cleaned = cleanSubImage(img, item.id, i);
-      if (cleaned !== img) {
-        replacedCount++;
-        console.log(`    [${i}]: ${(originalLen/1024).toFixed(0)}KB → ${cleaned.length} chars`);
+      const { filename, data } = extractFilename(img);
+
+      if (data && data.length > 1000) {
+        try {
+          const contentType = getContentType(data);
+          const ext = getExtension(contentType);
+          const path = `specbook/${item.id}/sub_${i}.${ext}`;
+          const url = await uploadToStorage(accessToken, path, data);
+          newSubImages.push(filename ? `${filename}|${url}` : url);
+          uploadCount++;
+        } catch (e) {
+          newSubImages.push(filename || '[업로드 실패]');
+        }
+      } else if (filename) {
+        newSubImages.push(filename);
+      } else {
+        newSubImages.push(img);
       }
-      newSubImages.push(cleaned);
     }
     processedItem.sub_images = newSubImages;
   }
 
-  console.log(`  🔄 총 ${replacedCount}개 Base64를 Storage URL로 교체`);
-
-  // 문서 크기 확인
-  const docSize = JSON.stringify(processedItem).length;
-  console.log(`  📊 문서 크기: ${docSize.toLocaleString()} bytes`);
-
-  if (docSize > 1000000) {
-    throw new Error(`문서 크기가 여전히 1MB를 초과합니다: ${docSize} bytes`);
+  // Firestore 저장
+  if (uploadCount > 0) {
+    await deleteFirestoreDoc(accessToken, String(item.id));
+    await createFirestoreDoc(accessToken, String(item.id), processedItem);
   }
 
-  // 기존 문서 삭제 후 재생성
-  console.log(`  🗑️ 기존 문서 삭제 중...`);
-  await deleteFirestoreDoc(accessToken, String(item.id));
-
-  console.log(`  📝 새 문서 생성 중...`);
-  await createFirestoreDoc(accessToken, String(item.id), processedItem);
-  console.log(`  ✅ Firestore 저장 완료`);
-
-  return replacedCount;
+  return uploadCount;
 }
 
 async function main() {
-  console.log('🚀 스펙북 이미지 Firebase Storage 마이그레이션 시작\n');
-  console.log('대상 아이템:', FAILED_ITEMS.length, '개\n');
+  console.log('🚀 모든 스펙북 이미지 Firebase Storage 마이그레이션\n');
+  console.log('버킷:', BUCKET + '\n');
 
   const accessToken = await getAccessToken();
-  console.log('✅ 토큰 발급 완료');
+  console.log('✅ 토큰 발급 완료\n');
 
-  // 전체 아이템 목록 조회
-  const allItems = await getItemList();
-  console.log(`📋 전체 아이템: ${allItems.length}개`);
-
-  // 실패한 아이템 필터링
-  const targetItems = allItems.filter(item => FAILED_ITEMS.includes(item.name));
-  console.log(`🎯 대상 아이템: ${targetItems.length}개\n`);
+  const items = await getItemList();
+  console.log(`📦 총 ${items.length}개 아이템 처리 예정\n`);
 
   let success = 0;
+  let skipped = 0;
   let failed = 0;
   let totalUploads = 0;
 
-  for (const item of targetItems) {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
     try {
-      const uploadCount = await processItem(accessToken, item);
-      totalUploads += uploadCount;
-      success++;
+      const uploadCount = await processItem(accessToken, item, i, items.length);
+
+      if (uploadCount > 0) {
+        success++;
+        totalUploads += uploadCount;
+        console.log(`  ✅ [${i+1}/${items.length}] ${item.name} - ${uploadCount}개 업로드`);
+      } else {
+        skipped++;
+      }
     } catch (error) {
-      console.log(`  ❌ 실패: ${error.message}`);
       failed++;
+      console.log(`  ❌ [${i+1}/${items.length}] ${item.name}: ${error.message.substring(0, 50)}`);
     }
 
-    await new Promise(r => setTimeout(r, 1000)); // 속도 조절
+    // 진행률 표시
+    if ((i + 1) % 10 === 0) {
+      console.log(`  --- 진행: ${i+1}/${items.length} (성공: ${success}, 스킵: ${skipped}, 실패: ${failed}) ---`);
+    }
+
+    await new Promise(r => setTimeout(r, 300)); // 속도 조절
   }
 
   console.log('\n' + '='.repeat(50));
-  console.log('🎉 완료!');
-  console.log(`  성공: ${success}개`);
-  console.log(`  실패: ${failed}개`);
-  console.log(`  이미지 업로드: ${totalUploads}개`);
+  console.log('🎉 마이그레이션 완료!');
+  console.log(`  - 이미지 업로드: ${totalUploads}개`);
+  console.log(`  - 성공 아이템: ${success}개`);
+  console.log(`  - 스킵 (이미지 없음): ${skipped}개`);
+  console.log(`  - 실패: ${failed}개`);
 }
 
 main().catch(console.error);

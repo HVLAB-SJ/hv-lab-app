@@ -35,30 +35,7 @@ export interface SpecBookItem {
   grade?: string;
   created_at: string;
   updated_at: string;
-  needs_railway_fallback?: boolean;
 }
-
-// Railway API에서 이미지 데이터 가져오기
-const fetchFromRailwayAPI = async (itemId: number): Promise<{ image_url: string | null; sub_images: string[] } | null> => {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`https://api.hvlab.app/api/specbook/item/${itemId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return {
-      image_url: data.image_url || null,
-      sub_images: data.sub_images || []
-    };
-  } catch (error) {
-    console.error('[Railway API] 이미지 조회 실패:', error);
-    return null;
-  }
-};
 
 // Firestore 데이터를 SpecBookItem으로 변환
 const parseSpecBookItem = (docId: string, data: Record<string, unknown>): SpecBookItem => {
@@ -76,8 +53,7 @@ const parseSpecBookItem = (docId: string, data: Record<string, unknown>): SpecBo
     display_order: data.display_order as number | undefined,
     grade: data.grade as string | undefined,
     created_at: (data.created_at as string) || new Date().toISOString(),
-    updated_at: (data.updated_at as string) || new Date().toISOString(),
-    needs_railway_fallback: data.needs_railway_fallback as boolean | undefined
+    updated_at: (data.updated_at as string) || new Date().toISOString()
   };
 };
 
@@ -128,7 +104,7 @@ const specbookFirestoreService = {
     return parseSpecBookItem(docSnap.id, docSnap.data());
   },
 
-  // 아이템 이미지 정보 조회 (Railway 폴백 지원)
+  // 아이템 이미지 정보 조회 (Firebase 전용)
   async getItemImage(id: string): Promise<{ image_url: string | null; sub_images: string[] } | null> {
     const docRef = doc(db, 'specbook_items', id);
     const docSnap = await getDoc(docRef);
@@ -138,15 +114,6 @@ const specbookFirestoreService = {
     }
 
     const data = docSnap.data();
-
-    // needs_railway_fallback 플래그가 있으면 Railway API에서 이미지 조회
-    if (data.needs_railway_fallback) {
-      console.log('[Firestore] Railway 폴백 사용:', id);
-      const railwayData = await fetchFromRailwayAPI(parseInt(id));
-      if (railwayData) {
-        return railwayData;
-      }
-    }
 
     return {
       image_url: (data.image_url as string) || null,
