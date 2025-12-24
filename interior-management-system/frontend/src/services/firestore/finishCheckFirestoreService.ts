@@ -13,6 +13,7 @@ import {
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
+import { uploadImageToStorage, deleteImageFromStorage, isBase64Image } from './storageService';
 
 export interface FinishCheckItemImage {
   id: string;
@@ -308,26 +309,41 @@ const finishCheckFirestoreService = {
       return null;
     }
 
-    return { image_data: imageDoc.data().image_data || '' };
+    const data = imageDoc.data();
+    // Storage URL이 있으면 그것을 사용, 없으면 기존 image_data 사용
+    return { image_data: data.image_url || data.image_data || '' };
   },
 
   // 이미지 업로드
   async uploadImage(itemId: string, imageData: string, filename: string): Promise<FinishCheckItemImage> {
     const imagesRef = collection(db, 'finish_check_images');
 
-    const newImage = {
+    // 먼저 문서를 생성하여 ID를 얻음
+    const tempImage = {
       item_id: itemId,
-      image_data: imageData,
+      image_data: '',
+      image_url: '',
       filename,
       created_at: serverTimestamp()
     };
 
-    const docRef = await addDoc(imagesRef, newImage);
+    const docRef = await addDoc(imagesRef, tempImage);
+
+    // Base64 이미지를 Storage로 업로드
+    let storedImageData = imageData;
+    if (isBase64Image(imageData)) {
+      const storageUrl = await uploadImageToStorage('finish_check', docRef.id, imageData);
+      // Storage URL로 업데이트
+      await updateDoc(docRef, { image_url: storageUrl, image_data: '' });
+      storedImageData = storageUrl;
+    } else {
+      await updateDoc(docRef, { image_data: imageData });
+    }
 
     return {
       id: docRef.id,
       item_id: itemId,
-      image_data: imageData,
+      image_data: storedImageData,
       filename,
       created_at: new Date().toISOString()
     };
@@ -335,7 +351,18 @@ const finishCheckFirestoreService = {
 
   // 이미지 삭제
   async deleteImage(imageId: string): Promise<void> {
-    await deleteDoc(doc(db, 'finish_check_images', imageId));
+    const imageRef = doc(db, 'finish_check_images', imageId);
+    const imageDoc = await getDoc(imageRef);
+
+    // Storage 이미지 삭제
+    if (imageDoc.exists()) {
+      const data = imageDoc.data();
+      if (data.image_url) {
+        await deleteImageFromStorage(data.image_url);
+      }
+    }
+
+    await deleteDoc(imageRef);
   }
 };
 

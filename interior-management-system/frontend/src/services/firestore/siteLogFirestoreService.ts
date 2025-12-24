@@ -18,6 +18,7 @@ import {
   where,
   Timestamp
 } from 'firebase/firestore';
+import { uploadImagesToStorage, deleteImagesFromStorage, isBase64Image } from './storageService';
 
 const COLLECTION_NAME = 'site_logs';
 
@@ -83,19 +84,35 @@ const siteLogFirestoreService = {
   // 일지 생성
   createLog: async (logData: SiteLogData): Promise<SiteLogResponse> => {
     const now = Timestamp.now();
-    const newData = {
+
+    // 먼저 문서를 생성하여 ID를 얻음
+    const tempData = {
       project: logData.project,
       date: logData.date instanceof Date
         ? Timestamp.fromDate(logData.date)
         : logData.date,
-      images: logData.images || [],
+      images: [],
       notes: logData.notes || '',
       createdBy: logData.createdBy,
       createdAt: now,
       updatedAt: now
     };
 
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), newData);
+    const docRef = await addDoc(collection(db, COLLECTION_NAME), tempData);
+
+    // Base64 이미지를 Storage로 업로드
+    let imageUrls: string[] = [];
+    if (logData.images && logData.images.length > 0) {
+      const hasBase64 = logData.images.some(img => isBase64Image(img));
+      if (hasBase64) {
+        imageUrls = await uploadImagesToStorage('site_logs', docRef.id, logData.images);
+        await updateDoc(docRef, { images: imageUrls });
+      } else {
+        imageUrls = logData.images;
+        await updateDoc(docRef, { images: imageUrls });
+      }
+    }
+
     const created = await getDoc(docRef);
     return convertDoc(created);
   },
@@ -113,8 +130,17 @@ const siteLogFirestoreService = {
         ? Timestamp.fromDate(logData.date)
         : logData.date;
     }
-    if (logData.images !== undefined) updateData.images = logData.images;
     if (logData.notes !== undefined) updateData.notes = logData.notes;
+
+    // 이미지 업데이트 시 Storage 업로드
+    if (logData.images !== undefined) {
+      const hasBase64 = logData.images.some(img => isBase64Image(img));
+      if (hasBase64) {
+        updateData.images = await uploadImagesToStorage('site_logs', id, logData.images);
+      } else {
+        updateData.images = logData.images;
+      }
+    }
 
     await updateDoc(docRef, updateData);
     const updated = await getDoc(docRef);
@@ -124,6 +150,16 @@ const siteLogFirestoreService = {
   // 일지 삭제
   deleteLog: async (id: string): Promise<void> => {
     const docRef = doc(db, COLLECTION_NAME, id);
+
+    // 기존 이미지 삭제
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.images && data.images.length > 0) {
+        await deleteImagesFromStorage(data.images);
+      }
+    }
+
     await deleteDoc(docRef);
   },
 

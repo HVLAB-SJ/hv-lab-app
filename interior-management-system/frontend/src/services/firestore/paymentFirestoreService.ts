@@ -17,6 +17,7 @@ import {
   Unsubscribe
 } from 'firebase/firestore';
 import { COLLECTIONS } from './index';
+import { uploadImagesToStorage, deleteImagesFromStorage, isBase64Image } from './storageService';
 
 // Firestore 결제요청 타입
 export interface FirestorePayment {
@@ -276,12 +277,27 @@ const paymentFirestoreService = {
       itemName: firestoreData.itemName || '',
       includesVAT: firestoreData.includesVAT || false,
       quickText: firestoreData.quickText || '',
-      images: firestoreData.images || [],
-      imageCount: firestoreData.images?.length || 0
+      images: [],
+      imageCount: 0
     };
 
     const docRef = doc(db, COLLECTIONS.PAYMENTS, String(newId));
     await setDoc(docRef, newPayment);
+
+    // Base64 이미지를 Storage로 업로드
+    if (firestoreData.images && firestoreData.images.length > 0) {
+      const hasBase64 = firestoreData.images.some(img => isBase64Image(img));
+      if (hasBase64) {
+        const imageUrls = await uploadImagesToStorage('payments', String(newId), firestoreData.images);
+        await updateDoc(docRef, { images: imageUrls, imageCount: imageUrls.length });
+        newPayment.images = imageUrls;
+        newPayment.imageCount = imageUrls.length;
+      } else {
+        await updateDoc(docRef, { images: firestoreData.images, imageCount: firestoreData.images.length });
+        newPayment.images = firestoreData.images;
+        newPayment.imageCount = firestoreData.images.length;
+      }
+    }
 
     return convertToPaymentResponse(newPayment);
   },
@@ -354,18 +370,37 @@ const paymentFirestoreService = {
   updatePaymentImages: async (id: string, images: string[]): Promise<{ message: string; images: string[] }> => {
     const docRef = doc(db, COLLECTIONS.PAYMENTS, id);
 
+    // Base64 이미지를 Storage로 업로드
+    let imageUrls = images;
+    if (images.length > 0) {
+      const hasBase64 = images.some(img => isBase64Image(img));
+      if (hasBase64) {
+        imageUrls = await uploadImagesToStorage('payments', id, images);
+      }
+    }
+
     await updateDoc(docRef, {
-      images,
-      imageCount: images.length,
+      images: imageUrls,
+      imageCount: imageUrls.length,
       updatedAt: new Date().toISOString()
     });
 
-    return { message: 'Images updated successfully', images };
+    return { message: 'Images updated successfully', images: imageUrls };
   },
 
   // 결제요청 삭제
   deletePayment: async (id: string): Promise<void> => {
     const docRef = doc(db, COLLECTIONS.PAYMENTS, id);
+
+    // 기존 이미지 삭제
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data() as FirestorePayment;
+      if (data.images && data.images.length > 0) {
+        await deleteImagesFromStorage(data.images);
+      }
+    }
+
     await deleteDoc(docRef);
   },
 

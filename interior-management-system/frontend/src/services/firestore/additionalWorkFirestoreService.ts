@@ -18,6 +18,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import type { AdditionalWorkResponse, AdditionalWorkData } from '../additionalWorkService';
+import { uploadImagesToStorage, deleteImagesFromStorage, isBase64Image } from './storageService';
 
 const COLLECTION_NAME = 'additional_works';
 
@@ -62,7 +63,7 @@ const additionalWorkFirestoreService = {
   // 추가공사 생성
   createAdditionalWork: async (data: AdditionalWorkData): Promise<AdditionalWorkResponse> => {
     const now = Timestamp.now();
-    const newData = {
+    const tempData = {
       project: data.project,
       description: data.description,
       amount: data.amount,
@@ -70,12 +71,24 @@ const additionalWorkFirestoreService = {
         ? Timestamp.fromDate(data.date)
         : data.date,
       notes: data.notes || '',
-      images: data.images || [],
+      images: [],
       createdAt: now,
       updatedAt: now
     };
 
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), newData);
+    const docRef = await addDoc(collection(db, COLLECTION_NAME), tempData);
+
+    // Base64 이미지를 Storage로 업로드
+    if (data.images && data.images.length > 0) {
+      const hasBase64 = data.images.some(img => isBase64Image(img));
+      if (hasBase64) {
+        const imageUrls = await uploadImagesToStorage('additional_works', docRef.id, data.images);
+        await updateDoc(docRef, { images: imageUrls });
+      } else {
+        await updateDoc(docRef, { images: data.images });
+      }
+    }
+
     const created = await getDoc(docRef);
     return convertDoc(created);
   },
@@ -96,7 +109,16 @@ const additionalWorkFirestoreService = {
         : data.date;
     }
     if (data.notes !== undefined) updateData.notes = data.notes;
-    if (data.images !== undefined) updateData.images = data.images;
+
+    // 이미지 업데이트 시 Storage 업로드
+    if (data.images !== undefined) {
+      const hasBase64 = data.images.some(img => isBase64Image(img));
+      if (hasBase64) {
+        updateData.images = await uploadImagesToStorage('additional_works', id, data.images);
+      } else {
+        updateData.images = data.images;
+      }
+    }
 
     await updateDoc(docRef, updateData);
     const updated = await getDoc(docRef);
@@ -106,6 +128,16 @@ const additionalWorkFirestoreService = {
   // 추가공사 삭제
   deleteAdditionalWork: async (id: string): Promise<void> => {
     const docRef = doc(db, COLLECTION_NAME, id);
+
+    // 기존 이미지 삭제
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.images && data.images.length > 0) {
+        await deleteImagesFromStorage(data.images);
+      }
+    }
+
     await deleteDoc(docRef);
   },
 

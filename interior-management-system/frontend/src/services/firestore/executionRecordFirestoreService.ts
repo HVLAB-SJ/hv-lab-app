@@ -17,6 +17,7 @@ import {
   Unsubscribe
 } from 'firebase/firestore';
 import { COLLECTIONS } from './index';
+import { uploadImagesToStorage, deleteImagesFromStorage, isBase64Image } from './storageService';
 
 // 프로젝트 캐시 (name -> id 매핑)
 let projectNameToIdCache: Map<string, number> = new Map();
@@ -237,12 +238,27 @@ const executionRecordFirestoreService = {
       includesVAT: firestoreData.includesVAT || false,
       createdAt: now,
       updatedAt: now,
-      images: firestoreData.images || [],
-      imageCount: firestoreData.images?.length || 0
+      images: [],
+      imageCount: 0
     };
 
     const docRef = doc(db, COLLECTIONS.EXECUTION_RECORDS, String(newId));
     await setDoc(docRef, newRecord);
+
+    // Base64 이미지를 Storage로 업로드
+    if (firestoreData.images && firestoreData.images.length > 0) {
+      const hasBase64 = firestoreData.images.some(img => isBase64Image(img));
+      if (hasBase64) {
+        const imageUrls = await uploadImagesToStorage('execution_records', String(newId), firestoreData.images);
+        await updateDoc(docRef, { images: imageUrls, imageCount: imageUrls.length });
+        newRecord.images = imageUrls;
+        newRecord.imageCount = imageUrls.length;
+      } else {
+        await updateDoc(docRef, { images: firestoreData.images, imageCount: firestoreData.images.length });
+        newRecord.images = firestoreData.images;
+        newRecord.imageCount = firestoreData.images.length;
+      }
+    }
 
     return convertToRecordResponse(newRecord);
   },
@@ -251,6 +267,15 @@ const executionRecordFirestoreService = {
   updateRecord: async (id: string, data: Record<string, unknown>): Promise<ExecutionRecordResponse> => {
     const docRef = doc(db, COLLECTIONS.EXECUTION_RECORDS, id);
     const firestoreData = convertToFirestoreFormat(data);
+
+    // 이미지 업데이트 시 Storage 업로드
+    if (firestoreData.images !== undefined) {
+      const hasBase64 = firestoreData.images.some(img => isBase64Image(img));
+      if (hasBase64) {
+        firestoreData.images = await uploadImagesToStorage('execution_records', id, firestoreData.images);
+      }
+      firestoreData.imageCount = firestoreData.images.length;
+    }
 
     await updateDoc(docRef, {
       ...firestoreData,
@@ -268,6 +293,16 @@ const executionRecordFirestoreService = {
   // 실행내역 삭제
   deleteRecord: async (id: string): Promise<void> => {
     const docRef = doc(db, COLLECTIONS.EXECUTION_RECORDS, id);
+
+    // 기존 이미지 삭제
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data() as FirestoreExecutionRecord;
+      if (data.images && data.images.length > 0) {
+        await deleteImagesFromStorage(data.images);
+      }
+    }
+
     await deleteDoc(docRef);
   },
 
