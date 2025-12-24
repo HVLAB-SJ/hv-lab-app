@@ -87,14 +87,28 @@ const authFirestoreService = {
     // 비밀번호 검증
     const hashedPassword = await simpleHash(credentials.password);
 
-    // passwordHash가 없으면 레거시 비밀번호 (평문) 또는 기본 비밀번호 체크
+    // passwordHash가 있으면 SHA-256 해시로 비교
     if (userData.passwordHash) {
       if (userData.passwordHash !== hashedPassword) {
         throw new Error('비밀번호가 일치하지 않습니다.');
       }
+    } else if (userData.password) {
+      // password 필드가 있는 경우
+      // bcrypt 해시인 경우 ($2b$, $2a$ 로 시작) - 기본 비밀번호만 허용
+      if (userData.password.startsWith('$2b$') || userData.password.startsWith('$2a$')) {
+        // bcrypt 해시는 클라이언트에서 검증 불가 - 기본 비밀번호 '1234'만 허용
+        if (credentials.password !== '1234') {
+          throw new Error('비밀번호가 일치하지 않습니다.');
+        }
+      } else {
+        // 평문 비밀번호
+        if (userData.password !== credentials.password && credentials.password !== '1234') {
+          throw new Error('비밀번호가 일치하지 않습니다.');
+        }
+      }
     } else {
-      // 레거시: 평문 비밀번호 또는 기본 비밀번호
-      if (userData.password !== credentials.password && credentials.password !== '1234') {
+      // password 필드가 없으면 기본 비밀번호만 허용
+      if (credentials.password !== '1234') {
         throw new Error('비밀번호가 일치하지 않습니다.');
       }
     }
