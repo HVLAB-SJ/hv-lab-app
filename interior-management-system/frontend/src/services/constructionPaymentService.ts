@@ -1,4 +1,6 @@
 import api from './api';
+import constructionPaymentFirestoreService from './firestore/constructionPaymentFirestoreService';
+import { getDataSourceConfig } from './firestore/dataSourceConfig';
 
 export interface ConstructionPaymentData {
   project: string;
@@ -47,35 +49,76 @@ export interface ConstructionPaymentResponse {
   updatedAt: string;
 }
 
-const constructionPaymentService = {
-  // Get all construction payments
+// Railway API 서비스 (기존)
+const railwayConstructionPaymentService = {
   getAllConstructionPayments: async (): Promise<ConstructionPaymentResponse[]> => {
     const response = await api.get('/construction-payments');
     return response.data;
   },
 
-  // Get single construction payment
   getConstructionPaymentById: async (id: string): Promise<ConstructionPaymentResponse> => {
     const response = await api.get(`/construction-payments/${id}`);
     return response.data;
   },
 
-  // Create construction payment
   createConstructionPayment: async (data: ConstructionPaymentData): Promise<ConstructionPaymentResponse> => {
     const response = await api.post('/construction-payments', data);
     return response.data;
   },
 
-  // Update construction payment
   updateConstructionPayment: async (id: string, data: Partial<ConstructionPaymentData>): Promise<ConstructionPaymentResponse> => {
     const response = await api.put(`/construction-payments/${id}`, data);
     return response.data;
   },
 
-  // Delete construction payment
   deleteConstructionPayment: async (id: string): Promise<void> => {
     await api.delete(`/construction-payments/${id}`);
   }
+};
+
+// 통합 서비스 (데이터 소스에 따라 자동 선택)
+const constructionPaymentService = {
+  getAllConstructionPayments: async (): Promise<ConstructionPaymentResponse[]> => {
+    if (getDataSourceConfig()) {
+      console.log('[constructionPaymentService] Using Firestore');
+      return constructionPaymentFirestoreService.getAllConstructionPayments();
+    }
+    console.log('[constructionPaymentService] Using Railway API');
+    return railwayConstructionPaymentService.getAllConstructionPayments();
+  },
+
+  getConstructionPaymentById: async (id: string): Promise<ConstructionPaymentResponse> => {
+    if (getDataSourceConfig()) {
+      const result = await constructionPaymentFirestoreService.getConstructionPaymentById(id);
+      if (!result) throw new Error('Construction payment not found');
+      return result;
+    }
+    return railwayConstructionPaymentService.getConstructionPaymentById(id);
+  },
+
+  createConstructionPayment: async (data: ConstructionPaymentData): Promise<ConstructionPaymentResponse> => {
+    if (getDataSourceConfig()) {
+      return constructionPaymentFirestoreService.createConstructionPayment(data);
+    }
+    return railwayConstructionPaymentService.createConstructionPayment(data);
+  },
+
+  updateConstructionPayment: async (id: string, data: Partial<ConstructionPaymentData>): Promise<ConstructionPaymentResponse> => {
+    if (getDataSourceConfig()) {
+      return constructionPaymentFirestoreService.updateConstructionPayment(id, data);
+    }
+    return railwayConstructionPaymentService.updateConstructionPayment(id, data);
+  },
+
+  deleteConstructionPayment: async (id: string): Promise<void> => {
+    if (getDataSourceConfig()) {
+      return constructionPaymentFirestoreService.deleteConstructionPayment(id);
+    }
+    return railwayConstructionPaymentService.deleteConstructionPayment(id);
+  },
+
+  // Firestore 실시간 구독 (Firestore 전용)
+  subscribeToConstructionPayments: constructionPaymentFirestoreService.subscribeToConstructionPayments
 };
 
 export default constructionPaymentService;

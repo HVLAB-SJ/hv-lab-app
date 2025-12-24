@@ -1,4 +1,6 @@
 import api from './api';
+import scheduleFirestoreService from './firestore/scheduleFirestoreService';
+import { getDataSourceConfig } from './firestore/dataSourceConfig';
 
 export interface ScheduleData {
   project: string;
@@ -52,20 +54,18 @@ export interface ScheduleResponse {
   time?: string;  // 시간 (HH:mm 형식)
 }
 
-const scheduleService = {
-  // Get all schedules
+// Railway API 서비스 (기존)
+const railwayScheduleService = {
   getAllSchedules: async (): Promise<ScheduleResponse[]> => {
     const response = await api.get('/schedules');
     return response.data;
   },
 
-  // Get single schedule
   getScheduleById: async (id: string): Promise<ScheduleResponse> => {
     const response = await api.get(`/schedules/${id}`);
     return response.data;
   },
 
-  // Create schedule
   createSchedule: async (data: ScheduleData): Promise<ScheduleResponse> => {
     const response = await api.post('/schedules', {
       project: data.project,
@@ -87,16 +87,59 @@ const scheduleService = {
     return response.data;
   },
 
-  // Update schedule
   updateSchedule: async (id: string, data: Partial<ScheduleData>): Promise<ScheduleResponse> => {
     const response = await api.put(`/schedules/${id}`, data);
     return response.data;
   },
 
-  // Delete schedule
   deleteSchedule: async (id: string): Promise<void> => {
     await api.delete(`/schedules/${id}`);
   }
+};
+
+// 통합 서비스 (데이터 소스에 따라 자동 선택)
+const scheduleService = {
+  getAllSchedules: async (): Promise<ScheduleResponse[]> => {
+    if (getDataSourceConfig()) {
+      console.log('[scheduleService] Using Firestore');
+      return scheduleFirestoreService.getAllSchedules();
+    }
+    console.log('[scheduleService] Using Railway API');
+    return railwayScheduleService.getAllSchedules();
+  },
+
+  getScheduleById: async (id: string): Promise<ScheduleResponse> => {
+    if (getDataSourceConfig()) {
+      const result = await scheduleFirestoreService.getScheduleById(id);
+      if (!result) throw new Error('Schedule not found');
+      return result;
+    }
+    return railwayScheduleService.getScheduleById(id);
+  },
+
+  createSchedule: async (data: ScheduleData): Promise<ScheduleResponse> => {
+    if (getDataSourceConfig()) {
+      return scheduleFirestoreService.createSchedule(data);
+    }
+    return railwayScheduleService.createSchedule(data);
+  },
+
+  updateSchedule: async (id: string, data: Partial<ScheduleData>): Promise<ScheduleResponse> => {
+    if (getDataSourceConfig()) {
+      return scheduleFirestoreService.updateSchedule(id, data);
+    }
+    return railwayScheduleService.updateSchedule(id, data);
+  },
+
+  deleteSchedule: async (id: string): Promise<void> => {
+    if (getDataSourceConfig()) {
+      return scheduleFirestoreService.deleteSchedule(id);
+    }
+    return railwayScheduleService.deleteSchedule(id);
+  },
+
+  // Firestore 실시간 구독 (Firestore 전용)
+  subscribeToSchedules: scheduleFirestoreService.subscribeToSchedules
 };
 
 export default scheduleService;

@@ -1,13 +1,15 @@
 import api from './api';
+import workRequestFirestoreService from './firestore/workRequestFirestoreService';
+import { getDataSourceConfig } from './firestore/dataSourceConfig';
 
 export interface WorkRequestData {
   project: string;
-  requestType: string; // 목공도면, 전기도면, 설비도면, 3D모델링, 기타
+  requestType: string;
   description: string;
   requestDate: Date | string;
   dueDate: Date | string;
-  requestedBy: string; // 요청자
-  assignedTo: string; // 담당자
+  requestedBy: string;
+  assignedTo: string;
   status?: 'pending' | 'in-progress' | 'completed' | 'cancelled';
   priority?: 'low' | 'medium' | 'high';
   notes?: string;
@@ -31,24 +33,19 @@ export interface WorkRequestResponse {
   updatedAt: string;
 }
 
-const workRequestService = {
-  // Get all work requests
+// Railway API 서비스 (기존)
+const railwayWorkRequestService = {
   getAllWorkRequests: async (): Promise<WorkRequestResponse[]> => {
     const response = await api.get('/workrequests');
     return response.data;
   },
 
-  // Get single work request
   getWorkRequestById: async (id: string): Promise<WorkRequestResponse> => {
     const response = await api.get(`/workrequests/${id}`);
     return response.data;
   },
 
-  // Create work request
   createWorkRequest: async (data: WorkRequestData): Promise<WorkRequestResponse> => {
-    console.log('[workRequestService.createWorkRequest] Input data:', data);
-
-    // Send all required fields to backend
     const backendData = {
       project: data.project,
       requestType: data.requestType,
@@ -67,11 +64,7 @@ const workRequestService = {
     return response.data;
   },
 
-  // Update work request
   updateWorkRequest: async (id: string, data: Partial<WorkRequestData>): Promise<WorkRequestResponse> => {
-    console.log('[workRequestService.updateWorkRequest] Input data:', data);
-
-    // Send all fields to backend (backend accepts camelCase)
     const backendData: Record<string, unknown> = {};
     if (data.project !== undefined) backendData.project = data.project;
     if (data.requestType !== undefined) backendData.requestType = data.requestType;
@@ -91,15 +84,58 @@ const workRequestService = {
       backendData.completedDate = data.completedDate instanceof Date ? data.completedDate.toISOString() : data.completedDate;
     }
 
-    console.log('[workRequestService.updateWorkRequest] Sending to backend:', backendData);
     const response = await api.put(`/workrequests/${id}`, backendData);
     return response.data;
   },
 
-  // Delete work request
   deleteWorkRequest: async (id: string): Promise<void> => {
     await api.delete(`/workrequests/${id}`);
   }
+};
+
+// 통합 서비스 (데이터 소스에 따라 자동 선택)
+const workRequestService = {
+  getAllWorkRequests: async (): Promise<WorkRequestResponse[]> => {
+    if (getDataSourceConfig()) {
+      console.log('[workRequestService] Using Firestore');
+      return workRequestFirestoreService.getAllWorkRequests();
+    }
+    console.log('[workRequestService] Using Railway API');
+    return railwayWorkRequestService.getAllWorkRequests();
+  },
+
+  getWorkRequestById: async (id: string): Promise<WorkRequestResponse> => {
+    if (getDataSourceConfig()) {
+      const result = await workRequestFirestoreService.getWorkRequestById(id);
+      if (!result) throw new Error('Work request not found');
+      return result;
+    }
+    return railwayWorkRequestService.getWorkRequestById(id);
+  },
+
+  createWorkRequest: async (data: WorkRequestData): Promise<WorkRequestResponse> => {
+    if (getDataSourceConfig()) {
+      return workRequestFirestoreService.createWorkRequest(data);
+    }
+    return railwayWorkRequestService.createWorkRequest(data);
+  },
+
+  updateWorkRequest: async (id: string, data: Partial<WorkRequestData>): Promise<WorkRequestResponse> => {
+    if (getDataSourceConfig()) {
+      return workRequestFirestoreService.updateWorkRequest(id, data);
+    }
+    return railwayWorkRequestService.updateWorkRequest(id, data);
+  },
+
+  deleteWorkRequest: async (id: string): Promise<void> => {
+    if (getDataSourceConfig()) {
+      return workRequestFirestoreService.deleteWorkRequest(id);
+    }
+    return railwayWorkRequestService.deleteWorkRequest(id);
+  },
+
+  // Firestore 실시간 구독 (Firestore 전용)
+  subscribeToWorkRequests: workRequestFirestoreService.subscribeToWorkRequests
 };
 
 export default workRequestService;

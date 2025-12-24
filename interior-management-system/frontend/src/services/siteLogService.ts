@@ -1,4 +1,6 @@
 import api from './api';
+import siteLogFirestoreService from './firestore/siteLogFirestoreService';
+import { getDataSourceConfig } from './firestore/dataSourceConfig';
 
 interface SiteLogData {
   project: string;
@@ -8,8 +10,8 @@ interface SiteLogData {
   createdBy: string;
 }
 
-const siteLogService = {
-  // 프로젝트별 일지 조회
+// Railway API 서비스 (기존)
+const railwaySiteLogService = {
   async getProjectLogs(projectName: string) {
     try {
       const response = await api.get(`/site-logs/project/${encodeURIComponent(projectName)}`);
@@ -20,7 +22,6 @@ const siteLogService = {
     }
   },
 
-  // 모든 일지 조회
   async getAllLogs() {
     try {
       const response = await api.get(`/site-logs`);
@@ -31,7 +32,6 @@ const siteLogService = {
     }
   },
 
-  // 일지 생성
   async createLog(logData: SiteLogData) {
     try {
       const response = await api.post(`/site-logs`, logData);
@@ -42,7 +42,6 @@ const siteLogService = {
     }
   },
 
-  // 일지 수정
   async updateLog(id: string, logData: Partial<SiteLogData>) {
     try {
       const response = await api.put(`/site-logs/${id}`, logData);
@@ -53,7 +52,6 @@ const siteLogService = {
     }
   },
 
-  // 일지 삭제
   async deleteLog(id: string) {
     try {
       const response = await api.delete(`/site-logs/${id}`);
@@ -64,7 +62,6 @@ const siteLogService = {
     }
   },
 
-  // 날짜 범위로 조회
   async getLogsByDateRange(projectName: string, startDate: Date, endDate: Date) {
     try {
       const response = await api.get(`/site-logs/range`, {
@@ -80,6 +77,56 @@ const siteLogService = {
       return [];
     }
   }
+};
+
+// 통합 서비스 (데이터 소스에 따라 자동 선택)
+const siteLogService = {
+  async getProjectLogs(projectName: string) {
+    if (getDataSourceConfig()) {
+      console.log('[siteLogService] Using Firestore');
+      return siteLogFirestoreService.getProjectLogs(projectName);
+    }
+    console.log('[siteLogService] Using Railway API');
+    return railwaySiteLogService.getProjectLogs(projectName);
+  },
+
+  async getAllLogs() {
+    if (getDataSourceConfig()) {
+      return siteLogFirestoreService.getAllLogs();
+    }
+    return railwaySiteLogService.getAllLogs();
+  },
+
+  async createLog(logData: SiteLogData) {
+    if (getDataSourceConfig()) {
+      return siteLogFirestoreService.createLog(logData);
+    }
+    return railwaySiteLogService.createLog(logData);
+  },
+
+  async updateLog(id: string, logData: Partial<SiteLogData>) {
+    if (getDataSourceConfig()) {
+      return siteLogFirestoreService.updateLog(id, logData);
+    }
+    return railwaySiteLogService.updateLog(id, logData);
+  },
+
+  async deleteLog(id: string) {
+    if (getDataSourceConfig()) {
+      return siteLogFirestoreService.deleteLog(id);
+    }
+    return railwaySiteLogService.deleteLog(id);
+  },
+
+  async getLogsByDateRange(projectName: string, startDate: Date, endDate: Date) {
+    if (getDataSourceConfig()) {
+      return siteLogFirestoreService.getLogsByDateRange(projectName, startDate, endDate);
+    }
+    return railwaySiteLogService.getLogsByDateRange(projectName, startDate, endDate);
+  },
+
+  // Firestore 실시간 구독 (Firestore 전용)
+  subscribeToLogs: siteLogFirestoreService.subscribeToLogs
 };
 
 export default siteLogService;
