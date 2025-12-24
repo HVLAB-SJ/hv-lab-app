@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Payment from '../models/Payment.model';
 import Project from '../models/Project.model';
+import ExecutionRecord from '../models/ExecutionRecord.model';
 import { sendUrgentVoiceCall, sendUrgentSMS } from '../services/voiceCall.service';
 import { config } from '../config/env.config';
 import { io } from '../index';
@@ -238,6 +239,55 @@ export const updatePaymentStatus = async (req: Request, res: Response): Promise<
     if (!payment) {
       res.status(404).json({ error: 'Payment not found' });
       return;
+    }
+
+    // 송금완료 시 자동으로 실행내역 생성
+    if (status === 'completed') {
+      try {
+        // 이미 동일한 paymentId로 실행내역이 있는지 확인
+        const existingRecord = await ExecutionRecord.findOne({ paymentId: payment._id });
+
+        if (!existingRecord) {
+          // 프로젝트 이름 추출
+          const projectName = typeof payment.project === 'object' && payment.project !== null
+            ? (payment.project as any).name
+            : '';
+
+          const executionRecord = new ExecutionRecord({
+            projectId: payment.project && typeof payment.project === 'object' ? (payment.project as any)._id : payment.project,
+            projectName: projectName,
+            author: '',
+            date: new Date(),
+            process: payment.vendorName || '',
+            itemName: payment.itemName || payment.description || '결제요청',
+            materialCost: payment.materialAmount || 0,
+            laborCost: payment.laborAmount || 0,
+            vatAmount: 0,
+            totalAmount: payment.amount || 0,
+            notes: payment.notes || '',
+            images: [],
+            paymentId: payment._id
+          });
+
+          await executionRecord.save();
+          console.log('✅ 실행내역 자동 생성 완료:', {
+            paymentId: payment._id,
+            projectName,
+            itemName: executionRecord.itemName
+          });
+
+          // 실행내역 생성 알림 브로드캐스트
+          io.emit('executionRecord:created', {
+            executionRecordId: executionRecord._id,
+            paymentId: payment._id
+          });
+        } else {
+          console.log('ℹ️ 이미 실행내역이 존재함:', { paymentId: payment._id });
+        }
+      } catch (execError) {
+        console.error('실행내역 자동 생성 실패:', execError);
+        // 실행내역 생성 실패해도 결제 상태 업데이트는 성공으로 처리
+      }
     }
 
     // 결제 상태 변경 시 모든 클라이언트에게 실시간 브로드캐스트

@@ -336,7 +336,10 @@ export const useDataStore = create<DataStore>()(
       const payments: Payment[] = apiPayments.map((p: PaymentResponse) => {
         return {
           id: String(p.id),
-          project: p.project_name || '',  // null인 경우 빈 문자열 (프론트엔드에서 '-' 표시)
+          // MongoDB populate는 project: { name: '...' } 형태로 반환
+          project: (typeof (p as any).project === 'object' && (p as any).project?.name)
+            ? (p as any).project.name
+            : (p.project_name || ''),
           purpose: p.description,
           process: p.vendor_name,
           itemName: p.item_name || '',
