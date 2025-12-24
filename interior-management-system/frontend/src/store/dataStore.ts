@@ -377,16 +377,16 @@ export const useDataStore = create<DataStore>()(
           },
           attachments: [],
           notes: p.notes || '',
-          // completionDate는 아래에서 로컬 데이터와 병합하여 설정
-          completionDate: p.paid_at ? new Date(p.paid_at) : undefined
+          // completionDate: MongoDB는 completionDate 필드를 직접 반환함
+          completionDate: p.completionDate ? new Date(p.completionDate) : undefined
         };
       });
 
-      // 기존 로컬 데이터의 completionDate 보존 (API 응답에 paid_at이 없을 경우)
+      // 기존 로컬 데이터의 completionDate 보존 (API 응답에 completionDate가 없을 경우)
       const currentPayments = get().payments;
       const currentPaymentMap = new Map(currentPayments.map(p => [p.id, p]));
       payments.forEach(payment => {
-        // API에서 paid_at이 없어서 completionDate가 undefined인 경우
+        // API에서 completionDate가 없어서 undefined인 경우
         if (!payment.completionDate && payment.status === 'completed') {
           const existing = currentPaymentMap.get(payment.id);
           if (existing?.completionDate) {
