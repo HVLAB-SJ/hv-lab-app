@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import api from '../services/api';
+import specbookFirestoreService from '../services/firestore/specbookFirestoreService';
+import { getDataSourceConfig } from '../services/firestore/dataSourceConfig';
 
 export interface SpecBookItem {
   id: number;
@@ -84,16 +86,25 @@ export const useSpecbookStore = create<SpecbookStore>((set, get) => ({
 
     try {
       console.log('[SpecbookStore] 라이브러리 사전 로딩 시작...');
-      const response = await api.get('/specbook/library/meta');
+
+      let items: SpecBookItem[];
+      if (getDataSourceConfig()) {
+        console.log('[SpecbookStore] Using Firestore');
+        items = await specbookFirestoreService.getLibraryMeta();
+      } else {
+        console.log('[SpecbookStore] Using Railway API');
+        const response = await api.get('/specbook/library/meta');
+        items = response.data;
+      }
 
       set({
-        libraryItems: response.data,
+        libraryItems: items,
         libraryLoaded: true,
         libraryLoading: false,
         libraryLoadedAt: Date.now()
       });
 
-      console.log('[SpecbookStore] 라이브러리 로딩 완료:', response.data.length, '개 아이템');
+      console.log('[SpecbookStore] 라이브러리 로딩 완료:', items.length, '개 아이템');
     } catch (error) {
       console.error('[SpecbookStore] 라이브러리 로딩 실패:', error);
       set({ libraryLoading: false });
@@ -105,12 +116,19 @@ export const useSpecbookStore = create<SpecbookStore>((set, get) => ({
     if (state.categoriesLoaded) return;
 
     try {
-      const response = await api.get('/specbook/categories');
+      let categories: string[];
+      if (getDataSourceConfig()) {
+        categories = await specbookFirestoreService.getCategories();
+      } else {
+        const response = await api.get('/specbook/categories');
+        categories = response.data;
+      }
+
       set({
-        categories: response.data,
+        categories: categories,
         categoriesLoaded: true
       });
-      console.log('[SpecbookStore] 카테고리 로딩 완료:', response.data.length, '개');
+      console.log('[SpecbookStore] 카테고리 로딩 완료:', categories.length, '개');
     } catch (error) {
       console.error('[SpecbookStore] 카테고리 로딩 실패:', error);
     }
@@ -165,8 +183,13 @@ export const useSpecbookStore = create<SpecbookStore>((set, get) => ({
     }
 
     try {
-      const response = await api.get(`/specbook/project/${projectId}/meta`);
-      const items = response.data;
+      let items: SpecBookItem[];
+      if (getDataSourceConfig()) {
+        items = await specbookFirestoreService.getProjectMeta(projectId);
+      } else {
+        const response = await api.get(`/specbook/project/${projectId}/meta`);
+        items = response.data;
+      }
 
       // 캐시에 저장
       set(state => {

@@ -1,29 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { Mail, Phone, MapPin, Calendar, User, Building, Trash2 } from 'lucide-react';
-import api from '../services/api';
-
-interface QuoteInquiry {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  address?: string;
-  projectType?: string;
-  budget?: string;
-  message: string;
-  createdAt: string;
-  isRead: boolean;
-}
+import quoteInquiryService, { QuoteInquiry as QuoteInquiryType } from '../services/quoteInquiryService';
+import { getDataSourceConfig } from '../services/firestore/dataSourceConfig';
 
 const QuoteInquiry = () => {
-  const [inquiries, setInquiries] = useState<QuoteInquiry[]>([]);
-  const [selectedInquiry, setSelectedInquiry] = useState<QuoteInquiry | null>(null);
+  const [inquiries, setInquiries] = useState<QuoteInquiryType[]>([]);
+  const [selectedInquiry, setSelectedInquiry] = useState<QuoteInquiryType | null>(null);
   const [loading, setLoading] = useState(false);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    loadInquiries();
+    // Firestore 사용 시 실시간 구독
+    if (getDataSourceConfig()) {
+      console.log('[QuoteInquiry] Using Firestore subscription');
+      unsubscribeRef.current = quoteInquiryService.subscribeToQuoteInquiries((data) => {
+        setInquiries(data);
+        setLoading(false);
+      });
+      setLoading(true);
+    } else {
+      // Railway API 사용 시
+      loadInquiries();
+    }
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
   }, []);
 
   const loadInquiries = async () => {
@@ -32,8 +38,8 @@ const QuoteInquiry = () => {
       if (inquiries.length === 0) {
         setLoading(true);
       }
-      const response = await api.get('/quote-inquiries');
-      setInquiries(response.data);
+      const data = await quoteInquiryService.getAllQuoteInquiries();
+      setInquiries(data);
     } catch (error) {
       console.error('Failed to load inquiries:', error);
       toast.error('견적문의를 불러오는데 실패했습니다');
@@ -44,10 +50,13 @@ const QuoteInquiry = () => {
 
   const markAsRead = async (id: string) => {
     try {
-      await api.put(`/quote-inquiries/${id}/read`);
-      setInquiries(prev =>
-        prev.map(inq => inq.id === id ? { ...inq, isRead: true } : inq)
-      );
+      await quoteInquiryService.markAsRead(id);
+      // Firestore 사용 시 실시간 동기화로 자동 업데이트됨
+      if (!getDataSourceConfig()) {
+        setInquiries(prev =>
+          prev.map(inq => inq.id === id ? { ...inq, isRead: true } : inq)
+        );
+      }
       // 배지 업데이트를 위한 이벤트 발생
       window.dispatchEvent(new CustomEvent('quoteInquiryRead'));
     } catch (error) {
@@ -55,7 +64,7 @@ const QuoteInquiry = () => {
     }
   };
 
-  const handleSelectInquiry = (inquiry: QuoteInquiry) => {
+  const handleSelectInquiry = (inquiry: QuoteInquiryType) => {
     setSelectedInquiry(inquiry);
     if (!inquiry.isRead) {
       markAsRead(inquiry.id);
@@ -70,8 +79,11 @@ const QuoteInquiry = () => {
     }
 
     try {
-      await api.delete(`/quote-inquiries/${id}`);
-      setInquiries(prev => prev.filter(inq => inq.id !== id));
+      await quoteInquiryService.deleteQuoteInquiry(id);
+      // Firestore 사용 시 실시간 동기화로 자동 업데이트됨
+      if (!getDataSourceConfig()) {
+        setInquiries(prev => prev.filter(inq => inq.id !== id));
+      }
 
       // 삭제된 항목이 선택된 항목이면 선택 해제
       if (selectedInquiry?.id === id) {
