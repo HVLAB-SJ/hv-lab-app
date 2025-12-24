@@ -63,6 +63,17 @@ const ExecutionHistory = () => {
 
   // 레코드의 고유 키 생성
   const getRecordKey = (record: { type: string; id: string }) => `${record.type}_${record.id}`;
+
+  // author 필드를 안전하게 문자열로 변환 (객체일 경우 name 추출)
+  const getAuthorString = (author: unknown): string => {
+    if (!author) return '-';
+    if (typeof author === 'string') return author;
+    if (typeof author === 'object' && author !== null) {
+      const authorObj = author as { name?: string; username?: string };
+      return authorObj.name || authorObj.username || '-';
+    }
+    return '-';
+  };
   const [isDragging, setIsDragging] = useState(false);
   const [includeVat, setIncludeVat] = useState(false);
   const [includeTaxDeduction, setIncludeTaxDeduction] = useState(false);
@@ -1664,7 +1675,7 @@ const ExecutionHistory = () => {
                       }}
                     >
                       <td className="px-3 py-3 text-gray-600 whitespace-nowrap exec-author-col">
-                        {record.author || '-'}
+                        {getAuthorString(record.author)}
                       </td>
                       <td className="px-3 py-3 text-gray-600 exec-date-col">
                         <span className="exec-date-full">{format(new Date(record.date), 'yyyy-MM-dd (EEE)', { locale: ko })}</span>
@@ -1766,7 +1777,7 @@ const ExecutionHistory = () => {
                     </div>
                     {/* 2행: 공정, 작성자, 날짜 + 자재비/인건비/부가세 */}
                     <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
-                      <span>{record.process || '-'} · {record.author || '-'} · {format(new Date(record.date), 'MM.dd', { locale: ko })}</span>
+                      <span>{record.process || '-'} · {getAuthorString(record.author)} · {format(new Date(record.date), 'MM.dd', { locale: ko })}</span>
                       <span className="text-[10px] text-gray-400">
                         자재비 {(record.materialCost || 0).toLocaleString()} · 인건비 {(record.laborCost || 0).toLocaleString()} · 부가세 {(record.vatAmount || 0).toLocaleString()}
                       </span>
