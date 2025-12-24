@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import api from '../services/api';
+import specbookService from '../services/specbookService';
 
 interface LazySpecbookImageProps {
   itemId: number;
@@ -90,12 +90,8 @@ const LazySpecbookImage = ({
       setIsLoading(true);
 
       // 새 요청 생성
-      const requestPromise = api.get(`/specbook/item/${itemId}/image`)
-        .then(response => {
-          const data = {
-            image_url: response.data.image_url,
-            sub_images: response.data.sub_images || []
-          };
+      const requestPromise = specbookService.getItemImage(itemId)
+        .then(data => {
           // 캐시에 저장
           imageCache.set(itemId, data);
           return data;

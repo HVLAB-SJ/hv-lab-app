@@ -1,41 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Edit2, Check, X, ChevronLeft, Image as ImageIcon, Upload, XCircle, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api from '../services/api';
+import finishCheckService, {
+  type FinishCheckSpace,
+  type FinishCheckItem,
+  type FinishCheckItemImage
+} from '../services/finishCheckService';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useDataStore } from '../store/dataStore';
-
-interface FinishCheckItemImage {
-  id: number;
-  item_id: number;
-  image_data?: string;  // 초기 로딩 시 없을 수 있음
-  filename: string | null;
-  created_at: string;
-}
-
-interface FinishCheckItem {
-  id: number;
-  space_id: number;
-  content: string;
-  is_completed: number;
-  is_priority?: number;
-  completed_at: string | null;
-  display_order: number;
-  created_at: string;
-  updated_at: string;
-  images: FinishCheckItemImage[];
-}
-
-interface FinishCheckSpace {
-  id: number;
-  name: string;
-  project_id: number | null;
-  display_order: number;
-  created_at: string;
-  updated_at: string;
-  items: FinishCheckItem[];
-}
 
 interface Project {
   id: number;
@@ -172,13 +145,10 @@ const FinishCheck = () => {
       if (spaces.length === 0) {
         setLoading(true);
       }
-      const url = selectedProjectId
-        ? `/finish-check/spaces?project_id=${selectedProjectId}`
-        : '/finish-check/spaces';
-      const response = await api.get(url);
+      const spacesData = await finishCheckService.getSpaces(selectedProjectId || undefined);
 
       // Ensure all items have an images array
-      const spacesWithImages = response.data.map((space: FinishCheckSpace) => ({
+      const spacesWithImages = spacesData.map((space: FinishCheckSpace) => ({
         ...space,
         items: space.items.map(item => ({
           ...item,
@@ -196,13 +166,13 @@ const FinishCheck = () => {
   };
 
   // 이미지 데이터 로드 (필요할 때만)
-  const loadImageData = async (imageId: number): Promise<string | null> => {
-    if (loadingImageIds.has(imageId)) return null;
+  const loadImageData = async (imageId: string | number): Promise<string | null> => {
+    if (loadingImageIds.has(Number(imageId))) return null;
 
     try {
-      setLoadingImageIds(prev => new Set(prev).add(imageId));
-      const response = await api.get(`/finish-check/images/${imageId}`);
-      const imageData = response.data.image_data;
+      setLoadingImageIds(prev => new Set(prev).add(Number(imageId)));
+      const result = await finishCheckService.getImageData(imageId);
+      const imageData = result?.image_data || null;
 
       // spaces 상태 업데이트하여 이미지 데이터 캐시
       setSpaces(prevSpaces => prevSpaces.map(space => ({
@@ -210,7 +180,7 @@ const FinishCheck = () => {
         items: space.items.map(item => ({
           ...item,
           images: item.images.map(img =>
-            img.id === imageId ? { ...img, image_data: imageData } : img
+            String(img.id) === String(imageId) ? { ...img, image_data: imageData } : img
           )
         }))
       })));
@@ -222,7 +192,7 @@ const FinishCheck = () => {
     } finally {
       setLoadingImageIds(prev => {
         const next = new Set(prev);
-        next.delete(imageId);
+        next.delete(Number(imageId));
         return next;
       });
     }
@@ -255,14 +225,11 @@ const FinishCheck = () => {
     setIsAddingSpace(true);
 
     try {
-      const response = await api.post('/finish-check/spaces', {
-        name: newSpaceName.trim(),
-        project_id: selectedProjectId
-      });
+      const newSpaceData = await finishCheckService.createSpace(newSpaceName.trim(), selectedProjectId);
       // Ensure items array exists
       const newSpace = {
-        ...response.data,
-        items: response.data.items || []
+        ...newSpaceData,
+        items: newSpaceData.items || []
       };
       setSpaces([...spaces, newSpace]);
       setNewSpaceName('');
@@ -276,18 +243,16 @@ const FinishCheck = () => {
     }
   };
 
-  const handleUpdateSpace = async (spaceId: number, newName: string) => {
+  const handleUpdateSpace = async (spaceId: string | number, newName: string) => {
     if (!newName.trim()) {
       toast.error('공간 이름을 입력하세요');
       return;
     }
 
     try {
-      await api.put(`/finish-check/spaces/${spaceId}`, {
-        name: newName.trim()
-      });
+      await finishCheckService.updateSpace(spaceId, newName.trim());
       setSpaces(spaces.map(space =>
-        space.id === spaceId ? { ...space, name: newName.trim() } : space
+        String(space.id) === String(spaceId) ? { ...space, name: newName.trim() } : space
       ));
       setEditingSpaceId(null);
       setEditingSpaceName('');
@@ -315,14 +280,14 @@ const FinishCheck = () => {
       // 선택된 항목들을 삭제
       await Promise.all(
         Array.from(selectedItemsToDelete).map(itemId =>
-          api.delete(`/finish-check/items/${itemId}`)
+          finishCheckService.deleteItem(itemId)
         )
       );
 
       // 로컬 상태 업데이트
       setSpaces(spaces.map(space =>
-        space.id === deletingSpaceId
-          ? { ...space, items: space.items.filter(item => !selectedItemsToDelete.has(item.id)) }
+        String(space.id) === String(deletingSpaceId)
+          ? { ...space, items: space.items.filter(item => !selectedItemsToDelete.has(item.id as number)) }
           : space
       ));
 
@@ -338,7 +303,7 @@ const FinishCheck = () => {
   const handleDeleteEntireSpace = async () => {
     if (deletingSpaceId === null) return;
 
-    const space = spaces.find(s => s.id === deletingSpaceId);
+    const space = spaces.find(s => String(s.id) === String(deletingSpaceId));
     if (!space) return;
 
     if (!confirm(`"${space.name}" 공간을 삭제하시겠습니까?\n\n삭제된 공간과 해당 공간의 모든 항목은 복구할 수 없습니다.`)) {
@@ -346,8 +311,8 @@ const FinishCheck = () => {
     }
 
     try {
-      await api.delete(`/finish-check/spaces/${deletingSpaceId}`);
-      setSpaces(spaces.filter(s => s.id !== deletingSpaceId));
+      await finishCheckService.deleteSpace(deletingSpaceId);
+      setSpaces(spaces.filter(s => String(s.id) !== String(deletingSpaceId)));
       toast.success('공간이 삭제되었습니다');
       setDeletingSpaceId(null);
       setSelectedItemsToDelete(new Set());
@@ -357,7 +322,7 @@ const FinishCheck = () => {
     }
   };
 
-  const handleAddItem = async (spaceId: number) => {
+  const handleAddItem = async (spaceId: string | number) => {
     if (!newItemContent.trim()) {
       toast.error('항목 내용을 입력하세요');
       return;
@@ -376,8 +341,8 @@ const FinishCheck = () => {
 
     // 즉시 UI 업데이트
     setSpaces(spaces.map(space =>
-      space.id === spaceId
-        ? { ...space, items: [...space.items, tempItem] }
+      String(space.id) === String(spaceId)
+        ? { ...space, items: [...space.items, tempItem as any] }
         : space
     ));
     const savedContent = newItemContent.trim();
@@ -386,16 +351,13 @@ const FinishCheck = () => {
 
     // 백그라운드에서 API 호출
     try {
-      const response = await api.post('/finish-check/items', {
-        space_id: spaceId,
-        content: savedContent
-      });
+      const newItem = await finishCheckService.createItem(spaceId, savedContent);
 
       // API 성공 시 임시 항목을 실제 데이터로 교체
       setSpaces(prev => prev.map(space =>
-        space.id === spaceId
+        String(space.id) === String(spaceId)
           ? { ...space, items: space.items.map(item =>
-              item.id === tempId ? { ...response.data, images: [] } : item
+              item.id === tempId ? { ...newItem, images: [] } : item
             )}
           : space
       ));
@@ -403,7 +365,7 @@ const FinishCheck = () => {
       console.error('Failed to add item:', error);
       // 실패 시 임시 항목 제거
       setSpaces(prev => prev.map(space =>
-        space.id === spaceId
+        String(space.id) === String(spaceId)
           ? { ...space, items: space.items.filter(item => item.id !== tempId) }
           : space
       ));
@@ -411,14 +373,14 @@ const FinishCheck = () => {
     }
   };
 
-  const handleToggleItem = async (itemId: number) => {
+  const handleToggleItem = async (itemId: string | number) => {
     try {
-      const response = await api.put(`/finish-check/items/${itemId}/toggle`);
+      const result = await finishCheckService.toggleItem(itemId);
 
       setSpaces(spaces.map(space => ({
         ...space,
         items: space.items.map(item =>
-          item.id === itemId ? { ...item, ...response.data } : item
+          String(item.id) === String(itemId) ? { ...item, ...result } : item
         )
       })));
     } catch (error) {
@@ -427,14 +389,14 @@ const FinishCheck = () => {
     }
   };
 
-  const handleTogglePriority = async (itemId: number) => {
+  const handleTogglePriority = async (itemId: string | number) => {
     try {
-      const response = await api.put(`/finish-check/items/${itemId}/toggle-priority`);
+      const result = await finishCheckService.togglePriority(itemId);
 
       setSpaces(spaces.map(space => ({
         ...space,
         items: space.items.map(item =>
-          item.id === itemId ? { ...item, is_priority: response.data.is_priority } : item
+          String(item.id) === String(itemId) ? { ...item, is_priority: result.is_priority } : item
         )
       })));
     } catch (error) {
@@ -443,21 +405,19 @@ const FinishCheck = () => {
     }
   };
 
-  const handleUpdateItem = async (itemId: number, newContent: string) => {
+  const handleUpdateItem = async (itemId: string | number, newContent: string) => {
     if (!newContent.trim()) {
       toast.error('항목 내용을 입력하세요');
       return;
     }
 
     try {
-      await api.put(`/finish-check/items/${itemId}`, {
-        content: newContent.trim()
-      });
+      await finishCheckService.updateItem(itemId, newContent.trim());
 
       setSpaces(spaces.map(space => ({
         ...space,
         items: space.items.map(item =>
-          item.id === itemId ? { ...item, content: newContent.trim() } : item
+          String(item.id) === String(itemId) ? { ...item, content: newContent.trim() } : item
         )
       })));
       setEditingItemId(null);
@@ -469,21 +429,21 @@ const FinishCheck = () => {
     }
   };
 
-  const handleDeleteItem = async (itemId: number) => {
+  const handleDeleteItem = async (itemId: string | number) => {
     if (!confirm('이 항목을 삭제하시겠습니까?')) {
       return;
     }
 
     try {
-      await api.delete(`/finish-check/items/${itemId}`);
+      await finishCheckService.deleteItem(itemId);
 
       setSpaces(spaces.map(space => ({
         ...space,
-        items: space.items.filter(item => item.id !== itemId)
+        items: space.items.filter(item => String(item.id) !== String(itemId))
       })));
 
       // 선택된 항목이 삭제된 경우 선택 해제
-      if (selectedItemForImages === itemId) {
+      if (selectedItemForImages === Number(itemId)) {
         setSelectedItemForImages(null);
       }
 
@@ -503,7 +463,7 @@ const FinishCheck = () => {
     });
   };
 
-  const handleImageUpload = async (itemId: number, file: File) => {
+  const handleImageUpload = async (itemId: string | number, file: File) => {
     // 파일 형식 체크
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
@@ -519,20 +479,17 @@ const FinishCheck = () => {
     }
 
     try {
-      setUploadingImages(prev => new Set([...prev, itemId]));
+      setUploadingImages(prev => new Set([...prev, Number(itemId)]));
 
       const base64 = await convertFileToBase64(file);
-      const response = await api.post(`/finish-check/items/${itemId}/images`, {
-        image_data: base64,
-        filename: file.name
-      });
+      const uploadedImage = await finishCheckService.uploadImage(itemId, base64, file.name);
 
       // 로컬 상태 업데이트
       setSpaces(spaces.map(space => ({
         ...space,
         items: space.items.map(item =>
-          item.id === itemId
-            ? { ...item, images: [...item.images, response.data] }
+          String(item.id) === String(itemId)
+            ? { ...item, images: [...item.images, uploadedImage as any] }
             : item
         )
       })));
@@ -544,7 +501,7 @@ const FinishCheck = () => {
     } finally {
       setUploadingImages(prev => {
         const newSet = new Set(prev);
-        newSet.delete(itemId);
+        newSet.delete(Number(itemId));
         return newSet;
       });
     }
@@ -564,19 +521,19 @@ const FinishCheck = () => {
     }
   };
 
-  const handleImageDelete = async (itemId: number, imageId: number) => {
+  const handleImageDelete = async (itemId: string | number, imageId: string | number) => {
     if (!confirm('이 이미지를 삭제하시겠습니까?')) {
       return;
     }
 
     try {
-      await api.delete(`/finish-check/images/${imageId}`);
+      await finishCheckService.deleteImage(imageId);
 
       setSpaces(spaces.map(space => ({
         ...space,
         items: space.items.map(item =>
-          item.id === itemId
-            ? { ...item, images: item.images.filter(img => img.id !== imageId) }
+          String(item.id) === String(itemId)
+            ? { ...item, images: item.images.filter(img => String(img.id) !== String(imageId)) }
             : item
         )
       })));

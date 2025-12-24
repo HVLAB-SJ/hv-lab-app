@@ -94,6 +94,22 @@ const specbookFirestoreService = {
     return parseSpecBookItem(docSnap.id, docSnap.data());
   },
 
+  // 아이템 이미지 정보 조회
+  async getItemImage(id: string): Promise<{ image_url: string | null; sub_images: string[] } | null> {
+    const docRef = doc(db, 'specbook_items', id);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return null;
+    }
+
+    const data = docSnap.data();
+    return {
+      image_url: (data.image_url as string) || null,
+      sub_images: (data.sub_images as string[]) || []
+    };
+  },
+
   // 라이브러리 아이템 실시간 구독
   subscribeToLibraryItems(callback: (items: SpecBookItem[]) => void): () => void {
     const itemsRef = collection(db, 'specbook_items');

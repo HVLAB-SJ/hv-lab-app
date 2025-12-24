@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import authService from '../services/authService';
+import { getDataSourceConfig } from '../services/firestore/dataSourceConfig';
 import toast from 'react-hot-toast';
 import type { ApiError } from '../types/forms';
 import { useSpecbookStore } from '../store/specbookStore';
@@ -45,12 +47,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      const response = await api.get('/auth/me');
-      if (response.data.success) {
-        setUser(response.data.user);
-        // 인증 성공 시 스펙북 데이터 백그라운드에서 사전 로딩
-        preloadSpecbook();
+      // Firestore 사용 시 authService 사용
+      if (getDataSourceConfig()) {
+        console.log('[AuthContext] Using Firestore via authService');
+        const user = await authService.getCurrentUser();
+        if (user) {
+          setUser(user);
+          // 인증 성공 시 스펙북 데이터 백그라운드에서 사전 로딩
+          preloadSpecbook();
+        }
+      } else {
+        // Railway API 사용 시 기존 방식
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        const response = await api.get('/auth/me');
+        if (response.data.success) {
+          setUser(response.data.user);
+          // 인증 성공 시 스펙북 데이터 백그라운드에서 사전 로딩
+          preloadSpecbook();
+        }
       }
     } catch (error: unknown) {
       // 401 에러인 경우에만 토큰 삭제 (토큰이 만료되었거나 유효하지 않음)
@@ -77,18 +91,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await api.post('/auth/login', { username, password });
-      const { token, user } = response.data;
+      let token: string;
+      let loggedInUser: User;
+
+      // Firestore 사용 시 authService 사용
+      if (getDataSourceConfig()) {
+        console.log('[AuthContext] Login via authService (Firestore)');
+        const response = await authService.login({ username, password });
+        token = response.token;
+        loggedInUser = response.user as User;
+      } else {
+        // Railway API 사용 시 기존 방식
+        const response = await api.post('/auth/login', { username, password });
+        token = response.data.token;
+        loggedInUser = response.data.user;
+      }
 
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));  // 유저 정보도 저장
+      localStorage.setItem('user', JSON.stringify(loggedInUser));  // 유저 정보도 저장
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(user);
+      setUser(loggedInUser);
 
       // 로그인 성공 시 스펙북 데이터 백그라운드에서 사전 로딩
       preloadSpecbook();
 
-      toast.success(`${user.name}님, 환영합니다!`);
+      toast.success(`${loggedInUser.name}님, 환영합니다!`);
 
       // 저장된 리다이렉트 URL이 있으면 해당 URL로 이동
       const redirectUrl = sessionStorage.getItem('redirectAfterLogin');

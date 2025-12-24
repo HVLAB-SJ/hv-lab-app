@@ -9,7 +9,7 @@ import workRequestService from '../services/workRequestService';
 import paymentService from '../services/paymentService';
 import asRequestService from '../services/asRequestService';
 import projectService from '../services/projectService';
-import api from '../services/api';
+import quoteInquiryService from '../services/quoteInquiryService';
 import socketService from '../services/socket';
 
 interface NavigationItem {
@@ -222,8 +222,8 @@ const Layout = () => {
         // 견적문의 읽지 않은 수 조회 (관리자/매니저만)
         if (user.role === 'admin' || user.role === 'manager') {
           try {
-            const quoteResponse = await api.get('/quote-inquiries');
-            const unreadQuotes = quoteResponse.data.filter((inq: { isRead: boolean }) => !inq.isRead).length;
+            const quoteInquiries = await quoteInquiryService.getAllQuoteInquiries();
+            const unreadQuotes = quoteInquiries.filter(inq => !inq.isRead).length;
             setUnreadQuoteInquiryCount(unreadQuotes);
           } catch (quoteError) {
             console.error('Failed to load quote inquiry count:', quoteError);
