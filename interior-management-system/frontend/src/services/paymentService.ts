@@ -141,6 +141,21 @@ const railwayPaymentService = {
 
   deletePayment: async (id: string): Promise<void> => {
     await api.delete(`/payments/${id}`);
+  },
+
+  sendTossPaymentSms: async (data: {
+    recipientPhone: string;
+    accountHolder: string;
+    bankName: string;
+    accountNumber: string;
+    amount: number;
+    projectName: string;
+    itemName?: string;
+    process?: string;
+    paymentId?: string | number;
+  }): Promise<{ success: boolean; message?: string }> => {
+    const response = await api.post('/payments/send-toss-payment-sms', data);
+    return response.data;
   }
 };
 
@@ -205,6 +220,9 @@ const paymentService = {
     }
     return railwayPaymentService.deletePayment(id);
   },
+
+  // Toss 결제 SMS 발송 (Railway API 전용 - 외부 서비스)
+  sendTossPaymentSms: railwayPaymentService.sendTossPaymentSms,
 
   // Firestore 실시간 구독 (Firestore 전용)
   subscribeToPayments: paymentFirestoreService.subscribeToPayments,

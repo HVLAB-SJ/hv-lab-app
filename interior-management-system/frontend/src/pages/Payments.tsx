@@ -11,7 +11,6 @@ import { ko } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import contractorService from '../services/contractorService';
 import paymentService from '../services/paymentService';
-import api from '../services/api';
 import CashReceiptModal from '../components/CashReceiptModal';
 import { removePosition } from '../utils/formatters';
 import { getAllImages, saveImages, migrateFromLocalStorage } from '../utils/imageStorage';
@@ -2040,7 +2039,7 @@ const Payments = () => {
         if (formData.accountHolder && formData.bankName && formData.accountNumber) {
           const recipientPhone = (includeVat || includeTaxDeduction) ? '01074088864' : '01089423283';
           try {
-            await api.post('/payments/send-toss-payment-sms', {
+            await paymentService.sendTossPaymentSms({
               recipientPhone: recipientPhone,
               accountHolder: formData.accountHolder,
               bankName: formData.bankName,
