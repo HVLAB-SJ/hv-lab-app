@@ -360,19 +360,32 @@ const paymentFirestoreService = {
 
   // 실시간 결제요청 목록 구독
   subscribeToPayments: (callback: (payments: PaymentResponse[]) => void): Unsubscribe => {
-    const collectionRef = collection(db, COLLECTIONS.PAYMENTS);
-    const q = query(collectionRef, orderBy('id', 'desc'));
+    // 먼저 프로젝트 캐시를 로드한 후 구독 시작
+    let unsubscribe: Unsubscribe | null = null;
 
-    return onSnapshot(q, async (snapshot) => {
-      // 캐시가 로드될 때까지 기다림
-      await loadProjectsCache();
+    // 프로젝트 캐시 로드 후 구독 설정
+    loadProjectsCache().then(() => {
+      const collectionRef = collection(db, COLLECTIONS.PAYMENTS);
+      const q = query(collectionRef, orderBy('id', 'desc'));
 
-      const payments = snapshot.docs.map(doc => {
-        const data = doc.data() as FirestorePayment;
-        return convertToPaymentResponse({ ...data, id: parseInt(doc.id) || data.id });
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        // 캐시가 이미 로드된 상태이므로 바로 변환
+        const payments = snapshot.docs.map(doc => {
+          const data = doc.data() as FirestorePayment;
+          return convertToPaymentResponse({ ...data, id: parseInt(doc.id) || data.id });
+        });
+        callback(payments);
       });
-      callback(payments);
+    }).catch(error => {
+      console.error('[paymentFirestoreService] 프로젝트 캐시 로드 실패로 구독 시작 불가:', error);
     });
+
+    // 구독 해제 함수 반환
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   },
 
   // 프로젝트별 결제요청 조회
