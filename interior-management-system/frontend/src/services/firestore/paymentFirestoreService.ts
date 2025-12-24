@@ -85,20 +85,39 @@ export interface PaymentResponse {
 
 // 프로젝트 정보 캐시
 let projectsCache: Map<string, { name: string; color: string }> = new Map();
+let projectsCachePromise: Promise<void> | null = null;
 
 async function loadProjectsCache(): Promise<void> {
+  // 이미 로드 완료된 경우
   if (projectsCache.size > 0) return;
 
-  const projectsRef = collection(db, COLLECTIONS.PROJECTS);
-  const querySnapshot = await getDocs(projectsRef);
+  // 이미 로드 중인 경우 기존 Promise를 기다림
+  if (projectsCachePromise) {
+    return projectsCachePromise;
+  }
 
-  querySnapshot.docs.forEach(doc => {
-    const data = doc.data();
-    projectsCache.set(doc.id, {
-      name: data.name || '',
-      color: data.color || '#4A90E2'
-    });
-  });
+  // 새로 로드 시작
+  projectsCachePromise = (async () => {
+    try {
+      const projectsRef = collection(db, COLLECTIONS.PROJECTS);
+      const querySnapshot = await getDocs(projectsRef);
+
+      querySnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        projectsCache.set(doc.id, {
+          name: data.name || '',
+          color: data.color || '#4A90E2'
+        });
+      });
+      console.log('[paymentFirestoreService] 프로젝트 캐시 로드 완료:', projectsCache.size, '개');
+    } catch (error) {
+      console.error('[paymentFirestoreService] 프로젝트 캐시 로드 실패:', error);
+      projectsCachePromise = null; // 실패 시 다시 시도할 수 있도록
+      throw error;
+    }
+  })();
+
+  return projectsCachePromise;
 }
 
 // Firestore 데이터를 API 응답 형식으로 변환
@@ -377,6 +396,7 @@ const paymentFirestoreService = {
   // 프로젝트 캐시 초기화 (프로젝트 변경 시 호출)
   clearProjectsCache: (): void => {
     projectsCache.clear();
+    projectsCachePromise = null;
   }
 };
 
