@@ -318,47 +318,19 @@ const Payments = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setPayments]);
 
-  // 모바일에서 3초마다 데이터 새로고침 (실시간 동기화 보조)
-  useEffect(() => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (!isMobile) return;
-
-    console.log('[모바일 폴링] 3초 간격 폴링 시작');
-    const intervalId = setInterval(async () => {
-      try {
-        await loadPaymentsFromAPI();
-      } catch (err) {
-        console.warn('[모바일 폴링] 새로고침 실패:', err);
-      }
-    }, 3000);
-
-    return () => {
-      console.log('[모바일 폴링] 폴링 중지');
-      clearInterval(intervalId);
-    };
-  }, [loadPaymentsFromAPI]);
+  // 모바일 폴링 제거 - Firestore 실시간 구독(onSnapshot)이 자동으로 동기화함
+  // 기존 3초 폴링이 Firestore 구독과 충돌하여 데이터가 사라지는 문제 발생
 
   // 페이지 포커스 시 Firestore 연결 재시작 (모바일에서 실시간 동기화 복구)
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
-        // 방금 결제요청을 추가한 경우 스킵
-        if (recentlyAddedPaymentRef.current) {
-          console.log('[포커스] 방금 추가한 결제요청 있음 - 스킵');
-          return;
-        }
-
-        // 모바일에서는 Firestore 연결 재시작 (실시간 구독 복구)
+        // 모바일에서는 Firestore 연결만 재시작 (실시간 구독이 자동으로 데이터 동기화)
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         if (isMobile) {
           console.log('[포커스] 모바일 - Firestore 연결 재시작');
           await reconnectFirestore();
-          // 데이터 새로고침
-          try {
-            await loadPaymentsFromAPI();
-          } catch (err) {
-            console.error('[포커스] 새로고침 실패:', err);
-          }
+          // loadPaymentsFromAPI 호출 제거 - Firestore onSnapshot이 자동으로 데이터 동기화
         }
       }
     };
@@ -368,7 +340,7 @@ const Payments = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [loadPaymentsFromAPI]);
+  }, []);
 
   // URL 파라미터로 송금완료 자동 처리
   useEffect(() => {
