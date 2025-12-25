@@ -120,6 +120,7 @@ const Payments = () => {
     name: string;
     bankName: string;
     accountNumber: string;
+    process: string;  // 이전 송금내역의 공정
     source: 'contractor' | 'payment';
   }>>([]);
   const [isAccountHolderFocused, setIsAccountHolderFocused] = useState(false);
@@ -579,6 +580,7 @@ const Payments = () => {
         name: string;
         bankName: string;
         accountNumber: string;
+        process: string;
         source: 'contractor' | 'payment';
       }> = [];
       const addedNames = new Set<string>();
@@ -593,10 +595,17 @@ const Payments = () => {
 
           if (lowerName.startsWith(lowerSearch) && !addedNames.has(lowerName)) {
             addedNames.add(lowerName);
+            // 협력업체의 이전 송금내역에서 공정 찾기
+            const prevPayment = payments.find(
+              p => p.status === 'completed' &&
+                   p.bankInfo?.accountHolder?.trim().toLowerCase() === lowerName &&
+                   p.process
+            );
             suggestions.push({
               name,
               bankName: contractor.bankName || '',
               accountNumber: contractor.accountNumber || '',
+              process: prevPayment?.process || '',
               source: 'contractor'
             });
           }
@@ -616,6 +625,7 @@ const Payments = () => {
               name,
               bankName: p.bankInfo!.bankName || '',
               accountNumber: p.bankInfo!.accountNumber || '',
+              process: p.process || '',
               source: 'payment'
             });
           }
@@ -2987,16 +2997,25 @@ const Payments = () => {
                           // 계좌번호에서 숫자와 하이픈만 남기기
                           accountNumber = accountNumber.replace(/[^\d\-]/g, '').trim();
 
+                          // 공정이 비어있고 suggestion에 공정이 있으면 자동 채우기
+                          const newProcess = (!formData.process && suggestion.process) ? suggestion.process : formData.process;
+
                           setFormData({
                             ...formData,
                             accountHolder: suggestion.name,
                             bankName: bankName || formData.bankName,
-                            accountNumber: accountNumber || formData.accountNumber
+                            accountNumber: accountNumber || formData.accountNumber,
+                            process: newProcess
                           });
                           setIsAccountHolderFocused(false);
                         }}
                       >
-                        <span className="font-medium">{suggestion.name}</span>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{suggestion.name}</span>
+                          {suggestion.process && (
+                            <span className="text-xs text-blue-600">공정: {suggestion.process}</span>
+                          )}
+                        </div>
                         <span className="text-xs text-gray-500">
                           {suggestion.source === 'contractor' ? '협력업체' : '송금내역'}
                         </span>
