@@ -7,6 +7,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  getDocsFromServer,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -212,13 +213,23 @@ function convertToFirestoreFormat(data: Record<string, unknown>): Partial<Firest
 }
 
 const paymentFirestoreService = {
-  // 모든 결제요청 조회
+  // 모든 결제요청 조회 (서버에서 직접 가져오기 - 캐시 우회)
   getAllPayments: async (): Promise<PaymentResponse[]> => {
     await loadProjectsCache();
 
     const collectionRef = collection(db, COLLECTIONS.PAYMENTS);
     const q = query(collectionRef, orderBy('id', 'desc'));
-    const querySnapshot = await getDocs(q);
+
+    let querySnapshot;
+    try {
+      // 서버에서 직접 가져오기 (캐시 우회)
+      querySnapshot = await getDocsFromServer(q);
+      console.log('[getAllPayments] 서버에서 직접 가져옴:', querySnapshot.docs.length, '건');
+    } catch (error) {
+      // 네트워크 오류 시 캐시에서 가져오기
+      console.warn('[getAllPayments] 서버 연결 실패, 캐시 사용:', error);
+      querySnapshot = await getDocs(q);
+    }
 
     return querySnapshot.docs.map(doc => {
       const data = doc.data() as FirestorePayment;
