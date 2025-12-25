@@ -232,65 +232,13 @@ const Payments = () => {
 
   // Firestore 실시간 구독 - 데스크탑/모바일 간 즉시 동기화 + 송금완료 알림
   const prevPaymentsRef = useRef<Map<string, string>>(new Map()); // paymentId -> status 맵
-  const subscriptionRef = useRef<(() => void) | null>(null);
-  const lastSyncTimeRef = useRef<number>(Date.now());
 
-  // API 응답을 로컬 Payment 형식으로 변환하는 함수
-  const convertApiPaymentsToLocal = useCallback((apiPayments: typeof payments extends (infer T)[] ? { id: number; project_name: string; description: string; vendor_name: string; item_name?: string; amount: number; material_amount?: number; labor_amount?: number; original_material_amount?: number; original_labor_amount?: number; apply_tax_deduction?: number; includes_vat?: number; quick_text?: string; images?: string | string[]; request_type: string; status: Payment['status']; requester_name: string; created_at: string; approved_at?: string; account_holder: string; bank_name: string; account_number: string; notes: string; paid_at?: string }[] : never): Payment[] => {
-    return apiPayments.map((p) => ({
-      id: String(p.id),
-      project: p.project_name || '',
-      purpose: p.description,
-      process: p.vendor_name,
-      itemName: p.item_name || '',
-      amount: p.amount,
-      materialAmount: p.material_amount || 0,
-      laborAmount: p.labor_amount || 0,
-      originalMaterialAmount: p.original_material_amount || 0,
-      originalLaborAmount: p.original_labor_amount || 0,
-      applyTaxDeduction: p.apply_tax_deduction === 1,
-      includesVAT: p.includes_vat === 1,
-      quickText: p.quick_text || '',
-      images: (() => {
-        if (!p.images) return [];
-        if (Array.isArray(p.images)) return p.images;
-        try {
-          const parsed = JSON.parse(p.images as string);
-          return Array.isArray(parsed) ? parsed : [];
-        } catch {
-          return [];
-        }
-      })(),
-      category: p.request_type as Payment['category'],
-      status: p.status,
-      urgency: 'normal' as Payment['urgency'],
-      requestedBy: p.requester_name,
-      requestDate: new Date(p.created_at),
-      approvalDate: p.approved_at ? new Date(p.approved_at) : undefined,
-      bankInfo: {
-        accountHolder: p.account_holder || '',
-        bankName: p.bank_name || '',
-        accountNumber: p.account_number || ''
-      },
-      attachments: [],
-      notes: p.notes || '',
-      completionDate: p.paid_at ? new Date(p.paid_at) : undefined
-    }));
-  }, []);
-
-  // 구독 시작 함수
-  const startSubscription = useCallback(() => {
+  useEffect(() => {
     console.log('[실시간 구독] Firestore 구독 시작...');
 
-    // 기존 구독 해제
-    if (subscriptionRef.current) {
-      subscriptionRef.current();
-      subscriptionRef.current = null;
-    }
-
-    subscriptionRef.current = paymentService.subscribeToPayments((apiPayments) => {
+    // 실시간 구독 시작 (paymentService의 subscribeToPayments 사용)
+    const unsubscribe = paymentService.subscribeToPayments((apiPayments) => {
       console.log('[실시간 구독] 데이터 수신:', apiPayments.length, '건');
-      lastSyncTimeRef.current = Date.now();
 
       // 이전 상태와 비교하여 송금완료된 항목 찾기 (알림 표시)
       apiPayments.forEach(p => {
@@ -310,29 +258,82 @@ const Payments = () => {
       });
       prevPaymentsRef.current = newStatusMap;
 
-      // 변환 및 상태 업데이트
-      const convertedPayments = convertApiPaymentsToLocal(apiPayments);
+      // API 응답을 로컬 Payment 형식으로 변환
+      const convertedPayments: Payment[] = apiPayments.map((p) => ({
+        id: String(p.id),
+        project: p.project_name || '',
+        purpose: p.description,
+        process: p.vendor_name,
+        itemName: p.item_name || '',
+        amount: p.amount,
+        materialAmount: p.material_amount || 0,
+        laborAmount: p.labor_amount || 0,
+        originalMaterialAmount: p.original_material_amount || 0,
+        originalLaborAmount: p.original_labor_amount || 0,
+        applyTaxDeduction: p.apply_tax_deduction === 1,
+        includesVAT: p.includes_vat === 1,
+        quickText: p.quick_text || '',
+        images: (() => {
+          if (!p.images) return [];
+          if (Array.isArray(p.images)) return p.images;
+          try {
+            const parsed = JSON.parse(p.images as string);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        })(),
+        category: p.request_type as Payment['category'],
+        status: p.status,
+        urgency: 'normal' as Payment['urgency'],
+        requestedBy: p.requester_name,
+        requestDate: new Date(p.created_at),
+        approvalDate: p.approved_at ? new Date(p.approved_at) : undefined,
+        bankInfo: {
+          accountHolder: p.account_holder || '',
+          bankName: p.bank_name || '',
+          accountNumber: p.account_number || ''
+        },
+        attachments: [],
+        notes: p.notes || '',
+        completionDate: p.paid_at ? new Date(p.paid_at) : undefined
+      }));
+
+      // Zustand store에 직접 업데이트
       const pendingCount = convertedPayments.filter(p => p.status === 'pending').length;
       const completedCount = convertedPayments.filter(p => p.status === 'completed').length;
       console.log('[실시간 구독] Zustand 상태 업데이트:', convertedPayments.length, '건 (대기:', pendingCount, ', 완료:', completedCount, ')');
       useDataStore.setState({ payments: convertedPayments });
     });
-  }, [convertApiPaymentsToLocal]);
-
-  useEffect(() => {
-    startSubscription();
 
     return () => {
       console.log('[실시간 구독] Firestore 구독 해제');
-      if (subscriptionRef.current) {
-        subscriptionRef.current();
-        subscriptionRef.current = null;
-      }
+      unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 페이지 포커스 시 동기화 확인 + 모바일 Firestore 재연결
+  // 모바일에서 3초마다 데이터 새로고침 (실시간 동기화 보조)
+  useEffect(() => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!isMobile) return;
+
+    console.log('[모바일 폴링] 3초 간격 폴링 시작');
+    const intervalId = setInterval(async () => {
+      try {
+        await loadPaymentsFromAPI();
+      } catch (err) {
+        console.warn('[모바일 폴링] 새로고침 실패:', err);
+      }
+    }, 3000);
+
+    return () => {
+      console.log('[모바일 폴링] 폴링 중지');
+      clearInterval(intervalId);
+    };
+  }, [loadPaymentsFromAPI]);
+
+  // 페이지 포커스 시 Firestore 연결 재시작 (모바일에서 실시간 동기화 복구)
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
@@ -342,29 +343,16 @@ const Payments = () => {
           return;
         }
 
-        const timeSinceLastSync = Date.now() - lastSyncTimeRef.current;
-        console.log('[포커스] 화면 복귀 - 마지막 동기화 이후:', Math.round(timeSinceLastSync / 1000), '초');
-
-        // 30초 이상 동기화가 없었으면 수동으로 새로고침
-        if (timeSinceLastSync > 30000) {
-          console.log('[포커스] 동기화 필요 - Firestore에서 데이터 새로고침');
-
-          // 모바일에서는 Firestore 연결 재시작
-          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-          if (isMobile) {
-            console.log('[포커스] 모바일 - Firestore 연결 재시작');
-            await reconnectFirestore();
-          }
-
-          // 구독 재시작 (새 연결로)
-          startSubscription();
-
-          // 추가로 수동 새로고침
+        // 모바일에서는 Firestore 연결 재시작 (실시간 구독 복구)
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+          console.log('[포커스] 모바일 - Firestore 연결 재시작');
+          await reconnectFirestore();
+          // 데이터 새로고침
           try {
             await loadPaymentsFromAPI();
-            console.log('[포커스] 수동 새로고침 완료');
           } catch (err) {
-            console.error('[포커스] 수동 새로고침 실패:', err);
+            console.error('[포커스] 새로고침 실패:', err);
           }
         }
       }
@@ -375,7 +363,7 @@ const Payments = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [startSubscription, loadPaymentsFromAPI]);
+  }, [loadPaymentsFromAPI]);
 
   // URL 파라미터로 송금완료 자동 처리
   useEffect(() => {
