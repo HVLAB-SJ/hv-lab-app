@@ -1027,13 +1027,19 @@ const Payments = () => {
       if (numberPatterns) {
         // 계좌번호에 포함된 숫자들을 추출 (공백/하이픈 제거 후 개별 숫자 그룹)
         const accountNumberParts = accountNumberText ? accountNumberText.split(/[\s\-]+/).filter(p => p) : [];
+        // 계좌번호 전체 숫자만 추출 (앞의 0 포함)
+        const accountNumberDigitsOnly = accountNumberText ? accountNumberText.replace(/[\s\-]/g, '') : '';
 
         numberPatterns.forEach(numStr => {
           const num = parseInt(numStr.replace(/,/g, ''));
           const numStrClean = numStr.replace(/,/g, '');
 
-          // 계좌번호에 포함된 숫자인지 확인 (각 부분별로 체크)
-          const isPartOfAccountNumber = accountNumberParts.some(part => part === numStrClean);
+          // 계좌번호에 포함된 숫자인지 확인 (앞의 0을 제거하고 비교하거나, 계좌번호 전체에 포함되어 있는지 확인)
+          const isPartOfAccountNumber = accountNumberParts.some(part =>
+            part === numStrClean ||
+            parseInt(part) === num ||  // 앞의 0 제거 후 비교 (예: 033692 vs 33692)
+            accountNumberDigitsOnly.includes(numStrClean)  // 계좌번호 전체에 포함 여부
+          );
 
           // 계좌번호 가능성 (연속된 10자리 이상 숫자)
           if (!result.bankInfo.accountNumber && numStrClean.length >= 10 && numStrClean.length <= 20) {
