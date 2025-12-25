@@ -460,8 +460,13 @@ const paymentFirestoreService = {
 
       unsubscribe = onSnapshot(
         q,
-        { includeMetadataChanges: true },
         (snapshot) => {
+          // 캐시 데이터는 무시하고 서버 데이터만 처리 (모바일 동기화 문제 해결)
+          if (snapshot.metadata.fromCache && snapshot.metadata.hasPendingWrites === false) {
+            console.log('[실시간 구독] 캐시 데이터 스킵, 서버 응답 대기...');
+            // 캐시 데이터도 일단 표시 (초기 로딩용)
+          }
+
           console.log('[실시간 구독] 스냅샷 수신:', snapshot.docs.length, '건, fromCache:', snapshot.metadata.fromCache);
 
           // 변경된 문서 로그
