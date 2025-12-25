@@ -1756,13 +1756,18 @@ const ExecutionHistory = () => {
                       selectedRecord === recordKey ? 'bg-blue-50 border-blue-300' : 'bg-white'
                     }`}
                     onClick={() => {
-                      setSelectedRecord(recordKey);
-                      setMobileView('image');
-                      // 미분할 항목 선택 시 자동으로 금액분할 모드 열기
-                      if (record.type === 'payment' && !(record as any).isSplitApplied) {
-                        setSplitModeRecord(recordKey);
-                        setSplitMaterialCost(record.totalAmount || 0);
-                        setSplitLaborCost(0);
+                      // 이미 선택된 항목을 다시 탭하면 이미지 뷰로 이동
+                      if (selectedRecord === recordKey) {
+                        setMobileView('image');
+                        // 미분할 항목 선택 시 자동으로 금액분할 모드 열기
+                        if (record.type === 'payment' && !(record as any).isSplitApplied) {
+                          setSplitModeRecord(recordKey);
+                          setSplitMaterialCost(record.totalAmount || 0);
+                          setSplitLaborCost(0);
+                        }
+                      } else {
+                        // 첫 탭은 선택만
+                        setSelectedRecord(recordKey);
                       }
                     }}
                   >
@@ -1777,6 +1782,23 @@ const ExecutionHistory = () => {
                           <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded shrink-0">
                             미분할
                           </span>
+                        )}
+                        {/* 선택된 항목에서 이미지 아이콘 표시 - 탭하면 바로 이미지 뷰로 */}
+                        {selectedRecord === recordKey && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMobileView('image');
+                              if (record.type === 'payment' && !(record as any).isSplitApplied) {
+                                setSplitModeRecord(recordKey);
+                                setSplitMaterialCost(record.totalAmount || 0);
+                                setSplitLaborCost(0);
+                              }
+                            }}
+                            className="p-1 text-blue-500 hover:text-blue-700 bg-blue-50 rounded"
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                          </button>
                         )}
                         <button
                           onClick={(e) => {
