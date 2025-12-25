@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
 import authService from '../services/authService';
 import toast from 'react-hot-toast';
 import type { ApiError } from '../types/forms';
@@ -91,7 +90,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(loggedInUser));  // 유저 정보도 저장
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(loggedInUser);
 
       // 로그인 성공 시 스펙북 데이터 백그라운드에서 사전 로딩
@@ -117,7 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');  // 유저 정보도 삭제
-    delete api.defaults.headers.common['Authorization'];
     setUser(null);
     navigate('/login');
     toast.success('로그아웃되었습니다');

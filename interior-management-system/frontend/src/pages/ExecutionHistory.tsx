@@ -170,7 +170,7 @@ const ExecutionHistory = () => {
           loadExecutionRecordsFromAPI()
         ]);
       } catch (error) {
-        console.error('Failed to load data:', error);
+        console.error('데이터 로드 실패:', error);
       }
     };
 

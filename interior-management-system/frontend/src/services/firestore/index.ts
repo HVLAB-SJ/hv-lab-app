@@ -24,11 +24,24 @@ import {
 // Firestore 컬렉션 이름
 export const COLLECTIONS = {
   PROJECTS: 'projects',
-  PAYMENTS: 'payments',
+  PAYMENTS: 'payment_requests',
+  SCHEDULES: 'schedules',
+  CONTRACTORS: 'contractors',
   EXECUTION_RECORDS: 'execution_records',
-  USERS: 'users',
+  AS_REQUESTS: 'as_requests',
+  ADDITIONAL_WORKS: 'additional_works',
+  CONSTRUCTION_PAYMENTS: 'construction_payments',
+  SITE_LOGS: 'site_logs',
+  DRAWINGS: 'drawings',
+  WORK_REQUESTS: 'work_requests',
+  QUOTE_INQUIRIES: 'quote_inquiries',
+  FINISH_CHECK_SPACES: 'finish_check_spaces',
+  FINISH_CHECK_ITEMS: 'finish_check_items',
   SPECBOOK_ITEMS: 'specbook_items',
-  SPECBOOK_CATEGORIES: 'specbook_categories'
+  SPECBOOK_CATEGORIES: 'specbook_categories',
+  SPECBOOK_PROJECT_ITEMS: 'specbook_project_items',
+  PROCESSES: 'processes',
+  USERS: 'users',
 } as const;
 
 // Firestore Timestamp를 ISO 문자열로 변환

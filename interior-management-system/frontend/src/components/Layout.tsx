@@ -2,8 +2,9 @@ import { Outlet, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import clsx from 'clsx';
-import { Plus, X, BookOpen, RefreshCw } from 'lucide-react';
+import { Plus, X, BookOpen, RefreshCw, Database } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
+import BackupModal from './BackupModal';
 import { useNotificationStore } from '../store/notificationStore';
 import workRequestService from '../services/workRequestService';
 import paymentService from '../services/paymentService';
@@ -24,6 +25,7 @@ const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const [mobileFormOpen, setMobileFormOpen] = useState(false);
+  const [backupModalOpen, setBackupModalOpen] = useState(false);
   const location = useLocation();
   const { unreadCount } = useNotificationStore();
   const [pendingWorkRequestCount, setPendingWorkRequestCount] = useState(0);
@@ -362,7 +364,19 @@ const Layout = () => {
               </NavLink>
             ))}
           </nav>
-          <div className="border-t border-gray-200 px-4 py-4">
+          <div className="border-t border-gray-200 px-4 py-4 space-y-2">
+            {user?.role === 'admin' && (
+              <button
+                onClick={() => {
+                  setSidebarOpen(false);
+                  setBackupModalOpen(true);
+                }}
+                className="w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 text-left flex items-center gap-2"
+              >
+                <Database className="h-4 w-4" />
+                데이터 백업
+              </button>
+            )}
             <button
               onClick={logout}
               className="w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 text-left"
@@ -404,7 +418,16 @@ const Layout = () => {
               </NavLink>
             ))}
           </nav>
-          <div className="border-t border-gray-200 px-4 py-4">
+          <div className="border-t border-gray-200 px-4 py-4 space-y-2">
+            {user?.role === 'admin' && (
+              <button
+                onClick={() => setBackupModalOpen(true)}
+                className="w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 text-left flex items-center gap-2"
+              >
+                <Database className="h-4 w-4" />
+                데이터 백업
+              </button>
+            )}
             <button
               onClick={logout}
               className="w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 text-left"
@@ -559,6 +582,12 @@ const Layout = () => {
       <NotificationPanel
         isOpen={notificationPanelOpen}
         onClose={() => setNotificationPanelOpen(false)}
+      />
+
+      {/* Backup Modal */}
+      <BackupModal
+        isOpen={backupModalOpen}
+        onClose={() => setBackupModalOpen(false)}
       />
     </div>
   );

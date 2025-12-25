@@ -96,7 +96,7 @@ const paymentService = {
     return paymentFirestoreService.deletePayment(id);
   },
 
-  // Toss 결제 SMS 발송 (외부 API 호출)
+  // Toss 결제 SMS 발송 (Firebase Cloud Functions 호출)
   sendTossPaymentSms: async (data: {
     recipientPhone: string;
     accountHolder: string;
