@@ -98,7 +98,8 @@ const Payments = () => {
   const [isSubmitting, setIsSubmitting] = useState(false); // 중복 제출 방지
   const autoCompleteProcessedRef = useRef(false); // 자동 송금완료 처리 여부 (중복 방지)
   const enteredViaCompleteLinkRef = useRef(false); // 완료 링크로 진입했는지 여부 (프로젝트 자동선택 방지)
-  const recentlyAddedPaymentRef = useRef<string | null>(null); // 방금 추가한 결제요청 ID (socket 중복 방지)
+  const recentlyAddedPaymentRef = useRef<string | null>(null); // 방금 추가한 결제요청 ID (중복 방지)
+  const recentlyCompletedPaymentRef = useRef<Set<string>>(new Set()); // 로컬에서 송금완료한 ID (중복 알림 방지)
 
   // 협력업체 관련 상태
   const [contractors, setContractors] = useState<Contractor[]>([]);
@@ -240,14 +241,17 @@ const Payments = () => {
     const unsubscribe = paymentService.subscribeToPayments((apiPayments) => {
       console.log('[실시간 구독] 데이터 수신:', apiPayments.length, '건');
 
-      // 이전 상태와 비교하여 송금완료된 항목 찾기 (알림 표시)
+      // 이전 상태와 비교하여 송금완료된 항목 찾기 (다른 기기에서 변경된 경우만 알림)
       apiPayments.forEach(p => {
         const paymentId = String(p.id);
         const prevStatus = prevPaymentsRef.current.get(paymentId);
 
-        // 이전에 pending이었던 것이 completed로 변경된 경우 알림 표시
+        // 이전에 pending이었던 것이 completed로 변경된 경우
         if (prevStatus && prevStatus !== 'completed' && p.status === 'completed') {
-          toast.success(`송금완료: ${p.project_name || ''} ${p.item_name || ''}`.trim(), { duration: 4000 });
+          // 로컬에서 완료한 건은 알림 건너뛰기 (이미 로컬에서 알림 표시함)
+          if (!recentlyCompletedPaymentRef.current.has(paymentId)) {
+            toast.success(`송금완료: ${p.project_name || ''} ${p.item_name || ''}`.trim(), { duration: 4000 });
+          }
         }
       });
 
@@ -400,6 +404,13 @@ const Payments = () => {
 
       // 로컬 상태 즉시 업데이트 (낙관적 UI) + completionDate 설정
       updatePayment(String(completeId), { status: 'completed', completionDate: new Date() });
+
+      // 중복 알림 방지: 로컬에서 완료한 ID 등록
+      recentlyCompletedPaymentRef.current.add(String(completeId));
+      setTimeout(() => {
+        recentlyCompletedPaymentRef.current.delete(String(completeId));
+      }, 10000); // 10초 후 해제
+
       toast.success('송금완료 처리되었습니다');
 
       // 배지 카운트 즉시 업데이트 이벤트 발생
@@ -2313,6 +2324,13 @@ const Payments = () => {
     updatePayment(paymentId, { status: 'completed', completionDate: new Date() });
     setShowDetailModal(false);
     setStatusFilter('completed');
+
+    // 중복 알림 방지: 로컬에서 완료한 ID 등록
+    recentlyCompletedPaymentRef.current.add(paymentId);
+    setTimeout(() => {
+      recentlyCompletedPaymentRef.current.delete(paymentId);
+    }, 10000); // 10초 후 해제
+
     // 프로젝트 필터는 유지 (사라지는 버그 수정)
     toast.success('송금완료 처리되었습니다');
     window.dispatchEvent(new CustomEvent('paymentCompleted'));
