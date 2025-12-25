@@ -63,6 +63,7 @@ interface Contractor {
 const Payments = () => {
   const {
     payments,
+    setPayments,
     loadPaymentsFromAPI,
     loadProjectsFromAPI,
     addPaymentToAPI,
@@ -303,11 +304,11 @@ const Payments = () => {
         completionDate: p.paid_at ? new Date(p.paid_at) : undefined
       }));
 
-      // Zustand store에 직접 업데이트
+      // Zustand store에 setPayments로 업데이트 (persist 미들웨어와 호환)
       const pendingCount = convertedPayments.filter(p => p.status === 'pending').length;
       const completedCount = convertedPayments.filter(p => p.status === 'completed').length;
       console.log('[실시간 구독] Zustand 상태 업데이트:', convertedPayments.length, '건 (대기:', pendingCount, ', 완료:', completedCount, ')');
-      useDataStore.setState({ payments: convertedPayments });
+      setPayments(convertedPayments);
     });
 
     return () => {
@@ -315,7 +316,7 @@ const Payments = () => {
       unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setPayments]);
 
   // 모바일에서 3초마다 데이터 새로고침 (실시간 동기화 보조)
   useEffect(() => {
