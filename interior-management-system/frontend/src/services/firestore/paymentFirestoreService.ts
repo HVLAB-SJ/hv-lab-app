@@ -334,6 +334,7 @@ const paymentFirestoreService = {
 
   // 결제요청 상태 변경
   updatePaymentStatus: async (id: string, status: string): Promise<PaymentResponse> => {
+    console.log('[Firestore] 상태 변경 시작:', id, '->', status);
     await loadProjectsCache();
 
     const docRef = doc(db, COLLECTIONS.PAYMENTS, id);
@@ -349,6 +350,7 @@ const paymentFirestoreService = {
     }
 
     await updateDoc(docRef, updateData);
+    console.log('[Firestore] 상태 변경 완료:', id, '->', status);
 
     const updated = await paymentFirestoreService.getPaymentById(id);
     if (!updated) {
@@ -414,42 +416,95 @@ const paymentFirestoreService = {
     await deleteDoc(docRef);
   },
 
-  // 실시간 결제요청 목록 구독
+  // 실시간 결제요청 목록 구독 - 개선된 버전
   subscribeToPayments: (callback: (payments: PaymentResponse[]) => void): Unsubscribe => {
-    // 먼저 프로젝트 캐시를 로드한 후 구독 시작
+    console.log('[paymentFirestoreService] subscribeToPayments 호출됨');
+
     let unsubscribe: Unsubscribe | null = null;
+    let isSubscribed = true;
 
-    // 프로젝트 캐시 로드 후 구독 설정
-    loadProjectsCache().then(() => {
-      const collectionRef = collection(db, COLLECTIONS.PAYMENTS);
-      const q = query(collectionRef, orderBy('id', 'desc'));
+    // 즉시 구독 시작 (프로젝트 캐시 로드와 동시에)
+    const startSubscription = async () => {
+      try {
+        // 프로젝트 캐시 로드 (백그라운드에서)
+        loadProjectsCache().catch(err => {
+          console.warn('[paymentFirestoreService] 프로젝트 캐시 로드 실패:', err);
+        });
 
-      unsubscribe = onSnapshot(
-        q,
-        { includeMetadataChanges: true }, // 메타데이터 변경도 감지 (연결 상태 포함)
-        (snapshot) => {
-          // fromCache가 false일 때만 서버 데이터 - 동기화 보장
-          console.log('[실시간 구독] 스냅샷 수신:', snapshot.docs.length, '건, fromCache:', snapshot.metadata.fromCache);
+        const collectionRef = collection(db, COLLECTIONS.PAYMENTS);
+        const q = query(collectionRef, orderBy('id', 'desc'));
 
-          // 캐시가 이미 로드된 상태이므로 바로 변환
-          const payments = snapshot.docs.map(doc => {
-            const data = doc.data() as FirestorePayment;
-            return convertToPaymentResponse({ ...data, id: parseInt(doc.id) || data.id });
-          });
-          callback(payments);
-        },
-        (error) => {
-          console.error('[실시간 구독] 오류 발생:', error);
+        console.log('[paymentFirestoreService] Firestore onSnapshot 구독 시작...');
+
+        unsubscribe = onSnapshot(
+          q,
+          { includeMetadataChanges: false }, // 메타데이터 변경은 무시하고 데이터 변경만 감지
+          async (snapshot) => {
+            if (!isSubscribed) {
+              console.log('[실시간 구독] 이미 해제됨 - 무시');
+              return;
+            }
+
+            console.log('[실시간 구독] 스냅샷 수신:', snapshot.docs.length, '건, fromCache:', snapshot.metadata.fromCache, 'hasPendingWrites:', snapshot.metadata.hasPendingWrites);
+
+            // 변경된 문서 로그
+            snapshot.docChanges().forEach(change => {
+              const data = change.doc.data();
+              console.log(`[실시간 구독] 변경: ${change.type} - ID: ${change.doc.id}, status: ${data.status}`);
+            });
+
+            // 프로젝트 캐시가 비어있으면 로드 대기
+            if (projectsCache.size === 0) {
+              try {
+                await loadProjectsCache();
+              } catch (err) {
+                console.warn('[실시간 구독] 프로젝트 캐시 로드 실패 - 기본값 사용');
+              }
+            }
+
+            const payments = snapshot.docs.map(doc => {
+              const data = doc.data() as FirestorePayment;
+              return convertToPaymentResponse({ ...data, id: parseInt(doc.id) || data.id });
+            });
+
+            callback(payments);
+          },
+          (error) => {
+            console.error('[실시간 구독] 오류 발생:', error);
+            // 오류 발생 시 재시도
+            if (isSubscribed) {
+              console.log('[실시간 구독] 5초 후 재연결 시도...');
+              setTimeout(() => {
+                if (isSubscribed) {
+                  startSubscription();
+                }
+              }, 5000);
+            }
+          }
+        );
+      } catch (error) {
+        console.error('[paymentFirestoreService] 구독 초기화 실패:', error);
+        // 재시도
+        if (isSubscribed) {
+          setTimeout(() => {
+            if (isSubscribed) {
+              startSubscription();
+            }
+          }, 3000);
         }
-      );
-    }).catch(error => {
-      console.error('[paymentFirestoreService] 프로젝트 캐시 로드 실패로 구독 시작 불가:', error);
-    });
+      }
+    };
+
+    // 즉시 구독 시작
+    startSubscription();
 
     // 구독 해제 함수 반환
     return () => {
+      console.log('[paymentFirestoreService] 구독 해제 요청됨');
+      isSubscribed = false;
       if (unsubscribe) {
         unsubscribe();
+        unsubscribe = null;
       }
     };
   },
