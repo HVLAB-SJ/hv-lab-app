@@ -10,7 +10,7 @@ import paymentService from '../services/paymentService';
 import asRequestService from '../services/asRequestService';
 import projectService from '../services/projectService';
 import quoteInquiryService from '../services/quoteInquiryService';
-import socketService from '../services/socket';
+import paymentFirestoreService from '../services/firestore/paymentFirestoreService';
 
 interface NavigationItem {
   name: string;
@@ -155,24 +155,19 @@ const Layout = () => {
     return () => window.removeEventListener('paymentCompleted', handlePaymentCompleted);
   }, []);
 
-  // Socket.IO 실시간 동기화 - 결제 상태 변경 시 배지 업데이트
+  // Firestore 실시간 구독 - 결제 상태 변경 시 배지 업데이트
   useEffect(() => {
-    const socket = socketService.getSocket();
-    if (!socket || !user) return;
+    if (!user) return;
 
-    const handlePaymentRefresh = async () => {
-      // 결제요청 pending 카운트 다시 로드
+    // Firestore 실시간 구독으로 결제요청 변경 감지
+    const unsubscribe = paymentFirestoreService.subscribeToPayments(async (payments) => {
       try {
-        const [payments, projects] = await Promise.all([
-          paymentService.getAllPayments(),
-          projectService.getAllProjects()
-        ]);
-
         // 안팀 사용자는 담당 프로젝트의 결제요청만 카운트
         let filteredPayments = payments;
         if (user.name === '안팀') {
+          const projects = await projectService.getAllProjects();
           const projectNames = projects.map(p => p.name);
-          filteredPayments = payments.filter(p => projectNames.includes(p.project));
+          filteredPayments = payments.filter(p => projectNames.includes(p.project_name));
         }
         setPendingPaymentCount(
           filteredPayments.filter(payment => payment.status === 'pending').length
@@ -180,12 +175,10 @@ const Layout = () => {
       } catch (error) {
         console.error('Failed to refresh payment count:', error);
       }
-    };
-
-    socket.on('payment:refresh', handlePaymentRefresh);
+    });
 
     return () => {
-      socket.off('payment:refresh', handlePaymentRefresh);
+      unsubscribe();
     };
   }, [user]);
 

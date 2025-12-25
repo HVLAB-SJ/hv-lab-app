@@ -22,14 +22,14 @@
    powershell -Command "Copy-Item -Path 'interior-management-system/frontend/dist/*' -Destination 'public/' -Recurse -Force"
    ```
 
-3. **Git 커밋 및 푸시**
+3. **Firebase 배포**
    ```bash
-   git add .
-   git commit -m "Auto deploy: Frontend build and update"
-   git push
+   firebase deploy --only hosting
    ```
 
 ### 주의사항
+- **Railway, GitHub 사용 금지** - 이 프로젝트는 Firebase만 사용
+- git push 하지 말 것 (로컬 커밋만 필요시 수행)
 - 빌드가 실패하면 다음 단계로 진행하지 마세요
 - 각 단계의 성공 여부를 확인하고 사용자에게 알려주세요
 - AdditionalWork.tsx 파일이 수정 중이면 배포를 대기하세요

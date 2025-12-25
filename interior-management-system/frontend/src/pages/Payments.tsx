@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDataStore, type Payment } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
-import socketService from '../services/socket';
 import { reconnectFirestore } from '../config/firebase';
 
 type PaymentRequest = Payment;
@@ -413,15 +412,7 @@ const Payments = () => {
         // API 완료 후 목록 새로고침 (서버와 동기화) - await로 완료 대기
         await loadPaymentsFromAPI();
 
-        // 다른 기기에 실시간 동기화 알림
-        const socket = socketService.getSocket();
-        if (socket) {
-          socket.emit('payment:refresh', {
-            paymentId: completeId,
-            status: 'completed',
-            updatedAt: new Date().toISOString()
-          });
-        }
+        // Firestore onSnapshot이 자동으로 다른 기기에 실시간 동기화됨
       } catch (error: any) {
         console.error('[자동 송금완료] 처리 실패:', error);
 
@@ -2083,7 +2074,7 @@ const Payments = () => {
         console.log('💰 Images in payment:', formData.quickImages?.length || 0, '개');
         const newPaymentId = await addPaymentToAPI(newPayment);
 
-        // 방금 추가한 결제요청 ID 저장 (socket 이벤트로 인한 중복 로드 방지)
+        // 방금 추가한 결제요청 ID 저장 (Firestore 실시간 구독으로 인한 중복 로드 방지)
         recentlyAddedPaymentRef.current = newPaymentId;
         // 10초 후 해제 (충분한 시간 후 정상 동기화 허용)
         setTimeout(() => {
@@ -2329,18 +2320,7 @@ const Payments = () => {
     // 2. API 호출 (백그라운드) - 실패 시 롤백
     try {
       await updatePaymentInAPI(paymentId, { status: 'completed' });
-
-      // 성공 시 다른 기기에 실시간 동기화 (프로젝트명, 항목명, 완료자 정보 포함)
-      const socket = socketService.getSocket();
-      if (socket) {
-        socket.emit('payment:refresh', {
-          paymentId,
-          status: 'completed',
-          projectName: payment?.project || '',
-          itemName: payment?.itemName || payment?.purpose || '',
-          completedBy: user?.username || ''
-        });
-      }
+      // Firestore onSnapshot이 자동으로 다른 기기에 실시간 동기화됨
     } catch (error) {
       console.error('송금완료 API 실패:', error);
       // 실패 시 롤백
