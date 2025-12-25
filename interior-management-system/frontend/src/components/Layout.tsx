@@ -2,7 +2,7 @@ import { Outlet, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import clsx from 'clsx';
-import { Plus, X, BookOpen, RefreshCw, Database } from 'lucide-react';
+import { Plus, X, RefreshCw } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
 import BackupModal from './BackupModal';
 import { useNotificationStore } from '../store/notificationStore';
@@ -371,9 +371,8 @@ const Layout = () => {
                   setSidebarOpen(false);
                   setBackupModalOpen(true);
                 }}
-                className="w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 text-left flex items-center gap-2"
+                className="w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 text-left"
               >
-                <Database className="h-4 w-4" />
                 데이터 백업
               </button>
             )}
@@ -422,9 +421,8 @@ const Layout = () => {
             {user?.role === 'admin' && (
               <button
                 onClick={() => setBackupModalOpen(true)}
-                className="w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 text-left flex items-center gap-2"
+                className="w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 text-left"
               >
-                <Database className="h-4 w-4" />
                 데이터 백업
               </button>
             )}

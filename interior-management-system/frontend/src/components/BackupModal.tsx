@@ -2,7 +2,7 @@
  * Firebase 백업 관리 모달
  */
 import { useState, useRef } from 'react';
-import { Download, Upload, X, Database, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import backupService, { BackupData, BackupProgress } from '../services/firestore/backupService';
 import toast from 'react-hot-toast';
 
@@ -84,121 +84,95 @@ export default function BackupModal({ isOpen, onClose }: BackupModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4">
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center gap-2">
-            <Database className="h-5 w-5 text-blue-600" />
-            <h2 className="text-lg font-semibold">데이터 백업 관리</h2>
-          </div>
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <h2 className="text-base font-medium text-gray-900">데이터 백업</h2>
           <button
             onClick={onClose}
             disabled={isProcessing}
-            className="p-1 hover:bg-gray-100 rounded-full disabled:opacity-50"
+            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* 본문 */}
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {/* 진행 상태 */}
-          {progress && progress.status !== 'idle' && (
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                {progress.status === 'completed' ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                ) : progress.status === 'error' ? (
-                  <AlertCircle className="h-5 w-5 text-red-500" />
-                ) : (
-                  <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-                )}
-                <span className="font-medium">
-                  {progress.status === 'backing_up' && '백업 중...'}
-                  {progress.status === 'restoring' && '복원 중...'}
-                  {progress.status === 'completed' && '완료!'}
-                  {progress.status === 'error' && '오류 발생'}
+          {progress && progress.status !== 'idle' && progress.status !== 'completed' && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">
+                  {progress.status === 'backing_up' ? '백업 중...' : '복원 중...'}
                 </span>
+                <span className="text-gray-900 font-medium">{getProgressPercent()}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+              <div className="w-full bg-gray-100 rounded-full h-1.5">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-gray-900 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${getProgressPercent()}%` }}
                 />
               </div>
-              <p className="text-sm text-gray-600">
-                {progress.currentCollection && `처리 중: ${progress.currentCollection}`}
-                {!progress.currentCollection && progress.status === 'completed' &&
-                  `${progress.completedCollections}개 컬렉션 처리 완료`}
-              </p>
+              {progress.currentCollection && (
+                <p className="text-xs text-gray-500">{progress.currentCollection}</p>
+              )}
             </div>
           )}
 
           {/* 백업 결과 */}
           {backupData && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="font-medium text-green-800 mb-2">백업 준비 완료</h3>
-              <p className="text-sm text-green-700 mb-3">
-                생성 시간: {new Date(backupData.createdAt).toLocaleString()}
-                <br />
-                총 {backupService.getBackupStats(backupData).totalDocuments.toLocaleString()}개 문서
+            <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+              <p className="text-sm text-gray-700">
+                {new Date(backupData.createdAt).toLocaleString()} 생성
+              </p>
+              <p className="text-xs text-gray-500">
+                {backupService.getBackupStats(backupData).totalDocuments.toLocaleString()}개 문서
               </p>
               <button
                 onClick={handleDownloadBackup}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                className="w-full py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                <Download className="h-4 w-4" />
-                백업 파일 다운로드
+                다운로드
               </button>
             </div>
           )}
 
           {/* 버튼들 */}
-          <div className="space-y-3">
-            <button
-              onClick={handleCreateBackup}
-              disabled={isProcessing}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isProcessing && progress?.status === 'backing_up' ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Download className="h-5 w-5" />
-              )}
-              새 백업 생성
-            </button>
-
-            <div className="relative">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json"
-                onChange={handleFileSelect}
-                disabled={isProcessing}
-                className="hidden"
-              />
+          {!backupData && (
+            <div className="space-y-2">
               <button
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleCreateBackup}
                 disabled={isProcessing}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isProcessing && progress?.status === 'restoring' ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Upload className="h-5 w-5" />
-                )}
-                백업 파일에서 복원
+                {isProcessing && progress?.status === 'backing_up' ? '백업 중...' : '새 백업 생성'}
               </button>
-            </div>
-          </div>
 
-          {/* 경고 */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-xs text-yellow-800">
-              <strong>주의:</strong> 복원 시 기존 데이터가 덮어씌워집니다.
-              복원 전 현재 상태를 먼저 백업해두세요.
-            </p>
-          </div>
+              <div className="relative">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileSelect}
+                  disabled={isProcessing}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessing}
+                  className="w-full py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isProcessing && progress?.status === 'restoring' ? '복원 중...' : '백업 파일에서 복원'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 안내 */}
+          <p className="text-xs text-gray-400 text-center">
+            매일 새벽 3시 자동 백업 (7일 보관)
+          </p>
         </div>
       </div>
     </div>
