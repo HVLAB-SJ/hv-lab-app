@@ -430,18 +430,22 @@ const paymentFirestoreService = {
 
   // 결제요청 삭제
   deletePayment: async (id: string): Promise<void> => {
+    console.log('[Firestore 삭제] 시작 - ID:', id);
     const docRef = doc(db, COLLECTIONS.PAYMENTS, id);
 
     // 기존 이미지 삭제
     const docSnap = await getDoc(docRef);
+    console.log('[Firestore 삭제] 문서 존재 여부:', docSnap.exists());
     if (docSnap.exists()) {
       const data = docSnap.data() as FirestorePayment;
       if (data.images && data.images.length > 0) {
+        console.log('[Firestore 삭제] 이미지 삭제 중...', data.images.length, '개');
         await deleteImagesFromStorage(data.images);
       }
     }
 
     await deleteDoc(docRef);
+    console.log('[Firestore 삭제] 완료 - ID:', id);
   },
 
   // 실시간 결제요청 목록 구독
