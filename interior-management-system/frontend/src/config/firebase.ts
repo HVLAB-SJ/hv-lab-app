@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableNetwork, disableNetwork } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Firebase 프로젝트 설정
@@ -20,5 +20,17 @@ export const db = getFirestore(app);
 
 // Storage 인스턴스
 export const storage = getStorage(app);
+
+// Firestore 연결 재시작 (모바일에서 실시간 동기화 복구용)
+export const reconnectFirestore = async (): Promise<void> => {
+  try {
+    console.log('[Firebase] 연결 재시작 중...');
+    await disableNetwork(db);
+    await enableNetwork(db);
+    console.log('[Firebase] 연결 재시작 완료');
+  } catch (error) {
+    console.error('[Firebase] 연결 재시작 실패:', error);
+  }
+};
 
 export default app;

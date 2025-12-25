@@ -424,14 +424,24 @@ const paymentFirestoreService = {
       const collectionRef = collection(db, COLLECTIONS.PAYMENTS);
       const q = query(collectionRef, orderBy('id', 'desc'));
 
-      unsubscribe = onSnapshot(q, (snapshot) => {
-        // 캐시가 이미 로드된 상태이므로 바로 변환
-        const payments = snapshot.docs.map(doc => {
-          const data = doc.data() as FirestorePayment;
-          return convertToPaymentResponse({ ...data, id: parseInt(doc.id) || data.id });
-        });
-        callback(payments);
-      });
+      unsubscribe = onSnapshot(
+        q,
+        { includeMetadataChanges: true }, // 메타데이터 변경도 감지 (연결 상태 포함)
+        (snapshot) => {
+          // fromCache가 false일 때만 서버 데이터 - 동기화 보장
+          console.log('[실시간 구독] 스냅샷 수신:', snapshot.docs.length, '건, fromCache:', snapshot.metadata.fromCache);
+
+          // 캐시가 이미 로드된 상태이므로 바로 변환
+          const payments = snapshot.docs.map(doc => {
+            const data = doc.data() as FirestorePayment;
+            return convertToPaymentResponse({ ...data, id: parseInt(doc.id) || data.id });
+          });
+          callback(payments);
+        },
+        (error) => {
+          console.error('[실시간 구독] 오류 발생:', error);
+        }
+      );
     }).catch(error => {
       console.error('[paymentFirestoreService] 프로젝트 캐시 로드 실패로 구독 시작 불가:', error);
     });

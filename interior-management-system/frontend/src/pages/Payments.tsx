@@ -3,6 +3,7 @@ import { useDataStore, type Payment } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import socketService from '../services/socket';
+import { reconnectFirestore } from '../config/firebase';
 
 type PaymentRequest = Payment;
 import { Search, Trash2, ImageIcon, X, Upload, FileText, Pencil } from 'lucide-react';
@@ -190,13 +191,24 @@ const Payments = () => {
     // 컴포넌트 마운트 시 projectFilter를 'all'로 초기화 (모바일/데스크탑 동일하게)
     setProjectFilter('all');
 
-    // 프로젝트와 결제 데이터를 API에서 로드 (localStorage 캐시 대신 최신 데이터 사용)
-    loadProjectsFromAPI().catch(error => {
-      console.error('Failed to load projects:', error);
-    });
-    loadPaymentsFromAPI().catch(error => {
-      console.error('Failed to load payments:', error);
-    });
+    // 모바일에서는 Firestore 연결 재시작 후 데이터 로드 (실시간 동기화 보장)
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const initializeData = async () => {
+      if (isMobile) {
+        console.log('[초기화] 모바일 감지 - Firestore 연결 재시작');
+        await reconnectFirestore();
+      }
+
+      // 프로젝트와 결제 데이터를 API에서 로드
+      loadProjectsFromAPI().catch(error => {
+        console.error('Failed to load projects:', error);
+      });
+      loadPaymentsFromAPI().catch(error => {
+        console.error('Failed to load payments:', error);
+      });
+    };
+
+    initializeData();
 
     const checkMobile = () => {
       setIsMobileDevice(window.innerWidth < 1024);
@@ -305,47 +317,31 @@ const Payments = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 페이지 포커스 시 새로고침 + 모바일 주기적 폴링 (실시간 구독 폴백)
+  // 페이지 포커스 시 Firestore 연결 재시작 (모바일에서 실시간 동기화 복구)
   useEffect(() => {
-    // 페이지가 다시 보일 때 새로고침 (탭 전환, 창 활성화 시)
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
-        // 방금 결제요청을 추가한 경우 포커스 새로고침도 스킵
+        // 방금 결제요청을 추가한 경우 스킵
         if (recentlyAddedPaymentRef.current) {
-          console.log('[포커스 새로고침] 방금 추가한 결제요청 있음 - 스킵');
+          console.log('[포커스] 방금 추가한 결제요청 있음 - 스킵');
           return;
         }
-        console.log('[포커스 새로고침] 페이지 활성화 - 결제 내역 업데이트 중...');
-        loadPaymentsFromAPI().catch(error => {
-          console.error('[포커스 새로고침] 실패:', error);
-        });
+
+        // 모바일에서는 Firestore 연결 재시작 (실시간 구독 복구)
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+          console.log('[포커스] 모바일 - Firestore 연결 재시작');
+          await reconnectFirestore();
+        }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // 모바일에서 3초마다 폴링 (Firestore 실시간 구독이 불안정할 수 있음)
-    let pollingInterval: ReturnType<typeof setInterval> | null = null;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    if (isMobile) {
-      console.log('[모바일 폴링] 3초 간격 폴링 시작');
-      pollingInterval = setInterval(() => {
-        if (document.visibilityState === 'visible' && !recentlyAddedPaymentRef.current) {
-          loadPaymentsFromAPI().catch(error => {
-            console.error('[모바일 폴링] 새로고침 실패:', error);
-          });
-        }
-      }, 3000);
-    }
-
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
     };
-  }, [loadPaymentsFromAPI]);
+  }, []);
 
   // URL 파라미터로 송금완료 자동 처리
   useEffect(() => {
