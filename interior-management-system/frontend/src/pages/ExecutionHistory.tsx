@@ -19,6 +19,7 @@ const ExecutionHistory = () => {
     executionRecords,
     loadPaymentsFromAPI,
     loadExecutionRecordsFromAPI,
+    loadProjectsFromAPI,
     addExecutionRecordToAPI,
     deleteExecutionRecordFromAPI,
     updateExecutionRecordInAPI,
@@ -164,6 +165,7 @@ const ExecutionHistory = () => {
     const loadData = async () => {
       try {
         await Promise.all([
+          loadProjectsFromAPI(),
           loadPaymentsFromAPI(),
           loadExecutionRecordsFromAPI()
         ]);

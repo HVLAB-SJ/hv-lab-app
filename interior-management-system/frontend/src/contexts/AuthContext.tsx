@@ -40,37 +40,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
+      // 먼저 로컬에 저장된 사용자 정보 확인
+      const savedUserStr = localStorage.getItem('user');
+      let savedUser: User | null = null;
+
+      if (savedUserStr) {
+        try {
+          savedUser = JSON.parse(savedUserStr);
+        } catch {
+          // 파싱 실패 시 무시
+        }
+      }
+
+      // 로컬에 사용자 정보가 있으면 즉시 로그인 상태로 설정 (빠른 UI 응답)
+      if (savedUser) {
+        setUser(savedUser);
+        // 스펙북 데이터 백그라운드에서 사전 로딩
+        preloadSpecbook();
+      }
+
       const token = localStorage.getItem('token');
       if (!token) {
+        // 토큰이 없어도 저장된 사용자 정보가 있으면 로그인 상태 유지
         setLoading(false);
         return;
       }
 
-      // Firestore를 통한 인증 확인
+      // Firestore를 통한 인증 확인 (백그라운드)
       const user = await authService.getCurrentUser();
       if (user) {
         setUser(user);
-        // 인증 성공 시 스펙북 데이터 백그라운드에서 사전 로딩
-        preloadSpecbook();
+        localStorage.setItem('user', JSON.stringify(user)); // 최신 정보로 갱신
       }
+      // user가 null이어도 savedUser가 있으면 로그아웃하지 않음
     } catch (error: unknown) {
-      // 401 에러인 경우에만 토큰 삭제 (토큰이 만료되었거나 유효하지 않음)
-      // 네트워크 에러나 서버 에러는 토큰을 유지하여 재시도 가능하게 함
-      const axiosError = error as { response?: { status?: number } };
-      if (axiosError.response?.status === 401) {
-        localStorage.removeItem('token');
-        delete api.defaults.headers.common['Authorization'];
-      } else {
-        // 네트워크 에러 등의 경우 토큰은 유지하고, 로컬스토리지에서 유저 정보 복원 시도
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          try {
-            setUser(JSON.parse(savedUser));
-          } catch {
-            // 파싱 실패 시 무시
-          }
-        }
-      }
+      // 에러 발생해도 로컬에 저장된 사용자 정보가 있으면 유지
+      console.error('Auth check error:', error);
+      // 이미 위에서 savedUser로 setUser를 했으므로 추가 처리 불필요
     } finally {
       setLoading(false);
     }

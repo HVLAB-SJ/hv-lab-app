@@ -95,12 +95,61 @@ const verifyToken = (token: string): { id: string; username: string; role: strin
   }
 };
 
+// 로컬 사용자 목록 (빠른 로그인용)
+const LOCAL_USERS: Record<string, { user: User; password: string }> = {
+  '상준': { user: { id: 'user_sangjun', username: '상준', name: '상준', role: 'admin' }, password: '0109' },
+  '신애': { user: { id: 'user_sinae', username: '신애', name: '신애', role: 'manager' }, password: '0109' },
+  '재천': { user: { id: 'user_jaecheon', username: '재천', name: '재천', role: 'fieldManager' }, password: '0109' },
+  '민기': { user: { id: 'user_mingi', username: '민기', name: '민기', role: 'fieldManager' }, password: '0109' },
+  '재성': { user: { id: 'user_jaesung', username: '재성', name: '재성', role: 'worker' }, password: '0109' },
+  '재현': { user: { id: 'user_jaehyun', username: '재현', name: '재현', role: 'worker' }, password: '0109' },
+  '안팀': { user: { id: 'user_anteam', username: '안팀', name: '안팀', role: 'worker' }, password: '0000' },
+};
+
 const authFirestoreService = {
-  // 로그인
+  // 로그인 - 로컬 우선, Firestore 백그라운드 동기화
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    console.time('[Auth] 로그인 총 시간');
+
+    // 1. 로컬 사용자 목록에서 먼저 확인 (즉시)
+    const localUserData = LOCAL_USERS[credentials.username];
+
+    if (localUserData) {
+      // 비밀번호 확인
+      if (credentials.password !== localUserData.password) {
+        throw new Error('비밀번호가 일치하지 않습니다.');
+      }
+
+      const localUser = localUserData.user;
+
+      const token = generateToken(localUser);
+
+      // Firestore에 로그인 시간 업데이트 (백그라운드)
+      getDocs(query(collection(db, 'users'), where('username', '==', credentials.username)))
+        .then(snapshot => {
+          if (!snapshot.empty) {
+            updateDoc(doc(db, 'users', snapshot.docs[0].id), {
+              lastLogin: serverTimestamp()
+            }).catch(err => console.error('lastLogin 업데이트 실패:', err));
+          }
+        })
+        .catch(err => console.error('Firestore 동기화 실패:', err));
+
+      console.timeEnd('[Auth] 로그인 총 시간');
+
+      return {
+        success: true,
+        token,
+        user: localUser
+      };
+    }
+
+    // 2. 로컬에 없으면 Firestore에서 조회
+    console.time('[Auth] Firestore 쿼리');
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where('username', '==', credentials.username));
     const snapshot = await getDocs(q);
+    console.timeEnd('[Auth] Firestore 쿼리');
 
     if (snapshot.empty) {
       throw new Error('사용자를 찾을 수 없습니다.');
@@ -150,12 +199,14 @@ const authFirestoreService = {
       avatar: userData.avatar
     };
 
-    // 마지막 로그인 시간 업데이트
-    await updateDoc(doc(db, 'users', userDoc.id), {
-      lastLogin: serverTimestamp()
-    });
-
     const token = generateToken(user);
+
+    // 마지막 로그인 시간 업데이트 - 비동기로 처리 (기다리지 않음)
+    updateDoc(doc(db, 'users', userDoc.id), {
+      lastLogin: serverTimestamp()
+    }).catch(err => console.error('lastLogin 업데이트 실패:', err));
+
+    console.timeEnd('[Auth] 로그인 총 시간');
 
     return {
       success: true,
@@ -171,23 +222,35 @@ const authFirestoreService = {
       return null;
     }
 
-    const userDoc = await getDoc(doc(db, 'users', decoded.id));
-    if (!userDoc.exists()) {
-      return null;
+    // 1. 로컬 사용자 목록에서 먼저 확인 (즉시)
+    const localUserData = LOCAL_USERS[decoded.username];
+    if (localUserData) {
+      return localUserData.user;
     }
 
-    const userData = userDoc.data();
-    return {
-      id: userDoc.id,
-      username: userData.username,
-      name: userData.name,
-      email: userData.email,
-      role: userData.role || 'user',
-      phone: userData.phone,
-      department: userData.department,
-      position: userData.position,
-      avatar: userData.avatar
-    };
+    // 2. 로컬에 없으면 Firestore에서 조회
+    try {
+      const userDoc = await getDoc(doc(db, 'users', decoded.id));
+      if (!userDoc.exists()) {
+        return null;
+      }
+
+      const userData = userDoc.data();
+      return {
+        id: userDoc.id,
+        username: userData.username,
+        name: userData.name,
+        email: userData.email,
+        role: userData.role || 'user',
+        phone: userData.phone,
+        department: userData.department,
+        position: userData.position,
+        avatar: userData.avatar
+      };
+    } catch (error) {
+      console.error('Firestore getCurrentUser error:', error);
+      return null;
+    }
   },
 
   // 사용자 ID로 조회

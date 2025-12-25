@@ -3,7 +3,7 @@ import { ko } from 'date-fns/locale';
 import { useDataStore } from '../store/dataStore';
 import { useAuth } from '../contexts/AuthContext';
 import { Calendar, Clock, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ScheduleModal from '../components/ScheduleModal';
 import { formatTimeKorean } from '../utils/formatters';
 import { TEAM_MEMBERS } from '../constants';
@@ -30,6 +30,13 @@ const Dashboard = () => {
   const { schedules, loadSchedulesFromAPI, addScheduleToAPI, deleteScheduleFromAPI } = useDataStore();
   const { user } = useAuth();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+  // 컴포넌트 마운트 시 스케줄 데이터 로드
+  useEffect(() => {
+    loadSchedulesFromAPI().catch(error => {
+      console.error('Failed to load schedules:', error);
+    });
+  }, [loadSchedulesFromAPI]);
 
   // 사용자 이름에서 성 제거 (마지막 2글자만 사용)
   // 예: "김상준" → "상준", "상준" → "상준"

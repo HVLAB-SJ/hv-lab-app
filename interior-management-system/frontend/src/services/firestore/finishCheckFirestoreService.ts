@@ -62,26 +62,35 @@ const finishCheckFirestoreService = {
     const spacesRef = collection(db, 'finish_check_spaces');
     let q;
 
+    // orderBy 제거 - Firestore 인덱스 필요 없이 클라이언트에서 정렬
     if (projectId) {
-      q = query(spacesRef, where('project_id', '==', projectId), orderBy('display_order'));
+      q = query(spacesRef, where('project_id', '==', projectId));
     } else {
-      q = query(spacesRef, orderBy('display_order'));
+      q = query(spacesRef);
     }
 
     const spacesSnapshot = await getDocs(q);
+    // 클라이언트에서 display_order로 정렬
+    const sortedSpaceDocs = spacesSnapshot.docs.sort((a, b) =>
+      (a.data().display_order || 0) - (b.data().display_order || 0)
+    );
     const spaces: FinishCheckSpace[] = [];
 
-    for (const spaceDoc of spacesSnapshot.docs) {
+    for (const spaceDoc of sortedSpaceDocs) {
       const spaceData = spaceDoc.data();
 
-      // 해당 공간의 항목들 조회
+      // 해당 공간의 항목들 조회 - orderBy 제거
       const itemsRef = collection(db, 'finish_check_items');
-      const itemsQuery = query(itemsRef, where('space_id', '==', spaceDoc.id), orderBy('display_order'));
+      const itemsQuery = query(itemsRef, where('space_id', '==', spaceDoc.id));
       const itemsSnapshot = await getDocs(itemsQuery);
+      // 클라이언트에서 정렬
+      const sortedItemDocs = itemsSnapshot.docs.sort((a, b) =>
+        (a.data().display_order || 0) - (b.data().display_order || 0)
+      );
 
       const items: FinishCheckItem[] = [];
 
-      for (const itemDoc of itemsSnapshot.docs) {
+      for (const itemDoc of sortedItemDocs) {
         const itemData = itemDoc.data();
 
         // 해당 항목의 이미지들 조회 (image_data 없이)
@@ -128,10 +137,11 @@ const finishCheckFirestoreService = {
   async createSpace(name: string, projectId: number): Promise<FinishCheckSpace> {
     const spacesRef = collection(db, 'finish_check_spaces');
 
-    // 최대 display_order 조회
-    const q = query(spacesRef, where('project_id', '==', projectId), orderBy('display_order', 'desc'));
+    // 최대 display_order 조회 - orderBy 제거, 클라이언트에서 계산
+    const q = query(spacesRef, where('project_id', '==', projectId));
     const snapshot = await getDocs(q);
-    const maxOrder = snapshot.docs.length > 0 ? (snapshot.docs[0].data().display_order || 0) : 0;
+    const maxOrder = snapshot.docs.reduce((max, doc) =>
+      Math.max(max, doc.data().display_order || 0), 0);
 
     const newSpace = {
       name,
@@ -192,10 +202,11 @@ const finishCheckFirestoreService = {
   async createItem(spaceId: string, content: string): Promise<FinishCheckItem> {
     const itemsRef = collection(db, 'finish_check_items');
 
-    // 최대 display_order 조회
-    const q = query(itemsRef, where('space_id', '==', spaceId), orderBy('display_order', 'desc'));
+    // 최대 display_order 조회 - orderBy 제거, 클라이언트에서 계산
+    const q = query(itemsRef, where('space_id', '==', spaceId));
     const snapshot = await getDocs(q);
-    const maxOrder = snapshot.docs.length > 0 ? (snapshot.docs[0].data().display_order || 0) : 0;
+    const maxOrder = snapshot.docs.reduce((max, doc) =>
+      Math.max(max, doc.data().display_order || 0), 0);
 
     const newItem = {
       space_id: spaceId,

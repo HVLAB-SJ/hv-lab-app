@@ -24,6 +24,7 @@ export interface FirestorePayment {
   id: number;
   projectId: number;
   userId: number;
+  requestedBy: string; // 요청자 이름
   requestType: string;
   vendorName: string;
   description: string;
@@ -142,7 +143,7 @@ function convertToPaymentResponse(firestoreData: FirestorePayment): PaymentRespo
     project_name: project.name,
     project_color: project.color,
     user_id: firestoreData.userId || 0,
-    requester_name: '', // 사용자 정보는 별도 조회 필요
+    requester_name: firestoreData.requestedBy || '', // 요청자 이름
     approved_by: firestoreData.approvedBy || undefined,
     request_type: firestoreData.requestType || 'material',
     vendor_name: firestoreData.vendorName || '',
@@ -184,6 +185,13 @@ function convertToFirestoreFormat(data: Record<string, unknown>): Partial<Firest
   if (data.account_holder !== undefined) result.accountHolder = data.account_holder as string;
   if (data.bank_name !== undefined) result.bankName = data.bank_name as string;
   if (data.account_number !== undefined) result.accountNumber = data.account_number as string;
+  // bankInfo 객체에서 계좌정보 추출
+  if (data.bankInfo !== undefined && typeof data.bankInfo === 'object' && data.bankInfo !== null) {
+    const bankInfo = data.bankInfo as { accountHolder?: string; bankName?: string; accountNumber?: string };
+    if (bankInfo.accountHolder) result.accountHolder = bankInfo.accountHolder;
+    if (bankInfo.bankName) result.bankName = bankInfo.bankName;
+    if (bankInfo.accountNumber) result.accountNumber = bankInfo.accountNumber;
+  }
   if (data.notes !== undefined) result.notes = data.notes as string;
   if (data.itemName !== undefined) result.itemName = data.itemName as string;
   if (data.item_name !== undefined) result.itemName = data.item_name as string;
@@ -198,6 +206,7 @@ function convertToFirestoreFormat(data: Record<string, unknown>): Partial<Firest
     result.images = Array.isArray(data.images) ? data.images : [];
   }
   if (data.status !== undefined) result.status = data.status as FirestorePayment['status'];
+  if (data.requestedBy !== undefined) result.requestedBy = data.requestedBy as string;
 
   return result;
 }
@@ -255,6 +264,7 @@ const paymentFirestoreService = {
       id: newId,
       projectId: firestoreData.projectId || 0,
       userId: 1, // 기본 사용자
+      requestedBy: firestoreData.requestedBy || '', // 요청자 이름
       requestType: firestoreData.requestType || 'material',
       vendorName: firestoreData.vendorName || '',
       description: firestoreData.description || '',

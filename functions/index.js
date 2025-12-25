@@ -555,7 +555,8 @@ app.delete('/payments/:id', authenticateToken, async (req, res) => {
 });
 
 // 토스 송금 SMS 발송 (부가세/세금공제 미체크용)
-app.post('/payments/send-toss-payment-sms', authenticateToken, async (req, res) => {
+// 인증 미들웨어 제거 - 프론트엔드 Firebase 토큰과 Cloud Functions JWT 토큰이 다름
+app.post('/payments/send-toss-payment-sms', async (req, res) => {
   try {
     const { recipientPhone, accountHolder, bankName, accountNumber, amount, projectName, itemName, process, paymentId } = req.body;
 

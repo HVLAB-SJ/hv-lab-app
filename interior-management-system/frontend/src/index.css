@@ -2059,15 +2059,15 @@ div.rbc-popup {
     min-height: 150px !important;
   }
 
-  /* 테이블 컬럼 */
-  .exec-th-author, .exec-author-col { width: 8% !important; white-space: nowrap !important; }
-  .exec-th-date, .exec-date-col { width: 16% !important; white-space: nowrap !important; }
-  .exec-th-process, .exec-process-col { width: 10% !important; }
-  .exec-th-item, .exec-item-col { width: 20% !important; }
-  .exec-th-material, .exec-material-col { width: 10% !important; }
-  .exec-th-labor, .exec-labor-col { width: 10% !important; }
-  .exec-th-vat, .exec-vat-col { width: 10% !important; }
-  .exec-th-total, .exec-total-col { width: 20% !important; }
+  /* 테이블 컬럼 - 한 줄 표시 */
+  .exec-th-author, .exec-author-col { width: auto !important; min-width: 50px !important; white-space: nowrap !important; }
+  .exec-th-date, .exec-date-col { width: auto !important; min-width: 95px !important; white-space: nowrap !important; }
+  .exec-th-process, .exec-process-col { width: auto !important; min-width: 50px !important; white-space: nowrap !important; }
+  .exec-th-item, .exec-item-col { width: auto !important; flex: 1 !important; }
+  .exec-th-material, .exec-material-col { width: auto !important; min-width: 70px !important; white-space: nowrap !important; }
+  .exec-th-labor, .exec-labor-col { width: auto !important; min-width: 70px !important; white-space: nowrap !important; }
+  .exec-th-vat, .exec-vat-col { width: auto !important; min-width: 60px !important; white-space: nowrap !important; }
+  .exec-th-total, .exec-total-col { width: auto !important; min-width: 80px !important; white-space: nowrap !important; }
 
   /* 날짜/총액 짧은 형식 */
   .exec-date-full { display: none !important; }

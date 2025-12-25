@@ -218,13 +218,37 @@ const Payments = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Firestore 실시간 구독 - 데스크탑/모바일 간 즉시 동기화
+  // Firestore 실시간 구독 - 데스크탑/모바일 간 즉시 동기화 + 송금완료 알림
+  const prevPaymentsRef = useRef<Map<string, string>>(new Map()); // paymentId -> status 맵
+
   useEffect(() => {
     console.log('[실시간 구독] Firestore 구독 시작...');
 
     // 실시간 구독 시작 (paymentService의 subscribeToPayments 사용)
     const unsubscribe = paymentService.subscribeToPayments((apiPayments) => {
       console.log('[실시간 구독] 데이터 수신:', apiPayments.length, '건');
+
+      // 이전 상태와 비교하여 송금완료된 항목 찾기 (알림 표시)
+      apiPayments.forEach(p => {
+        const paymentId = String(p.id);
+        const prevStatus = prevPaymentsRef.current.get(paymentId);
+
+        // 이전에 pending이었던 것이 completed로 변경된 경우 알림 표시
+        if (prevStatus && prevStatus !== 'completed' && p.status === 'completed') {
+          // 로컬에서 이미 처리된 경우 스킵 (자신이 처리한 경우)
+          const localPayment = payments.find(lp => String(lp.id) === paymentId);
+          if (!localPayment || localPayment.status !== 'completed') {
+            toast.success(`송금완료: ${p.project_name || ''} ${p.item_name || ''}`.trim(), { duration: 4000 });
+          }
+        }
+      });
+
+      // 현재 상태 저장 (다음 비교용)
+      const newStatusMap = new Map<string, string>();
+      apiPayments.forEach(p => {
+        newStatusMap.set(String(p.id), p.status);
+      });
+      prevPaymentsRef.current = newStatusMap;
 
       // API 응답을 로컬 Payment 형식으로 변환
       const convertedPayments: Payment[] = apiPayments.map((p) => ({
@@ -264,12 +288,12 @@ const Payments = () => {
         },
         attachments: [],
         notes: p.notes || '',
-        completionDate: (p as any).completionDate ? new Date((p as any).completionDate) : undefined
+        completionDate: p.paid_at ? new Date(p.paid_at) : undefined
       }));
 
       // 방금 추가한 결제요청은 보호 (깜빡임 방지)
       if (!recentlyAddedPaymentRef.current) {
-        // Zustand store에 직접 업데이트
+        // Zustand store에 직접 업데이트 - loadPaymentsFromAPI 호출 없이 즉시 반영
         useDataStore.setState({ payments: convertedPayments });
       }
     });
@@ -278,6 +302,7 @@ const Payments = () => {
       console.log('[실시간 구독] Firestore 구독 해제');
       unsubscribe();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 페이지 포커스 시 새로고침 (폴백용 - 실시간 구독이 연결 해제된 경우를 대비)
@@ -300,77 +325,7 @@ const Payments = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      clearInterval(autoRefreshInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [loadPaymentsFromAPI]);
-
-  // Socket.IO 실시간 동기화 - 다른 사용자가 송금완료 시 즉시 반영
-  useEffect(() => {
-    let socket = socketService.getSocket();
-    let retryCount = 0;
-    let retryInterval: NodeJS.Timeout | null = null;
-
-    const handlePaymentRefresh = (data: { paymentId: string | number; status: string; updatedAt: string }) => {
-      console.log('🔄 [실시간 동기화] 결제 상태 변경 감지:', data);
-
-      // 방금 자신이 추가한 결제요청인 경우 무시
-      // 타입 변환하여 비교 (서버는 숫자, 클라이언트는 문자열)
-      if (recentlyAddedPaymentRef.current && String(data.paymentId) === recentlyAddedPaymentRef.current) {
-        console.log('⏭️ [실시간 동기화] 자신이 추가한 결제요청 - 새로고침 스킵');
-        return;
-      }
-
-      // 낙관적 업데이트 중인 항목이 있으면 새로고침 지연
-      // (dataStore의 보호 로직이 처리하므로 바로 호출해도 됨)
-      console.log('🔄 [실시간 동기화] loadPaymentsFromAPI 호출 (보호 로직 적용됨)');
-
-      // 결제 목록 새로고침
-      loadPaymentsFromAPI().catch(error => {
-        console.error('[실시간 동기화] 새로고침 실패:', error);
-      });
-    };
-
-    const setupSocketListener = () => {
-      socket = socketService.getSocket();
-      if (socket) {
-        console.log('✅ [Payments] Socket 연결 확인, payment:refresh 리스너 등록');
-        socket.on('payment:refresh', handlePaymentRefresh);
-        if (retryInterval) {
-          clearInterval(retryInterval);
-          retryInterval = null;
-        }
-        return true;
-      }
-      return false;
-    };
-
-    // 즉시 시도
-    if (!setupSocketListener()) {
-      // 소켓이 아직 없으면 500ms마다 재시도 (최대 10회)
-      console.log('⏳ [Payments] Socket 대기 중...');
-      retryInterval = setInterval(() => {
-        retryCount++;
-        if (setupSocketListener() || retryCount >= 10) {
-          if (retryInterval) {
-            clearInterval(retryInterval);
-            retryInterval = null;
-          }
-          if (retryCount >= 10 && !socketService.getSocket()) {
-            console.warn('⚠️ [Payments] Socket 연결 실패 - 실시간 동기화 불가');
-          }
-        }
-      }, 500);
-    }
-
-    return () => {
-      if (retryInterval) {
-        clearInterval(retryInterval);
-      }
-      const currentSocket = socketService.getSocket();
-      if (currentSocket) {
-        currentSocket.off('payment:refresh', handlePaymentRefresh);
-      }
     };
   }, [loadPaymentsFromAPI]);
 
@@ -1859,7 +1814,7 @@ const Payments = () => {
     // projectFilter가 'all'이거나 비어있으면 전체 표시, 아니면 해당 프로젝트만
     const matchesProject = projectFilter === 'all' || !projectFilter || record.project === projectFilter;
     // 내 요청만 보기 (송금완료 탭에서만 적용)
-    const matchesMyRequests = !showMyRequestsOnly || statusFilter !== 'completed' || record.requestedBy === user?.name;
+    const matchesMyRequests = !showMyRequestsOnly || statusFilter !== 'completed' || record.requestedBy === user?.username;
     return matchesSearch && matchesStatus && matchesProject && matchesMyRequests;
   }).sort((a, b) => {
     // null/undefined 안전 체크
@@ -2042,7 +1997,7 @@ const Payments = () => {
           id: `payment_${Date.now()}`,
           project: projectName,
           requestDate: new Date(formData.date),
-          requestedBy: user?.name || '알 수 없음',
+          requestedBy: user?.username || '알 수 없음',
           purpose: formData.itemName,
           amount: totalAmount,
           status: 'pending',
@@ -2101,8 +2056,9 @@ const Payments = () => {
               paymentId: newPaymentId  // 송금완료 링크용
             });
             toast.success('결제 요청 문자가 발송되었습니다');
-          } catch (smsError) {
+          } catch (smsError: any) {
             console.error('SMS 발송 실패:', smsError);
+            toast.error('문자 발송 실패: ' + (smsError.response?.data?.error || smsError.message || '알 수 없는 오류'));
           }
         }
       }
@@ -2320,10 +2276,16 @@ const Payments = () => {
     try {
       await updatePaymentInAPI(paymentId, { status: 'completed' });
 
-      // 성공 시 다른 기기에 실시간 동기화
+      // 성공 시 다른 기기에 실시간 동기화 (프로젝트명, 항목명, 완료자 정보 포함)
       const socket = socketService.getSocket();
       if (socket) {
-        socket.emit('payment:refresh', { paymentId, status: 'completed' });
+        socket.emit('payment:refresh', {
+          paymentId,
+          status: 'completed',
+          projectName: payment?.project || '',
+          itemName: payment?.itemName || payment?.purpose || '',
+          completedBy: user?.username || ''
+        });
       }
     } catch (error) {
       console.error('송금완료 API 실패:', error);

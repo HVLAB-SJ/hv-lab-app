@@ -29,6 +29,7 @@ const ConstructionPayment = () => {
   const {
     projects,
     constructionPayments,
+    loadProjectsFromAPI,
     loadConstructionPaymentsFromAPI,
     addConstructionPaymentToAPI,
     updateConstructionPaymentInAPI,
@@ -53,18 +54,21 @@ const ConstructionPayment = () => {
     endDate: ''
   });
 
-  // Load construction payments from API on mount
+  // Load construction payments and projects from API on mount
   useEffect(() => {
-    console.log('💰 ConstructionPayment: Loading payments from API...');
-    loadConstructionPaymentsFromAPI()
+    console.log('💰 ConstructionPayment: Loading data from API...');
+    Promise.all([
+      loadProjectsFromAPI(),
+      loadConstructionPaymentsFromAPI()
+    ])
       .then(() => {
-        console.log('💰 ConstructionPayment: Payments loaded successfully');
+        console.log('💰 ConstructionPayment: Data loaded successfully');
       })
       .catch(error => {
-        console.error('💰 ConstructionPayment: Failed to load construction payments:', error);
+        console.error('💰 ConstructionPayment: Failed to load data:', error);
         toast.error('공사대금 데이터를 불러오는데 실패했습니다');
       });
-  }, [loadConstructionPaymentsFromAPI]);
+  }, [loadProjectsFromAPI, loadConstructionPaymentsFromAPI]);
 
   // Load additional works from API
   useEffect(() => {

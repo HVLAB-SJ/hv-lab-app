@@ -35,7 +35,13 @@ class AuthService {
 
   async getCurrentUser(): Promise<User | null> {
     const token = this.getToken();
-    if (!token) return null;
+
+    // 토큰이 없어도 로컬에 저장된 사용자 정보가 있으면 반환
+    const savedUser = this.getUser();
+
+    if (!token) {
+      return savedUser;
+    }
 
     try {
       const user = await authFirestoreService.getCurrentUser(token);
@@ -43,14 +49,17 @@ class AuthService {
         localStorage.setItem('user', JSON.stringify(user));
         return user;
       }
-      // 토큰이 유효하지 않은 경우 (만료됨)
-      console.log('Token invalid or expired, clearing...');
-      this.logout();
+      // 토큰이 유효하지 않은 경우 - 로컬 사용자 정보 유지 (로그아웃 안 함)
+      console.log('Token invalid or expired, using cached user...');
+      if (savedUser) {
+        // 토큰만 제거하고 사용자 정보는 유지
+        localStorage.removeItem('token');
+        return savedUser;
+      }
       return null;
     } catch (error) {
       console.error('Get current user error:', error);
       // 네트워크 에러 등의 경우 로컬 저장된 사용자 정보 반환
-      const savedUser = this.getUser();
       if (savedUser) {
         console.log('Using cached user data due to error');
         return savedUser;

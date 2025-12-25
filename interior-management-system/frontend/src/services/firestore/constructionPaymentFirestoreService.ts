@@ -25,16 +25,44 @@ const COLLECTION_NAME = 'construction_payments';
 const convertDoc = (docSnap: any): ConstructionPaymentResponse => {
   const data = docSnap.data();
 
-  // payments 배열 변환
-  const payments = (data.payments || []).map((p: any) => ({
-    types: p.types || [],
-    amount: p.amount || 0,
-    date: p.date instanceof Timestamp
-      ? p.date.toDate().toISOString()
-      : p.date || '',
-    method: p.method || '',
-    notes: p.notes || ''
-  }));
+  // payments 배열 변환 (문자열인 경우 파싱)
+  let paymentsArray = data.payments || [];
+  if (typeof paymentsArray === 'string') {
+    try {
+      paymentsArray = JSON.parse(paymentsArray);
+    } catch {
+      paymentsArray = [];
+    }
+  }
+  if (!Array.isArray(paymentsArray)) {
+    paymentsArray = [];
+  }
+
+  const payments = paymentsArray.map((p: any) => {
+    // types 필드 변환 (문자열인 경우 파싱)
+    let typesArray = p.types || [];
+    if (typeof typesArray === 'string') {
+      try {
+        typesArray = JSON.parse(typesArray);
+      } catch {
+        typesArray = [typesArray]; // 단일 문자열인 경우 배열로 변환
+      }
+    }
+    if (!Array.isArray(typesArray)) {
+      typesArray = [];
+    }
+
+    return {
+      types: typesArray,
+      type: typesArray[0] || p.type || '계약금', // type 필드도 추가
+      amount: p.amount || 0,
+      date: p.date instanceof Timestamp
+        ? p.date.toDate().toISOString()
+        : p.date || '',
+      method: p.method || '',
+      notes: p.notes || ''
+    };
+  });
 
   // expectedPaymentDates 변환
   const expectedPaymentDates: any = {};
@@ -83,9 +111,20 @@ const convertDoc = (docSnap: any): ConstructionPaymentResponse => {
 const constructionPaymentFirestoreService = {
   // 모든 공사금 조회
   getAllConstructionPayments: async (): Promise<ConstructionPaymentResponse[]> => {
-    const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(convertDoc);
+    console.log('[ConstructionPayment] Firestore 조회 시작...');
+    try {
+      // createdAt이 없는 문서가 있을 수 있으므로 정렬 없이 조회
+      const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+      console.log('[ConstructionPayment] Firestore 스냅샷:', snapshot.size, '개 문서');
+      const results = snapshot.docs
+        .map(convertDoc)
+        .filter(doc => doc.project && doc.totalAmount); // undefined 필터링
+      console.log('[ConstructionPayment] Firestore에서 로드 완료:', results.length, '개');
+      return results;
+    } catch (error) {
+      console.error('[ConstructionPayment] Firestore 조회 실패:', error);
+      return [];
+    }
   },
 
   // 단일 공사금 조회

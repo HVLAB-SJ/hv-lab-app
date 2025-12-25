@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { initializeApp, getApps } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Firebase 프로젝트 설정
@@ -12,22 +12,13 @@ const firebaseConfig = {
   appId: "1:268116248842:web:3415b6668e854e99ab92f3"
 };
 
-// Firebase 앱 초기화
-const app = initializeApp(firebaseConfig);
+// Firebase 앱 초기화 (이미 초기화된 경우 기존 앱 사용)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Firestore 인스턴스
+// Firestore 인스턴스 - 기본 설정 사용 (멀티탭 자동 지원)
 export const db = getFirestore(app);
 
 // Storage 인스턴스
 export const storage = getStorage(app);
-
-// 오프라인 지원 활성화 (선택적)
-enableIndexedDbPersistence(db).catch((err) => {
-  if (err.code === 'failed-precondition') {
-    console.warn('오프라인 지원: 여러 탭이 열려 있어 비활성화됨');
-  } else if (err.code === 'unimplemented') {
-    console.warn('오프라인 지원: 브라우저에서 지원되지 않음');
-  }
-});
 
 export default app;
