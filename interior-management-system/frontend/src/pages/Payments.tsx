@@ -299,11 +299,7 @@ const Payments = () => {
 
         // 이전에 pending이었던 것이 completed로 변경된 경우 알림 표시
         if (prevStatus && prevStatus !== 'completed' && p.status === 'completed') {
-          // 로컬에서 이미 처리된 경우 스킵 (자신이 처리한 경우)
-          const localPayment = payments.find(lp => String(lp.id) === paymentId);
-          if (!localPayment || localPayment.status !== 'completed') {
-            toast.success(`송금완료: ${p.project_name || ''} ${p.item_name || ''}`.trim(), { duration: 4000 });
-          }
+          toast.success(`송금완료: ${p.project_name || ''} ${p.item_name || ''}`.trim(), { duration: 4000 });
         }
       });
 
@@ -321,7 +317,7 @@ const Payments = () => {
       console.log('[실시간 구독] Zustand 상태 업데이트:', convertedPayments.length, '건 (대기:', pendingCount, ', 완료:', completedCount, ')');
       useDataStore.setState({ payments: convertedPayments });
     });
-  }, [convertApiPaymentsToLocal, payments]);
+  }, [convertApiPaymentsToLocal]);
 
   useEffect(() => {
     startSubscription();

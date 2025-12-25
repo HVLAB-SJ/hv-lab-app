@@ -422,6 +422,43 @@ const paymentFirestoreService = {
 
     let unsubscribe: Unsubscribe | null = null;
     let isSubscribed = true;
+    let pollingInterval: ReturnType<typeof setInterval> | null = null;
+    let lastDataHash = '';
+
+    // 데이터 해시 생성 (변경 감지용)
+    const createDataHash = (payments: PaymentResponse[]): string => {
+      return payments.map(p => `${p.id}:${p.status}`).join(',');
+    };
+
+    // 수동 폴링으로 데이터 가져오기
+    const fetchLatestData = async () => {
+      if (!isSubscribed) return;
+
+      try {
+        const collectionRef = collection(db, COLLECTIONS.PAYMENTS);
+        const q = query(collectionRef, orderBy('id', 'desc'));
+        const snapshot = await getDocs(q);
+
+        // 프로젝트 캐시 확인
+        if (projectsCache.size === 0) {
+          await loadProjectsCache().catch(() => {});
+        }
+
+        const payments = snapshot.docs.map(doc => {
+          const data = doc.data() as FirestorePayment;
+          return convertToPaymentResponse({ ...data, id: parseInt(doc.id) || data.id });
+        });
+
+        const newHash = createDataHash(payments);
+        if (newHash !== lastDataHash) {
+          console.log('[폴링] 데이터 변경 감지:', payments.length, '건');
+          lastDataHash = newHash;
+          callback(payments);
+        }
+      } catch (err) {
+        console.warn('[폴링] 데이터 가져오기 실패:', err);
+      }
+    };
 
     // 즉시 구독 시작 (프로젝트 캐시 로드와 동시에)
     const startSubscription = async () => {
@@ -438,14 +475,15 @@ const paymentFirestoreService = {
 
         unsubscribe = onSnapshot(
           q,
-          { includeMetadataChanges: false }, // 메타데이터 변경은 무시하고 데이터 변경만 감지
+          { includeMetadataChanges: true }, // 연결 상태 변경도 감지
           async (snapshot) => {
             if (!isSubscribed) {
               console.log('[실시간 구독] 이미 해제됨 - 무시');
               return;
             }
 
-            console.log('[실시간 구독] 스냅샷 수신:', snapshot.docs.length, '건, fromCache:', snapshot.metadata.fromCache, 'hasPendingWrites:', snapshot.metadata.hasPendingWrites);
+            const fromCache = snapshot.metadata.fromCache;
+            console.log('[실시간 구독] 스냅샷 수신:', snapshot.docs.length, '건, fromCache:', fromCache, 'hasPendingWrites:', snapshot.metadata.hasPendingWrites);
 
             // 변경된 문서 로그
             snapshot.docChanges().forEach(change => {
@@ -467,6 +505,7 @@ const paymentFirestoreService = {
               return convertToPaymentResponse({ ...data, id: parseInt(doc.id) || data.id });
             });
 
+            lastDataHash = createDataHash(payments);
             callback(payments);
           },
           (error) => {
@@ -482,6 +521,14 @@ const paymentFirestoreService = {
             }
           }
         );
+
+        // 모바일 감지 및 폴링 시작 (3초마다)
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile && !pollingInterval) {
+          console.log('[paymentFirestoreService] 모바일 감지 - 3초 폴링 시작');
+          pollingInterval = setInterval(fetchLatestData, 3000);
+        }
+
       } catch (error) {
         console.error('[paymentFirestoreService] 구독 초기화 실패:', error);
         // 재시도
@@ -505,6 +552,10 @@ const paymentFirestoreService = {
       if (unsubscribe) {
         unsubscribe();
         unsubscribe = null;
+      }
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
       }
     };
   },
