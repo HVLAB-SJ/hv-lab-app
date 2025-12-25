@@ -38,6 +38,7 @@ export interface FirestorePayment {
   paidAt: string | null;
   receiptUrl: string | null;
   notes: string;
+  requestDate: string; // 요청 날짜 (사용자가 선택한 날짜)
   createdAt: string;
   updatedAt: string;
   applyTaxDeduction: boolean;
@@ -84,6 +85,7 @@ export interface PaymentResponse {
   updated_at: string;
   approved_at?: string;
   paid_at?: string;
+  request_date?: string; // 사용자가 선택한 요청 날짜
 }
 
 // 프로젝트 정보 캐시
@@ -166,7 +168,8 @@ function convertToPaymentResponse(firestoreData: FirestorePayment): PaymentRespo
     status: firestoreData.status || 'pending',
     created_at: firestoreData.createdAt || '',
     updated_at: firestoreData.updatedAt || '',
-    paid_at: firestoreData.paidAt || undefined
+    paid_at: firestoreData.paidAt || undefined,
+    request_date: firestoreData.requestDate || firestoreData.createdAt || '' // 요청 날짜 (없으면 생성일 사용)
   };
 }
 
@@ -208,6 +211,19 @@ function convertToFirestoreFormat(data: Record<string, unknown>): Partial<Firest
   }
   if (data.status !== undefined) result.status = data.status as FirestorePayment['status'];
   if (data.requestedBy !== undefined) result.requestedBy = data.requestedBy as string;
+
+  // 요청 날짜 처리 (Date 객체 또는 문자열)
+  if (data.requestDate !== undefined) {
+    const rd = data.requestDate;
+    if (rd instanceof Date) {
+      result.requestDate = rd.toISOString();
+    } else if (typeof rd === 'string') {
+      result.requestDate = rd;
+    }
+  }
+  if (data.request_date !== undefined && typeof data.request_date === 'string') {
+    result.requestDate = data.request_date;
+  }
 
   return result;
 }
@@ -288,6 +304,7 @@ const paymentFirestoreService = {
       paidAt: null,
       receiptUrl: null,
       notes: firestoreData.notes || '',
+      requestDate: firestoreData.requestDate || now, // 사용자가 선택한 요청 날짜
       createdAt: now,
       updatedAt: now,
       applyTaxDeduction: firestoreData.applyTaxDeduction || false,

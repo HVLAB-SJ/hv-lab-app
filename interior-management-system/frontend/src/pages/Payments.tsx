@@ -288,7 +288,7 @@ const Payments = () => {
         status: p.status,
         urgency: 'normal' as Payment['urgency'],
         requestedBy: p.requester_name,
-        requestDate: new Date(p.created_at),
+        requestDate: new Date(p.request_date || p.created_at),
         approvalDate: p.approved_at ? new Date(p.approved_at) : undefined,
         bankInfo: {
           accountHolder: p.account_holder || '',
