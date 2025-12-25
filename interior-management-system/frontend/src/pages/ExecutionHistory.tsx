@@ -859,6 +859,18 @@ const ExecutionHistory = () => {
           includesTaxDeduction: includeTaxDeduction,
           includesVat: includeVat
         });
+
+        // 연동된 결제요청이 있으면 날짜도 함께 수정
+        if (editingRecord.paymentId) {
+          const linkedPayment = payments.find(p => String(p.id) === String(editingRecord.paymentId));
+          if (linkedPayment) {
+            console.log('[handleEditSave] 연동된 결제요청 날짜도 수정:', editingRecord.paymentId);
+            await updatePaymentInAPI(String(editingRecord.paymentId), {
+              ...linkedPayment,
+              requestDate: formData.date
+            });
+          }
+        }
         // updateExecutionRecordInAPI가 이미 로컬 상태를 업데이트하므로 추가 로드 불필요
       }
 
