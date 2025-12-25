@@ -305,7 +305,7 @@ const Payments = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 페이지 포커스 시 새로고침 (폴백용 - 실시간 구독이 연결 해제된 경우를 대비)
+  // 페이지 포커스 시 새로고침 + 모바일 주기적 폴링 (실시간 구독 폴백)
   useEffect(() => {
     // 페이지가 다시 보일 때 새로고침 (탭 전환, 창 활성화 시)
     const handleVisibilityChange = () => {
@@ -324,8 +324,26 @@ const Payments = () => {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // 모바일에서 3초마다 폴링 (Firestore 실시간 구독이 불안정할 수 있음)
+    let pollingInterval: ReturnType<typeof setInterval> | null = null;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      console.log('[모바일 폴링] 3초 간격 폴링 시작');
+      pollingInterval = setInterval(() => {
+        if (document.visibilityState === 'visible' && !recentlyAddedPaymentRef.current) {
+          loadPaymentsFromAPI().catch(error => {
+            console.error('[모바일 폴링] 새로고침 실패:', error);
+          });
+        }
+      }, 3000);
+    }
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
     };
   }, [loadPaymentsFromAPI]);
 
