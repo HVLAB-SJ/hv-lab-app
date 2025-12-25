@@ -218,20 +218,70 @@ const Payments = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 자동 새로고침 (30초마다) + 페이지 포커스 시 새로고침
+  // Firestore 실시간 구독 - 데스크탑/모바일 간 즉시 동기화
   useEffect(() => {
-    const autoRefreshInterval = setInterval(() => {
-      // 방금 결제요청을 추가한 경우 자동 새로고침 스킵 (깜빡임 방지)
-      if (recentlyAddedPaymentRef.current) {
-        console.log('[자동 새로고침] 방금 추가한 결제요청 있음 - 스킵');
-        return;
-      }
-      console.log('[자동 새로고침] 결제 내역 업데이트 중...');
-      loadPaymentsFromAPI().catch(error => {
-        console.error('[자동 새로고침] 실패:', error);
-      });
-    }, 30000); // 30초
+    console.log('[실시간 구독] Firestore 구독 시작...');
 
+    // 실시간 구독 시작 (paymentService의 subscribeToPayments 사용)
+    const unsubscribe = paymentService.subscribeToPayments((apiPayments) => {
+      console.log('[실시간 구독] 데이터 수신:', apiPayments.length, '건');
+
+      // API 응답을 로컬 Payment 형식으로 변환
+      const convertedPayments: Payment[] = apiPayments.map((p) => ({
+        id: String(p.id),
+        project: p.project_name || '',
+        purpose: p.description,
+        process: p.vendor_name,
+        itemName: p.item_name || '',
+        amount: p.amount,
+        materialAmount: p.material_amount || 0,
+        laborAmount: p.labor_amount || 0,
+        originalMaterialAmount: p.original_material_amount || 0,
+        originalLaborAmount: p.original_labor_amount || 0,
+        applyTaxDeduction: p.apply_tax_deduction === 1,
+        includesVAT: p.includes_vat === 1,
+        quickText: p.quick_text || '',
+        images: (() => {
+          if (!p.images) return [];
+          if (Array.isArray(p.images)) return p.images;
+          try {
+            const parsed = JSON.parse(p.images as string);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        })(),
+        category: p.request_type as Payment['category'],
+        status: p.status,
+        urgency: 'normal' as Payment['urgency'],
+        requestedBy: p.requester_name,
+        requestDate: new Date(p.created_at),
+        approvalDate: p.approved_at ? new Date(p.approved_at) : undefined,
+        bankInfo: {
+          accountHolder: p.account_holder || '',
+          bankName: p.bank_name || '',
+          accountNumber: p.account_number || ''
+        },
+        attachments: [],
+        notes: p.notes || '',
+        completionDate: (p as any).completionDate ? new Date((p as any).completionDate) : undefined
+      }));
+
+      // 방금 추가한 결제요청은 보호 (깜빡임 방지)
+      if (!recentlyAddedPaymentRef.current) {
+        // Zustand store에 직접 업데이트
+        useDataStore.setState({ payments: convertedPayments });
+      }
+    });
+
+    return () => {
+      console.log('[실시간 구독] Firestore 구독 해제');
+      unsubscribe();
+    };
+  }, []);
+
+  // 페이지 포커스 시 새로고침 (폴백용 - 실시간 구독이 연결 해제된 경우를 대비)
+  useEffect(() => {
     // 페이지가 다시 보일 때 새로고침 (탭 전환, 창 활성화 시)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {

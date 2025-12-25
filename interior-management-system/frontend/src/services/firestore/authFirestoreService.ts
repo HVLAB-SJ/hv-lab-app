@@ -80,6 +80,11 @@ const generateToken = (user: User): string => {
 // 토큰 검증
 const verifyToken = (token: string): { id: string; username: string; role: string } | null => {
   try {
+    // Railway JWT 토큰 형식 (eyJ...)이면 무효화
+    if (token.startsWith('eyJ')) {
+      console.log('[Auth] 기존 Railway JWT 토큰 감지 - 무효화');
+      return null;
+    }
     const payload = JSON.parse(base64ToUtf8(token));
     if (payload.exp < Date.now()) {
       return null; // 토큰 만료

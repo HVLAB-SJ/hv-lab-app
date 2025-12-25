@@ -41,11 +41,20 @@ class AuthService {
       const user = await authFirestoreService.getCurrentUser(token);
       if (user) {
         localStorage.setItem('user', JSON.stringify(user));
+        return user;
       }
-      return user;
+      // 토큰이 유효하지 않은 경우 (만료됨)
+      console.log('Token invalid or expired, clearing...');
+      this.logout();
+      return null;
     } catch (error) {
       console.error('Get current user error:', error);
-      this.logout();
+      // 네트워크 에러 등의 경우 로컬 저장된 사용자 정보 반환
+      const savedUser = this.getUser();
+      if (savedUser) {
+        console.log('Using cached user data due to error');
+        return savedUser;
+      }
       return null;
     }
   }
