@@ -32,6 +32,11 @@ service firebase.storage {
     match /drawings/{allPaths=**} {
       allow read, write: if true;
     }
+    // backups - Cloud Functions에서만 접근 (admin SDK 사용)
+    // 클라이언트 직접 접근 차단, signed URL 통해서만 다운로드
+    match /backups/{allPaths=**} {
+      allow read, write: if false;
+    }
 
     // 기타 경로는 차단
     match /{allPaths=**} {

@@ -1510,3 +1510,245 @@ exports.api = functions
   .region('asia-northeast3')
   .runWith({ timeoutSeconds: 60, memory: '512MB' })
   .https.onRequest(app);
+
+// =====================
+// 자동 백업 스케줄 (매일 새벽 3시 KST)
+// =====================
+const BACKUP_COLLECTIONS = [
+  'projects',
+  'payment_requests',
+  'schedules',
+  'contractors',
+  'execution_records',
+  'as_requests',
+  'additional_works',
+  'construction_payments',
+  'site_logs',
+  'drawings',
+  'work_requests',
+  'quote_inquiries',
+  'finish_check_spaces',
+  'finish_check_items',
+  'specbook_items',
+  'specbook_categories',
+  'specbook_project_items',
+  'processes',
+  'users'
+];
+
+exports.scheduledBackup = functions
+  .region('asia-northeast3')
+  .runWith({ timeoutSeconds: 540, memory: '1GB' })
+  .pubsub.schedule('0 3 * * *')  // 매일 새벽 3시 (UTC 기준 18:00 = KST 03:00)
+  .timeZone('Asia/Seoul')
+  .onRun(async (context) => {
+    console.log('[자동 백업] 시작:', new Date().toISOString());
+
+    try {
+      const backup = {
+        version: '1.0.0',
+        createdAt: new Date().toISOString(),
+        collections: {}
+      };
+
+      // 모든 컬렉션 백업
+      for (const collectionName of BACKUP_COLLECTIONS) {
+        try {
+          const snapshot = await db.collection(collectionName).get();
+          const documents = [];
+          snapshot.forEach(doc => {
+            documents.push({
+              id: doc.id,
+              data: doc.data()
+            });
+          });
+          backup.collections[collectionName] = {
+            count: documents.length,
+            documents
+          };
+          console.log(`[자동 백업] ${collectionName}: ${documents.length}개 문서`);
+        } catch (error) {
+          console.error(`[자동 백업] ${collectionName} 백업 실패:`, error);
+          backup.collections[collectionName] = { count: 0, documents: [] };
+        }
+      }
+
+      // Firebase Storage에 저장
+      const dateStr = new Date().toISOString().split('T')[0];
+      const fileName = `backups/auto-backup-${dateStr}.json`;
+      const file = bucket.file(fileName);
+
+      await file.save(JSON.stringify(backup, null, 2), {
+        metadata: {
+          contentType: 'application/json',
+          metadata: {
+            createdAt: backup.createdAt,
+            type: 'auto-backup'
+          }
+        }
+      });
+
+      console.log(`[자동 백업] 완료: ${fileName}`);
+
+      // 오래된 백업 삭제 (7일 이상)
+      const [files] = await bucket.getFiles({ prefix: 'backups/auto-backup-' });
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      for (const oldFile of files) {
+        const fileName = oldFile.name;
+        // 파일명에서 날짜 추출 (auto-backup-YYYY-MM-DD.json)
+        const dateMatch = fileName.match(/auto-backup-(\d{4}-\d{2}-\d{2})\.json/);
+        if (dateMatch) {
+          const fileDate = new Date(dateMatch[1]);
+          if (fileDate < sevenDaysAgo) {
+            await oldFile.delete();
+            console.log(`[자동 백업] 오래된 백업 삭제: ${fileName}`);
+          }
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('[자동 백업] 실패:', error);
+      throw error;
+    }
+  });
+
+// 수동 백업 트리거 (HTTP 엔드포인트)
+app.post('/admin/backup', async (req, res) => {
+  // 관리자 인증 확인
+  const adminSecret = req.headers['x-admin-secret'];
+  if (adminSecret !== ADMIN_SECRET) {
+    return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+  }
+
+  console.log('[수동 백업] 시작:', new Date().toISOString());
+
+  try {
+    const backup = {
+      version: '1.0.0',
+      createdAt: new Date().toISOString(),
+      collections: {}
+    };
+
+    // 모든 컬렉션 백업
+    for (const collectionName of BACKUP_COLLECTIONS) {
+      try {
+        const snapshot = await db.collection(collectionName).get();
+        const documents = [];
+        snapshot.forEach(doc => {
+          documents.push({
+            id: doc.id,
+            data: doc.data()
+          });
+        });
+        backup.collections[collectionName] = {
+          count: documents.length,
+          documents
+        };
+      } catch (error) {
+        console.error(`[수동 백업] ${collectionName} 백업 실패:`, error);
+        backup.collections[collectionName] = { count: 0, documents: [] };
+      }
+    }
+
+    // Firebase Storage에 저장
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const fileName = `backups/manual-backup-${timestamp}.json`;
+    const file = bucket.file(fileName);
+
+    await file.save(JSON.stringify(backup, null, 2), {
+      metadata: {
+        contentType: 'application/json',
+        metadata: {
+          createdAt: backup.createdAt,
+          type: 'manual-backup'
+        }
+      }
+    });
+
+    // 다운로드 URL 생성 (1시간 유효)
+    const [url] = await file.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 60 * 60 * 1000
+    });
+
+    console.log(`[수동 백업] 완료: ${fileName}`);
+
+    res.json({
+      success: true,
+      message: '백업이 완료되었습니다.',
+      fileName,
+      downloadUrl: url,
+      stats: {
+        collections: Object.keys(backup.collections).length,
+        totalDocuments: Object.values(backup.collections).reduce((sum, c) => sum + c.count, 0)
+      }
+    });
+  } catch (error) {
+    console.error('[수동 백업] 실패:', error);
+    res.status(500).json({ error: '백업에 실패했습니다.' });
+  }
+});
+
+// 백업 목록 조회
+app.get('/admin/backups', async (req, res) => {
+  // 관리자 인증 확인
+  const adminSecret = req.headers['x-admin-secret'];
+  if (adminSecret !== ADMIN_SECRET) {
+    return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+  }
+
+  try {
+    const [files] = await bucket.getFiles({ prefix: 'backups/' });
+
+    const backups = await Promise.all(files.map(async (file) => {
+      const [metadata] = await file.getMetadata();
+      return {
+        name: file.name,
+        size: parseInt(metadata.size),
+        createdAt: metadata.metadata?.createdAt || metadata.timeCreated,
+        type: metadata.metadata?.type || 'unknown'
+      };
+    }));
+
+    // 최신순 정렬
+    backups.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json(backups);
+  } catch (error) {
+    console.error('[백업 목록] 실패:', error);
+    res.status(500).json({ error: '백업 목록 조회에 실패했습니다.' });
+  }
+});
+
+// 백업 다운로드 URL 생성
+app.get('/admin/backups/:fileName/download', async (req, res) => {
+  // 관리자 인증 확인
+  const adminSecret = req.headers['x-admin-secret'];
+  if (adminSecret !== ADMIN_SECRET) {
+    return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+  }
+
+  try {
+    const fileName = `backups/${req.params.fileName}`;
+    const file = bucket.file(fileName);
+
+    const [exists] = await file.exists();
+    if (!exists) {
+      return res.status(404).json({ error: '백업 파일을 찾을 수 없습니다.' });
+    }
+
+    // 다운로드 URL 생성 (1시간 유효)
+    const [url] = await file.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 60 * 60 * 1000
+    });
+
+    res.json({ downloadUrl: url });
+  } catch (error) {
+    console.error('[백업 다운로드] 실패:', error);
+    res.status(500).json({ error: '다운로드 URL 생성에 실패했습니다.' });
+  }
+});
